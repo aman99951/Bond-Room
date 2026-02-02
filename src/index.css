@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+*:focus-visible {
+  outline: 2px solid #111111;
+  outline-offset: 2px;
+}
+
+/* Scrollbar styling */
+* {
+  scrollbar-color: var(--color-scrollbar) var(--color-scroll-track);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--color-scroll-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar);
+  border-radius: 8px;
+}
+
+:root {
+  --font-sans: "Manrope", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  --color-bg: #f5f2f2;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f3f4f6;
+
+  --color-text: #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-subtle: #9ca3af;
+
+  --color-border: #e5e7eb;
+  --color-accent: #111827;
+  --color-accent-contrast: #ffffff;
+  --color-link: #111827;
+
+  --color-scrollbar: #111111;
+  --color-scroll-track: #f3f4f6;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+@layer utilities {
+  .bg-page { background-color: var(--color-bg); }
+  .bg-surface { background-color: var(--color-surface); }
+  .bg-muted { background-color: var(--color-surface-muted); }
+  .text-primary { color: var(--color-text); }
+  .text-secondary { color: var(--color-text-secondary); }
+  .text-muted { color: var(--color-text-muted); }
+  .text-subtle { color: var(--color-text-subtle); }
+  .border-default { border-color: var(--color-border); }
+  .bg-accent { background-color: var(--color-accent); }
+  .text-on-accent { color: var(--color-accent-contrast); }
+  .border-accent { border-color: var(--color-accent); }
+  .link-primary { color: var(--color-link); }
+}
