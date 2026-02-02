@@ -40,6 +40,13 @@ const MentorProfile = () => {
           >
             Schedule Session
           </Link>
+          <Link
+            to="/feedback"
+            className="mt-3 block w-full rounded-md border border-default bg-surface text-secondary py-2 text-xs text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
+            aria-label="Give feedback for this mentor"
+          >
+            Give Feedback
+          </Link>
 
           <div className="mt-4 text-[10px] text-muted text-center">AI Matched For</div>
           <div className="mt-2 flex items-center justify-center gap-2">

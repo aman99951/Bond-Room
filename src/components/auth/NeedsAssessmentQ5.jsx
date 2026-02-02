@@ -31,7 +31,7 @@ const NeedsAssessmentQ5 = () => {
               <span>Question 5 of 5</span>
             </div>
             <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
-              <div className="h-1.5 w-56 rounded-full bg-gray-800"></div>
+              <div className="h-1.5 w-full rounded-full bg-accent"></div>
             </div>
 
             <div className="text-center mt-10">
@@ -58,8 +58,7 @@ const NeedsAssessmentQ5 = () => {
                 to="/dashboard"
                 className="w-full sm:w-80 rounded-md bg-accent text-on-accent py-2.5 text-sm text-center"
               >
-                Next Question →
-              </Link>
+                Finish →</Link>
             </div>
 
             <div className="mt-4 text-center">

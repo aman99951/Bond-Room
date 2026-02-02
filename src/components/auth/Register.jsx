@@ -2,6 +2,7 @@ import React from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
 import { Link } from 'react-router-dom';
+import logo from '../assets/i.png';
 
 const Register = () => {
   return (
@@ -13,11 +14,8 @@ const Register = () => {
           <div className="border border-default rounded-2xl overflow-hidden bg-surface shadow-sm">
             <div className="grid md:grid-cols-2">
               <div className="bg-muted p-8 sm:p-10 flex flex-col items-center justify-center text-center">
-                <div className="h-32 w-32 sm:h-44 sm:w-44 rounded-full bg-gray-200 flex items-center justify-center">
-                  <svg className="h-10 w-10 text-subtle" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M7 15l3-3 3 3 3-4 3 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-accent flex items-center justify-center">
+                  <img src={logo} alt="Bond Room" className="h-6 w-6" />
                 </div>
                 <h3 className="mt-6 sm:mt-8 text-base font-semibold text-secondary">Find Your Safe Space</h3>
                 <p className="mt-2 text-sm text-muted max-w-xs">

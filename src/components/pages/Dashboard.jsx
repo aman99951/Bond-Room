@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import topRightIcon from '../assets/Vector (1).png';
 
 const recommended = [
   {
@@ -38,11 +39,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="h-16 w-32 rounded-xl bg-muted flex items-center justify-center self-start sm:self-auto" aria-hidden="true">
-            <svg className="h-8 w-8 text-subtle" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M5 12c4-6 10-6 14 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M7 12c3-4 7-4 10 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M9 12c2-2 4-2 6 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+            <img src={topRightIcon} alt="" className="h-8 w-8" />
           </div>
         </div>
 

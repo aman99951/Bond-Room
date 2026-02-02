@@ -2,6 +2,7 @@ import React from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
 import { Link } from 'react-router-dom';
+import logo from '../assets/i.png';
 
 const Login = () => {
   return (
@@ -10,39 +11,56 @@ const Login = () => {
 
       <main className="flex-1">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-20 py-10">
-          <div className="max-w-md mx-auto rounded-2xl border border-default bg-surface p-8 shadow-sm">
-            <h1 className="text-xl font-semibold text-primary">Welcome back</h1>
-            <p className="mt-1 text-sm text-muted">Sign in to continue to Bond Room.</p>
-
-            <form className="mt-6 space-y-4">
-              <div>
-                <label htmlFor="loginEmail" className="text-xs text-muted">Email Address</label>
-                <input
-                  id="loginEmail"
-                  type="email"
-                  className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm"
-                  placeholder="you@example.com"
-                />
+          <div className="border border-default rounded-2xl overflow-hidden bg-surface shadow-sm">
+            <div className="grid md:grid-cols-2">
+              <div className="bg-muted p-8 sm:p-10 flex flex-col items-center justify-center text-center">
+                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-accent flex items-center justify-center">
+                  <img src={logo} alt="Bond Room" className="h-6 w-6" />
+                </div>
+                <h3 className="mt-6 sm:mt-8 text-base font-semibold text-secondary">Welcome Back</h3>
+                <p className="mt-2 text-sm text-muted max-w-xs">
+                  Sign in to continue your journey with Bond Room.
+                </p>
               </div>
-              <div>
-                <label htmlFor="loginPassword" className="text-xs text-muted">Password</label>
-                <input
-                  id="loginPassword"
-                  type="password"
-                  className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm"
-                  placeholder="••••••••"
-                />
-              </div>
-              <button type="button" className="w-full rounded-md bg-accent text-on-accent py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
-                Login
-              </button>
-            </form>
 
-            <div className="mt-4 text-xs text-muted text-center">
-              Don’t have an account?{' '}
-              <Link to="/register" className="underline text-secondary">
-                Register
-              </Link>
+              <div className="p-6 sm:p-8 lg:p-10">
+                <div className="inline-flex items-center rounded-full bg-muted text-xs text-muted px-3 py-1">
+                  Login
+                </div>
+                <h2 className="mt-3 text-lg sm:text-xl font-semibold text-primary">Access your account</h2>
+                <p className="mt-1 text-sm text-muted">Enter your credentials to continue.</p>
+
+                <form className="mt-6 space-y-4">
+                  <div>
+                    <label htmlFor="loginEmail" className="text-xs text-muted">Email Address</label>
+                    <input
+                      id="loginEmail"
+                      type="email"
+                      className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="loginPassword" className="text-xs text-muted">Password</label>
+                    <input
+                      id="loginPassword"
+                      type="password"
+                      className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm"
+                      placeholder="********"
+                    />
+                  </div>
+                  <button type="button" className="w-full rounded-md bg-accent text-on-accent py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                    Login
+                  </button>
+                </form>
+
+                <div className="mt-4 text-xs text-muted text-center">
+                  Don&apos;t have an account?{' '}
+                  <Link to="/register" className="underline text-secondary">
+                    Register
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
