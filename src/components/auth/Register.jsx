@@ -1,10 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
 import { Link } from 'react-router-dom';
 import logo from '../assets/i.png';
 
 const Register = () => {
+  const [gradeOpen, setGradeOpen] = useState(false);
+  const [gradeValue, setGradeValue] = useState('Select');
+  const [genderOpen, setGenderOpen] = useState(false);
+  const [genderValue, setGenderValue] = useState('Select Gender');
+  const gradeOptions = ['9th Grade', '10th Grade', '11th Grade', '12th Grade'];
+  const genderOptions = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
   return (
     <div className="min-h-screen bg-surface text-primary flex flex-col">
       <TopAuth />
@@ -44,10 +50,38 @@ const Register = () => {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="grade" className="text-xs text-muted">Grade</label>
-                      <select id="grade" className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm text-muted">
-                        <option>Select</option>
-                      </select>
+                      <label id="registerGradeLabel" className="text-xs text-muted">Grade</label>
+                      <div className="relative mt-1" tabIndex={0} onBlur={() => setGradeOpen(false)}>
+                        <button
+                          type="button"
+                          className="w-full rounded-md border border-default px-3 py-2 text-sm text-left"
+                          onClick={() => setGradeOpen((o) => !o)}
+                          aria-haspopup="listbox"
+                          aria-expanded={gradeOpen}
+                          aria-labelledby="registerGradeLabel"
+                        >
+                          {gradeValue}
+                        </button>
+                        {gradeOpen && (
+                          <ul className="absolute z-10 mt-1 w-full rounded-md border border-accent bg-accent text-on-accent text-sm shadow" role="listbox">
+                            {gradeOptions.map((opt) => (
+                              <li key={opt}>
+                                <button
+                                  type="button"
+                                  className="w-full text-left px-3 py-2 hover:bg-black/80"
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    setGradeValue(opt);
+                                    setGradeOpen(false);
+                                  }}
+                                >
+                                  {opt}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <label htmlFor="email" className="text-xs text-muted">Email Address</label>
@@ -61,10 +95,38 @@ const Register = () => {
                       <input id="dob" className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm" placeholder="dd/mm/yyyy" />
                     </div>
                     <div>
-                      <label htmlFor="gender" className="text-xs text-muted">Gender</label>
-                      <select id="gender" className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm text-muted">
-                        <option>Select Gender</option>
-                      </select>
+                      <label id="registerGenderLabel" className="text-xs text-muted">Gender</label>
+                      <div className="relative mt-1" tabIndex={0} onBlur={() => setGenderOpen(false)}>
+                        <button
+                          type="button"
+                          className="w-full rounded-md border border-default px-3 py-2 text-sm text-left"
+                          onClick={() => setGenderOpen((o) => !o)}
+                          aria-haspopup="listbox"
+                          aria-expanded={genderOpen}
+                          aria-labelledby="registerGenderLabel"
+                        >
+                          {genderValue}
+                        </button>
+                        {genderOpen && (
+                          <ul className="absolute z-10 mt-1 w-full rounded-md border border-accent bg-accent text-on-accent text-sm shadow" role="listbox">
+                            {genderOptions.map((opt) => (
+                              <li key={opt}>
+                                <button
+                                  type="button"
+                                  className="w-full text-left px-3 py-2 hover:bg-black/80"
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    setGenderValue(opt);
+                                    setGenderOpen(false);
+                                  }}
+                                >
+                                  {opt}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                   </div>
 
