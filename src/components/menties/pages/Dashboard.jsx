@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import topRightIcon from '../assets/Vector (1).png';
+import topRightIcon from '../../assets/Vector (1).png';
 
 const recommended = [
   {

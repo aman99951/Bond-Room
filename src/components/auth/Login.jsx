@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/i.png';
 
 const Login = () => {
+  const [roleValue, setRoleValue] = useState('Student');
+  const [roleOpen, setRoleOpen] = useState(false);
+  const roleOptions = ['Student', 'Mentor'];
+  const navigate = useNavigate();
+
+  const handleRoleSelect = (nextRole) => {
+    setRoleValue(nextRole);
+    setRoleOpen(false);
+    try {
+      localStorage.setItem('userRole', nextRole === 'Mentor' ? 'mentors' : 'menties');
+    } catch {
+      // ignore storage errors
+    }
+  };
   return (
     <div className="min-h-screen bg-surface text-primary flex flex-col">
       <TopAuth />
@@ -32,6 +46,37 @@ const Login = () => {
 
                 <form className="mt-6 space-y-4">
                   <div>
+                    <label id="loginRoleLabel" className="text-xs text-muted">Login as</label>
+                    <div className="relative mt-1" tabIndex={0} onBlur={() => setRoleOpen(false)}>
+                      <button
+                        type="button"
+                        className="w-full rounded-md border border-default px-3 py-2 text-sm text-left"
+                        onClick={() => setRoleOpen((o) => !o)}
+                        aria-haspopup="listbox"
+                        aria-expanded={roleOpen}
+                        aria-labelledby="loginRoleLabel"
+                      >
+                        {roleValue}
+                      </button>
+                      {roleOpen && (
+                        <ul className="absolute z-10 mt-1 w-full rounded-md border border-default bg-surface text-primary text-sm shadow" role="listbox">
+                          {roleOptions.map((opt) => (
+                            <li key={opt}>
+                              <button
+                                type="button"
+                                className="w-full text-left px-3 py-2 hover:bg-muted"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => handleRoleSelect(opt)}
+                              >
+                                {opt}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                  <div>
                     <label htmlFor="loginEmail" className="text-xs text-muted">Email Address</label>
                     <input
                       id="loginEmail"
@@ -49,7 +94,18 @@ const Login = () => {
                       placeholder="********"
                     />
                   </div>
-                  <button type="button" className="w-full rounded-md bg-accent text-on-accent py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
+                  <button
+                    type="button"
+                    className="w-full rounded-md bg-accent text-on-accent py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
+                    onClick={() => {
+                      try {
+                        localStorage.setItem('userRole', roleValue === 'Mentor' ? 'mentors' : 'menties');
+                      } catch {
+                        // ignore storage errors
+                      }
+                      navigate(roleValue === 'Mentor' ? '/mentor-impact-dashboard' : '/dashboard');
+                    }}
+                  >
                     Login
                   </button>
                 </form>

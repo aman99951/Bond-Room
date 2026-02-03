@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/i.png';
-import { navRoutes } from '../../config/routes';
+import { getRoutesForLayout } from '../../config/routes';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [showLogout, setShowLogout] = useState(false);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const role = (() => {
+    if (pathname.startsWith('/mentor-')) return 'mentors';
+    try {
+      return localStorage.getItem('userRole') || 'menties';
+    } catch {
+      return 'menties';
+    }
+  })();
+  const navRoutes = getRoutesForLayout(role);
 
   const handleLogout = () => {
     try {
@@ -20,7 +30,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={onClose} />
+        <div className="fixed inset-0 bg-[#5D3699]/40 z-40 md:hidden" onClick={onClose} />
       )}
       <aside
         className={`w-full md:w-72 border-b md:border-r border-gray-100 bg-surface md:h-screen z-50 overflow-y-auto ${
@@ -132,7 +142,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         <button className="mt-4 text-xs text-muted underline">Rematch / Refresh Suggestions</button>
       </div>
       {showLogout && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60]">
+        <div className="fixed inset-0 bg-[#5D3699]/40 flex items-center justify-center z-[60]">
           <div className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-lg">
             <h2 className="text-lg font-semibold text-primary">Log out?</h2>
             <p className="mt-2 text-sm text-muted">Are you sure you want to log out of Bond Room?</p>

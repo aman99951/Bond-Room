@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import logo from '../assets/i.png';
+import logo from '../assets/Logo.png';
 
 const TopAuth = () => {
   const { pathname } = useLocation();
@@ -10,10 +10,7 @@ const TopAuth = () => {
     <header className="border-b border-gray-100">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-20 h-14 sm:h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent">
-            <img src={logo} alt="Bond Room" className="h-4 w-4" />
-          </span>
-          <span className="text-sm font-semibold">Bond Room</span>
+          <img src={logo} alt="Bond Room" className="h-9 w-auto" />
         </div>
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted">
           <a href="#" className="hover:text-primary">About</a>

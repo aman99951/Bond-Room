@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import Register from './auth/Register';
+import MentorRegister from './auth/MentorRegister';
 import Login from './auth/Login';
 import VerifyParent from './auth/VerifyParent';
 import NeedsAssessment from './auth/NeedsAssessment';
@@ -11,15 +12,25 @@ import NeedsAssessmentQ3 from './auth/NeedsAssessmentQ3';
 import NeedsAssessmentQ4 from './auth/NeedsAssessmentQ4';
 import NeedsAssessmentQ5 from './auth/NeedsAssessmentQ5';
 import MainLayout from './MainLayout';
-import Dashboard from './pages/Dashboard';
-import MySessions from './pages/MySessions';
-import Mentors from './pages/Mentors';
-import Profile from './pages/Profile';
-import MentorDetails from './pages/MentorDetails';
-import BookSession from './pages/BookSession';
-import BookingSuccess from './pages/BookingSuccess';
-import Feedback from './pages/Feedback';
-import MentorProfile from './pages/MentorProfile';
+import Dashboard from './menties/pages/Dashboard';
+import MySessions from './menties/pages/MySessions';
+import Mentors from './menties/pages/Mentors';
+import Profile from './menties/pages/Profile';
+import MentorDetails from './menties/pages/MentorDetails';
+import BookSession from './menties/pages/BookSession';
+import BookingSuccess from './menties/pages/BookingSuccess';
+import Feedback from './menties/pages/Feedback';
+import MentorProfile from './menties/pages/MentorProfile';
+import MentorVerifyIdentity from './mentors/pages/VerifyIdentity';
+import MentorVerifyContact from './mentors/pages/VerifyContact';
+import MentorOnboardingStatus from './mentors/pages/OnboardingStatus';
+import MentorTrainingModules from './mentors/pages/TrainingModules';
+import MentorTrainingBoundaries from './mentors/pages/TrainingBoundaries';
+import MentorImpactDashboard from './mentors/pages/ImpactDashboard';
+import MentorMySessions from './mentors/pages/MySessions';
+import MentorSessionCompleted from './mentors/pages/SessionCompleted';
+import MentorImpact from './mentors/pages/Impact';
+import LandingPage from './LandingPage';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -45,9 +56,15 @@ const AppLayout = () => {
     <Router>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/mentor-register" element={<MentorRegister />} />
+        <Route path="/mentor-verify-identity" element={<MentorVerifyIdentity />} />
+        <Route path="/mentor-verify-contact" element={<MentorVerifyContact />} />
+        <Route path="/mentor-onboarding-status" element={<MentorOnboardingStatus />} />
+        <Route path="/mentor-training-modules" element={<MentorTrainingModules />} />
+        <Route path="/mentor-training-boundaries" element={<MentorTrainingBoundaries />} />
         <Route path="/verify-parent" element={<VerifyParent />} />
         <Route path="/needs-assessment" element={<NeedsAssessment />} />
         <Route path="/needs-assessment/q2" element={<NeedsAssessmentQ2 />} />
@@ -64,6 +81,11 @@ const AppLayout = () => {
         <Route path="booking-success" element={<BookingSuccess />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="mentor-profile" element={<MentorProfile />} />
+        <Route path="mentor-impact-dashboard" element={<MentorImpactDashboard />} />
+        <Route path="mentor-dashboard" element={<MentorImpactDashboard />} />
+        <Route path="mentor-impact" element={<MentorImpact />} />
+        <Route path="mentor-sessions" element={<MentorMySessions />} />
+        <Route path="mentor-session-completed" element={<MentorSessionCompleted />} />
       </Route>
         <Route path="*" element={<Navigate to="/register" replace />} />
       </Routes>

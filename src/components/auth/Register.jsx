@@ -1,50 +1,102 @@
 import React, { useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import { Link } from 'react-router-dom';
-import logo from '../assets/i.png';
+import { Link, useNavigate } from 'react-router-dom';
+import leftside from '../assets/Leftside.png';
 
 const Register = () => {
   const [gradeOpen, setGradeOpen] = useState(false);
   const [gradeValue, setGradeValue] = useState('Select');
   const [genderOpen, setGenderOpen] = useState(false);
   const [genderValue, setGenderValue] = useState('Select Gender');
+  const [roleValue, setRoleValue] = useState('Student');
+  const [roleOpen, setRoleOpen] = useState(false);
+  const navigate = useNavigate();
   const gradeOptions = ['9th Grade', '10th Grade', '11th Grade', '12th Grade'];
   const genderOptions = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
+  const roleOptions = ['Student', 'Mentor'];
+
+  const handleRoleSelect = (nextRole) => {
+    setRoleValue(nextRole);
+    setRoleOpen(false);
+    try {
+      localStorage.setItem('userRole', nextRole === 'Mentor' ? 'mentors' : 'menties');
+    } catch {
+      // ignore storage errors
+    }
+    if (nextRole === 'Mentor') {
+      navigate('/mentor-register');
+    }
+  };
   return (
-    <div className="min-h-screen bg-surface text-primary flex flex-col">
+    <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
       <TopAuth />
 
       <main className="flex-1">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-20 py-8 sm:py-10">
-          <div className="border border-default rounded-2xl overflow-hidden bg-surface shadow-sm">
-            <div className="grid md:grid-cols-2">
-              <div className="bg-muted p-8 sm:p-10 flex flex-col items-center justify-center text-center">
-                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-accent flex items-center justify-center">
-                  <img src={logo} alt="Bond Room" className="h-6 w-6" />
-                </div>
-                <h3 className="mt-6 sm:mt-8 text-base font-semibold text-secondary">Find Your Safe Space</h3>
-                <p className="mt-2 text-sm text-muted max-w-xs">
-                  Connect with mentors who understand your journey.
-                </p>
+          <div className="border border-[#e6e2f1] rounded-2xl overflow-hidden bg-white shadow-sm">
+            <div className="grid md:grid-cols-[1.05fr_1fr]">
+              <div className="hidden md:block bg-[#f8f6fb]">
+                <img
+                  src={leftside}
+                  alt="Find your safe space"
+                  className="h-full w-full object-cover"
+                />
               </div>
 
-              <div className="p-6 sm:p-8 lg:p-10">
-                <div className="inline-flex items-center rounded-full bg-muted text-xs text-muted px-3 py-1">
+              <div className="p-6 sm:p-8 lg:p-10 bg-[#f7f5fa]">
+                <div className="inline-flex items-center rounded-full bg-[#ede7f6] text-xs text-[#6b4eff] px-3 py-1 font-medium">
                   Step 1 of 3
                 </div>
-                <h2 className="mt-3 text-lg sm:text-xl font-semibold text-primary">Create your account</h2>
-                <p className="mt-1 text-sm text-muted">Join a community dedicated to student well-being.</p>
+                <h2 className="mt-3 text-lg sm:text-2xl font-semibold text-[#1f2937]">
+                  Create your Bond Room account
+                </h2>
+                <p className="mt-1 text-sm text-[#6b7280]">You don&apos;t have to carry this alone.</p>
+                <p className="mt-4 text-sm text-[#6b7280]">
+                  Preparing for exams like JEE, NEET, CLAT, or board exams can feel overwhelming.
+                  Bond Room connects you with trusted elders who listen—without judgment or pressure.
+                </p>
 
                 <form className="mt-6 space-y-4">
+                  <div>
+                    <label id="registerRoleLabel" className="text-xs text-muted">Registering as</label>
+                    <div className="relative mt-1" tabIndex={0} onBlur={() => setRoleOpen(false)}>
+                      <button
+                        type="button"
+                        className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm text-left"
+                        onClick={() => setRoleOpen((o) => !o)}
+                        aria-haspopup="listbox"
+                        aria-expanded={roleOpen}
+                        aria-labelledby="registerRoleLabel"
+                      >
+                        {roleValue}
+                      </button>
+                      {roleOpen && (
+                        <ul className="absolute z-10 mt-1 w-full rounded-md border border-default bg-surface text-primary text-sm shadow" role="listbox">
+                          {roleOptions.map((opt) => (
+                            <li key={opt}>
+                              <button
+                                type="button"
+                                className="w-full text-left px-3 py-2 hover:bg-muted"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => handleRoleSelect(opt)}
+                              >
+                                {opt}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="firstName" className="text-xs text-muted">First name</label>
-                      <input id="firstName" className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm" placeholder="e.g. Priya" />
+                      <input id="firstName" className="mt-1 w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm" placeholder="e.g. Priya" />
                     </div>
                     <div>
                       <label htmlFor="lastName" className="text-xs text-muted">Last name</label>
-                      <input id="lastName" className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm" placeholder="e.g. Sharma" />
+                      <input id="lastName" className="mt-1 w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm" placeholder="e.g. Sharma" />
                     </div>
                   </div>
 
@@ -54,7 +106,7 @@ const Register = () => {
                       <div className="relative mt-1" tabIndex={0} onBlur={() => setGradeOpen(false)}>
                         <button
                           type="button"
-                          className="w-full rounded-md border border-default px-3 py-2 text-sm text-left"
+                          className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm text-left"
                           onClick={() => setGradeOpen((o) => !o)}
                           aria-haspopup="listbox"
                           aria-expanded={gradeOpen}
@@ -68,7 +120,7 @@ const Register = () => {
                               <li key={opt}>
                                 <button
                                   type="button"
-                                  className="w-full text-left px-3 py-2 hover:bg-black/80"
+                                  className="w-full text-left px-3 py-2 hover:bg-[#5D3699]/80"
                                   onMouseDown={(e) => e.preventDefault()}
                                   onClick={() => {
                                     setGradeValue(opt);
@@ -85,21 +137,21 @@ const Register = () => {
                     </div>
                     <div>
                       <label htmlFor="email" className="text-xs text-muted">Email Address</label>
-                      <input id="email" type="email" className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm" placeholder="student@example.com" />
+                      <input id="email" type="email" className="mt-1 w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm" placeholder="student@example.com" />
                     </div>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="dob" className="text-xs text-muted">Date of Birth</label>
-                      <input id="dob" className="mt-1 w-full rounded-md border border-default px-3 py-2 text-sm" placeholder="dd/mm/yyyy" />
+                      <input id="dob" className="mt-1 w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm" placeholder="dd/mm/yyyy" />
                     </div>
                     <div>
                       <label id="registerGenderLabel" className="text-xs text-muted">Gender</label>
                       <div className="relative mt-1" tabIndex={0} onBlur={() => setGenderOpen(false)}>
                         <button
                           type="button"
-                          className="w-full rounded-md border border-default px-3 py-2 text-sm text-left"
+                          className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm text-left"
                           onClick={() => setGenderOpen((o) => !o)}
                           aria-haspopup="listbox"
                           aria-expanded={genderOpen}
@@ -113,7 +165,7 @@ const Register = () => {
                               <li key={opt}>
                                 <button
                                   type="button"
-                                  className="w-full text-left px-3 py-2 hover:bg-black/80"
+                                  className="w-full text-left px-3 py-2 hover:bg-[#5D3699]/80"
                                   onMouseDown={(e) => e.preventDefault()}
                                   onClick={() => {
                                     setGenderValue(opt);
@@ -130,15 +182,17 @@ const Register = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-default p-3">
+                  <div className="rounded-lg border border-[#d7d0e2] bg-white p-3">
                     <label className="flex items-start gap-2 text-sm text-secondary">
                       <input id="parentMobileOpt" type="checkbox" className="mt-1" />
-                      <span>Parent's Mobile Number</span>
+                      <span>Parent / Guardian Consent</span>
                     </label>
-                    <p className="text-xs text-muted mt-1">Required for parental consent verification.</p>
+                    <p className="text-xs text-muted mt-1">
+                      We&apos;ll send an OTP to inform your parent/guardian that you&apos;re joining Bond Room.
+                    </p>
                     <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                      <div className="w-full sm:w-20 rounded-md border border-default px-3 py-2 text-sm text-muted" aria-hidden="true">+91</div>
-                      <input id="parentMobile" className="flex-1 rounded-md border border-default px-3 py-2 text-sm" placeholder="98765 43210" aria-label="Parent mobile number" />
+                      <div className="w-full sm:w-20 rounded-md border border-[#d7d0e2] bg-[#f6f4fb] px-3 py-2 text-sm text-muted" aria-hidden="true">+91</div>
+                      <input id="parentMobile" className="flex-1 rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm" placeholder="98765 43210" aria-label="Parent mobile number" />
                     </div>
                   </div>
 
@@ -152,7 +206,7 @@ const Register = () => {
 
                   <Link
                     to="/verify-parent"
-                    className="block w-full rounded-md bg-accent text-on-accent py-2.5 text-sm text-center"
+                    className="block w-full rounded-md bg-[#5b2c91] text-white py-2.5 text-sm text-center"
                   >
                     Continue
                   </Link>
