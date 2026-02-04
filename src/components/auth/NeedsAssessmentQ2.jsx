@@ -2,18 +2,32 @@ import React from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
 import { Link } from 'react-router-dom';
-import selectedIcon from '../assets/Vector.png';
 
 const Choice = ({ label, selected }) => {
   return (
     <button
       type="button"
-      className={`relative h-12 sm:h-14 rounded-lg border px-4 text-sm text-secondary flex items-center justify-center ${
-        selected ? 'border-accent shadow-sm' : 'border-default'
+      className={`relative w-[240px] h-[69px] rounded-[12px] border-2 px-[59px] py-[22px] text-sm text-secondary flex items-center justify-center ${
+        selected ? 'border-[#41a34a] bg-[#f2faf3] shadow-sm' : 'border-default'
       }`}
     >
-      {label}
-      {selected && <img src={selectedIcon} alt="" className="absolute right-3 h-4 w-4" />}
+      <span
+        className="whitespace-nowrap"
+        style={{
+          fontFamily: 'DM Sans',
+          fontSize: '16px',
+          lineHeight: '24px',
+          fontWeight: selected ? 600 : 400,
+          textAlign: 'center',
+        }}
+      >
+        {label}
+      </span>
+      {selected && (
+        <span className="absolute right-3 h-4 w-4 rounded-full bg-[#41a34a] text-white text-[10px] flex items-center justify-center">
+          {'\u2713'}
+        </span>
+      )}
     </button>
   );
 };
@@ -27,22 +41,40 @@ const NeedsAssessmentQ2 = () => {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-20 py-10 sm:py-14">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center justify-between text-xs text-muted">
-              <span>Step 3 of 3: Needs Assessment</span>
-              <span>Question 2 of 5</span>
+              <span style={{ fontFamily: 'DM Sans', fontSize: '12px', lineHeight: '24px', fontWeight: 400, textAlign: 'center' }}>
+                Step 3 of 3: Needs Assessment
+              </span>
+              <span style={{ fontFamily: 'DM Sans', fontSize: '12px', lineHeight: '24px', fontWeight: 400, textAlign: 'center' }}>
+                Question 2 of 5
+              </span>
             </div>
             <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
               <div className="h-1.5 w-2/5 rounded-full bg-accent"></div>
             </div>
 
             <div className="text-center mt-10">
-              <h2 className="text-xl sm:text-2xl font-semibold">What’s been causing this feeling?</h2>
+              <h2
+                className="text-center text-[#1f2937]"
+                style={{ fontFamily: 'Manrope', fontSize: '36px', lineHeight: '45.5px', fontWeight: 600 }}
+              >
+                What’s been causing this feeling?
+              </h2>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center">
               <Choice label="Exam Pressure" />
               <Choice label="Parent Expectations" selected />
               <Choice label="Friend Issues" />
-              <Choice label="Future Anxiety (Career/College)" />
+              <Choice
+                label={(
+                  <>
+                    Future Anxiety{' '}
+                    <span style={{ fontFamily: 'DM Sans', fontSize: '12px', lineHeight: '24px', fontWeight: 400, textAlign: 'center' }}>
+                      (Career/College)
+                    </span>
+                  </>
+                )}
+              />
               <Choice label="Concentration Struggles" />
               <Choice label="Study Struggles" />
               <div className="sm:col-start-2">

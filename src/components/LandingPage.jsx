@@ -1,12 +1,12 @@
 import './LandingPage.css';
+import logo from './assets/Logo.png';
 
 const LandingPage = () => {
   return (
     <div className="landing">
       <header className="landing__header">
         <div className="landing__brand">
-          <span className="landing__logo">Bond</span>
-          <span className="landing__logo-dot">.</span>
+          <img src={logo} alt="Bond Room" className="landing__logo" />
         </div>
         <nav className="landing__nav">
           <a href="#about">About</a>
@@ -15,48 +15,43 @@ const LandingPage = () => {
         </nav>
         <div className="landing__actions">
           <a className="btn btn--ghost" href="/login">Log in</a>
-          <a className="btn btn--primary" href="/register">Start now</a>
+          <a className="btn btn--primary" href="/register">Get Started</a>
         </div>
       </header>
 
       <main>
         <section className="hero">
           <div className="hero__content">
-            <p className="hero__eyebrow">Guided support for students</p>
-            <h1>Guided Support for Students from Experienced Mentors</h1>
+            <h1>
+              Guided Support for
+              <br />
+              Students from
+              <br />
+              <span className="hero__title-accent">Experienced</span>
+              <br />
+              <span className="hero__title-accent">Mentors</span>
+            </h1>
             <p className="hero__lead">
-              A safe, structured space where students can grow academically and emotionally
-              with trusted mentors who walk the path with them.
+              A safe, structured space where students can grow academically and emotionally with trusted mentors who
+              walk the path with them.
             </p>
             <div className="hero__cta">
-              <a className="btn btn--primary" href="/register">Get started</a>
-              <a className="btn btn--outline" href="/mentor-register">Become a mentor</a>
+              <a className="btn btn--primary" href="/register">Get Started</a>
+              <a className="btn btn--outline" href="/mentor-register">Become a Mentor</a>
             </div>
-            <div className="hero__trust">
-              <div>
-                <strong>1,200+</strong>
-                <span>students matched</span>
-              </div>
-              <div>
-                <strong>4.9/5</strong>
-                <span>mentor rating</span>
-              </div>
-              <div>
-                <strong>100%</strong>
-                <span>verified mentors</span>
-              </div>
-            </div>
+            <p className="hero__note">All mentors are verified and session activities are monitored for safety.</p>
           </div>
           <div className="hero__visual">
-            <div className="hero__image hero__image--large" />
-            <div className="hero__image hero__image--small" />
-            <div className="hero__bubble hero__bubble--top">
-              <p>We meet on your schedule.</p>
-              <span>Weekly progress check-ins</span>
-            </div>
+            <div className="hero__image hero__image--left" />
+            <div className="hero__image hero__image--right" />
             <div className="hero__bubble hero__bubble--bottom">
-              <p>Personalized guidance</p>
-              <span>Tailored to each student</span>
+              <div className="hero__bubble-tag">
+                <span className="hero__bubble-dot" />
+                Live Session
+              </div>
+              <div className="hero__bubble-quote">
+                &quot;It&apos;s normal to feel overwhelmed at this stage. Let&apos;s break it down into smaller steps together.&quot;
+              </div>
             </div>
           </div>
         </section>
@@ -70,45 +65,60 @@ const LandingPage = () => {
             <div className="flow__card">
               <span className="flow__icon">01</span>
               <h3>Listen</h3>
-              <p>We start by understanding goals, needs, and communication style.</p>
+              <p>Students share goals, challenges, and communication style.</p>
             </div>
             <div className="flow__card">
               <span className="flow__icon">02</span>
               <h3>Understand</h3>
-              <p>Mentors map a clear plan with milestones and parent visibility.</p>
+              <p>Mentors craft a tailored plan with checkpoints and clarity.</p>
             </div>
             <div className="flow__card">
               <span className="flow__icon">03</span>
               <h3>Guide</h3>
-              <p>Ongoing sessions build confidence, habits, and academic momentum.</p>
+              <p>Sessions build habits, confidence, and academic momentum.</p>
             </div>
           </div>
         </section>
 
         <section className="trust" id="safety">
           <div className="trust__copy">
-            <h2>Built on Trust, Experience, and Care</h2>
+            <h2>
+              Built on Trust,
+              <br />
+              Experience, and Care
+            </h2>
             <p>
-              Every mentor is background-checked, trained, and supported by our in-house
-              student success team.
+              Every mentor is background-checked, trained, and supported by our in-house student success team.
             </p>
           </div>
           <div className="trust__list">
             <div className="trust__item">
-              <h4>Safe &amp; Monitored Sessions</h4>
-              <p>Session logs, parent updates, and secure messaging included.</p>
+              <span className="trust__dot" />
+              <div>
+                <h4>Safe &amp; Monitored Sessions</h4>
+                <p>Session logs, parent updates, and secure messaging included.</p>
+              </div>
             </div>
             <div className="trust__item">
-              <h4>Mentors You Trust 24/7</h4>
-              <p>High-quality mentors vetted for experience and empathy.</p>
+              <span className="trust__dot" />
+              <div>
+                <h4>Mentors You Trust 24/7</h4>
+                <p>High-quality mentors vetted for experience and empathy.</p>
+              </div>
             </div>
             <div className="trust__item">
-              <h4>AI-Powered Matching</h4>
-              <p>We pair students with mentors based on goals and personality.</p>
+              <span className="trust__dot" />
+              <div>
+                <h4>AI-Powered Matching</h4>
+                <p>We pair students with mentors based on goals and personality.</p>
+              </div>
             </div>
             <div className="trust__item">
-              <h4>Student-Centered Experience</h4>
-              <p>Flexible scheduling, progress tracking, and clear outcomes.</p>
+              <span className="trust__dot" />
+              <div>
+                <h4>Student-Centered Experience</h4>
+                <p>Flexible scheduling, progress tracking, and clear outcomes.</p>
+              </div>
             </div>
           </div>
         </section>
@@ -120,10 +130,7 @@ const LandingPage = () => {
           </div>
           <div className="stories__grid">
             <article className="quote">
-              <p>
-                ‚ÄúBond helped my daughter regain her confidence and finally enjoy
-                learning again.‚Äù
-              </p>
+              <p>ìBond helped my daughter regain her confidence and finally enjoy learning again.î</p>
               <div className="quote__meta">
                 <span className="quote__avatar">A</span>
                 <div>
@@ -133,10 +140,7 @@ const LandingPage = () => {
               </div>
             </article>
             <article className="quote">
-              <p>
-                ‚ÄúThe mentor understood exactly how I learn. My grades improved
-                in just one semester.‚Äù
-              </p>
+              <p>ìThe mentor understood exactly how I learn. My grades improved in just one semester.î</p>
               <div className="quote__meta">
                 <span className="quote__avatar">J</span>
                 <div>
@@ -146,10 +150,7 @@ const LandingPage = () => {
               </div>
             </article>
             <article className="quote">
-              <p>
-                ‚ÄúWeekly updates kept us in the loop. The experience felt safe
-                and collaborative.‚Äù
-              </p>
+              <p>ìWeekly updates kept us in the loop. The experience felt safe and collaborative.î</p>
               <div className="quote__meta">
                 <span className="quote__avatar">R</span>
                 <div>
@@ -165,6 +166,7 @@ const LandingPage = () => {
           <div className="section__title section__title--left">
             <h2>Wisdom You Can See</h2>
             <p>Mentors who have guided students across academics and life skills.</p>
+            <a className="gallery__link" href="/mentors">Meet Our Mentors</a>
           </div>
           <div className="gallery__grid">
             <article className="mentor-card">
@@ -205,8 +207,7 @@ const LandingPage = () => {
 
       <footer className="landing__footer">
         <div className="landing__brand">
-          <span className="landing__logo">Bond</span>
-          <span className="landing__logo-dot">.</span>
+          <img src={logo} alt="Bond Room" className="landing__logo" />
         </div>
         <p>Guided mentoring for every student.</p>
         <div className="landing__footer-links">

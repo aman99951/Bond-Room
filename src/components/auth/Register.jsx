@@ -33,10 +33,10 @@ const Register = () => {
       <TopAuth />
 
       <main className="flex-1">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-20 py-8 sm:py-10">
-          <div className="border border-[#e6e2f1] rounded-2xl overflow-hidden bg-white shadow-sm">
-            <div className="grid md:grid-cols-[1.05fr_1fr]">
-              <div className="hidden md:block bg-[#f8f6fb]">
+        <div className="w-full flex justify-center px-4 sm:px-6 py-6 sm:py-10">
+          <div className="border border-[#e6e2f1] rounded-b-[12px] overflow-hidden bg-white shadow-sm w-full max-w-[1266px] md:h-[790px]">
+            <div className="grid md:grid-cols-[591px_675px] md:h-[788px]">
+              <div className="hidden md:block bg-[#f8f6fb] w-[591px] h-[788px]">
                 <img
                   src={leftside}
                   alt="Find your safe space"
@@ -44,7 +44,7 @@ const Register = () => {
                 />
               </div>
 
-              <div className="p-6 sm:p-8 lg:p-10 bg-[#f7f5fa]">
+              <div className="p-6 sm:p-8 lg:p-10 bg-[#f7f5fa] w-full md:w-[675px] md:h-[788px]">
                 <div className="inline-flex items-center rounded-full bg-[#ede7f6] text-xs text-[#6b4eff] px-3 py-1 font-medium">
                   Step 1 of 3
                 </div>
@@ -58,37 +58,6 @@ const Register = () => {
                 </p>
 
                 <form className="mt-6 space-y-4">
-                  <div>
-                    <label id="registerRoleLabel" className="text-xs text-muted">Registering as</label>
-                    <div className="relative mt-1" tabIndex={0} onBlur={() => setRoleOpen(false)}>
-                      <button
-                        type="button"
-                        className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm text-left"
-                        onClick={() => setRoleOpen((o) => !o)}
-                        aria-haspopup="listbox"
-                        aria-expanded={roleOpen}
-                        aria-labelledby="registerRoleLabel"
-                      >
-                        {roleValue}
-                      </button>
-                      {roleOpen && (
-                        <ul className="absolute z-10 mt-1 w-full rounded-md border border-default bg-surface text-primary text-sm shadow" role="listbox">
-                          {roleOptions.map((opt) => (
-                            <li key={opt}>
-                              <button
-                                type="button"
-                                className="w-full text-left px-3 py-2 hover:bg-muted"
-                                onMouseDown={(e) => e.preventDefault()}
-                                onClick={() => handleRoleSelect(opt)}
-                              >
-                                {opt}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="firstName" className="text-xs text-muted">First name</label>
@@ -184,7 +153,7 @@ const Register = () => {
 
                   <div className="rounded-lg border border-[#d7d0e2] bg-white p-3">
                     <label className="flex items-start gap-2 text-sm text-secondary">
-                      <input id="parentMobileOpt" type="checkbox" className="mt-1" />
+                      <input id="parentMobileOpt" type="checkbox" className="mt-1 accent-[#5b2c91]" />
                       <span>Parent / Guardian Consent</span>
                     </label>
                     <p className="text-xs text-muted mt-1">
@@ -197,7 +166,7 @@ const Register = () => {
                   </div>
 
                   <label className="flex items-start gap-2 text-sm text-secondary">
-                    <input id="recordConsent" type="checkbox" className="mt-1" />
+                    <input id="recordConsent" type="checkbox" className="mt-1 accent-[#5b2c91]" />
                     <span>
                       I Agree to Session Recording for Safety
                       <span className="block text-xs text-muted">All sessions are recorded to ensure student safety and quality of mentorship. Learn more.</span>

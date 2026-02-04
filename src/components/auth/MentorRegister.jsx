@@ -44,7 +44,7 @@ const MentorRegister = () => {
       <TopAuth />
 
       <main className="flex-1">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-20 py-8 sm:py-10">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-20 py-8 sm:py-10">
           <div className="border border-[#e6e2f1] rounded-2xl overflow-hidden bg-white shadow-sm">
             <div className="grid md:grid-cols-[1.05fr_1fr]">
               <div className="hidden md:block bg-[#f8f6fb]">

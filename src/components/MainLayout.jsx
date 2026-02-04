@@ -33,13 +33,11 @@ const MainLayout = ({ currentUser, onSignOut }) => {
         <div className="flex-1 flex flex-col md:flex-row md:overflow-hidden">
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <main className="flex-1 md:overflow-y-auto" data-scroll-container="true" tabIndex={0} role="main">
-            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24">
+            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
               <Outlet />
             </div>
+            <BottomAuth />
           </main>
-        </div>
-        <div className="sticky bottom-0 z-30">
-          <BottomAuth />
         </div>
       </div>
       {/* <OrderBot /> */}

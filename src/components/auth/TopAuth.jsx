@@ -7,24 +7,27 @@ const TopAuth = () => {
   const isLogin = pathname === '/login';
 
   return (
-    <header className="border-b border-gray-100">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-20 h-14 sm:h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img src={logo} alt="Bond Room" className="h-9 w-auto" />
+    <header className="border-b border-gray-100 bg-white">
+      <div className="max-w-full mx-auto px-6 lg:px-[88px] h-[78px] flex items-center justify-between">
+        <div className="flex items-center">
+          <img
+            src={logo}
+            alt="Bond Room"
+            className="h-[49.7903px] w-[56.9998px] object-contain"
+          />
         </div>
-        <nav className="hidden md:flex items-center gap-6 text-sm text-muted">
-          <a href="#" className="hover:text-primary">About</a>
-          <a href="#" className="hover:text-primary">Safety</a>
-          <a href="#" className="hover:text-primary">Contact</a>
-        </nav>
-        <div className="flex items-center gap-3 sm:gap-4 text-sm">
-          <a href="#" className="hidden sm:inline text-muted hover:text-primary">Help</a>
+        <div className="flex items-center gap-[47px] text-[13px] text-[#36323D]">
+          <nav className="hidden md:flex items-center gap-[47px]">
+            <a href="#" className="hover:text-primary">About</a>
+            <a href="#" className="hover:text-primary">Contact</a>
+            <a href="#" className="hover:text-primary">Help</a>
+          </nav>
           {isLogin ? (
-            <Link to="/register" className="px-3 sm:px-4 py-1.5 rounded-md bg-accent text-on-accent text-sm">
+            <Link to="/register" className="px-4 py-1.5 rounded-md bg-accent text-on-accent text-[13px]">
               Register
             </Link>
           ) : (
-            <Link to="/login" className="px-3 sm:px-4 py-1.5 rounded-md bg-accent text-on-accent text-sm">
+            <Link to="/login" className="px-4 py-1.5 rounded-md bg-accent text-on-accent text-[13px]">
               Login
             </Link>
           )}
