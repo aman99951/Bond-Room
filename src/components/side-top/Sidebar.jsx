@@ -8,14 +8,18 @@ const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const role = (() => {
-    if (pathname.startsWith('/mentor-')) return 'mentors';
     try {
-      return localStorage.getItem('userRole') || 'menties';
+      const storedRole = localStorage.getItem('userRole');
+      if (storedRole) return storedRole;
     } catch {
-      return 'menties';
+      // ignore storage errors
     }
+    const matchedRoute = getRoutesForLayout().find((route) => route.path === pathname);
+    if (matchedRoute?.roles?.[0]) return matchedRoute.roles[0];
+    if (pathname.startsWith('/mentor-')) return 'mentors';
+    return 'menties';
   })();
-  const navRoutes = getRoutesForLayout(role);
+  const navRoutes = getRoutesForLayout(role, { sidebarOnly: true });
 
   const handleLogout = () => {
     try {

@@ -130,7 +130,9 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-            <button className="mt-3 sm:mt-4 w-full rounded-md bg-[#5D3699] text-white py-2 text-xs">View Profile</button>
+            <Link to="/mentor-profile" className="mt-3 sm:mt-4 w-full rounded-md bg-[#5D3699] text-white py-2 text-xs text-center">
+              View Profile
+            </Link>
           </div>
         ))}
       </div>
