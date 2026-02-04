@@ -39,7 +39,21 @@ const LandingPage = () => {
               <a className="btn btn--primary" href="/register">Get Started</a>
               <a className="btn btn--outline" href="/mentor-register">Become a Mentor</a>
             </div>
-            <p className="hero__note">All mentors are verified and session activities are monitored for safety.</p>
+            <p className="hero__note">
+              <span className="hero__note-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="hero__note-svg">
+                  <path
+                    d="M7 10V8a5 5 0 0 1 10 0v2"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.6" fill="none" />
+                </svg>
+              </span>
+              All mentors are verified and session activities are monitored for safety.
+            </p>
           </div>
           <div className="hero__visual">
             <div className="hero__image hero__image--left" />

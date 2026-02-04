@@ -122,13 +122,18 @@
   gap: 8px;
 }
 
-.hero__note::before {
-  content: "";
+.hero__note-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 16px;
   height: 16px;
-  border-radius: 4px;
-  background: #5d3699;
-  box-shadow: inset 0 0 0 2px #5d3699;
+  color: #5d3699;
+}
+
+.hero__note-svg {
+  width: 16px;
+  height: 16px;
 }
 
 .hero__visual {
