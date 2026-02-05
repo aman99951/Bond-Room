@@ -26,7 +26,7 @@ const MentorRegister = () => {
 
       <main className="flex-1 bg-transparent">
         <div className="w-full flex justify-center px-4 sm:px-6 lg:px-4 py-4 sm:py-6 lg:py-10 bg-transparent">
-          <div className="rounded-[12px] overflow-hidden w-full max-w-[1266px] border border-[#1f1f28] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] xl:min-h-[820px]">
+          <div className="rounded-[12px] overflow-hidden w-full max-w-[1266px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] xl:min-h-[820px]">
             <div className="grid grid-cols-1 xl:grid-cols-[591px_675px] h-full">
               
               {/* Left Side - Desktop Only */}
@@ -107,7 +107,7 @@ const MentorRegister = () => {
                         </label>
                         <input 
                           id="firstName" 
-                          className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
+                          className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
                           placeholder="e.g. Priya" 
                         />
                       </div>
@@ -117,7 +117,7 @@ const MentorRegister = () => {
                         </label>
                         <input 
                           id="lastName" 
-                          className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
+                          className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
                           placeholder="e.g. Sharma" 
                         />
                       </div>
@@ -132,7 +132,7 @@ const MentorRegister = () => {
                         <input 
                           id="email" 
                           type="email" 
-                          className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
+                          className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
                           placeholder="name@example.com" 
                         />
                       </div>
@@ -143,7 +143,7 @@ const MentorRegister = () => {
                         <input 
                           id="mobile" 
                           type="tel"
-                          className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
+                          className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
                           placeholder="+91 98765 43210" 
                         />
                       </div>
@@ -158,7 +158,7 @@ const MentorRegister = () => {
                         <input 
                           id="dob" 
                           type="date"
-                          className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
+                          className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
                           placeholder="dd/mm/yyyy" 
                         />
                       </div>
@@ -186,7 +186,7 @@ const MentorRegister = () => {
                       </label>
                       <input 
                         id="cityState" 
-                        className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
+                        className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
                         placeholder="e.g. Tiruchirappalli, Tamil Nadu" 
                       />
                     </div>
@@ -200,7 +200,7 @@ const MentorRegister = () => {
                         id="languages"
                         multiple
                         size={3}
-                        className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                        className="w-full rounded-md border bg-white px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
                         value={selectedLanguages}
                         onChange={(e) => handleMultiSelect(e, setSelectedLanguages)}
                       >
@@ -226,7 +226,7 @@ const MentorRegister = () => {
                         id="careAreas"
                         multiple
                         size={3}
-                        className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                        className="w-full rounded-md border bg-white px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
                         value={selectedCareAreas}
                         onChange={(e) => handleMultiSelect(e, setSelectedCareAreas)}
                       >
@@ -250,7 +250,7 @@ const MentorRegister = () => {
                       </label>
                       <input 
                         id="qualification" 
-                        className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
+                        className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all" 
                         placeholder="e.g. PhD in Psychology" 
                       />
                     </div>
@@ -263,7 +263,7 @@ const MentorRegister = () => {
                       <textarea
                         id="bio"
                         rows={3}
-                        className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all resize-none"
+                        className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all resize-none"
                         placeholder="Tell us a bit about your professional background..."
                       />
                     </div>
