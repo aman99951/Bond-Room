@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './side-top/Sidebar';
 import BottomAuth from './auth/BottomAuth';
-import logo from './assets/logo.png';
+import logo from '../assets/logo.png';
 // import OrderBot from '../components/OrderBot';
 
 const MainLayout = ({ currentUser, onSignOut }) => {
