@@ -1,4 +1,4 @@
-import logo from './assets/Logo.png';
+import logo from './assets/logo.png';
 import heroLeft from './assets/left.png';
 import heroRight from './assets/right.png';
 import { 

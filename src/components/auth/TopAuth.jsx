@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import logo from '../assets/Logo.png';
+import logo from '../assets/logo.png';
 
 const TopAuth = () => {
   const { pathname } = useLocation();

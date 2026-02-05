@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import logo from '../assets/Logo.png';
+import logo from '../assets/logo.png';
 import { getRoutesForLayout } from '../../config/routes';
 
 const Sidebar = ({ isOpen, onClose }) => {
