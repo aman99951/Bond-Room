@@ -52,6 +52,15 @@ body {
   color: var(--color-text);
 }
 
+select:focus {
+  outline-color: var(--color-accent);
+}
+
+select[multiple] option:checked {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
 @layer utilities {
   .bg-page { background-color: var(--color-bg); }
   .bg-surface { background-color: var(--color-surface); }

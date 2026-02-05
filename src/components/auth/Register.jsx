@@ -34,9 +34,9 @@ const Register = () => {
 
       <main className="flex-1">
         <div className="w-full flex justify-center px-4 sm:px-6 py-6 sm:py-10">
-          <div className="border border-[#e6e2f1] rounded-b-[12px] overflow-hidden bg-white shadow-sm w-full max-w-[1266px] md:h-[790px]">
-            <div className="grid md:grid-cols-[591px_675px] md:h-[788px]">
-              <div className="hidden md:block bg-[#f8f6fb] w-[591px] h-[788px]">
+          <div className="border border-[#e6e2f1] rounded-b-[12px] overflow-hidden bg-white shadow-sm w-full max-w-[1266px] xl:h-[790px]">
+            <div className="grid grid-cols-1 xl:grid-cols-[591px_675px] xl:h-[788px]">
+              <div className="hidden xl:block bg-[#f8f6fb] w-[591px] h-[788px]">
                 <img
                   src={leftside}
                   alt="Find your safe space"
@@ -44,7 +44,7 @@ const Register = () => {
                 />
               </div>
 
-              <div className="p-6 sm:p-8 lg:p-10 bg-[#f7f5fa] w-full md:w-[675px] md:h-[788px]">
+              <div className="p-6 sm:p-8 lg:p-10 bg-[#f7f5fa] w-full xl:w-[675px] xl:h-[788px]">
                 <div className="inline-flex items-center rounded-full bg-[#ede7f6] text-xs text-[#6b4eff] px-3 py-1 font-medium">
                   Step 1 of 3
                 </div>

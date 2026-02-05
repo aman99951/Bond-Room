@@ -29,7 +29,9 @@ import MentorTrainingBoundaries from './mentors/pages/TrainingBoundaries';
 import MentorImpactDashboard from './mentors/pages/ImpactDashboard';
 import MentorMySessions from './mentors/pages/MySessions';
 import MentorSessionCompleted from './mentors/pages/SessionCompleted';
-import MentorImpact from './mentors/pages/Impact';
+import MentorImpact from './mentors/pages/ImpactDashboard';
+import MentorAvailability from './mentors/pages/ManageAvailability';
+import MentorMyprofilePage from './mentors/pages/Myprofile';
 import LandingPage from './LandingPage';
 
 const ScrollToTop = () => {
@@ -86,6 +88,8 @@ const AppLayout = () => {
         <Route path="mentor-impact" element={<MentorImpact />} />
         <Route path="mentor-sessions" element={<MentorMySessions />} />
         <Route path="mentor-session-completed" element={<MentorSessionCompleted />} />
+        <Route path="mentor-availability" element={<MentorAvailability />} />
+        <Route path="mentor-myprofile" element={<MentorMyprofilePage />} />
       </Route>
         <Route path="*" element={<Navigate to="/register" replace />} />
       </Routes>

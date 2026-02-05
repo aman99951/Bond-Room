@@ -42,7 +42,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         }`}
       >
       <div className="px-5 py-5 flex items-center justify-between">
-        <img src={logo} alt="Bond Room" className="h-10 w-auto" />
+        <img src={logo} alt="Bond Room" className="w-[75px] h-[65.5px] object-contain" />
         <button
           className="md:hidden h-8 w-8 rounded-full bg-gray-100 border border-gray-100 flex items-center justify-center"
           onClick={onClose}
@@ -55,8 +55,12 @@ const Sidebar = ({ isOpen, onClose }) => {
       </div>
 
       <div className="px-5 pt-2 pb-4">
-        <div className="text-xs text-[#6b7280]">Good Morning</div>
-        <div className="text-sm font-semibold text-[#111827]">Rajeswari</div>
+        <div className="text-[#6b7280]" style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}>
+          Good Morning
+        </div>
+        <div className="text-[#111827]" style={{ fontFamily: 'DM Sans', fontSize: '20px', lineHeight: '28px', fontWeight: 600 }}>
+          Rajeswari
+        </div>
       </div>
 
       <nav className="px-4">
@@ -71,13 +75,15 @@ const Sidebar = ({ isOpen, onClose }) => {
                     if (onClose) onClose();
                   }}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
+                    `flex items-center gap-3 px-3 py-2 rounded-md ${
                       isActive ? 'bg-[#eef2ff] text-[#5b2c91]' : 'text-[#6b7280] hover:bg-gray-50'
                     }`
                   }
                 >
                   <Icon className="h-4 w-4 text-current" />
-                  <span>{item.label}</span>
+                  <span style={{ fontFamily: 'Inter', fontSize: '16px', lineHeight: '24px', fontWeight: 500 }}>
+                    {item.label}
+                  </span>
                 </NavLink>
               </li>
             );
@@ -100,40 +106,42 @@ const Sidebar = ({ isOpen, onClose }) => {
         </ul>
       </nav>
 
-      <div className="px-5 pt-5 mt-6">
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-          <div className="text-sm font-semibold text-[#111827]">Why these matches?</div>
-          <p className="mt-1 text-xs text-[#6b7280]">
-            Our AI analyzed your recent input to find mentors best suited to support your current needs.
-          </p>
+      {role !== 'mentors' && (
+        <div className="px-5 pt-5 mt-6">
+          <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <div className="text-sm font-semibold text-[#111827]">Why these matches?</div>
+            <p className="mt-1 text-xs text-[#6b7280]">
+              Our AI analyzed your recent input to find mentors best suited to support your current needs.
+            </p>
 
-          <div className="mt-3 space-y-2 text-xs text-[#6b7280]">
-            <div className="flex items-center gap-2">
-              <span className="h-4 w-4 text-current">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M12 8v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  <circle cx="12" cy="16" r="1" fill="currentColor" />
-                </svg>
-              </span>
-              <span>Language: English</span>
+            <div className="mt-3 space-y-2 text-xs text-[#6b7280]">
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 text-current">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M12 8v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    <circle cx="12" cy="16" r="1" fill="currentColor" />
+                  </svg>
+                </span>
+                <span>Language: English</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 text-current">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <span>Availability: Weekdays</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="h-4 w-4 text-current">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </span>
-              <span>Availability: Weekdays</span>
-            </div>
+
+            <button className="mt-3 text-xs text-[#5b2c91] underline">
+              Rematch / Refresh Suggestions
+            </button>
           </div>
-
-          <button className="mt-3 text-xs text-[#5b2c91] underline">
-            Rematch / Refresh Suggestions
-          </button>
         </div>
-      </div>
+      )}
       {showLogout && (
         <div className="fixed inset-0 bg-[#5D3699]/40 flex items-center justify-center z-[60]">
           <div className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-lg">

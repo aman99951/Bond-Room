@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './side-top/Sidebar';
 import BottomAuth from './auth/BottomAuth';
-import logo from './assets/i.png';
+import logo from './assets/logo.png';
 // import OrderBot from '../components/OrderBot';
 
 const MainLayout = ({ currentUser, onSignOut }) => {
@@ -22,7 +22,7 @@ const MainLayout = ({ currentUser, onSignOut }) => {
           </svg>
         </button>
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md ">
             <img src={logo} alt="Bond Room" className="h-4 w-4" />
           </span>
           <span className="text-sm font-semibold text-primary">Bond Room</span>
