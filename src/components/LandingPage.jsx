@@ -1,17 +1,41 @@
+import { useEffect } from 'react';
 import logo from './assets/logo.png';
 import heroLeft from './assets/left.png';
 import heroRight from './assets/right.png';
-import { 
-  ShieldCheck, 
-  Clock, 
-  Sparkles, 
+import mentorLeft from './assets/mentor-left.png';
+import plantPot from './assets/plant-pot-cropped.png';
+import avatarOne from './assets/avatar-1.jpg';
+import students from './assets/teach2.png';
+import {
+  ShieldCheck,
   Users,
-  ChevronRight 
+  Bot,
+  Smile,
+  ChevronRight,
+  Twitter,
+  Linkedin,
+  LockKeyhole,
+  Ear,
+  Brain,
+  Handshake,
 } from 'lucide-react';
+import './LandingPage.css';
 
 const LandingPage = () => {
+  useEffect(() => {
+    const previousBodyBackground = document.body.style.background;
+    const previousHtmlBackground = document.documentElement.style.background;
+    document.body.style.background = 'transparent';
+    document.documentElement.style.background = 'transparent';
+
+    return () => {
+      document.body.style.background = previousBodyBackground;
+      document.documentElement.style.background = previousHtmlBackground;
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white font-['DM_Sans'] text-gray-900">
+    <div className="landing-figma-root min-h-screen font-['DM_Sans'] text-gray-900">
       {/* Header */}
       <header className="max-w-7xl mx-auto px-6 py-5 lg:px-8">
         <div className="flex flex-col lg:grid lg:grid-cols-[auto_1fr_auto] gap-4 lg:gap-6 items-start lg:items-center">
@@ -35,13 +59,13 @@ const LandingPage = () => {
 
           {/* Actions */}
           <div className="flex gap-3 w-full lg:w-auto">
-            <a 
+            <a
               className="text-gray-600 hover:text-gray-900 font-semibold text-sm px-5 py-2.5 rounded-lg transition-all hover:-translate-y-0.5"
               href="/login"
             >
               Log in
             </a>
-            <a 
+            <a
               className="bg-[#5d3699] text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow-lg shadow-purple-500/20 hover:-translate-y-0.5 transition-all"
               href="/register"
             >
@@ -67,297 +91,341 @@ const LandingPage = () => {
       <main>
         {/* Hero Section */}
         <section className="max-w-7xl mx-auto px-6 py-8 lg:py-12 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Hero Content */}
-            <div className="order-2 lg:order-1">
-              <h1 className="font-['Manrope'] font-bold text-4xl sm:text-5xl lg:text-[44px] leading-tight mb-4">
+          <div className="hero-figma-grid">
+            <div className="hero-figma-copy">
+              <h1 className="hero-figma-title">
                 Guided Support for
                 <br />
                 Students from
                 <br />
-                <span className="text-[#5d3699]">Experienced</span>
+                <span>Experienced</span>
                 <br />
-                <span className="text-[#5d3699]">Mentors</span>
+                <span>Mentors</span>
               </h1>
-              <p className="text-gray-600 text-base mb-6 max-w-lg">
-                A safe, structured space where students can grow academically and emotionally with trusted mentors who
-                walk the path with them.
+
+              <p className="hero-figma-description">
+                A safe, thoughtful platform where students grow through conversations with trusted mentors
+                who&apos;ve walked the path before.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                <a 
-                  className="bg-[#5d3699] text-white font-semibold text-sm px-6 py-3 rounded-lg shadow-lg shadow-purple-500/20 hover:-translate-y-0.5 transition-all text-center"
-                  href="/register"
-                >
+
+              <div className="hero-figma-actions">
+                <a className="hero-figma-btn hero-figma-btn--primary" href="/register">
                   Get Started
                 </a>
-                <a 
-                  className="border border-gray-300 text-gray-700 font-semibold text-sm px-6 py-3 rounded-lg hover:-translate-y-0.5 transition-all text-center bg-white"
-                  href="/mentor-register"
-                >
+                <a className="hero-figma-btn hero-figma-btn--secondary" href="/mentor-register">
                   Become a Mentor
                 </a>
               </div>
-              <p className="text-xs text-gray-600 flex items-start gap-2">
-                <ShieldCheck className="w-5 h-5 text-[#5d3699] flex-shrink-0 mt-0.5" />
-                <span>All mentors are verified and session activities are monitored for safety.</span>
+
+              <p className="hero-figma-note">
+                <LockKeyhole size={14} strokeWidth={2.4} />
+                Sessions are monitored and recorded for student safety.
               </p>
             </div>
 
-            {/* Hero Visual */}
-            <div className="relative min-h-[400px] lg:min-h-[420px] order-1 lg:order-2">
-              <div 
-                className="absolute left-0 top-0 w-[70%] sm:w-[330px] h-[320px] sm:h-[380px] bg-cover bg-center rounded-[28px] shadow-2xl"
-                style={{ backgroundImage: `url(${heroLeft})` }}
-              />
-              <div 
-                className="absolute right-0 top-4 sm:right-2 sm:top-2 w-[65%] sm:w-[300px] h-[280px] sm:h-[330px] bg-cover bg-center rounded-[28px] shadow-2xl"
-                style={{ backgroundImage: `url(${heroRight})` }}
-              />
-              
-              {/* Bubble */}
-              <div className="absolute bottom-0 right-0 sm:bottom-auto sm:top-[310px] sm:right-10 w-full sm:w-[384px] max-w-[384px] bg-white p-5 rounded-xl shadow-lg border border-gray-200">
-                <div className="flex items-center gap-2 text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  Live Session
+            <div className="hero-figma-visual" aria-hidden="true">
+              <div className="hero-figma-images">
+                <figure className="hero-figma-image hero-figma-image--left">
+                  <img src={heroLeft} alt="" />
+                </figure>
+                <div className="hero-figma-right-wrap">
+                  <img src={plantPot} alt="" className="hero-figma-pot" />
+                  <figure className="hero-figma-image hero-figma-image--right">
+                    <img src={heroRight} alt="" />
+                  </figure>
                 </div>
-                <p className="text-xs text-gray-700 font-medium leading-relaxed">
-                  "It's normal to feel overwhelmed at this stage. Let's break it down into smaller steps together."
-                </p>
               </div>
+
+              <article className="hero-figma-live-card">
+                <div className="hero-figma-live-label">
+                  <span className="hero-figma-live-dot" />
+                  LIVE SESSION
+                </div>
+                <p>
+                  &quot;It&apos;s normal to feel overwhelmed at this stage. Let&apos;s break it down into
+                  smaller steps together.&quot;
+                </p>
+              </article>
             </div>
           </div>
         </section>
 
         {/* Flow Section */}
-        <section className="max-w-6xl mx-auto px-6 py-12 lg:py-16 lg:px-8" id="about">
-          <div className="text-center mb-8">
-            <h2 className="font-['Manrope'] font-bold text-2xl lg:text-3xl mb-2 text-gray-900">
-              How Guidance Flows
-            </h2>
-            <p className="text-gray-600 text-sm">
-              A simple, transparent process that keeps students safe and supported.
-            </p>
+        <section className="flow-figma-section" id="about">
+          <div className="flow-figma-heading">
+            <h2>How Guidance Flows</h2>
+            <p>A simple, transparent journey from confusion to clarity.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 text-center hover:shadow-md transition-shadow">
-              <span className="inline-flex bg-purple-50 text-[#5d3699] px-4 py-1.5 rounded-full font-semibold mb-4 text-xs">
-                01
-              </span>
-              <h3 className="font-semibold text-base mb-2">Listen</h3>
-              <p className="text-xs text-gray-600">
-                Students share goals, challenges, and communication style.
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 text-center hover:shadow-md transition-shadow">
-              <span className="inline-flex bg-purple-50 text-[#5d3699] px-4 py-1.5 rounded-full font-semibold mb-4 text-xs">
-                02
-              </span>
-              <h3 className="font-semibold text-base mb-2">Understand</h3>
-              <p className="text-xs text-gray-600">
-                Mentors craft a tailored plan with checkpoints and clarity.
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 text-center hover:shadow-md transition-shadow">
-              <span className="inline-flex bg-purple-50 text-[#5d3699] px-4 py-1.5 rounded-full font-semibold mb-4 text-xs">
-                03
-              </span>
-              <h3 className="font-semibold text-base mb-2">Guide</h3>
-              <p className="text-xs text-gray-600">
-                Sessions build habits, confidence, and academic momentum.
-              </p>
-            </div>
+
+          <div className="flow-figma-steps">
+            <article className="flow-figma-step">
+              <div className="flow-figma-node">
+                <Ear />
+              </div>
+              <h3>Listen</h3>
+              <p>Students share their concerns in a private, judgment-free space.</p>
+            </article>
+
+            <article className="flow-figma-step">
+              <div className="flow-figma-node">
+                <Brain />
+              </div>
+              <h3>Understand</h3>
+              <p>Our intelligent system matches them with a mentor who truly relates.</p>
+            </article>
+
+            <article className="flow-figma-step">
+              <div className="flow-figma-node">
+                <Handshake />
+              </div>
+              <h3>Guide</h3>
+              <p>Meaningful 1-on-1 sessions that provide perspective and direction.</p>
+            </article>
           </div>
         </section>
 
         {/* Trust Section */}
-        <section className="max-w-6xl mx-auto px-6 py-12 lg:px-8" id="safety">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12">
-            <div>
-              <h2 className="font-['Manrope'] font-bold text-2xl lg:text-3xl leading-tight mb-3">
+        <section className="trust-figma-section" id="safety">
+          <div className="trust-figma-shell">
+            <div className="trust-figma-copy">
+              <h2>
                 Built on Trust,
                 <br />
                 Experience, and Care
               </h2>
-              <p className="text-gray-600 text-sm max-w-md">
-                Every mentor is background-checked, trained, and supported by our in-house student success team.
+              <p>
+                Bond Room isn&apos;t about generic advice - it&apos;s about guidance. Every interaction is
+                designed to be safe, respectful, and deeply human. We bridge the gap between generations to
+                foster real growth.
               </p>
+              <span className="trust-figma-accent" />
             </div>
-            <div className="space-y-3">
-              <div className="bg-white p-4 rounded-xl border border-gray-100 flex gap-3 items-start hover:shadow-md transition-shadow">
-                <div className="w-5 h-5 rounded-full bg-purple-50 flex-shrink-0 mt-1 flex items-center justify-center">
-                  <ShieldCheck className="w-3 h-3 text-[#5d3699]" />
+
+            <div className="trust-figma-list">
+              <article className="trust-figma-item">
+                <div className="trust-figma-icon">
+                  <ShieldCheck />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm mb-1">Safe &amp; Monitored Sessions</h4>
-                  <p className="text-xs text-gray-600">
-                    Session logs, parent updates, and secure messaging included.
+                  <h4>Safe &amp; Monitored Sessions</h4>
+                  <p>
+                    Strict safety protocols including keyword monitoring and session recording ensure a secure
+                    environment for every student.
                   </p>
                 </div>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-gray-100 flex gap-3 items-start hover:shadow-md transition-shadow">
-                <div className="w-5 h-5 rounded-full bg-purple-50 flex-shrink-0 mt-1 flex items-center justify-center">
-                  <Clock className="w-3 h-3 text-[#5d3699]" />
+              </article>
+
+              <article className="trust-figma-item">
+                <div className="trust-figma-icon">
+                  <Users />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm mb-1">Mentors You Trust 24/7</h4>
-                  <p className="text-xs text-gray-600">
-                    High-quality mentors vetted for experience and empathy.
+                  <h4>Mentors from Trusted 50+ Age Group</h4>
+                  <p>
+                    Wisdom comes from lived experience. Our mentors are vetted professionals, retirees, and
+                    parents who genuinely care.
                   </p>
                 </div>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-gray-100 flex gap-3 items-start hover:shadow-md transition-shadow">
-                <div className="w-5 h-5 rounded-full bg-purple-50 flex-shrink-0 mt-1 flex items-center justify-center">
-                  <Sparkles className="w-3 h-3 text-[#5d3699]" />
+              </article>
+
+              <article className="trust-figma-item">
+                <div className="trust-figma-icon">
+                  <Bot />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm mb-1">AI-Powered Matching</h4>
-                  <p className="text-xs text-gray-600">
-                    We pair students with mentors based on goals and personality.
+                  <h4>AI-Powered Matching</h4>
+                  <p>
+                    Our algorithm considers academic interests, emotional needs, and language preferences to
+                    find the perfect mentor match.
                   </p>
                 </div>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-gray-100 flex gap-3 items-start hover:shadow-md transition-shadow">
-                <div className="w-5 h-5 rounded-full bg-purple-50 flex-shrink-0 mt-1 flex items-center justify-center">
-                  <Users className="w-3 h-3 text-[#5d3699]" />
+              </article>
+
+              <article className="trust-figma-item">
+                <div className="trust-figma-icon">
+                  <Smile />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm mb-1">Student-Centered Experience</h4>
-                  <p className="text-xs text-gray-600">
-                    Flexible scheduling, progress tracking, and clear outcomes.
+                  <h4>Simple, Student-Friendly Experience</h4>
+                  <p>
+                    No complex onboarding. Just sign up, match, and start talking. Designed to be as easy as
+                    messaging a friend.
                   </p>
                 </div>
-              </div>
+              </article>
             </div>
           </div>
         </section>
 
         {/* Stories Section */}
-        <section className="max-w-6xl mx-auto px-6 py-12 lg:px-8" id="stories">
-          <div className="text-left mb-8">
-            <h2 className="font-['Manrope'] font-bold text-2xl lg:text-3xl mb-2">
-              Stories That Matter
-            </h2>
-            <p className="text-gray-600 text-sm">
-              Parents and students who found confidence through mentoring.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <article className="bg-white p-5 rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
-              <p className="text-sm text-gray-700 mb-4">
-                "Bond helped my daughter regain her confidence and finally enjoy learning again."
-              </p>
-              <div className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-full bg-purple-50 text-[#5d3699] grid place-items-center font-semibold text-xs">
-                  A
-                </span>
-                <div>
-                  <strong className="text-sm block">Alex M.</strong>
-                  <span className="text-xs text-gray-600">Parent</span>
+        <section className="stories-figma-section" id="stories">
+          <div className="stories-figma-shell">
+            <h2>Stories That Matter</h2>
+
+            <div className="stories-figma-grid">
+              <article className="stories-figma-card">
+                <span className="stories-figma-quote">❝</span>
+                <p>
+                  &quot;I was so stressed about my board exams. Talking to Mr. Sharma helped me calm down. He
+                  didn&apos;t just give advice, he listened.&quot;
+                </p>
+                <div className="stories-figma-person">
+                  <img src={avatarOne} alt="Arav" />
+                  <div>
+                    <h4>Arav</h4>
+                    <span>Student, 17</span>
+                  </div>
                 </div>
-              </div>
-            </article>
-            <article className="bg-white p-5 rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
-              <p className="text-sm text-gray-700 mb-4">
-                "The mentor understood exactly how I learn. My grades improved in just one semester."
-              </p>
-              <div className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-full bg-purple-50 text-[#5d3699] grid place-items-center font-semibold text-xs">
-                  J
-                </span>
-                <div>
-                  <strong className="text-sm block">Jenna K.</strong>
-                  <span className="text-xs text-gray-600">Student</span>
+              </article>
+
+              <article className="stories-figma-card">
+                <span className="stories-figma-quote">❝</span>
+                <p>
+                  &quot;I felt lost choosing a career path. My mentor shared her own journey of confusion and
+                  success, which gave me so much hope.&quot;
+                </p>
+                <div className="stories-figma-person">
+                  <img
+                    src={students}
+                    alt="Priya"
+                    className="stories-figma-avatar stories-figma-avatar--left"
+                  />
+                  <div>
+                    <h4>Priya</h4>
+                    <span>Student, 19</span>
+                  </div>
                 </div>
-              </div>
-            </article>
-            <article className="bg-white p-5 rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
-              <p className="text-sm text-gray-700 mb-4">
-                "Weekly updates kept us in the loop. The experience felt safe and collaborative."
-              </p>
-              <div className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-full bg-purple-50 text-[#5d3699] grid place-items-center font-semibold text-xs">
-                  R
-                </span>
-                <div>
-                  <strong className="text-sm block">Ravi S.</strong>
-                  <span className="text-xs text-gray-600">Parent</span>
+              </article>
+
+              <article className="stories-figma-card">
+                <span className="stories-figma-quote">❝</span>
+                <p>
+                  &quot;It&apos;s different than talking to parents. My mentor feels like a wise friend who
+                  doesn&apos;t judge my mistakes.&quot;
+                </p>
+                <div className="stories-figma-person">
+                  <img
+                    src={students}
+                    alt="Rohan"
+                    className="stories-figma-avatar stories-figma-avatar--right"
+                  />
+                  <div>
+                    <h4>Rohan</h4>
+                    <span>Student, 16</span>
+                  </div>
                 </div>
-              </div>
-            </article>
+              </article>
+            </div>
           </div>
         </section>
 
         {/* Gallery Section */}
-        <section className="max-w-6xl mx-auto px-6 py-12 lg:px-8">
-          <div className="text-left mb-6">
-            <h2 className="font-['Manrope'] font-bold text-2xl lg:text-3xl mb-2">
-              Wisdom You Can See
-            </h2>
-            <p className="text-gray-600 text-sm mb-3">
-              Mentors who have guided students across academics and life skills.
-            </p>
-            <a className="inline-flex items-center gap-1 text-sm text-[#5d3699] font-semibold hover:gap-2 transition-all" href="/mentors">
-              Meet Our Mentors
-              <ChevronRight className="w-4 h-4" />
-            </a>
+        <section className="wisdom-figma-section">
+          <div className="wisdom-figma-shell">
+            <div className="wisdom-figma-head">
+              <div className="wisdom-figma-copy">
+                <h2>Wisdom You Can See</h2>
+                <p>
+                  Connect with mentors who bring decades of life experience, professional success, and
+                  emotional intelligence.
+                </p>
+              </div>
+
+              <a className="wisdom-figma-link" href="/mentors">
+                Meet Our Mentors
+                <ChevronRight size={17} />
+              </a>
+            </div>
+
+            <div className="wisdom-figma-grid">
+              <article className="wisdom-figma-card">
+                <figure className="wisdom-figma-media wisdom-figma-media--one">
+                  <img src={heroRight} alt="Dr. Anand K." />
+                </figure>
+                <div className="wisdom-figma-body">
+                  <div className="wisdom-figma-row">
+                    <h3>Dr. Anand K.</h3>
+                    <span>Retired Prof.</span>
+                  </div>
+                  <div className="wisdom-figma-tags">
+                    <span>Academic Stress</span>
+                    <span>Physics</span>
+                  </div>
+                  <p>&quot;I help students find joy in learning rather than fearing exams.&quot;</p>
+                </div>
+              </article>
+
+              <article className="wisdom-figma-card">
+                <figure className="wisdom-figma-media wisdom-figma-media--two">
+                  <img src={mentorLeft} alt="Mrs. Radha" />
+                </figure>
+                <div className="wisdom-figma-body">
+                  <div className="wisdom-figma-row">
+                    <h3>Mrs. Radha</h3>
+                    <span>Ex-HR Director</span>
+                  </div>
+                  <div className="wisdom-figma-tags">
+                    <span>Career Guidance</span>
+                    <span>Confidence</span>
+                  </div>
+                  <p>&quot;Guiding young minds to discover their true potential is my passion.&quot;</p>
+                </div>
+              </article>
+
+              <article className="wisdom-figma-card">
+                <figure className="wisdom-figma-media wisdom-figma-media--three">
+                  <img src={heroRight} alt="Col. Singh (Retd)" />
+                </figure>
+                <div className="wisdom-figma-body">
+                  <div className="wisdom-figma-row">
+                    <h3>Col. Singh (Retd)</h3>
+                    <span>Army Veteran</span>
+                  </div>
+                  <div className="wisdom-figma-tags">
+                    <span>Discipline</span>
+                    <span>Leadership</span>
+                  </div>
+                  <p>&quot;Building character and resilience for the challenges of tomorrow.&quot;</p>
+                </div>
+              </article>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <article className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow">
-              <div 
-                className="h-36 bg-cover bg-center"
-                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=800&q=80')" }}
-              />
-              <div className="p-4">
-                <h3 className="font-semibold text-sm">Dr. Ananya K.</h3>
-                <p className="text-xs text-gray-600 mt-1">STEM Mentorship</p>
+        </section>
+
+        <section className="wellbeing-figma-section">
+          <div className="wellbeing-figma-shell">
+            <div className="wellbeing-figma-left">
+              <div className="wellbeing-figma-icon">
+                <ShieldCheck />
               </div>
-            </article>
-            <article className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow">
-              <div 
-                className="h-36 bg-cover bg-center"
-                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80')" }}
-              />
-              <div className="p-4">
-                <h3 className="font-semibold text-sm">Mr. Rahul S.</h3>
-                <p className="text-xs text-gray-600 mt-1">Career Guidance</p>
+              <div className="wellbeing-figma-copy">
+                <h3>Your wellbeing comes first</h3>
+                <p>
+                  All sessions are private yet monitored by AI for safety keywords. We maintain a zero-tolerance
+                  policy for inappropriate behavior.
+                </p>
               </div>
-            </article>
-            <article className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow">
-              <div 
-                className="h-36 bg-cover bg-center"
-                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80')" }}
-              />
-              <div className="p-4">
-                <h3 className="font-semibold text-sm">Ms. Sanya D.</h3>
-                <p className="text-xs text-gray-600 mt-1">Learning Strategies</p>
-              </div>
-            </article>
+            </div>
+
+            <div className="wellbeing-figma-links">
+              <a href="/privacy">Privacy Policy</a>
+              <a href="/safety">Safety Guidelines</a>
+            </div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="max-w-6xl mx-auto px-6 py-12 mb-16 lg:px-8">
-          <div className="bg-purple-50 border border-purple-100 rounded-2xl p-8 lg:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div>
-              <h2 className="font-['Manrope'] font-bold text-xl lg:text-2xl mb-2">
-                Ready to Start Your Journey?
-              </h2>
-              <p className="text-sm text-gray-600">
-                Match with a mentor in minutes and begin guided progress today.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-              <a 
-                className="bg-[#5d3699] text-white font-semibold text-sm px-6 py-3 rounded-lg shadow-lg shadow-purple-500/20 hover:-translate-y-0.5 transition-all text-center whitespace-nowrap"
-                href="/register"
-              >
-                Register a Student
+        <section className="cta-figma-section">
+          <div className="cta-figma-shell">
+            <h2>Ready to Start Your Journey?</h2>
+            <p>Join a community built on wisdom, trust, and shared growth.</p>
+
+            <div className="cta-figma-actions">
+              <a className="cta-figma-btn cta-figma-btn--primary" href="/register">
+                Begin as Student
               </a>
-              <a 
-                className="border border-gray-300 text-gray-700 font-semibold text-sm px-6 py-3 rounded-lg hover:-translate-y-0.5 transition-all text-center bg-white whitespace-nowrap"
-                href="/mentor-register"
-              >
-                Register as Mentor
+              <a className="cta-figma-btn cta-figma-btn--secondary" href="/mentor-register">
+                Sign Up as Mentor
               </a>
             </div>
           </div>
@@ -365,19 +433,31 @@ const LandingPage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-7xl mx-auto px-6 py-8 lg:px-8 border-t border-gray-100">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Bond Room" className="h-10 w-auto" />
-            <p className="text-sm text-gray-600">Guided mentoring for every student.</p>
-          </div>
-          <div className="flex gap-6 text-xs text-gray-600">
-            <a href="/privacy" className="hover:text-gray-900 transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-gray-900 transition-colors">Terms</a>
-            <a href="/support" className="hover:text-gray-900 transition-colors">Support</a>
+      <footer className="footer-figma-section">
+        <div className="footer-figma-shell">
+          <a href="/" className="footer-figma-brand" aria-label="Bond Room Home">
+            <img src={logo} alt="Bond Room" />
+          </a>
+
+          <nav className="footer-figma-nav">
+            <a href="#about">About</a>
+            <a href="/terms">Terms</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/support">Help</a>
+          </nav>
+
+          <div className="footer-figma-social">
+            <a href="#" aria-label="Twitter">
+              <Twitter />
+            </a>
+            <a href="#" aria-label="LinkedIn">
+              <Linkedin />
+            </a>
           </div>
         </div>
       </footer>
+
+      <div className="copyright-figma-strip">© 2025 Bond Room Platform. All rights reserved.</div>
     </div>
   );
 };
