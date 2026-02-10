@@ -152,9 +152,10 @@
 
 .hero-figma-live-card {
   position: absolute;
-  left: 20%;
+  left: 50%;
+  transform: translateX(-50%);
   right: auto;
-  bottom: -38px;
+  bottom: 37px;
   width: 386px;
   border-radius: 14px;
   background: #fefefe;
@@ -162,6 +163,7 @@
   box-shadow: 0 20px 42px rgba(9, 17, 33, 0.3);
   padding: 17px 20px 16px;
   box-sizing: border-box;
+  z-index: 8;
 }
 
 .hero-figma-live-label {
@@ -315,6 +317,7 @@
   .hero-figma-live-card {
     width: min(386px, calc(100% - 8px));
     left: 0;
+    transform: none;
     bottom: 14px;
     padding: 14px 16px;
   }
@@ -470,10 +473,6 @@
     font-size: 1.35rem;
   }
 }
-.hero-figma-live-card {
-  left: 18%;
-}
-
 .trust-figma-section {
   margin-top: 48px;
   background: #f2f4f7;
