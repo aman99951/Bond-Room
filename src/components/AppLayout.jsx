@@ -1,6 +1,6 @@
 // src/layouts/AppLayout.jsx
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import Register from './auth/Register';
 import MentorRegister from './auth/MentorRegister';
@@ -28,11 +28,21 @@ import MentorTrainingModules from './mentors/pages/TrainingModules';
 import MentorTrainingBoundaries from './mentors/pages/TrainingBoundaries';
 import MentorImpactDashboard from './mentors/pages/ImpactDashboard';
 import MentorMySessions from './mentors/pages/MySessions';
+import MentorSessionRequests from './mentors/pages/SessionRequests';
 import MentorSessionCompleted from './mentors/pages/SessionCompleted';
 import MentorImpact from './mentors/pages/ImpactDashboard';
 import MentorAvailability from './mentors/pages/ManageAvailability';
 import MentorMyprofilePage from './mentors/pages/Myprofile';
+import MentorMenteeProfile from './mentors/pages/MenteeProfile';
+import AdminPortal from './admin/AdminPortal';
 import LandingPage from './LandingPage';
+import {
+  AUTH_LOGOUT_EVENT_NAME,
+  getAuthSession,
+  mapAppRoleToUiRole,
+} from '../apis/api/storage';
+import { mentorApi } from '../apis/api/mentorApi';
+import { useMentorData } from '../apis/apihook/useMentorData';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -53,10 +63,164 @@ const ScrollToTop = () => {
   return null;
 };
 
+const isPublicPath = (pathname) => {
+  if (pathname === '/admin') return true;
+  const exactPublicPaths = new Set([
+    '/',
+    '/login',
+    '/register',
+    '/mentor-register',
+    '/mentor-verify-identity',
+    '/mentor-verify-contact',
+    '/mentor-onboarding-status',
+    '/mentor-training-modules',
+    '/mentor-training-boundaries',
+    '/verify-parent',
+    '/needs-assessment',
+  ]);
+  if (exactPublicPaths.has(pathname)) return true;
+  return pathname.startsWith('/needs-assessment/');
+};
+
+const AuthExpiryWatcher = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (isPublicPath(location.pathname)) return undefined;
+
+    const checkAndRedirect = () => {
+      const session = getAuthSession();
+      if (!session?.accessToken && window.location.pathname !== '/login') {
+        window.location.replace('/login');
+      }
+    };
+
+    checkAndRedirect();
+    const intervalId = window.setInterval(checkAndRedirect, 15000);
+    const onVisibility = () => checkAndRedirect();
+    const onLogoutEvent = () => checkAndRedirect();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener(AUTH_LOGOUT_EVENT_NAME, onLogoutEvent);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener(AUTH_LOGOUT_EVENT_NAME, onLogoutEvent);
+    };
+  }, [location.pathname]);
+
+  return null;
+};
+
+const ProtectedApp = ({ children }) => {
+  const session = getAuthSession();
+  if (!session?.accessToken) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+const ReturnToPreviousRoute = () => {
+  const navigate = useNavigate();
+  const session = getAuthSession();
+
+  useEffect(() => {
+    const canGoBack = window.history.length > 1;
+    if (canGoBack) {
+      navigate(-1);
+      return;
+    }
+
+    const uiRole = mapAppRoleToUiRole(session?.role);
+    if (uiRole === 'mentors') {
+      navigate('/mentor-impact-dashboard', { replace: true });
+      return;
+    }
+    if (uiRole === 'admins') {
+      navigate('/admin', { replace: true });
+      return;
+    }
+    if (session?.accessToken) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+    navigate('/login', { replace: true });
+  }, [navigate, session?.accessToken, session?.role]);
+
+  return null;
+};
+
+const MentorDashboardGuard = ({ children }) => {
+  const session = getAuthSession();
+  const { mentor, loading: mentorLoading } = useMentorData();
+  const [checking, setChecking] = useState(true);
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkStatus = async () => {
+      if (session?.role !== 'mentor') {
+        if (!cancelled) {
+          setAllowed(false);
+          setChecking(false);
+        }
+        return;
+      }
+      if (mentorLoading) {
+        if (!cancelled) {
+          setChecking(true);
+        }
+        return;
+      }
+      if (!mentor?.id) {
+        if (!cancelled) {
+          setAllowed(false);
+          setChecking(false);
+        }
+        return;
+      }
+      if (!cancelled) {
+        setChecking(true);
+      }
+      try {
+        const response = await mentorApi.getMentorOnboarding(mentor.id);
+        const statusValue =
+          response?.status?.current_status ||
+          response?.status?.final_approval_status ||
+          '';
+        if (!cancelled) {
+          setAllowed(String(statusValue).toLowerCase() === 'completed');
+        }
+      } catch {
+        if (!cancelled) {
+          setAllowed(false);
+        }
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    };
+
+    checkStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [mentor?.id, mentorLoading, session?.role]);
+
+  if (mentorLoading || checking) {
+    return <div className="p-6 text-sm text-[#6b7280]">Checking onboarding status...</div>;
+  }
+  if (!allowed) {
+    return <Navigate to="/mentor-onboarding-status" replace />;
+  }
+  return children;
+};
+
 const AppLayout = () => {
   return (
     <Router>
       <ScrollToTop />
+      <AuthExpiryWatcher />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -67,13 +231,21 @@ const AppLayout = () => {
         <Route path="/mentor-onboarding-status" element={<MentorOnboardingStatus />} />
         <Route path="/mentor-training-modules" element={<MentorTrainingModules />} />
         <Route path="/mentor-training-boundaries" element={<MentorTrainingBoundaries />} />
+        <Route path="/admin" element={<AdminPortal />} />
         <Route path="/verify-parent" element={<VerifyParent />} />
         <Route path="/needs-assessment" element={<NeedsAssessment />} />
         <Route path="/needs-assessment/q2" element={<NeedsAssessmentQ2 />} />
         <Route path="/needs-assessment/q3" element={<NeedsAssessmentQ3 />} />
         <Route path="/needs-assessment/q4" element={<NeedsAssessmentQ4 />} />
         <Route path="/needs-assessment/q5" element={<NeedsAssessmentQ5 />} />
-        <Route path="/*" element={<MainLayout />}>
+        <Route
+          path="/*"
+          element={(
+            <ProtectedApp>
+              <MainLayout />
+            </ProtectedApp>
+          )}
+        >
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="my-sessions" element={<MySessions />} />
         <Route path="mentors" element={<Mentors />} />
@@ -83,15 +255,39 @@ const AppLayout = () => {
         <Route path="booking-success" element={<BookingSuccess />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="mentor-profile" element={<MentorProfile />} />
-        <Route path="mentor-impact-dashboard" element={<MentorImpactDashboard />} />
-        <Route path="mentor-dashboard" element={<MentorImpactDashboard />} />
-        <Route path="mentor-impact" element={<MentorImpact />} />
+        <Route
+          path="mentor-impact-dashboard"
+          element={(
+            <MentorDashboardGuard>
+              <MentorImpactDashboard />
+            </MentorDashboardGuard>
+          )}
+        />
+        <Route
+          path="mentor-dashboard"
+          element={(
+            <MentorDashboardGuard>
+              <MentorImpactDashboard />
+            </MentorDashboardGuard>
+          )}
+        />
+        <Route
+          path="mentor-impact"
+          element={(
+            <MentorDashboardGuard>
+              <MentorImpact />
+            </MentorDashboardGuard>
+          )}
+        />
         <Route path="mentor-sessions" element={<MentorMySessions />} />
+        <Route path="mentor-mentee-profile/:sessionId" element={<MentorMenteeProfile />} />
+        <Route path="mentor-session-requests" element={<MentorSessionRequests />} />
         <Route path="mentor-session-completed" element={<MentorSessionCompleted />} />
         <Route path="mentor-availability" element={<MentorAvailability />} />
         <Route path="mentor-myprofile" element={<MentorMyprofilePage />} />
+        <Route path="*" element={<ReturnToPreviousRoute />} />
       </Route>
-        <Route path="*" element={<Navigate to="/register" replace />} />
+        <Route path="*" element={<ReturnToPreviousRoute />} />
       </Routes>
     </Router>
   );

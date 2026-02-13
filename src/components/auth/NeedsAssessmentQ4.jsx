@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import { Link } from 'react-router-dom';
-const Choice = ({ label, selected }) => {
+import { Link, useNavigate } from 'react-router-dom';
+import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
+
+const Choice = ({ label, selected, onClick }) => {
   return (
     <button
       type="button"
-      className={`relative w-[240px] h-[69px] rounded-[12px] border-2 px-[59px] py-[22px] text-sm text-secondary flex items-center justify-center ${
+      onClick={onClick}
+      className={`relative w-[240px] h-[69px] rounded-[12px] border-2 px-[20px] py-[22px] text-sm text-secondary flex items-center justify-center ${
         selected ? 'border-[#41a34a] bg-[#f2faf3] shadow-sm' : 'border-default'
       }`}
     >
@@ -32,6 +35,23 @@ const Choice = ({ label, selected }) => {
 };
 
 const NeedsAssessmentQ4 = () => {
+  const navigate = useNavigate();
+  const { draft, saveAnswer } = useMenteeAssessment();
+  const [selectedComfort, setSelectedComfort] = useState(draft.comfort_level || 'Neutral');
+
+  const options = [
+    'Very Uncomfortable',
+    'Somewhat Uncomfortable',
+    'Neutral',
+    'Comfortable',
+    'Very Comfortable',
+  ];
+
+  const handleNext = () => {
+    saveAnswer('comfort_level', selectedComfort);
+    navigate('/needs-assessment/q5');
+  };
+
   return (
     <div className="min-h-screen bg-surface text-primary flex flex-col">
       <TopAuth />
@@ -61,11 +81,14 @@ const NeedsAssessmentQ4 = () => {
             </div>
 
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center">
-              <Choice label="Very Uncomfortable" />
-              <Choice label="Somewhat Uncomfortable" />
-              <Choice label="Neutral" selected />
-              <Choice label="Comfortable" />
-              <Choice label="Very Comfortable" />
+              {options.map((option) => (
+                <Choice
+                  key={option}
+                  label={option}
+                  selected={selectedComfort === option}
+                  onClick={() => setSelectedComfort(option)}
+                />
+              ))}
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -75,16 +98,17 @@ const NeedsAssessmentQ4 = () => {
               >
                 Back
               </Link>
-              <Link
-                to="/needs-assessment/q5"
+              <button
+                type="button"
+                onClick={handleNext}
                 className="w-full sm:w-80 rounded-md bg-accent text-on-accent py-2.5 text-sm text-center"
               >
                 Next Question →
-              </Link>
+              </button>
             </div>
 
             <div className="mt-4 text-center">
-              <button className="text-xs text-subtle underline">Skip this question</button>
+              <button className="text-xs text-subtle underline" onClick={handleNext}>Skip this question</button>
             </div>
           </div>
         </div>
@@ -96,4 +120,3 @@ const NeedsAssessmentQ4 = () => {
 };
 
 export default NeedsAssessmentQ4;
-

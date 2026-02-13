@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
 
-const Choice = ({ label, selected }) => {
+const Choice = ({ label, selected, onClick }) => {
   return (
     <button
       type="button"
-      className={`relative w-[240px] h-[69px] rounded-[12px] border-2 px-[59px] py-[22px] text-sm text-secondary flex items-center justify-center ${
+      onClick={onClick}
+      className={`relative w-[240px] h-[69px] rounded-[12px] border-2 px-[20px] py-[22px] text-sm text-secondary flex items-center justify-center ${
         selected ? 'border-[#41a34a] bg-[#f2faf3] shadow-sm' : 'border-default'
       }`}
     >
@@ -33,6 +35,25 @@ const Choice = ({ label, selected }) => {
 };
 
 const NeedsAssessmentQ2 = () => {
+  const navigate = useNavigate();
+  const { draft, saveAnswer } = useMenteeAssessment();
+  const [selectedCause, setSelectedCause] = useState(draft.feeling_cause || 'Parent Expectations');
+
+  const options = [
+    'Exam Pressure',
+    'Parent Expectations',
+    'Friend Issues',
+    'Future Anxiety (Career/College)',
+    'Concentration Struggles',
+    'Study Struggles',
+    'Others',
+  ];
+
+  const handleNext = () => {
+    saveAnswer('feeling_cause', selectedCause);
+    navigate('/needs-assessment/q3');
+  };
+
   return (
     <div className="min-h-screen bg-surface text-primary flex flex-col">
       <TopAuth />
@@ -57,29 +78,19 @@ const NeedsAssessmentQ2 = () => {
                 className="text-center text-[#1f2937]"
                 style={{ fontFamily: 'Manrope', fontSize: '36px', lineHeight: '45.5px', fontWeight: 600 }}
               >
-                What’s been causing this feeling?
+                What&apos;s been causing this feeling?
               </h2>
             </div>
 
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center">
-              <Choice label="Exam Pressure" />
-              <Choice label="Parent Expectations" selected />
-              <Choice label="Friend Issues" />
-              <Choice
-                label={(
-                  <>
-                    Future Anxiety{' '}
-                    <span style={{ fontFamily: 'DM Sans', fontSize: '12px', lineHeight: '24px', fontWeight: 400, textAlign: 'center' }}>
-                      (Career/College)
-                    </span>
-                  </>
-                )}
-              />
-              <Choice label="Concentration Struggles" />
-              <Choice label="Study Struggles" />
-              <div className="sm:col-start-2">
-                <Choice label="Others" />
-              </div>
+              {options.map((option) => (
+                <Choice
+                  key={option}
+                  label={option}
+                  selected={selectedCause === option}
+                  onClick={() => setSelectedCause(option)}
+                />
+              ))}
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -89,16 +100,17 @@ const NeedsAssessmentQ2 = () => {
               >
                 Back
               </Link>
-              <Link
-                to="/needs-assessment/q3"
+              <button
+                type="button"
+                onClick={handleNext}
                 className="w-full sm:w-80 rounded-md bg-accent text-on-accent py-2.5 text-sm text-center"
               >
                 Next Question →
-              </Link>
+              </button>
             </div>
 
             <div className="mt-4 text-center">
-              <button className="text-xs text-subtle underline">Skip this question</button>
+              <button className="text-xs text-subtle underline" onClick={handleNext}>Skip this question</button>
             </div>
           </div>
         </div>

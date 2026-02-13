@@ -9,6 +9,7 @@ import BookingSuccess from '../components/menties/pages/BookingSuccess';
 import Feedback from '../components/menties/pages/Feedback';
 import MentorImpactDashboard from '../components/mentors/pages/ImpactDashboard';
 import MentorSessions from '../components/mentors/pages/MySessions';
+import MentorSessionRequests from '../components/mentors/pages/SessionRequests';
 import MentorAvailability from '../components/mentors/pages/ManageAvailability';
 import MentorMyprofilePage from '../components/mentors/pages/Myprofile';
 import { Home, Calendar, Users, User } from 'lucide-react';
@@ -85,12 +86,18 @@ export const navRoutes = [
     component: MentorImpactDashboard,
     roles: ['mentors'],
   },
- 
   {
     label: 'My Sessions',
     path: '/mentor-sessions',
     icon: Calendar,
     component: MentorSessions,
+    roles: ['mentors'],
+  },
+  {
+    label: 'Session Requests',
+    path: '/mentor-session-requests',
+    icon: Calendar,
+    component: MentorSessionRequests,
     roles: ['mentors'],
   },
   {

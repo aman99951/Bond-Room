@@ -1,13 +1,52 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import { getRoutesForLayout } from '../../config/routes';
+import { menteeApi } from '../../apis/api/menteeApi';
+import { mentorApi } from '../../apis/api/mentorApi';
+import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
+import { getAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
+
+const normalizeList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  return [];
+};
+
+const summarizeAvailability = (preferredTimes) => {
+  const entries = Array.isArray(preferredTimes) ? preferredTimes : [];
+  const days = [...new Set(entries.map((item) => item?.day).filter(Boolean))];
+  if (!days.length) return 'Not provided';
+
+  const weekdaySet = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']);
+  const weekendSet = new Set(['Saturday', 'Sunday']);
+
+  const allWeekdays = days.every((day) => weekdaySet.has(day));
+  if (allWeekdays) return 'Weekdays';
+
+  const allWeekends = days.every((day) => weekendSet.has(day));
+  if (allWeekends) return 'Weekends';
+
+  if (days.length <= 2) return days.join(', ');
+  return `${days.length} days selected`;
+};
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [showLogout, setShowLogout] = useState(false);
+  const [menteeName, setMenteeName] = useState('');
+  const [mentorName, setMentorName] = useState('');
+  const [menteeId, setMenteeId] = useState(null);
+  const [latestRequest, setLatestRequest] = useState(null);
+  const [matchLanguage, setMatchLanguage] = useState('Not provided');
+  const [matchAvailability, setMatchAvailability] = useState('Not provided');
+  const [refreshingMatch, setRefreshingMatch] = useState(false);
+  const [refreshMessage, setRefreshMessage] = useState('');
   const navigate = useNavigate();
+  const { logout, loading } = useMenteeAuth();
   const { pathname } = useLocation();
   const role = (() => {
+    const authRole = mapAppRoleToUiRole(getAuthSession()?.role);
+    if (authRole) return authRole;
     try {
       const storedRole = localStorage.getItem('userRole');
       if (storedRole) return storedRole;
@@ -21,14 +60,105 @@ const Sidebar = ({ isOpen, onClose }) => {
   })();
   const navRoutes = getRoutesForLayout(role, { sidebarOnly: true });
 
-  const handleLogout = () => {
+  const loadMatchContext = async () => {
+    if (role === 'mentors') return;
+    const auth = getAuthSession();
+    if (!auth?.email) return;
+
     try {
-      localStorage.removeItem('bookingComplete');
+      const mentees = normalizeList(await menteeApi.getMentees({ email: auth.email }));
+      const currentMentee = mentees[0] || null;
+
+      setMenteeName(currentMentee?.first_name || '');
+      setMenteeId(currentMentee?.id ?? null);
+
+      if (!currentMentee?.id) {
+        setLatestRequest(null);
+        setMatchLanguage('Not provided');
+        setMatchAvailability('Not provided');
+        return;
+      }
+
+      const requests = normalizeList(
+        await menteeApi.listMenteeRequests({ mentee_id: currentMentee.id })
+      );
+      const latest = requests[0] || null;
+      setLatestRequest(latest);
+      setMatchLanguage(latest?.language || 'Not provided');
+      setMatchAvailability(summarizeAvailability(latest?.preferred_times));
     } catch {
-      // ignore storage errors
+      setLatestRequest(null);
+      setMatchLanguage('Not provided');
+      setMatchAvailability('Not provided');
     }
-    setShowLogout(false);
-    navigate('/login');
+  };
+
+  useEffect(() => {
+    if (role === 'mentors') {
+      const loadMentorContext = async () => {
+        const auth = getAuthSession();
+        if (!auth?.email) return;
+        try {
+          const mentors = normalizeList(await mentorApi.getMentors({ email: auth.email }));
+          const currentMentor = mentors[0] || null;
+          setMentorName(currentMentor?.first_name || '');
+        } catch {
+          setMentorName('');
+        }
+      };
+      loadMentorContext();
+    } else {
+      loadMatchContext();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      setShowLogout(false);
+      navigate('/login');
+    }
+  };
+
+  const handleRefreshSuggestions = async () => {
+    setRefreshMessage('');
+
+    if (!menteeId || !latestRequest) {
+      setRefreshMessage('Complete assessment first to generate matches.');
+      return;
+    }
+
+    setRefreshingMatch(true);
+    try {
+      await menteeApi.createRequest({
+        feeling: latestRequest?.feeling || '',
+        feeling_cause: latestRequest?.feeling_cause || '',
+        support_type: latestRequest?.support_type || '',
+        comfort_level: latestRequest?.comfort_level || '',
+        topics: Array.isArray(latestRequest?.topics) ? latestRequest.topics : [],
+        free_text: latestRequest?.free_text || '',
+        preferred_times: Array.isArray(latestRequest?.preferred_times)
+          ? latestRequest.preferred_times
+          : [],
+        preferred_format: latestRequest?.preferred_format || '',
+        language: latestRequest?.language || '',
+        timezone: latestRequest?.timezone || '',
+        access_needs: latestRequest?.access_needs || '',
+        safety_notes: latestRequest?.safety_notes || '',
+        session_mode: latestRequest?.session_mode || 'online',
+        allow_auto_match: latestRequest?.allow_auto_match !== false,
+        safety_flag: Boolean(latestRequest?.safety_flag),
+      });
+      await loadMatchContext();
+      window.dispatchEvent(new CustomEvent('mentee:recommendations-updated'));
+      setRefreshMessage('Suggestions refreshed successfully.');
+    } catch (error) {
+      setRefreshMessage(error?.message || 'Unable to refresh suggestions right now.');
+    } finally {
+      setRefreshingMatch(false);
+    }
   };
 
   return (
@@ -59,7 +189,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           Good Morning
         </div>
         <div className="text-[#111827]" style={{ fontFamily: 'DM Sans', fontSize: '20px', lineHeight: '28px', fontWeight: 600 }}>
-          Rajeswari
+          {role === 'mentors' ? mentorName || 'Mentor' : menteeName || 'Rajeswari'}
         </div>
       </div>
 
@@ -123,7 +253,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     <circle cx="12" cy="16" r="1" fill="currentColor" />
                   </svg>
                 </span>
-                <span>Language: English</span>
+                <span>Language: {matchLanguage}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-4 w-4 text-current">
@@ -132,13 +262,22 @@ const Sidebar = ({ isOpen, onClose }) => {
                     <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                 </span>
-                <span>Availability: Weekdays</span>
+                <span>Availability: {matchAvailability}</span>
               </div>
             </div>
 
-            <button className="mt-3 text-xs text-[#5b2c91] underline">
-              Rematch / Refresh Suggestions
+            <button
+              className="mt-3 text-xs text-[#5b2c91] underline disabled:opacity-60"
+              onClick={handleRefreshSuggestions}
+              disabled={refreshingMatch}
+            >
+              {refreshingMatch ? 'Refreshing Suggestions...' : 'Rematch / Refresh Suggestions'}
             </button>
+            {refreshMessage && (
+              <div className={`mt-2 text-[11px] ${refreshMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+                {refreshMessage}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -157,8 +296,9 @@ const Sidebar = ({ isOpen, onClose }) => {
               <button
                 className="rounded-md bg-accent px-4 py-2 text-sm text-on-accent"
                 onClick={handleLogout}
+                disabled={loading}
               >
-                Logout
+                {loading ? 'Logging out...' : 'Logout'}
               </button>
             </div>
           </div>

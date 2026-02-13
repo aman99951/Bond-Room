@@ -1,7 +1,33 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useMentorScreenData } from './useMentorScreenData';
 
 const MentorDetails = () => {
+  const { mentor, availability, review, loading, error } = useMentorScreenData();
+  const mentorIdSuffix = mentor?.id ? `?mentorId=${mentor.id}` : '';
+  const rating = mentor?.rating != null ? Number(mentor.rating).toFixed(1) : '';
+  const reviewCount = mentor?.reviews != null ? Number(mentor.reviews) : null;
+  const reviewStars = review?.rating ? '*'.repeat(Math.max(1, Math.min(5, Number(review.rating)))) : '';
+  const displayName = mentor?.name || (mentor?.id ? `Mentor #${mentor.id}` : '');
+  const [aboutExpanded, setAboutExpanded] = useState(false);
+  const [showReadMore, setShowReadMore] = useState(false);
+  const aboutRef = useRef(null);
+
+  useEffect(() => {
+    if (aboutExpanded) return undefined;
+    const checkOverflow = () => {
+      const element = aboutRef.current;
+      if (!element) {
+        setShowReadMore(false);
+        return;
+      }
+      setShowReadMore(element.scrollHeight > element.clientHeight + 1);
+    };
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [mentor?.bio, aboutExpanded]);
+
   return (
     <div className="p-3 sm:p-4 md:p-6 overflow-x-hidden bg-transparent">
       <div
@@ -13,73 +39,81 @@ const MentorDetails = () => {
           >
             <div className="flex flex-col items-center text-center">
               <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                <img
-                  src="https://c.pxhere.com/photos/c7/42/young_man_portrait_beard_young_man_male_handsome_young_man_handsome-1046502.jpg!d"
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                {mentor?.avatar ? (
+                  <img
+                    src={mentor.avatar}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gray-200" />
+                )}
               </div>
               <h1
                 className="mt-3 text-[#111827] text-center text-xl sm:text-2xl"
                 style={{ fontFamily: 'Inter', lineHeight: '32px', fontWeight: 700 }}
               >
-                Dr. Lakshmi T Rajan
+                {displayName}
               </h1>
-              <div className="text-xs text-[#64748B] flex items-center gap-1">
-                <span className="inline-flex h-3 w-3 items-center justify-center">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="h-3 w-3 text-[#4B5563]">
-                    <path d="M12 21s7-5.2 7-11a7 7 0 0 0-14 0c0 5.8 7 11 7 11z" stroke="currentColor" strokeWidth="1.5" />
-                    <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-                  </svg>
-                </span>
-                Madurai, TN
-              </div>
+              {mentor?.location && (
+                <div className="text-xs text-[#64748B] flex items-center gap-1">
+                  <span className="inline-flex h-3 w-3 items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="h-3 w-3 text-[#4B5563]">
+                      <path d="M12 21s7-5.2 7-11a7 7 0 0 0-14 0c0 5.8 7 11 7 11z" stroke="currentColor" strokeWidth="1.5" />
+                      <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                  </span>
+                  {mentor.location}
+                </div>
+              )}
 
-              <div
-                className="mt-3 inline-flex items-center justify-center rounded-full bg-[#DCFCE7] px-3 py-1 text-[#166534] text-xs"
-                style={{
-                  minWidth: '106.17px',
-                  height: '24px',
-                  fontFamily: 'Inter',
-                  fontWeight: 600,
-                }}
-              >
-                Senior Mentor
-              </div>
+              {mentor?.qualification && (
+                <div
+                  className="mt-3 inline-flex items-center justify-center rounded-full bg-[#DCFCE7] px-3 py-1 text-[#166534] text-xs"
+                  style={{
+                    minWidth: '106.17px',
+                    height: '24px',
+                    fontFamily: 'Inter',
+                    fontWeight: 600,
+                  }}
+                >
+                  {mentor.qualification}
+                </div>
+              )}
               <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
-                <span
-                  className="rounded-full bg-[#F1F5F9] px-[10px] py-[4px] text-[#334155] text-xs"
-                  style={{
-                    fontFamily: 'DM Sans',
-                    fontWeight: 500,
-                  }}
-                >
-                  Tamil
-                </span>
-                <span
-                  className="rounded-full bg-[#F1F5F9] px-[10px] py-[4px] text-[#334155] text-xs"
-                  style={{
-                    fontFamily: 'DM Sans',
-                    fontWeight: 500,
-                  }}
-                >
-                  English
-                </span>
+                {(mentor?.languages || []).map((language) => (
+                  <span
+                    key={language}
+                    className="rounded-full bg-[#F1F5F9] px-[10px] py-[4px] text-[#334155] text-xs"
+                    style={{
+                      fontFamily: 'DM Sans',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {language}
+                  </span>
+                ))}
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-center gap-2 mx-auto pb-4 sm:pb-6" style={{ minHeight: '48px' }}>
-              <span className="text-[#f4b740]">★</span>
-              <span style={{ fontFamily: 'Inter', fontSize: '16px', lineHeight: '24px', fontWeight: 600, textAlign: 'center', verticalAlign: 'middle', color: '#111827' }}>
-                4.9
-              </span>
-              <span style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '24px', fontWeight: 400, textAlign: 'center', verticalAlign: 'middle', color: '#6b7280' }}>
-                (128 reviews)
-              </span>
-            </div>
+            {(rating || reviewCount != null) && (
+              <div className="mt-4 flex items-center justify-center gap-2 mx-auto pb-4 sm:pb-6" style={{ minHeight: '48px' }}>
+                <span className="text-[#f4b740]">*</span>
+                {rating && (
+                  <span style={{ fontFamily: 'Inter', fontSize: '16px', lineHeight: '24px', fontWeight: 600, textAlign: 'center', verticalAlign: 'middle', color: '#111827' }}>
+                    {rating}
+                  </span>
+                )}
+                {reviewCount != null && (
+                  <span style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '24px', fontWeight: 400, textAlign: 'center', verticalAlign: 'middle', color: '#6b7280' }}>
+                    ({reviewCount} reviews)
+                  </span>
+                )}
+              </div>
+            )}
 
             <Link
-              to="/book-session"
+              to={`/book-session${mentorIdSuffix}`}
               className="mt-4 block rounded-[8px] bg-[#5D3699] text-white text-center px-4 sm:px-6 py-3 w-full lg:w-[275.33px] text-sm sm:text-base"
               style={{
                 height: '48px',
@@ -91,21 +125,32 @@ const MentorDetails = () => {
               Schedule Session
             </Link>
 
-            <div className="mt-4 text-[10px] text-[#6b7280] text-center">AI Matched For:</div>
-            <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
-              <span className="rounded-full bg-[#E0E7FF] px-3 py-1 text-[10px] text-[#5D3699]">Anxiety</span>
-              <span className="rounded-full bg-[#E0E7FF] px-3 py-1 text-[10px] text-[#5D3699]">Stress</span>
-            </div>
+            {Array.isArray(mentor?.areas) && mentor.areas.length > 0 && (
+              <>
+                <div className="mt-4 text-[10px] text-[#6b7280] text-center">AI Matched For:</div>
+                <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
+                  {mentor.areas.map((area) => (
+                    <span key={area} className="rounded-full bg-[#E0E7FF] px-3 py-1 text-[10px] text-[#5D3699]">{area}</span>
+                  ))}
+                </div>
+              </>
+            )}
           </aside>
 
           <Link to="/mentors" className="text-xs text-[#6b7280] underline block">
-            ← Back to recommendations
+            {'<-'} Back to recommendations
           </Link>
         </div>
 
         <section
           className="space-y-4 sm:space-y-6 lg:space-y-8 min-w-0 w-full lg:w-[728.67px] lg:h-[1030px] lg:ml-[80.33px]"
         >
+          {(loading || error) && (
+            <div className={`text-xs sm:text-sm ${error ? 'text-red-600' : 'text-[#6b7280]'}`}>
+              {error || 'Loading mentor details...'}
+            </div>
+          )}
+
           <div
             className="border border-[#e5e7eb] rounded-[16px] bg-white p-4 sm:p-6 lg:p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)] w-full lg:w-[728.67px] lg:h-[267px]"
           >
@@ -115,22 +160,31 @@ const MentorDetails = () => {
             >
               About the Mentor
             </h2>
-            <p
-              className="mt-3 text-[#6b7280] text-sm sm:text-base w-full lg:w-[649px] lg:h-[128px] lg:max-h-[128px]"
-              style={{
-                fontFamily: 'DM Sans',
-                lineHeight: '26px',
-                fontWeight: 400,
-              }}
-            >
-             Hi there! I'm Lakshmi, and I specialize in helping students navigate the pressures of high school with confidence. With over 5 years of experience in educational counseling, I've helped hundreds of teens find their balance.
-            </p>
-            <button
-              className="mt-3 text-[#5D3699] text-center text-sm sm:text-base"
-              style={{ fontFamily: 'Inter', lineHeight: '24px', fontWeight: 600 }}
-            >
-              Read More
-            </button>
+            {mentor?.bio && (
+              <p
+                ref={aboutRef}
+                className={`mt-3 text-[#6b7280] text-sm sm:text-base w-full lg:w-[649px] ${
+                  aboutExpanded ? '' : 'line-clamp-4'
+                }`}
+                style={{
+                  fontFamily: 'DM Sans',
+                  lineHeight: '26px',
+                  fontWeight: 400,
+                }}
+              >
+                {mentor.bio}
+              </p>
+            )}
+            {showReadMore && (
+              <button
+                type="button"
+                className="mt-3 text-[#5D3699] text-center text-sm sm:text-base"
+                style={{ fontFamily: 'Inter', lineHeight: '24px', fontWeight: 600 }}
+                onClick={() => setAboutExpanded((prev) => !prev)}
+              >
+                {aboutExpanded ? 'Read Less' : 'Read More'}
+              </button>
+            )}
           </div>
 
           <div
@@ -143,12 +197,12 @@ const MentorDetails = () => {
               Wisdom Areas
             </h2>
             <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-3 lg:gap-4 w-full lg:w-[648.67px] lg:h-[92px]">
-              {['Exam Anxiety', 'Study Strategies', 'Parent Pressure', 'Motivation', 'Stress Relief', 'Time Management', 'Perfectionism'].map((t) => (
+              {(mentor?.areas || []).map((area) => (
                 <span
-                  key={t}
+                  key={area}
                   className="rounded-[8px] bg-[#F1F5F9] px-3 sm:px-4 py-1.5 sm:py-2 text-[9px] sm:text-[10px] text-[#5D3699]"
                 >
-                  {t}
+                  {area}
                 </span>
               ))}
             </div>
@@ -170,15 +224,7 @@ const MentorDetails = () => {
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1 sm:gap-2 lg:gap-3 mt-2">
-                {[
-                  [],
-                  ['9:00 AM'],
-                  [],
-                  ['2:00 PM'],
-                  [],
-                  ['10:00 AM', '11:00 AM'],
-                  ['3:00 PM'],
-                ].map((times, i) => (
+                {(availability || []).map((times, i) => (
                   <div key={i} className="flex flex-col items-center gap-1 sm:gap-2">
                     {times.length === 0 ? (
                       <span className="h-6 sm:h-8" />
@@ -208,26 +254,27 @@ const MentorDetails = () => {
                   className="text-[#111827] text-sm sm:text-base"
                   style={{ fontFamily: 'Inter', lineHeight: '24px', fontWeight: 600 }}
                 >
-                  Michael B.
+                  {review ? 'Recent Feedback' : 'No Feedback Yet'}
                 </span>
                 <span
                   className="text-[#f4b740] text-base sm:text-lg"
                   style={{ lineHeight: '16px' }}
                 >
-                  ★★★★★
+                  {reviewStars}
                 </span>
               </div>
-              <p
-                className="mt-2 text-sm sm:text-base w-full lg:w-[598.67px] lg:h-[48px]"
-                style={{
-                  fontFamily: 'DM Sans',
-                  lineHeight: '24px',
-                  fontWeight: 400,
-                }}
-              >
-                "Her guidance on study strategies completely changed my approach to learning. I feel more confident and
-                organized than ever."
-              </p>
+              {review?.comments && (
+                <p
+                  className="mt-2 text-sm sm:text-base w-full lg:w-[598.67px] lg:h-[48px]"
+                  style={{
+                    fontFamily: 'DM Sans',
+                    lineHeight: '24px',
+                    fontWeight: 400,
+                  }}
+                >
+                  "{review.comments}"
+                </p>
+              )}
             </div>
           </div>
         </section>

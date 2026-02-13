@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TopAuth from '../../auth/TopAuth';
@@ -6,12 +6,124 @@ import BottomAuth from '../../auth/BottomAuth';
 import mentorLeft from '../../assets/teach1.png';
 import mentorBottom from '../../assets/teach2.png';
 import imageContainer from '../../assets/Image Container.png';
+import { mentorApi } from '../../../apis/api/mentorApi';
+import { useMentorAuth } from '../../../apis/apihook/useMentorAuth';
+import { useMentorData } from '../../../apis/apihook/useMentorData';
+import { getAuthSession, getPendingMentorRegistration } from '../../../apis/api/storage';
+
+const getUploadStatus = (file, uploaded) => {
+  if (file?.name) return file.name;
+  if (uploaded) return 'Uploaded';
+  return 'Not uploaded';
+};
 
 const VerifyIdentity = () => {
   const navigate = useNavigate();
+  const pendingMentor = useMemo(() => getPendingMentorRegistration(), []);
+  const { mentor } = useMentorData();
+  const { login } = useMentorAuth();
   const [aadhaarFront, setAadhaarFront] = useState(false);
   const [aadhaarBack, setAadhaarBack] = useState(false);
   const [passport, setPassport] = useState(false);
+  const [aadhaarFrontFile, setAadhaarFrontFile] = useState(null);
+  const [aadhaarBackFile, setAadhaarBackFile] = useState(null);
+  const [passportFile, setPassportFile] = useState(null);
+  const [notes, setNotes] = useState('');
+  const [verificationId, setVerificationId] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [authReady, setAuthReady] = useState(Boolean(getAuthSession()?.accessToken));
+  const mentorId = pendingMentor?.mentorId || mentor?.id;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (authReady) return undefined;
+    if (!pendingMentor?.email || !pendingMentor?.password) return undefined;
+
+    const ensureLogin = async () => {
+      try {
+        await login(pendingMentor.email, pendingMentor.password, 'mentors');
+        if (!cancelled) setAuthReady(true);
+      } catch (err) {
+        if (!cancelled) {
+          setErrorMessage(err?.message || 'Unable to authenticate mentor session.');
+        }
+      }
+    };
+
+    ensureLogin();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, login, pendingMentor?.email, pendingMentor?.password]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!authReady || !mentorId) return undefined;
+
+    const loadVerification = async () => {
+      try {
+        const response = await mentorApi.listIdentityVerifications({ mentor_id: mentorId });
+        const list = Array.isArray(response) ? response : response?.results || [];
+        const existing = list[0] || null;
+        if (!cancelled && existing) {
+          setVerificationId(existing.id);
+          setVerificationStatus(existing.status || '');
+          setAadhaarFront(Boolean(existing.aadhaar_front));
+          setAadhaarBack(Boolean(existing.aadhaar_back));
+          setPassport(Boolean(existing.passport_or_license));
+          setNotes(existing.additional_notes || '');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setErrorMessage(err?.message || 'Unable to load verification status.');
+        }
+      }
+    };
+
+    loadVerification();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, mentorId]);
+
+  const handleSubmit = async () => {
+    setErrorMessage('');
+    setInfoMessage('');
+
+    if (!mentorId) {
+      setErrorMessage('Mentor registration not found. Please register again.');
+      return;
+    }
+    if (!authReady) {
+      setErrorMessage('Please login to continue verification.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = new FormData();
+      payload.append('mentor', String(mentorId));
+      if (aadhaarFrontFile) payload.append('aadhaar_front', aadhaarFrontFile);
+      if (aadhaarBackFile) payload.append('aadhaar_back', aadhaarBackFile);
+      if (passportFile) payload.append('passport_or_license', passportFile);
+      if (notes) payload.append('additional_notes', notes);
+
+      if (verificationId) {
+        await mentorApi.updateIdentityVerification(verificationId, payload);
+      } else {
+        await mentorApi.createIdentityVerification(payload);
+      }
+      setInfoMessage('Identity verification submitted successfully.');
+      navigate('/mentor-verify-contact');
+    } catch (err) {
+      setErrorMessage(err?.message || 'Unable to submit verification right now.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
@@ -86,12 +198,20 @@ const VerifyIdentity = () => {
 
                   <form className="mt-6 space-y-5">
                     <div className="grid gap-4 sm:grid-cols-3">
-                      <label className="group border border-dashed border-[#d7d0e2] rounded-xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer bg-white hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91]">
+                      <label
+                        className={`group border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
+                          aadhaarFront ? 'border-[#22c55e] bg-[#f0fdf4]' : 'border-[#d7d0e2] bg-white'
+                        }`}
+                      >
                         <input
                           type="file"
                           className="sr-only"
                           accept=".jpg,.jpeg,.png,.pdf"
-                          onChange={(e) => setAadhaarFront(!!e.target.files?.length)}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            setAadhaarFrontFile(file);
+                            setAadhaarFront(Boolean(file));
+                          }}
                         />
                         <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
                           <Upload
@@ -101,14 +221,25 @@ const VerifyIdentity = () => {
                         </div>
                         <span className="text-sm text-[#1f2937]">Aadhaar Front</span>
                         <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
+                        <span className={`text-xs max-w-full truncate ${aadhaarFront ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
+                          {getUploadStatus(aadhaarFrontFile, aadhaarFront)}
+                        </span>
                       </label>
 
-                      <label className="group border border-dashed border-[#d7d0e2] rounded-xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer bg-white hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91]">
+                      <label
+                        className={`group border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
+                          aadhaarBack ? 'border-[#22c55e] bg-[#f0fdf4]' : 'border-[#d7d0e2] bg-white'
+                        }`}
+                      >
                         <input
                           type="file"
                           className="sr-only"
                           accept=".jpg,.jpeg,.png,.pdf"
-                          onChange={(e) => setAadhaarBack(!!e.target.files?.length)}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            setAadhaarBackFile(file);
+                            setAadhaarBack(Boolean(file));
+                          }}
                         />
                         <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
                           <Upload
@@ -118,14 +249,25 @@ const VerifyIdentity = () => {
                         </div>
                         <span className="text-sm text-[#1f2937]">Aadhaar Back</span>
                         <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
+                        <span className={`text-xs max-w-full truncate ${aadhaarBack ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
+                          {getUploadStatus(aadhaarBackFile, aadhaarBack)}
+                        </span>
                       </label>
 
-                      <label className="group border border-dashed border-[#d7d0e2] rounded-xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer bg-white hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91]">
+                      <label
+                        className={`group border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
+                          passport ? 'border-[#22c55e] bg-[#f0fdf4]' : 'border-[#d7d0e2] bg-white'
+                        }`}
+                      >
                         <input
                           type="file"
                           className="sr-only"
                           accept=".jpg,.jpeg,.png,.pdf"
-                          onChange={(e) => setPassport(!!e.target.files?.length)}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            setPassportFile(file);
+                            setPassport(Boolean(file));
+                          }}
                         />
                         <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
                           <Upload
@@ -135,6 +277,9 @@ const VerifyIdentity = () => {
                         </div>
                         <span className="text-sm text-[#1f2937]">Passport/Driving License</span>
                         <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
+                        <span className={`text-xs max-w-full truncate ${passport ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
+                          {getUploadStatus(passportFile, passport)}
+                        </span>
                       </label>
                     </div>
 
@@ -147,16 +292,26 @@ const VerifyIdentity = () => {
                         rows={4}
                         className="mt-2 w-full rounded-md border border-[#d7d0e2] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent"
                         placeholder="Add a brief explanation if any detail differs from your application..."
+                        value={notes}
+                        onChange={(event) => setNotes(event.target.value)}
                       />
                     </div>
 
                     <div className="flex flex-col items-center gap-2">
+                      {verificationStatus && (
+                        <p className="text-xs text-[#6b7280]">
+                          Current status: <span className="font-semibold">{verificationStatus}</span>
+                        </p>
+                      )}
+                      {errorMessage && <p className="text-xs text-red-600">{errorMessage}</p>}
+                      {!errorMessage && infoMessage && <p className="text-xs text-green-700">{infoMessage}</p>}
                       <button
                         type="button"
                         className="w-full rounded-md bg-[#5b2c91] text-white py-2.5 text-sm font-semibold hover:bg-[#4a2374] transition-all"
-                        onClick={() => navigate('/mentor-verify-contact')}
+                        onClick={handleSubmit}
+                        disabled={loading}
                       >
-                        Submit for Verification
+                        {loading ? 'Submitting...' : 'Submit for Verification'}
                       </button>
                       <p className="text-xs text-[#6b7280]">Verification usually takes 24-48 hours</p>
                     </div>

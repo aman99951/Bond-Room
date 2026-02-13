@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import { Link } from 'react-router-dom';
-const Choice = ({ label, selected }) => {
+import { Link, useNavigate } from 'react-router-dom';
+import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
+
+const Choice = ({ label, selected, onClick }) => {
   return (
     <button
       type="button"
-      className={`relative w-[240px] h-[69px] rounded-[12px] border-2 px-[59px] py-[22px] text-sm text-secondary flex items-center justify-center ${
+      onClick={onClick}
+      className={`relative w-[240px] h-[69px] rounded-[12px] border-2 px-[20px] py-[22px] text-sm text-secondary flex items-center justify-center ${
         selected ? 'border-[#41a34a] bg-[#f2faf3] shadow-sm' : 'border-default'
       }`}
     >
@@ -32,6 +35,24 @@ const Choice = ({ label, selected }) => {
 };
 
 const NeedsAssessmentQ5 = () => {
+  const navigate = useNavigate();
+  const { draft, saveAnswer, submitAssessment, loading, error } = useMenteeAssessment();
+  const [selectedLanguage, setSelectedLanguage] = useState(draft.language || 'Tamil');
+  const [localError, setLocalError] = useState('');
+
+  const options = ['Tamil', 'English', 'Telugu', 'Malayalam', 'Kannada', 'Hindi'];
+
+  const handleFinish = async () => {
+    setLocalError('');
+    try {
+      saveAnswer('language', selectedLanguage);
+      await submitAssessment();
+      navigate('/dashboard');
+    } catch (err) {
+      setLocalError(err?.message || 'Unable to submit assessment.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-surface text-primary flex flex-col">
       <TopAuth />
@@ -61,13 +82,19 @@ const NeedsAssessmentQ5 = () => {
             </div>
 
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center">
-              <Choice label="Tamil" selected />
-              <Choice label="English" />
-              <Choice label="Telugu" />
-              <Choice label="Malayalam" />
-              <Choice label="Kannada" />
-              <Choice label="Hindi" />
+              {options.map((option) => (
+                <Choice
+                  key={option}
+                  label={option}
+                  selected={selectedLanguage === option}
+                  onClick={() => setSelectedLanguage(option)}
+                />
+              ))}
             </div>
+
+            {(localError || error) && (
+              <p className="mt-4 text-sm text-red-600 text-center">{localError || error}</p>
+            )}
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
@@ -76,15 +103,20 @@ const NeedsAssessmentQ5 = () => {
               >
                 Back
               </Link>
-              <Link
-                to="/dashboard"
-                className="w-full sm:w-80 rounded-md bg-accent text-on-accent py-2.5 text-sm text-center"
+              <button
+                type="button"
+                onClick={handleFinish}
+                className="w-full sm:w-80 rounded-md bg-accent text-on-accent py-2.5 text-sm text-center disabled:opacity-70"
+                disabled={loading}
               >
-                Finish →</Link>
+                {loading ? 'Submitting...' : 'Finish →'}
+              </button>
             </div>
 
             <div className="mt-4 text-center">
-              <button className="text-xs text-subtle underline">Skip this question</button>
+              <button className="text-xs text-subtle underline" onClick={handleFinish} disabled={loading}>
+                Skip this question
+              </button>
             </div>
           </div>
         </div>
@@ -96,4 +128,3 @@ const NeedsAssessmentQ5 = () => {
 };
 
 export default NeedsAssessmentQ5;
-

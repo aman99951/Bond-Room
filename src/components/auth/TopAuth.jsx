@@ -9,13 +9,13 @@ const TopAuth = () => {
   return (
     <header className="border-b border-gray-100 bg-white">
       <div className="max-w-full mx-auto px-6 lg:px-[88px] h-[78px] flex items-center justify-between">
-        <div className="flex items-center">
+        <Link to="/" className="flex items-center" aria-label="Go to landing page">
           <img
             src={logo}
             alt="Bond Room"
             className="h-[49.7903px] w-[56.9998px] object-contain"
           />
-        </div>
+        </Link>
         <div className="flex items-center gap-[47px] text-[13px] text-[#36323D]">
           <nav className="hidden md:flex items-center gap-[47px]">
             <a href="#" className="hover:text-primary">About</a>

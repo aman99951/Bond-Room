@@ -32,11 +32,13 @@ const MainLayout = ({ currentUser, onSignOut }) => {
       <div className="flex-1 flex flex-col md:overflow-hidden">
         <div className="flex-1 flex flex-col md:flex-row md:overflow-hidden">
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 md:overflow-y-auto" data-scroll-container="true" tabIndex={0} role="main">
-            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <main className="flex-1 md:overflow-y-auto flex flex-col" data-scroll-container="true" tabIndex={0} role="main">
+            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1">
               <Outlet />
             </div>
-            <BottomAuth />
+            <div className="mt-auto">
+              <BottomAuth />
+            </div>
           </main>
         </div>
       </div>

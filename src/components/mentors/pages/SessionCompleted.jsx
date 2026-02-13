@@ -1,8 +1,74 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Check, Wallet, Heart, Flag, Clock, Calendar } from 'lucide-react';
+import { mentorApi } from '../../../apis/api/mentorApi';
+import { getSelectedSessionId } from '../../../apis/api/storage';
 
 const SessionCompleted = () => {
   const [selected, setSelected] = useState(null);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
+  const [note, setNote] = useState('');
+  const [amount, setAmount] = useState('');
+  const [issueCategory, setIssueCategory] = useState('other');
+  const [issueDescription, setIssueDescription] = useState('');
+
+  const sessionId = useMemo(() => getSelectedSessionId(), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!sessionId) {
+      setLoading(false);
+      return undefined;
+    }
+    const loadSession = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await mentorApi.getSessionById(sessionId);
+        if (!cancelled) setSession(response || null);
+      } catch (err) {
+        if (!cancelled) setError(err?.message || 'Unable to load session.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    loadSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
+
+  const menteeLabel = session?.mentee ? `Mentee #${session.mentee}` : 'Mentee';
+  const durationLabel = session?.duration_minutes ? `${session.duration_minutes} Minutes` : 'Duration TBD';
+  const dateLabel = session?.scheduled_start
+    ? new Date(session.scheduled_start).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+    : 'Date TBD';
+
+  const handleConfirm = async () => {
+    if (!selected || !session?.id) return;
+    setSaving(true);
+    setError('');
+    setInfoMessage('');
+    try {
+      await mentorApi.updateSession(session.id, { status: 'completed' });
+      const payload = { action: selected };
+      if (amount) payload.amount = Number(amount);
+      if (note) payload.note = note;
+      if (selected === 'report') {
+        payload.issue_category = issueCategory;
+        payload.issue_description = issueDescription || note;
+      }
+      await mentorApi.submitSessionDisposition(session.id, payload);
+      setInfoMessage('Session disposition saved successfully.');
+    } catch (err) {
+      setError(err?.message || 'Unable to process session disposition.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const cards = [
     {
@@ -41,19 +107,23 @@ const SessionCompleted = () => {
         <div className="mt-6 rounded-2xl bg-[#f7fafc] px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-[#374151]">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ec4899] text-white flex items-center justify-center text-xs font-semibold">
-              RS
+              {menteeLabel
+                .split(' ')
+                .slice(-1)[0]
+                ?.replace('#', '')
+                ?.slice(0, 2) || 'MN'}
             </div>
-            <div className="font-medium">Rahul S.</div>
+            <div className="font-medium">{menteeLabel}</div>
           </div>
           <div className="hidden sm:block h-6 w-px bg-[#e5e7eb]" />
           <div className="flex items-center gap-2 text-sm">
             <Clock className="h-4 w-4 text-[#6b7280]" />
-            45 Minutes
+            {durationLabel}
           </div>
           <div className="hidden sm:block h-6 w-px bg-[#e5e7eb]" />
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="h-4 w-4 text-[#6b7280]" />
-            Oct 24, 2024
+            {dateLabel}
           </div>
         </div>
 
@@ -95,17 +165,78 @@ const SessionCompleted = () => {
           })}
         </div>
 
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs text-[#6b7280] mb-1">Notes (optional)</label>
+            <textarea
+              rows={3}
+              className="w-full rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-sm"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Add a note for this disposition."
+            />
+          </div>
+          {(selected === 'claim' || selected === 'donate') && (
+            <div>
+              <label className="block text-xs text-[#6b7280] mb-1">Amount (optional)</label>
+              <input
+                type="number"
+                min="0"
+                className="w-full rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-sm"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                placeholder="500"
+              />
+            </div>
+          )}
+          {selected === 'report' && (
+            <>
+              <div>
+                <label className="block text-xs text-[#6b7280] mb-1">Issue Category</label>
+                <select
+                  className="w-full rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-sm"
+                  value={issueCategory}
+                  onChange={(event) => setIssueCategory(event.target.value)}
+                >
+                  <option value="technical_issue">Technical Issue</option>
+                  <option value="mentee_no_show">Mentee No-show</option>
+                  <option value="safety_concern">Safety Concern</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-[#6b7280] mb-1">Issue Description</label>
+                <textarea
+                  rows={3}
+                  className="w-full rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-sm"
+                  value={issueDescription}
+                  onChange={(event) => setIssueDescription(event.target.value)}
+                  placeholder="Describe the issue."
+                />
+              </div>
+            </>
+          )}
+        </div>
+
         <div className="mt-8 flex flex-col items-center gap-3">
           <button
             type="button"
-            className="w-full sm:w-[320px] rounded-full bg-[#d1d5db] text-white py-3 text-sm font-semibold"
-            disabled={!selected}
+            className={`w-full sm:w-[320px] rounded-full py-3 text-sm font-semibold transition ${
+              selected ? 'bg-[#5b2c91] text-white' : 'bg-[#e5e7eb] text-[#9ca3af]'
+            }`}
+            disabled={!selected || saving}
+            onClick={handleConfirm}
           >
-            Confirm Selection
+            {saving ? 'Saving...' : 'Confirm Selection'}
           </button>
           <button type="button" className="text-sm text-[#6b7280]">
             Need Help?
           </button>
+          {(loading || error || infoMessage) && (
+            <div className={`text-xs ${error ? 'text-red-600' : 'text-green-700'}`}>
+              {error || infoMessage || 'Loading session...'}
+            </div>
+          )}
         </div>
       </div>
     </div>

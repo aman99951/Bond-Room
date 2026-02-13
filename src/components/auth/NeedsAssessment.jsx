@@ -1,23 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import { Link } from 'react-router-dom';
-import moreIcon from '../assets/more.png';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
 
-const NeedOption = ({ label, selected, icon, iconClassName }) => {
+const NeedOption = ({ label, selected, icon, iconClassName, onClick }) => {
   return (
     <button
       type="button"
       className={`relative w-[240px] h-[156px] rounded-[12px] border-2 text-center flex flex-col items-center justify-center gap-3 bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] ${
         selected ? 'border-[#41a34a] bg-[#f2faf3]' : 'border-[#d7d0e2]'
       }`}
+      onClick={onClick}
     >
       <span className="h-16 w-16 rounded-full bg-[#F5F5F5] border border-[#E5E7EB] flex items-center justify-center">
         {typeof icon === 'string' ? (
           <span className={`leading-none ${iconClassName || 'text-[28px]'}`}>{icon}</span>
-        ) : (
-          <img src={icon} alt="" className={`object-contain ${iconClassName || 'h-7 w-7'}`} />
-        )}
+        ) : null}
       </span>
       <span className={`text-sm ${selected ? 'text-[#1f2937] font-semibold' : 'text-[#6b7280]'}`}>{label}</span>
       {selected && (
@@ -30,6 +29,35 @@ const NeedOption = ({ label, selected, icon, iconClassName }) => {
 };
 
 const NeedsAssessment = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { draft, saveAnswer } = useMenteeAssessment();
+  const [selectedFeeling, setSelectedFeeling] = useState(draft.feeling || 'Anxious');
+  const hideBackButton = new URLSearchParams(location.search).get('from') === 'dashboard';
+
+  const options = [
+    'Burnt Out',
+    'Anxious',
+    'Confused',
+    'Lonely',
+    'Hopeful',
+    'Other',
+  ];
+
+  const icons = {
+    'Burnt Out': '🤯',
+    Anxious: '😟',
+    Confused: '😕',
+    Lonely: '😞',
+    Hopeful: '😌',
+    Other: '⋯',
+  };
+
+  const handleNext = () => {
+    saveAnswer('feeling', selectedFeeling);
+    navigate('/needs-assessment/q2');
+  };
+
   return (
     <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
       <TopAuth />
@@ -58,27 +86,34 @@ const NeedsAssessment = () => {
             </div>
 
             <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <NeedOption label="Burnt Out" icon="🤯" iconClassName="text-[28px]" />
-              <NeedOption label="Anxious" icon="😟" iconClassName="text-[28px]" selected />
-              <NeedOption label="Confused" icon="😕" iconClassName="text-[28px]" />
-              <NeedOption label="Lonely" icon="😞" iconClassName="text-[28px]" />
-              <NeedOption label="Hopeful" icon="😌" iconClassName="text-[28px]" />
-              <NeedOption label="Other" icon="⋯" iconClassName="text-[28px]"/>
+              {options.map((option) => (
+                <NeedOption
+                  key={option}
+                  label={option}
+                  icon={icons[option]}
+                  iconClassName="text-[28px]"
+                  selected={selectedFeeling === option}
+                  onClick={() => setSelectedFeeling(option)}
+                />
+              ))}
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/verify-parent"
-                className="w-full sm:w-40 rounded-md border border-[#d7d0e2] py-2.5 text-sm text-center text-[#6b7280] bg-white"
-              >
-                Back
-              </Link>
-              <Link
-                to="/needs-assessment/q2"
+              {!hideBackButton && (
+                <Link
+                  to="/verify-parent"
+                  className="w-full sm:w-40 rounded-md border border-[#d7d0e2] py-2.5 text-sm text-center text-[#6b7280] bg-white"
+                >
+                  Back
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={handleNext}
                 className="w-full sm:w-80 rounded-md bg-[#5b2c91] text-white py-2.5 text-sm text-center"
               >
                 Next Question →
-              </Link>
+              </button>
             </div>
 
             <div className="mt-4 text-center">
@@ -94,5 +129,3 @@ const NeedsAssessment = () => {
 };
 
 export default NeedsAssessment;
-
-

@@ -1,11 +1,77 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import leftside from '../assets/Leftside.png';
 import errorIcon from '../assets/error.png';
+import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
+import {
+  clearPendingMenteeRegistration,
+  getPendingMenteeRegistration,
+} from '../../apis/api/storage';
 
 const VerifyParent = () => {
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const pendingMentee = useMemo(() => getPendingMenteeRegistration(), []);
+  const [otp, setOtp] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [otpHint, setOtpHint] = useState('');
+  const { loading, sendParentOtp, verifyParentOtp, login } = useMenteeAuth();
+
+  const parentMobileMasked =
+    state?.parentMobileMasked ||
+    (pendingMentee?.parentMobile
+      ? `${'*'.repeat(Math.max(pendingMentee.parentMobile.length - 4, 0))}${pendingMentee.parentMobile.slice(-4)}`
+      : '******0000');
+
+  const handleOtpChange = (event) => {
+    const digitsOnly = event.target.value.replace(/\D/g, '').slice(0, 6);
+    setOtp(digitsOnly);
+  };
+
+  const handleResend = async () => {
+    setErrorMessage('');
+    setInfoMessage('');
+    try {
+      if (!pendingMentee?.menteeId) {
+        throw new Error('Registration data not found. Please register again.');
+      }
+      const response = await sendParentOtp(pendingMentee.menteeId, pendingMentee.parentMobile);
+      setInfoMessage('OTP sent successfully.');
+      if (response?.otp) {
+        setOtpHint(`Test OTP: ${response.otp}`);
+      }
+    } catch (err) {
+      setErrorMessage(err?.message || 'Unable to resend OTP.');
+    }
+  };
+
+  const handleVerify = async () => {
+    setErrorMessage('');
+    setInfoMessage('');
+
+    if (!pendingMentee?.menteeId || !pendingMentee?.email || !pendingMentee?.password) {
+      setErrorMessage('Registration session expired. Please register again.');
+      return;
+    }
+
+    if (otp.length !== 6) {
+      setErrorMessage('Please enter a valid 6-digit OTP.');
+      return;
+    }
+
+    try {
+      await verifyParentOtp(pendingMentee.menteeId, otp);
+      await login(pendingMentee.email, pendingMentee.password, 'menties');
+      clearPendingMenteeRegistration();
+      navigate('/needs-assessment');
+    } catch (err) {
+      setErrorMessage(err?.message || 'OTP verification failed.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
       <TopAuth />
@@ -43,7 +109,7 @@ const VerifyParent = () => {
                     Verify phone number
                   </h2>
                   <p className="mt-1 text-xs text-[#6b7280]">
-                    Enter the 6-digit OTP sent to +91 ******3210
+                    Enter the 6-digit OTP sent to +91 {parentMobileMasked}
                   </p>
 
                   <div className="mt-5 rounded-lg border border-[#e3d7f5] bg-[#eadcf9] p-4 text-left text-[#3f3a4a] shadow-sm">
@@ -61,28 +127,41 @@ const VerifyParent = () => {
                     </div>
                   </div>
 
-                  <div className="mt-6 flex flex-wrap justify-center gap-3">
-                    {['4', '2', '', '', '', ''].map((v, i) => (
-                      <input
-                        key={i}
-                        value={v}
-                        readOnly
-                        className="h-10 w-10 rounded-md border border-[#d7d0e2] bg-white text-center text-sm"
-                      />
-                    ))}
+                  <div className="mt-6 flex justify-center">
+                    <input
+                      value={otp}
+                      onChange={handleOtpChange}
+                      placeholder="Enter OTP"
+                      className="h-10 w-44 rounded-md border border-[#d7d0e2] bg-white text-center text-sm tracking-[0.5em]"
+                      maxLength={6}
+                      inputMode="numeric"
+                    />
                   </div>
 
                   <div className="mt-4 flex items-center justify-between text-xs text-[#6b7280]">
-                    <span>01:42</span>
-                    <button className="text-[#6b7280] hover:text-[#5b2c91]">Resend OTP</button>
+                    <span>{otp.length ? `${otp.length}/6 digits` : 'Enter OTP'}</span>
+                    <button
+                      className="text-[#6b7280] hover:text-[#5b2c91] disabled:opacity-70"
+                      onClick={handleResend}
+                      type="button"
+                      disabled={loading}
+                    >
+                      Resend OTP
+                    </button>
                   </div>
 
-                  <Link
-                    to="/needs-assessment"
+                  {errorMessage && <p className="mt-3 text-sm text-red-600">{errorMessage}</p>}
+                  {!errorMessage && infoMessage && <p className="mt-3 text-sm text-green-700">{infoMessage}</p>}
+                  {!errorMessage && otpHint && <p className="mt-2 text-xs text-[#5b2c91]">{otpHint}</p>}
+
+                  <button
+                    type="button"
+                    onClick={handleVerify}
                     className="mt-5 block w-full rounded-md bg-[#5b2c91] text-white py-2.5 text-sm text-center"
+                    disabled={loading}
                   >
-                    Verify & Continue
-                  </Link>
+                    {loading ? 'Verifying...' : 'Verify & Continue'}
+                  </button>
                   <Link
                     to="/register"
                     className="mt-3 block w-full rounded-md border border-[#d7d0e2] bg-white py-2.5 text-[#6b7280] text-center"
