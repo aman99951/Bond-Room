@@ -1,4 +1,5 @@
 import { clearAuthSession, getAccessToken } from './storage';
+import { beginApiRequest, endApiRequest } from './requestLoading';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
 
@@ -47,27 +48,32 @@ const request = async (path, options = {}) => {
     }
   }
 
-  const response = await fetch(buildUrl(path), {
-    method,
-    headers: finalHeaders,
-    body: data !== undefined ? (isFormData ? data : JSON.stringify(data)) : undefined,
-  });
+  beginApiRequest();
+  try {
+    const response = await fetch(buildUrl(path), {
+      method,
+      headers: finalHeaders,
+      body: data !== undefined ? (isFormData ? data : JSON.stringify(data)) : undefined,
+    });
 
-  const payload = await parseResponseBody(response);
-  if (!response.ok) {
-    if (response.status === 401 && auth) {
-      clearAuthSession();
-      if (typeof window !== 'undefined') {
-        const currentPath = window.location.pathname || '';
-        if (currentPath !== '/login') {
-          window.location.replace('/login');
+    const payload = await parseResponseBody(response);
+    if (!response.ok) {
+      if (response.status === 401 && auth) {
+        clearAuthSession();
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname || '';
+          if (currentPath !== '/login') {
+            window.location.replace('/login');
+          }
         }
       }
+      throw toError(response, payload);
     }
-    throw toError(response, payload);
-  }
 
-  return payload;
+    return payload;
+  } finally {
+    endApiRequest();
+  }
 };
 
 export const apiClient = {

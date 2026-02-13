@@ -51,6 +51,7 @@ const ImpactDashboard = () => {
   const topicStats = Array.isArray(dashboard?.topic_stats) ? dashboard.topic_stats : [];
   const ledger = Array.isArray(dashboard?.ledger) ? dashboard.ledger : [];
   const reviewCount = feedbackList.length;
+  const isInitialLoading = loading && !dashboard;
 
   const sessionMap = useMemo(() => {
     return sessions.reduce((acc, session) => {
@@ -167,6 +168,15 @@ const ImpactDashboard = () => {
     });
   }, [topicStats]);
 
+  const loadingTopicPlaceholders = useMemo(
+    () => [
+      { label: 'Loading topic data...', value: 70, count: 0 },
+      { label: 'Loading topic data...', value: 45, count: 0 },
+      { label: 'Loading topic data...', value: 25, count: 0 },
+    ],
+    []
+  );
+
   const monthlySeries = useMemo(() => {
     const now = new Date();
     const months = [];
@@ -216,6 +226,24 @@ const ImpactDashboard = () => {
     [monthlySeries]
   );
 
+  const tableRows = isInitialLoading
+    ? Array.from({ length: ledgerPageSize }).map((_, index) => ({
+      id: `loading-${index + 1}`,
+      date: '',
+      mentee: 'Loading...',
+      duration: '--',
+      status: 'pending',
+      rating: 0,
+      notes: 'Loading...',
+    }))
+    : paginatedLedgerRows;
+
+  const topicRows = isInitialLoading
+    ? loadingTopicPlaceholders
+    : normalizedTopics.length
+      ? normalizedTopics
+      : [{ label: 'No data', value: 0, count: 0 }];
+
   return (
     <div className="min-h-screen bg-transparent text-[#111827] p-6 sm:p-8 rounded-2xl">
       <div className="max-w-[1200px] mx-auto">
@@ -245,9 +273,13 @@ const ImpactDashboard = () => {
               <span className="h-8 w-8 rounded-full bg-[#ede9fe] text-[#5b2c91] flex items-center justify-center">
                 <Video className="h-4 w-4" />
               </span>
-              <span className="text-[24px] font-semibold text-[#5b2c91]">{summary.total_sessions || 0}</span>
+              <span className="text-[24px] font-semibold text-[#5b2c91]">
+                {isInitialLoading ? '--' : summary.total_sessions || 0}
+              </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#6b7280]">{sessionChangeLabel}</p>
+            <p className="mt-1 text-[11px] text-[#6b7280]">
+              {isInitialLoading ? 'Loading metrics...' : sessionChangeLabel}
+            </p>
           </div>
           <div className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
@@ -312,8 +344,8 @@ const ImpactDashboard = () => {
               Topics Addressed
             </h3>
             <div className="mt-4 space-y-3">
-              {(normalizedTopics.length ? normalizedTopics : [{ label: 'No data', value: 0 }]).map((item) => (
-                <div key={item.label}>
+              {topicRows.map((item, index) => (
+                <div key={`${item.label}-${index}`}>
                   <div className="flex items-center justify-between text-[11px] text-[#6b7280]">
                     <span>{item.label}</span>
                     <span>{item.value}%</span>
@@ -396,7 +428,7 @@ const ImpactDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedLedgerRows.map((row) => {
+              {tableRows.map((row) => {
                 const statusLabel = getStatusLabel(row.status);
                 const badgeClass =
                   statusLabel === 'Reported'
@@ -431,7 +463,7 @@ const ImpactDashboard = () => {
                   </tr>
                 );
               })}
-              {!paginatedLedgerRows.length && (
+              {!tableRows.length && (
                 <tr className="border-t border-[#f1f5f9] text-[#4b5563]">
                   <td className="px-4 py-3 text-xs text-[#6b7280]" colSpan={6}>
                     No ledger entries yet.
@@ -451,7 +483,7 @@ const ImpactDashboard = () => {
                 type="button"
                 className="rounded-md border border-[#e6e2f1] px-3 py-1 disabled:opacity-50"
                 onClick={() => setLedgerPage((prev) => Math.max(1, prev - 1))}
-                disabled={ledgerPage <= 1}
+                disabled={isInitialLoading || ledgerPage <= 1}
               >
                 Previous
               </button>
@@ -459,7 +491,7 @@ const ImpactDashboard = () => {
                 type="button"
                 className="rounded-md bg-[#5b2c91] text-white px-3 py-1 disabled:opacity-50"
                 onClick={() => setLedgerPage((prev) => Math.min(totalLedgerPages, prev + 1))}
-                disabled={ledgerPage >= totalLedgerPages}
+                disabled={isInitialLoading || ledgerPage >= totalLedgerPages}
               >
                 Next
               </button>

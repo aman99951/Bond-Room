@@ -1,13 +1,22 @@
 // src/layouts/MainLayout.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './side-top/Sidebar';
 import BottomAuth from './auth/BottomAuth';
 import logo from '../assets/logo.png';
+import { subscribeToApiLoading } from '../apis/api/requestLoading';
 // import OrderBot from '../components/OrderBot';
 
 const MainLayout = ({ currentUser, onSignOut }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [apiLoading, setApiLoading] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToApiLoading((loading) => {
+      setApiLoading(loading);
+    });
+    return unsubscribe;
+  }, []);
 
   return (
     <div className="min-h-screen md:h-screen flex flex-col bg-page">
@@ -42,6 +51,13 @@ const MainLayout = ({ currentUser, onSignOut }) => {
           </main>
         </div>
       </div>
+      {apiLoading ? (
+        <div className="fixed inset-0 z-[60] pointer-events-none flex items-center justify-center">
+          <div className="rounded-full bg-white/85 p-4 shadow-md border border-default">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#d9d3e5] border-t-[#5D3699]" />
+          </div>
+        </div>
+      ) : null}
       {/* <OrderBot /> */}
     </div>
   );

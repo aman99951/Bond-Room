@@ -154,7 +154,7 @@ const MentorDashboardGuard = ({ children }) => {
   const session = getAuthSession();
   const { mentor, loading: mentorLoading } = useMentorData();
   const [checking, setChecking] = useState(true);
-  const [allowed, setAllowed] = useState(false);
+  const [allowed, setAllowed] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -207,13 +207,18 @@ const MentorDashboardGuard = ({ children }) => {
     };
   }, [mentor?.id, mentorLoading, session?.role]);
 
-  if (mentorLoading || checking) {
-    return <div className="p-6 text-sm text-[#6b7280]">Checking onboarding status...</div>;
-  }
-  if (!allowed) {
+  if (!mentorLoading && !checking && allowed === false) {
     return <Navigate to="/mentor-onboarding-status" replace />;
   }
-  return children;
+
+  return (
+    <>
+      {children}
+      {(mentorLoading || checking) ? (
+        <div className="mt-3 px-6 text-sm text-[#6b7280]">Checking onboarding status...</div>
+      ) : null}
+    </>
+  );
 };
 
 const AppLayout = () => {
