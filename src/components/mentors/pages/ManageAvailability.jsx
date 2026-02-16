@@ -123,7 +123,7 @@ const ManageAvailability = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mentor?.id, weekStart]);
 
-  const handleDrop = async (targetLabel, payload) => {
+  const _handleDrop = async (targetLabel, payload) => {
     if (!payload) return;
     const { fromLabel, slotId } = payload;
     if (fromLabel === targetLabel) return;

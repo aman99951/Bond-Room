@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from './client.js';
 
 export const authApi = {
   registerAdmin: (payload) => apiClient.post('/auth/register/admin/', payload, { auth: false }),

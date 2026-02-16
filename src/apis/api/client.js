@@ -1,7 +1,10 @@
-import { clearAuthSession, getAccessToken } from './storage';
-import { beginApiRequest, endApiRequest } from './requestLoading';
+import { clearAuthSession, getAccessToken } from './storage.js';
+import { beginApiRequest, endApiRequest } from './requestLoading.js';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+const API_BASE_URL = (((import.meta && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '/api')).replace(
+  /\/+$/,
+  '',
+);
 
 const normalizePath = (path) => {
   if (!path) return '/';

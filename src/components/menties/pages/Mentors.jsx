@@ -17,7 +17,7 @@ const getMentorName = (mentor) => {
   return name || mentor?.name || '';
 };
 
-const mapMentorToCard = (mentor, index = 0) => ({
+const mapMentorToCard = (mentor) => ({
   id: mentor?.id ?? null,
   name: getMentorName(mentor),
   location: mentor?.city_state || mentor?.location || '',
@@ -58,8 +58,8 @@ const Mentors = () => {
       try {
         const recommendedResponse = await menteeApi.getRecommendedMentors({ mentee_id: mentee.id });
         const recommendedList = normalizeList(recommendedResponse);
-        const cards = recommendedList.map((item, index) =>
-          mapMentorToCard(item?.mentor || item, index)
+        const cards = recommendedList.map((item) =>
+          mapMentorToCard(item?.mentor || item)
         );
         if (!cancelled) setMentors(cards);
       } catch (err) {

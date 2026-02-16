@@ -48,8 +48,14 @@ const ImpactDashboard = () => {
   }, [mentor?.id]);
 
   const summary = dashboard?.summary || {};
-  const topicStats = Array.isArray(dashboard?.topic_stats) ? dashboard.topic_stats : [];
-  const ledger = Array.isArray(dashboard?.ledger) ? dashboard.ledger : [];
+  const topicStats = useMemo(
+    () => (Array.isArray(dashboard?.topic_stats) ? dashboard.topic_stats : []),
+    [dashboard?.topic_stats]
+  );
+  const ledger = useMemo(
+    () => (Array.isArray(dashboard?.ledger) ? dashboard.ledger : []),
+    [dashboard?.ledger]
+  );
   const reviewCount = feedbackList.length;
   const isInitialLoading = loading && !dashboard;
 
@@ -246,7 +252,7 @@ const ImpactDashboard = () => {
 
   return (
     <div className="min-h-screen bg-transparent text-[#111827] p-6 sm:p-8 rounded-2xl">
-      <div className="max-w-[1200px] mx-auto">
+      <div className="max-w-full mx-auto">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-['DM_Sans'] font-bold text-[30px] leading-[36px] tracking-[0px] align-middle text-[#333333]">Impact Dashboard</h2>
@@ -509,5 +515,4 @@ const ImpactDashboard = () => {
 };
 
 export default ImpactDashboard;
-
 

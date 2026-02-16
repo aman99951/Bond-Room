@@ -96,7 +96,7 @@ const TrainingModules = () => {
             {modules.map((module) => {
               const status = module.training_status || module.status || 'locked';
               const isCompleted = status === 'completed';
-              const isInProgress = status === 'in_progress';
+              const _isInProgress = status === 'in_progress';
               const isLocked = status === 'locked';
               const cardClass = isCompleted
                 ? 'border-[#d9f3e6] bg-[#f0fff7]'

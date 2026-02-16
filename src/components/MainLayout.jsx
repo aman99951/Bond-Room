@@ -7,7 +7,7 @@ import logo from '../assets/logo.png';
 import { subscribeToApiLoading } from '../apis/api/requestLoading';
 // import OrderBot from '../components/OrderBot';
 
-const MainLayout = ({ currentUser, onSignOut }) => {
+const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [apiLoading, setApiLoading] = useState(false);
 
