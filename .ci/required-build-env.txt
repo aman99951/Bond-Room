@@ -1,0 +1,2 @@
+# Required at build time to keep CI close to production configuration.
+VITE_API_BASE_URL

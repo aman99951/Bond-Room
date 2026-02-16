@@ -4,9 +4,15 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   frontend-checkin-gate:
     runs-on: ubuntu-latest
+    env:
+      # Build parity gate: set this in repo Variables/Secrets.
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_BASE_URL }}
 
     steps:
       - name: Checkout
@@ -21,11 +27,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate required build env vars
+        run: bash scripts/ci/check_required_env.sh ".ci/required-build-env.txt"
+
       - name: Run lint
-        run: npm run lint
+        run: |
+          mkdir -p artifacts/frontend
+          npm run lint 2>&1 | tee artifacts/frontend/lint.log
 
       - name: Run tests
-        run: npm run test
+        run: npm run test 2>&1 | tee artifacts/frontend/test.log
 
       - name: Build
-        run: npm run build
+        run: npm run build 2>&1 | tee artifacts/frontend/build.log
+
+      - name: Upload frontend artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-artifacts
+          path: |
+            artifacts/frontend/
+            dist/
