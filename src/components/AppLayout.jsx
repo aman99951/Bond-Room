@@ -22,10 +22,10 @@ import BookingSuccess from './menties/pages/BookingSuccess';
 import Feedback from './menties/pages/Feedback';
 import MentorProfile from './menties/pages/MentorProfile';
 import MentorVerifyIdentity from './mentors/pages/VerifyIdentity';
-import MentorVerifyContact from './mentors/pages/VerifyContact';
 import MentorOnboardingStatus from './mentors/pages/OnboardingStatus';
 import MentorTrainingModules from './mentors/pages/TrainingModules';
 import MentorTrainingBoundaries from './mentors/pages/TrainingBoundaries';
+import MentorTrainingQuiz from './mentors/pages/TrainingQuiz';
 import MentorImpactDashboard from './mentors/pages/ImpactDashboard';
 import MentorMySessions from './mentors/pages/MySessions';
 import MentorSessionRequests from './mentors/pages/SessionRequests';
@@ -71,10 +71,10 @@ const isPublicPath = (pathname) => {
     '/register',
     '/mentor-register',
     '/mentor-verify-identity',
-    '/mentor-verify-contact',
     '/mentor-onboarding-status',
     '/mentor-training-modules',
     '/mentor-training-boundaries',
+    '/mentor-training-modules-quiz',
     '/verify-parent',
     '/needs-assessment',
   ]);
@@ -232,10 +232,12 @@ const AppLayout = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/mentor-register" element={<MentorRegister />} />
         <Route path="/mentor-verify-identity" element={<MentorVerifyIdentity />} />
-        <Route path="/mentor-verify-contact" element={<MentorVerifyContact />} />
+        <Route path="/mentor-verify-contact" element={<Navigate to="/mentor-register" replace />} />
         <Route path="/mentor-onboarding-status" element={<MentorOnboardingStatus />} />
         <Route path="/mentor-training-modules" element={<MentorTrainingModules />} />
         <Route path="/mentor-training-boundaries" element={<MentorTrainingBoundaries />} />
+        <Route path="/mentor-training-modules-quiz" element={<MentorTrainingQuiz />} />
+        <Route path="/mentor-training-quiz" element={<Navigate to="/mentor-training-modules-quiz" replace />} />
         <Route path="/admin" element={<AdminPortal />} />
         <Route path="/verify-parent" element={<VerifyParent />} />
         <Route path="/needs-assessment" element={<NeedsAssessment />} />

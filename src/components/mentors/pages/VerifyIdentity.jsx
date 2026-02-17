@@ -11,6 +11,27 @@ import { useMentorAuth } from '../../../apis/apihook/useMentorAuth';
 import { useMentorData } from '../../../apis/apihook/useMentorData';
 import { getAuthSession, getPendingMentorRegistration } from '../../../apis/api/storage';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+
+const resolveMediaUrl = (value) => {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('/')) {
+    const base = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
+    return base ? `${base}${value}` : value;
+  }
+  return value;
+};
+
+const resolveDocumentKind = ({ file, url }) => {
+  const fileType = (file?.type || '').toLowerCase();
+  if (fileType.startsWith('image/')) return 'image';
+  if (fileType === 'application/pdf') return 'pdf';
+  if (/\.pdf($|\?)/i.test(url || '')) return 'pdf';
+  if (/\.(png|jpe?g|gif|webp|bmp|svg)($|\?)/i.test(url || '')) return 'image';
+  return 'unknown';
+};
+
 const getUploadStatus = (file, uploaded) => {
   if (file?.name) return file.name;
   if (uploaded) return 'Uploaded';
@@ -28,6 +49,12 @@ const VerifyIdentity = () => {
   const [aadhaarFrontFile, setAadhaarFrontFile] = useState(null);
   const [aadhaarBackFile, setAadhaarBackFile] = useState(null);
   const [passportFile, setPassportFile] = useState(null);
+  const [aadhaarFrontUrl, setAadhaarFrontUrl] = useState('');
+  const [aadhaarBackUrl, setAadhaarBackUrl] = useState('');
+  const [passportUrl, setPassportUrl] = useState('');
+  const [aadhaarFrontPreviewUrl, setAadhaarFrontPreviewUrl] = useState('');
+  const [aadhaarBackPreviewUrl, setAadhaarBackPreviewUrl] = useState('');
+  const [passportPreviewUrl, setPassportPreviewUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [verificationId, setVerificationId] = useState(null);
   const [verificationStatus, setVerificationStatus] = useState('');
@@ -35,7 +62,65 @@ const VerifyIdentity = () => {
   const [infoMessage, setInfoMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [authReady, setAuthReady] = useState(Boolean(getAuthSession()?.accessToken));
+  const [documentViewer, setDocumentViewer] = useState({
+    open: false,
+    title: '',
+    url: '',
+    kind: 'unknown',
+  });
   const mentorId = pendingMentor?.mentorId || mentor?.id;
+  const aadhaarFrontViewUrl = aadhaarFrontPreviewUrl || aadhaarFrontUrl;
+  const aadhaarBackViewUrl = aadhaarBackPreviewUrl || aadhaarBackUrl;
+  const passportViewUrl = passportPreviewUrl || passportUrl;
+
+  const openDocumentViewer = ({ title, url, file }) => {
+    if (!url) return;
+    setDocumentViewer({
+      open: true,
+      title,
+      url,
+      kind: resolveDocumentKind({ file, url }),
+    });
+  };
+
+  const closeDocumentViewer = () => {
+    setDocumentViewer({
+      open: false,
+      title: '',
+      url: '',
+      kind: 'unknown',
+    });
+  };
+
+  useEffect(() => {
+    if (!aadhaarFrontFile) {
+      setAadhaarFrontPreviewUrl('');
+      return undefined;
+    }
+    const objectUrl = URL.createObjectURL(aadhaarFrontFile);
+    setAadhaarFrontPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [aadhaarFrontFile]);
+
+  useEffect(() => {
+    if (!aadhaarBackFile) {
+      setAadhaarBackPreviewUrl('');
+      return undefined;
+    }
+    const objectUrl = URL.createObjectURL(aadhaarBackFile);
+    setAadhaarBackPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [aadhaarBackFile]);
+
+  useEffect(() => {
+    if (!passportFile) {
+      setPassportPreviewUrl('');
+      return undefined;
+    }
+    const objectUrl = URL.createObjectURL(passportFile);
+    setPassportPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [passportFile]);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +159,9 @@ const VerifyIdentity = () => {
           setAadhaarFront(Boolean(existing.aadhaar_front));
           setAadhaarBack(Boolean(existing.aadhaar_back));
           setPassport(Boolean(existing.passport_or_license));
+          setAadhaarFrontUrl(resolveMediaUrl(existing.aadhaar_front));
+          setAadhaarBackUrl(resolveMediaUrl(existing.aadhaar_back));
+          setPassportUrl(resolveMediaUrl(existing.passport_or_license));
           setNotes(existing.additional_notes || '');
         }
       } catch (err) {
@@ -117,7 +205,7 @@ const VerifyIdentity = () => {
         await mentorApi.createIdentityVerification(payload);
       }
       setInfoMessage('Identity verification submitted successfully.');
-      navigate('/mentor-verify-contact');
+      navigate('/mentor-onboarding-status');
     } catch (err) {
       setErrorMessage(err?.message || 'Unable to submit verification right now.');
     } finally {
@@ -186,7 +274,7 @@ const VerifyIdentity = () => {
               <div className="p-4 sm:p-6 lg:p-10 bg-[#f7f5fa] text-[#1f2937] h-full">
                 <div className="max-w-2xl mx-auto md:max-w-none md:mx-0">
                   <div className="inline-flex items-center rounded-full bg-[#e9ddff] text-xs text-[#5b2c91] px-3 py-1 font-medium">
-                    Step 2 of 3
+                    Step 3 of 3
                   </div>
                   <h2 className="mt-3 text-xl sm:text-2xl font-semibold text-[#1f2937]">
                     Verify your Identity
@@ -198,89 +286,146 @@ const VerifyIdentity = () => {
 
                   <form className="mt-6 space-y-5">
                     <div className="grid gap-4 sm:grid-cols-3">
-                      <label
-                        className={`group border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
-                          aadhaarFront ? 'border-[#22c55e] bg-[#f0fdf4]' : 'border-[#d7d0e2] bg-white'
-                        }`}
-                      >
-                        <input
-                          type="file"
-                          className="sr-only"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0] || null;
-                            setAadhaarFrontFile(file);
-                            setAadhaarFront(Boolean(file));
-                          }}
-                        />
-                        <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
-                          <Upload
-                            className={`h-5 w-5 ${aadhaarFront ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
-                            aria-hidden="true"
+                      <div className="space-y-2">
+                        <label
+                          className={`group h-[210px] border border-dashed rounded-xl p-4 flex flex-col items-center justify-between text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
+                            aadhaarFront ? 'border-[#22c55e] bg-[#f0fdf4]' : 'border-[#d7d0e2] bg-white'
+                          }`}
+                        >
+                          <input
+                            type="file"
+                            className="sr-only"
+                            accept=".jpg,.jpeg,.png,.pdf"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              setAadhaarFrontFile(file);
+                              setAadhaarFront(Boolean(file || aadhaarFrontUrl));
+                            }}
                           />
+                          <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
+                            <Upload
+                              className={`h-5 w-5 ${aadhaarFront ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
+                              aria-hidden="true"
+                            />
+                          </div>
+                          <span className="text-sm text-[#1f2937] min-h-[40px] flex items-center justify-center leading-5">Aadhaar Front</span>
+                          <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
+                          <span className={`text-xs max-w-full truncate ${aadhaarFront ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
+                            {getUploadStatus(aadhaarFrontFile, aadhaarFront)}
+                          </span>
+                        </label>
+                        <div className="h-5">
+                          {aadhaarFrontViewUrl && (
+                            <button
+                              type="button"
+                              className="inline-block text-xs text-[#5b2c91] underline"
+                              onClick={() =>
+                                openDocumentViewer({
+                                  title: 'Aadhaar Front',
+                                  url: aadhaarFrontViewUrl,
+                                  file: aadhaarFrontFile,
+                                })
+                              }
+                            >
+                              View document
+                            </button>
+                          )}
                         </div>
-                        <span className="text-sm text-[#1f2937]">Aadhaar Front</span>
-                        <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
-                        <span className={`text-xs max-w-full truncate ${aadhaarFront ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
-                          {getUploadStatus(aadhaarFrontFile, aadhaarFront)}
-                        </span>
-                      </label>
+                      </div>
 
-                      <label
-                        className={`group border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
-                          aadhaarBack ? 'border-[#22c55e] bg-[#f0fdf4]' : 'border-[#d7d0e2] bg-white'
-                        }`}
-                      >
-                        <input
-                          type="file"
-                          className="sr-only"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0] || null;
-                            setAadhaarBackFile(file);
-                            setAadhaarBack(Boolean(file));
-                          }}
-                        />
-                        <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
-                          <Upload
-                            className={`h-5 w-5 ${aadhaarBack ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
-                            aria-hidden="true"
+                      <div className="space-y-2">
+                        <label
+                          className={`group h-[210px] border border-dashed rounded-xl p-4 flex flex-col items-center justify-between text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
+                            aadhaarBack ? 'border-[#22c55e] bg-[#f0fdf4]' : 'border-[#d7d0e2] bg-white'
+                          }`}
+                        >
+                          <input
+                            type="file"
+                            className="sr-only"
+                            accept=".jpg,.jpeg,.png,.pdf"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              setAadhaarBackFile(file);
+                              setAadhaarBack(Boolean(file || aadhaarBackUrl));
+                            }}
                           />
+                          <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
+                            <Upload
+                              className={`h-5 w-5 ${aadhaarBack ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
+                              aria-hidden="true"
+                            />
+                          </div>
+                          <span className="text-sm text-[#1f2937] min-h-[40px] flex items-center justify-center leading-5">Aadhaar Back</span>
+                          <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
+                          <span className={`text-xs max-w-full truncate ${aadhaarBack ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
+                            {getUploadStatus(aadhaarBackFile, aadhaarBack)}
+                          </span>
+                        </label>
+                        <div className="h-5">
+                          {aadhaarBackViewUrl && (
+                            <button
+                              type="button"
+                              className="inline-block text-xs text-[#5b2c91] underline"
+                              onClick={() =>
+                                openDocumentViewer({
+                                  title: 'Aadhaar Back',
+                                  url: aadhaarBackViewUrl,
+                                  file: aadhaarBackFile,
+                                })
+                              }
+                            >
+                              View document
+                            </button>
+                          )}
                         </div>
-                        <span className="text-sm text-[#1f2937]">Aadhaar Back</span>
-                        <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
-                        <span className={`text-xs max-w-full truncate ${aadhaarBack ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
-                          {getUploadStatus(aadhaarBackFile, aadhaarBack)}
-                        </span>
-                      </label>
+                      </div>
 
-                      <label
-                        className={`group border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
-                          passport ? 'border-[#22c55e] bg-[#f0fdf4]' : 'border-[#d7d0e2] bg-white'
-                        }`}
-                      >
-                        <input
-                          type="file"
-                          className="sr-only"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0] || null;
-                            setPassportFile(file);
-                            setPassport(Boolean(file));
-                          }}
-                        />
-                        <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
-                          <Upload
-                            className={`h-5 w-5 ${passport ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
-                            aria-hidden="true"
+                      <div className="space-y-2">
+                        <label
+                          className={`group h-[210px] border border-dashed rounded-xl p-4 flex flex-col items-center justify-between text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
+                            passport ? 'border-[#22c55e] bg-[#f0fdf4]' : 'border-[#d7d0e2] bg-white'
+                          }`}
+                        >
+                          <input
+                            type="file"
+                            className="sr-only"
+                            accept=".jpg,.jpeg,.png,.pdf"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              setPassportFile(file);
+                              setPassport(Boolean(file || passportUrl));
+                            }}
                           />
+                          <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
+                            <Upload
+                              className={`h-5 w-5 ${passport ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
+                              aria-hidden="true"
+                            />
+                          </div>
+                          <span className="text-sm text-[#1f2937] min-h-[40px] flex items-center justify-center leading-5">Passport/Driving License</span>
+                          <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
+                          <span className={`text-xs max-w-full truncate ${passport ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
+                            {getUploadStatus(passportFile, passport)}
+                          </span>
+                        </label>
+                        <div className="h-5">
+                          {passportViewUrl && (
+                            <button
+                              type="button"
+                              className="inline-block text-xs text-[#5b2c91] underline"
+                              onClick={() =>
+                                openDocumentViewer({
+                                  title: 'Passport/Driving License',
+                                  url: passportViewUrl,
+                                  file: passportFile,
+                                })
+                              }
+                            >
+                              View document
+                            </button>
+                          )}
                         </div>
-                        <span className="text-sm text-[#1f2937]">Passport/Driving License</span>
-                        <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
-                        <span className={`text-xs max-w-full truncate ${passport ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
-                          {getUploadStatus(passportFile, passport)}
-                        </span>
-                      </label>
+                      </div>
                     </div>
 
                     <div>
@@ -322,6 +467,47 @@ const VerifyIdentity = () => {
           </div>
         </div>
       </main>
+
+      {documentViewer.open && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={closeDocumentViewer}
+          role="dialog"
+          aria-modal="true"
+          aria-label={documentViewer.title || 'Document preview'}
+        >
+          <div
+            className="w-full max-w-4xl rounded-xl bg-white shadow-2xl overflow-hidden"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#e5e7eb] px-4 py-3">
+              <h3 className="text-sm font-semibold text-[#1f2937]">{documentViewer.title}</h3>
+              <button
+                type="button"
+                className="rounded-md border border-[#d1d5db] px-3 py-1 text-xs text-[#374151] hover:bg-[#f3f4f6]"
+                onClick={closeDocumentViewer}
+              >
+                Close
+              </button>
+            </div>
+            <div className="bg-[#111827] max-h-[80vh] overflow-auto">
+              {documentViewer.kind === 'image' ? (
+                <img
+                  src={documentViewer.url}
+                  alt={documentViewer.title || 'Document preview'}
+                  className="w-full h-auto max-h-[80vh] object-contain"
+                />
+              ) : (
+                <iframe
+                  src={documentViewer.url}
+                  title={documentViewer.title || 'Document preview'}
+                  className="w-full h-[80vh] bg-white"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomAuth />
     </div>

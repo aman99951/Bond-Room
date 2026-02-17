@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Calendar, Eye, FileImage, FileText, X } from 'lucide-react';
 import { authApi } from '../../apis/api/authApi';
 import { mentorApi } from '../../apis/api/mentorApi';
 import {
@@ -30,6 +31,20 @@ const resolveMediaUrl = (value) => {
     return `${base}${value}`;
   }
   return value;
+};
+
+const resolveDocumentKind = (url) => {
+  if (!url) return 'unknown';
+  if (/\.pdf($|\?)/i.test(url)) return 'pdf';
+  if (/\.(png|jpe?g|gif|webp|bmp|svg)($|\?)/i.test(url)) return 'image';
+  return 'unknown';
+};
+
+const getDocumentName = (url) => {
+  if (!url) return '';
+  const normalized = String(url).split('?')[0];
+  const parts = normalized.split('/');
+  return parts[parts.length - 1] || 'document';
 };
 
 const toOnboardingIdentityStatus = (identityDecision) => {
@@ -111,6 +126,12 @@ const AdminPortal = () => {
     finalApprovalStatus: 'pending',
     reviewerNotes: '',
     finalRejectionReason: '',
+  });
+  const [documentViewer, setDocumentViewer] = useState({
+    open: false,
+    title: '',
+    url: '',
+    kind: 'unknown',
   });
 
   const isAdmin = session?.role === 'admin';
@@ -262,6 +283,22 @@ const AdminPortal = () => {
     setSelectedMentorId(null);
     setSelectedMentor(null);
     setSelectedOnboarding(null);
+    setDocumentViewer({ open: false, title: '', url: '', kind: 'unknown' });
+  };
+
+  const openDocumentViewer = (title, url) => {
+    const resolvedUrl = resolveMediaUrl(url);
+    if (!resolvedUrl) return;
+    setDocumentViewer({
+      open: true,
+      title,
+      url: resolvedUrl,
+      kind: resolveDocumentKind(resolvedUrl),
+    });
+  };
+
+  const closeDocumentViewer = () => {
+    setDocumentViewer({ open: false, title: '', url: '', kind: 'unknown' });
   };
 
   const handleSaveDecision = async () => {
@@ -313,7 +350,12 @@ const AdminPortal = () => {
   };
 
   const sortedMentors = useMemo(() => {
-    return [...mentors].sort((a, b) => Number(a?.id || 0) - Number(b?.id || 0));
+    return [...mentors].sort((a, b) => {
+      const aCreated = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const bCreated = b?.created_at ? new Date(b.created_at).getTime() : 0;
+      if (aCreated !== bCreated) return bCreated - aCreated;
+      return Number(b?.id || 0) - Number(a?.id || 0);
+    });
   }, [mentors]);
 
   if (isOtherRoleLoggedIn) {
@@ -624,54 +666,59 @@ const AdminPortal = () => {
                 </div>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-lg border border-[#e5e7eb] bg-[#faf8ff] p-3.5">
-                    <div className="text-xs font-semibold text-[#111827]">Identity Documents</div>
-                    <div className="mt-2 space-y-1 text-xs text-[#6b7280]">
-                      <div>
-                        Aadhaar Front:{' '}
-                        {selectedOnboarding?.identity_verification?.aadhaar_front ? (
-                          <a
-                            className="text-[#5b2c91] underline"
-                            href={resolveMediaUrl(selectedOnboarding.identity_verification.aadhaar_front)}
-                            target="_blank"
-                            rel="noreferrer"
+                  <div className="rounded-xl border border-[#ded3f2] bg-gradient-to-br from-[#faf8ff] to-[#f4efff] p-4 shadow-[0_10px_24px_rgba(91,44,145,0.08)]">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xs font-semibold tracking-wide uppercase text-[#5b2c91]">Identity Documents</div>
+                      <div className="inline-flex items-center gap-1.5 rounded-full border border-[#e1d8f3] bg-white px-2.5 py-1 text-[10px] text-[#6b7280]">
+                        <Calendar className="h-3.5 w-3.5 text-[#5b2c91]" aria-hidden="true" />
+                        <span>{formatDateTime(selectedOnboarding?.identity_verification?.submitted_at)}</span>
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-2.5">
+                      {[
+                        ['Aadhaar Front', selectedOnboarding?.identity_verification?.aadhaar_front],
+                        ['Aadhaar Back', selectedOnboarding?.identity_verification?.aadhaar_back],
+                        ['Passport/License', selectedOnboarding?.identity_verification?.passport_or_license],
+                      ].map(([label, rawUrl]) => {
+                        const resolvedUrl = resolveMediaUrl(rawUrl);
+                        const available = Boolean(resolvedUrl);
+                        const kind = resolveDocumentKind(resolvedUrl);
+                        const fileLabel = getDocumentName(resolvedUrl);
+                        return (
+                          <div
+                            key={label}
+                            className={`rounded-lg border px-3 py-2.5 ${
+                              available
+                                ? 'border-[#e2d7f5] bg-white'
+                                : 'border-[#ece8f6] bg-[#f8f7fb]'
+                            }`}
                           >
-                            View file
-                          </a>
-                        ) : 'Not uploaded'}
-                      </div>
-                      <div>
-                        Aadhaar Back:{' '}
-                        {selectedOnboarding?.identity_verification?.aadhaar_back ? (
-                          <a
-                            className="text-[#5b2c91] underline"
-                            href={resolveMediaUrl(selectedOnboarding.identity_verification.aadhaar_back)}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            View file
-                          </a>
-                        ) : 'Not uploaded'}
-                      </div>
-                      <div>
-                        Passport/License:{' '}
-                        {selectedOnboarding?.identity_verification?.passport_or_license ? (
-                          <a
-                            className="text-[#5b2c91] underline"
-                            href={resolveMediaUrl(selectedOnboarding.identity_verification.passport_or_license)}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            View file
-                          </a>
-                        ) : 'Not uploaded'}
-                      </div>
-                      <div>
-                        Submitted:{' '}
-                        <span className="text-[#111827]">
-                          {formatDateTime(selectedOnboarding?.identity_verification?.submitted_at)}
-                        </span>
-                      </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="min-w-0 flex items-center gap-2">
+                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                                  available ? 'bg-[#f1e9ff] text-[#5b2c91]' : 'bg-[#eef0f3] text-[#9ca3af]'
+                                }`}>
+                                  {kind === 'pdf' ? <FileText className="h-4 w-4" aria-hidden="true" /> : <FileImage className="h-4 w-4" aria-hidden="true" />}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="text-xs font-semibold text-[#1f2937]">{label}</div>
+                                  <div className="text-[11px] text-[#6b7280] truncate">{available ? fileLabel : 'Not uploaded'}</div>
+                                </div>
+                              </div>
+                              {available && (
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1 rounded-md border border-[#d8c8f2] bg-[#f8f2ff] px-2.5 py-1.5 text-[11px] font-semibold text-[#5b2c91] hover:bg-[#f1e7ff]"
+                                  onClick={() => openDocumentViewer(label, resolvedUrl)}
+                                >
+                                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                                  View
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -807,6 +854,55 @@ const AdminPortal = () => {
           </div>
         </div>
       </div>
+      {documentViewer.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+          role="dialog"
+          aria-modal="true"
+          onClick={closeDocumentViewer}
+        >
+          <div
+            className="w-full max-w-4xl rounded-2xl border border-[#ded3f2] bg-white shadow-[0_18px_60px_rgba(17,24,39,0.28)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#ece8f6] px-4 py-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-sm font-semibold text-[#1f2937]">{documentViewer.title}</h3>
+                <p className="truncate text-xs text-[#6b7280]">{getDocumentName(documentViewer.url)}</p>
+              </div>
+              <button
+                type="button"
+                className="rounded-md border border-[#e5e7eb] p-1.5 text-[#6b7280] hover:text-[#111827]"
+                onClick={closeDocumentViewer}
+                aria-label="Close document viewer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-[75vh] overflow-auto bg-[#f8f5ff] p-4">
+              {documentViewer.kind === 'image' && (
+                <img
+                  src={documentViewer.url}
+                  alt={documentViewer.title}
+                  className="mx-auto max-h-[68vh] w-auto max-w-full rounded-lg border border-[#e2d7f5] bg-white object-contain"
+                />
+              )}
+              {documentViewer.kind === 'pdf' && (
+                <iframe
+                  title={documentViewer.title}
+                  src={documentViewer.url}
+                  className="h-[68vh] w-full rounded-lg border border-[#e2d7f5] bg-white"
+                />
+              )}
+              {documentViewer.kind === 'unknown' && (
+                <div className="rounded-lg border border-[#e2d7f5] bg-white p-6 text-center text-sm text-[#6b7280]">
+                  Preview is not available for this file type.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

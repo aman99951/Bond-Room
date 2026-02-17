@@ -1,10 +1,18 @@
 import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
+import { clearAuthSession, getAuthSession } from '../../apis/api/storage';
 
 const TopAuth = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const isLogin = pathname === '/login';
+  const isLoggedIn = Boolean(getAuthSession()?.accessToken);
+
+  const handleLogout = () => {
+    clearAuthSession();
+    navigate('/login');
+  };
 
   return (
     <header className="border-b border-gray-100 bg-white">
@@ -22,7 +30,15 @@ const TopAuth = () => {
             <a href="#" className="hover:text-primary">Contact</a>
             <a href="#" className="hover:text-primary">Help</a>
           </nav>
-          {isLogin ? (
+          {isLoggedIn ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-4 py-1.5 rounded-md bg-accent text-on-accent text-[13px]"
+            >
+              Logout
+            </button>
+          ) : isLogin ? (
             <Link to="/register" className="px-4 py-1.5 rounded-md bg-accent text-on-accent text-[13px]">
               Register
             </Link>

@@ -63,7 +63,7 @@ const OnboardingStatus = () => {
       { key: 'application_status', label: 'Application Submitted' },
       { key: 'identity_status', label: 'Document Verification' },
       { key: 'training_status', label: 'Training Module', link: '/mentor-training-modules' },
-      { key: 'final_approval_status', label: 'Final Approval', link: '/mentor-impact-dashboard' },
+      { key: 'final_approval_status', label: 'Final Approval' },
     ],
     []
   );

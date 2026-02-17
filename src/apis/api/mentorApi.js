@@ -22,6 +22,16 @@ export const mentorApi = {
     apiClient.post(`/mentors/${mentorId}/admin-decision/`, payload),
 
   listTrainingModules: (params = {}) => apiClient.get(`/training-modules/${buildQuery(params)}`),
+  watchTrainingModuleVideo: (moduleId, payload) =>
+    apiClient.post(`/training-modules/${moduleId}/watch-video/`, payload),
+  getTrainingQuizStatus: (params = {}) =>
+    apiClient.get(`/training-modules/quiz/${buildQuery(params)}`),
+  startTrainingQuiz: (payload = {}) =>
+    apiClient.post('/training-modules/quiz/start/', payload),
+  submitTrainingQuiz: (payload) =>
+    apiClient.post('/training-modules/quiz/submit/', payload),
+  abandonTrainingQuiz: (payload) =>
+    apiClient.post('/training-modules/quiz/abandon/', payload),
   listMentorTrainingProgress: (params = {}) =>
     apiClient.get(`/mentor-training-progress/${buildQuery(params)}`),
   createMentorTrainingProgress: (payload) => apiClient.post('/mentor-training-progress/', payload),

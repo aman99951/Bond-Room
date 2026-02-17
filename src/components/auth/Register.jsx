@@ -30,8 +30,8 @@ const Register = () => {
   const [otpHint, setOtpHint] = useState('');
   const navigate = useNavigate();
   const { loading, registerMentee, sendParentOtp } = useMenteeAuth();
-  const gradeOptions = ['9th Grade', '10th Grade', '11th Grade', '12th Grade'];
-  const genderOptions = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
+  const gradeOptions = ['10th Grade', '11th Grade', '12th Grade'];
+  const genderOptions = ['Female', 'Male'];
 
   const updateField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
