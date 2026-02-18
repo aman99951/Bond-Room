@@ -69,6 +69,7 @@ test("authApi maps every wrapper to correct endpoint", async () => {
     { fnName: "sendMentorOtp", args: [{}], expectedMethod: "post", expectedPath: "/auth/mentor-contact/send-otp/" },
     { fnName: "verifyMentorOtp", args: [{}], expectedMethod: "post", expectedPath: "/auth/mentor-contact/verify-otp/" },
     { fnName: "login", args: [{}], expectedMethod: "post", expectedPath: "/login/" },
+    { fnName: "adminLogin", args: [{}], expectedMethod: "post", expectedPath: "/admin/login/" },
     { fnName: "logout", args: [], expectedMethod: "post", expectedPath: "/auth/logout/" },
   ];
 

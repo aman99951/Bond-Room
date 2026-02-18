@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Calendar, Eye, FileImage, FileText, X } from 'lucide-react';
 import { authApi } from '../../apis/api/authApi';
 import { mentorApi } from '../../apis/api/mentorApi';
@@ -96,17 +96,9 @@ const inputClass =
 
 const AdminPortal = () => {
   const [session, setSession] = useState(() => getAuthSession());
-  const [authMode, setAuthMode] = useState('login');
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    mobile: '',
-    password: '',
-  });
 
   const [mentors, setMentors] = useState([]);
   const [statusMap, setStatusMap] = useState({});
@@ -223,7 +215,7 @@ const AdminPortal = () => {
     }
     setAuthLoading(true);
     try {
-      const tokens = await authApi.login({
+      const tokens = await authApi.adminLogin({
         email: loginForm.email.trim().toLowerCase(),
         password: loginForm.password,
       });
@@ -231,47 +223,6 @@ const AdminPortal = () => {
       setLoginForm({ email: '', password: '' });
     } catch (err) {
       setAuthError(err?.message || 'Unable to login as admin.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleRegister = async (event) => {
-    event.preventDefault();
-    setAuthError('');
-    if (
-      !registerForm.firstName.trim() ||
-      !registerForm.lastName.trim() ||
-      !registerForm.email.trim() ||
-      !registerForm.mobile.trim() ||
-      !registerForm.password
-    ) {
-      setAuthError('Please fill all registration fields.');
-      return;
-    }
-    setAuthLoading(true);
-    try {
-      await authApi.registerAdmin({
-        first_name: registerForm.firstName.trim(),
-        last_name: registerForm.lastName.trim(),
-        email: registerForm.email.trim().toLowerCase(),
-        mobile: registerForm.mobile.trim(),
-        password: registerForm.password,
-      });
-      const tokens = await authApi.login({
-        email: registerForm.email.trim().toLowerCase(),
-        password: registerForm.password,
-      });
-      applySession(tokens, registerForm.email.trim().toLowerCase());
-      setRegisterForm({
-        firstName: '',
-        lastName: '',
-        email: '',
-        mobile: '',
-        password: '',
-      });
-    } catch (err) {
-      setAuthError(err?.message || 'Unable to register admin account.');
     } finally {
       setAuthLoading(false);
     }
@@ -397,130 +348,48 @@ const AdminPortal = () => {
             </div>
 
             <div className="p-6 sm:p-8">
-              <div className="inline-flex rounded-full border border-[#e5e7eb] bg-[#f9fafb] p-1">
-                <button
-                  type="button"
-                  className={`rounded-full px-4 py-1.5 text-xs font-semibold ${authMode === 'login' ? 'bg-[#5b2c91] text-white' : 'text-[#6b7280]'}`}
-                  onClick={() => setAuthMode('login')}
-                >
-                  Admin Login
-                </button>
-                <button
-                  type="button"
-                  className={`rounded-full px-4 py-1.5 text-xs font-semibold ${authMode === 'register' ? 'bg-[#5b2c91] text-white' : 'text-[#6b7280]'}`}
-                  onClick={() => setAuthMode('register')}
-                >
-                  Admin Register
-                </button>
-              </div>
-
               <h2 className="mt-5 text-2xl font-semibold text-[#111827]">
-                {authMode === 'login' ? 'Welcome back, Admin' : 'Create Admin Account'}
+                Welcome back, Admin
               </h2>
               <p className="mt-1 text-sm text-[#6b7280]">
-                {authMode === 'login'
-                  ? 'Sign in to manage mentor onboarding decisions.'
-                  : 'Register using your admin credentials to access dashboard controls.'}
+                Sign in to manage mentor onboarding decisions.
+              </p>
+              <p className="mt-2 text-xs text-[#6b7280]">
+                Admin registration is managed through Django superadmin.
               </p>
 
-              {authMode === 'login' ? (
-                <form className="mt-6 space-y-4" onSubmit={handleLogin}>
-              <div>
-                <label htmlFor="adminLoginEmail" className="text-xs text-[#6b7280]">Email</label>
-                <input
-                  id="adminLoginEmail"
-                  type="email"
-                  className={inputClass}
-                  value={loginForm.email}
-                  onChange={(event) => setLoginForm((prev) => ({ ...prev, email: event.target.value }))}
-                  placeholder="admin@example.com"
-                />
-              </div>
-              <div>
-                <label htmlFor="adminLoginPassword" className="text-xs text-[#6b7280]">Password</label>
-                <input
-                  id="adminLoginPassword"
-                  type="password"
-                  className={inputClass}
-                  value={loginForm.password}
-                  onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))}
-                  placeholder="••••••••"
-                />
-              </div>
-              {authError && <div className="text-xs text-red-600">{authError}</div>}
-              <button
-                type="submit"
-                className="w-full rounded-md bg-[#5b2c91] px-4 py-2.5 text-sm text-white hover:bg-[#4a2374] disabled:opacity-70"
-                disabled={authLoading}
-              >
-                {authLoading ? 'Signing in...' : 'Login'}
-              </button>
-            </form>
-          ) : (
-            <form className="mt-6 grid gap-4 sm:grid-cols-2" onSubmit={handleRegister}>
-              <div>
-                <label htmlFor="adminFirstName" className="text-xs text-[#6b7280]">First Name</label>
-                <input
-                  id="adminFirstName"
-                  className={inputClass}
-                  value={registerForm.firstName}
-                  onChange={(event) => setRegisterForm((prev) => ({ ...prev, firstName: event.target.value }))}
-                  placeholder="First name"
-                />
-              </div>
-              <div>
-                <label htmlFor="adminLastName" className="text-xs text-[#6b7280]">Last Name</label>
-                <input
-                  id="adminLastName"
-                  className={inputClass}
-                  value={registerForm.lastName}
-                  onChange={(event) => setRegisterForm((prev) => ({ ...prev, lastName: event.target.value }))}
-                  placeholder="Last name"
-                />
-              </div>
-              <div>
-                <label htmlFor="adminRegisterEmail" className="text-xs text-[#6b7280]">Email</label>
-                <input
-                  id="adminRegisterEmail"
-                  type="email"
-                  className={inputClass}
-                  value={registerForm.email}
-                  onChange={(event) => setRegisterForm((prev) => ({ ...prev, email: event.target.value }))}
-                  placeholder="admin@example.com"
-                />
-              </div>
-              <div>
-                <label htmlFor="adminMobile" className="text-xs text-[#6b7280]">Mobile</label>
-                <input
-                  id="adminMobile"
-                  type="tel"
-                  className={inputClass}
-                  value={registerForm.mobile}
-                  onChange={(event) => setRegisterForm((prev) => ({ ...prev, mobile: event.target.value }))}
-                  placeholder="+91 98765 43210"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="adminRegisterPassword" className="text-xs text-[#6b7280]">Password</label>
-                <input
-                  id="adminRegisterPassword"
-                  type="password"
-                  className={inputClass}
-                  value={registerForm.password}
-                  onChange={(event) => setRegisterForm((prev) => ({ ...prev, password: event.target.value }))}
-                  placeholder="Minimum 6 characters"
-                />
-              </div>
-              {authError && <div className="sm:col-span-2 text-xs text-red-600">{authError}</div>}
-              <button
-                type="submit"
-                className="sm:col-span-2 w-full rounded-md bg-[#5b2c91] px-4 py-2.5 text-sm text-white hover:bg-[#4a2374] disabled:opacity-70"
-                disabled={authLoading}
-              >
-                {authLoading ? 'Creating account...' : 'Register Admin'}
-              </button>
-            </form>
-          )}
+              <form className="mt-6 space-y-4" onSubmit={handleLogin}>
+                <div>
+                  <label htmlFor="adminLoginEmail" className="text-xs text-[#6b7280]">Email</label>
+                  <input
+                    id="adminLoginEmail"
+                    type="email"
+                    className={inputClass}
+                    value={loginForm.email}
+                    onChange={(event) => setLoginForm((prev) => ({ ...prev, email: event.target.value }))}
+                    placeholder="admin@example.com"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="adminLoginPassword" className="text-xs text-[#6b7280]">Password</label>
+                  <input
+                    id="adminLoginPassword"
+                    type="password"
+                    className={inputClass}
+                    value={loginForm.password}
+                    onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))}
+                    placeholder="********"
+                  />
+                </div>
+                {authError && <div className="text-xs text-red-600">{authError}</div>}
+                <button
+                  type="submit"
+                  className="w-full rounded-md bg-[#5b2c91] px-4 py-2.5 text-sm text-white hover:bg-[#4a2374] disabled:opacity-70"
+                  disabled={authLoading}
+                >
+                  {authLoading ? 'Signing in...' : 'Login'}
+                </button>
+              </form>
             </div>
           </div>
         </div>
@@ -908,3 +777,5 @@ const AdminPortal = () => {
 };
 
 export default AdminPortal;
+
+

@@ -9,5 +9,6 @@ export const authApi = {
   sendMentorOtp: (payload) => apiClient.post('/auth/mentor-contact/send-otp/', payload, { auth: false }),
   verifyMentorOtp: (payload) => apiClient.post('/auth/mentor-contact/verify-otp/', payload, { auth: false }),
   login: (payload) => apiClient.post('/login/', payload, { auth: false }),
+  adminLogin: (payload) => apiClient.post('/admin/login/', payload, { auth: false }),
   logout: () => apiClient.post('/auth/logout/', {}),
 };

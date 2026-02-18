@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, CirclePlay, Lock } from 'lucide-react';
 import TopAuth from '../../auth/TopAuth';
@@ -20,6 +20,8 @@ const FALLBACK_VIDEOS = [
     watched: false,
   },
 ];
+
+const YOUTUBE_IFRAME_API_SRC = 'https://www.youtube.com/iframe_api';
 
 const getModuleVideos = (moduleData) => {
   if (Array.isArray(moduleData?.video_progress) && moduleData.video_progress.length) {
@@ -53,12 +55,70 @@ const getYouTubeVideoId = (url) => {
       return parsed.pathname.replace('/', '');
     }
     if (parsed.hostname.includes('youtube.com')) {
-      return parsed.searchParams.get('v') || '';
+      const videoIdFromQuery = parsed.searchParams.get('v');
+      if (videoIdFromQuery) return videoIdFromQuery;
+      const pathSegments = parsed.pathname.split('/').filter(Boolean);
+      const embedIndex = pathSegments.findIndex((segment) => segment === 'embed');
+      if (embedIndex >= 0 && pathSegments[embedIndex + 1]) return pathSegments[embedIndex + 1];
+      const shortsIndex = pathSegments.findIndex((segment) => segment === 'shorts');
+      if (shortsIndex >= 0 && pathSegments[shortsIndex + 1]) return pathSegments[shortsIndex + 1];
+      return '';
     }
     return '';
   } catch {
     return '';
   }
+};
+
+const getYouTubeEmbedUrl = (url) => {
+  const videoId = getYouTubeVideoId(url);
+  if (!videoId) return '';
+  const origin =
+    typeof window !== 'undefined' && window.location?.origin
+      ? `&origin=${encodeURIComponent(window.location.origin)}`
+      : '';
+  return `https://www.youtube.com/embed/${videoId}?enablejsapi=1&playsinline=1&rel=0&modestbranding=1${origin}`;
+};
+
+const ensureYouTubeIframeApi = () => {
+  if (typeof window === 'undefined') {
+    return Promise.reject(new Error('YouTube API is unavailable outside browser context.'));
+  }
+
+  if (window.YT?.Player) {
+    return Promise.resolve(window.YT);
+  }
+
+  if (window.__bondRoomYouTubeApiPromise) {
+    return window.__bondRoomYouTubeApiPromise;
+  }
+
+  window.__bondRoomYouTubeApiPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector(`script[src="${YOUTUBE_IFRAME_API_SRC}"]`);
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = YOUTUBE_IFRAME_API_SRC;
+      script.async = true;
+      script.onerror = () => reject(new Error('Failed to load YouTube API script.'));
+      document.head.appendChild(script);
+    }
+
+    const previousReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof previousReady === 'function') {
+        previousReady();
+      }
+      resolve(window.YT);
+    };
+
+    window.setTimeout(() => {
+      if (window.YT?.Player) {
+        resolve(window.YT);
+      }
+    }, 0);
+  });
+
+  return window.__bondRoomYouTubeApiPromise;
 };
 
 const TrainingBoundaries = () => {
@@ -76,6 +136,8 @@ const TrainingBoundaries = () => {
   const [loading, setLoading] = useState(true);
   const [markingVideoIndex, setMarkingVideoIndex] = useState(null);
   const [error, setError] = useState('');
+  const youtubePlayersRef = useRef({});
+  const processedCompletionsRef = useRef(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -127,8 +189,14 @@ const TrainingBoundaries = () => {
     return idx + 1;
   }, [moduleData, modules]);
 
-  const handleVideoEnded = async (videoIndex) => {
+  const handleVideoEnded = useCallback(async (videoIndex) => {
     if (!mentor?.id || !moduleData?.id || moduleStatus === 'locked') return;
+    const selectedVideo = videos.find((item) => item.index === videoIndex);
+    if (selectedVideo?.watched) return;
+
+    const completionKey = `${moduleData.id}:${videoIndex}`;
+    if (processedCompletionsRef.current.has(completionKey)) return;
+    processedCompletionsRef.current.add(completionKey);
 
     setMarkingVideoIndex(videoIndex);
     setError('');
@@ -146,11 +214,81 @@ const TrainingBoundaries = () => {
       setModules(nextModules);
       setModuleData(nextModule);
     } catch (err) {
+      processedCompletionsRef.current.delete(completionKey);
       setError(err?.message || 'Unable to update video progress.');
     } finally {
       setMarkingVideoIndex(null);
     }
-  };
+  }, [mentor?.id, moduleStatus, videos, modules, moduleData]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const setupYouTubePlayers = async () => {
+      const activePrefix = moduleData?.id ? `yt-player-${moduleData.id}-` : '';
+      Object.entries(youtubePlayersRef.current).forEach(([elementId, player]) => {
+        if (activePrefix && elementId.startsWith(activePrefix)) return;
+        if (player && typeof player.destroy === 'function') {
+          try {
+            player.destroy();
+          } catch {
+            // Ignore cleanup errors for third-party player instances.
+          }
+        }
+        delete youtubePlayersRef.current[elementId];
+      });
+
+      if (!moduleData?.id || moduleStatus === 'locked') return;
+
+      const pendingYouTubeVideos = videos.filter(
+        (video) => !video.watched && Boolean(getYouTubeVideoId(video.url))
+      );
+      if (!pendingYouTubeVideos.length) return;
+
+      try {
+        const YT = await ensureYouTubeIframeApi();
+        if (cancelled || !YT?.Player) return;
+
+        pendingYouTubeVideos.forEach((video) => {
+          const elementId = `yt-player-${moduleData.id}-${video.index}`;
+          if (youtubePlayersRef.current[elementId]) return;
+
+          youtubePlayersRef.current[elementId] = new YT.Player(elementId, {
+            events: {
+              onStateChange: (event) => {
+                if (event?.data === YT.PlayerState.ENDED) {
+                  handleVideoEnded(video.index);
+                }
+              },
+            },
+          });
+        });
+      } catch {
+        // No-op: direct video playback still auto-completes; YouTube fallback remains playable.
+      }
+    };
+
+    setupYouTubePlayers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [moduleData?.id, moduleStatus, videos, handleVideoEnded]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(youtubePlayersRef.current).forEach((player) => {
+        if (player && typeof player.destroy === 'function') {
+          try {
+            player.destroy();
+          } catch {
+            // Ignore cleanup errors for third-party player instances.
+          }
+        }
+      });
+      youtubePlayersRef.current = {};
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
@@ -240,25 +378,15 @@ const TrainingBoundaries = () => {
                         {getYouTubeVideoId(video.url) ? (
                           <>
                             <iframe
+                              id={`yt-player-${moduleData.id}-${video.index}`}
                               title={video.title}
-                              src={`https://www.youtube.com/embed/${getYouTubeVideoId(video.url)}?rel=0&modestbranding=1`}
+                              src={getYouTubeEmbedUrl(video.url)}
                               className="mt-3 h-[220px] w-full rounded-lg border border-[#e5e7eb] bg-black"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                               allowFullScreen
                             />
-
-                            {!video.watched && (
-                              <button
-                                type="button"
-                                className="mt-3 rounded-md bg-[#5b2c91] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4a2374]"
-                                onClick={() => handleVideoEnded(video.index)}
-                                disabled={markingVideoIndex === video.index}
-                              >
-                                {markingVideoIndex === video.index ? 'Updating...' : 'Mark as watched'}
-                              </button>
-                            )}
                             <p className="mt-2 text-xs text-[#6b7280]">
-                              Watch the full video, then click Mark as watched.
+                              Video auto-marks complete when playback reaches the end.
                             </p>
                           </>
                         ) : !video.url ? (

@@ -33,6 +33,7 @@ const MentorRegister = () => {
     channel: 'email',
     otp: '',
   });
+  const [formSection, setFormSection] = useState(1);
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -318,233 +319,252 @@ const MentorRegister = () => {
                   </p>
 
                   <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <label htmlFor="firstName" className="block text-xs font-medium text-[#6b7280] mb-1">
-                          First name
-                        </label>
-                        <input
-                          id="firstName"
-                          className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                          placeholder="e.g. Priya"
-                          value={form.firstName}
-                          onChange={(event) => updateField('firstName', event.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="lastName" className="block text-xs font-medium text-[#6b7280] mb-1">
-                          Last name
-                        </label>
-                        <input
-                          id="lastName"
-                          className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                          placeholder="e.g. Sharma"
-                          value={form.lastName}
-                          onChange={(event) => updateField('lastName', event.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <label htmlFor="email" className="block text-xs font-medium text-[#6b7280] mb-1">
-                          Email
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            id="email"
-                            type="email"
-                            className="flex-1 rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                            placeholder="name@example.com"
-                            value={form.email}
-                            onChange={(event) => updateField('email', event.target.value)}
-                          />
-                          <button
-                            type="button"
-                            className={`rounded-md px-3 py-2 text-xs font-semibold border ${
-                              emailVerified
-                                ? 'border-[#22c55e] text-[#15803d] bg-[#f0fdf4]'
-                                : 'border-[#5b2c91] text-[#5b2c91] bg-white'
-                            }`}
-                            onClick={() => openOtpModal('email')}
-                            disabled={loading || !form.email.trim() || emailVerified}
-                          >
-                            {emailVerified ? 'Verified' : 'Verify'}
-                          </button>
-                        </div>
+                    <section className="rounded-xl border border-[#e6e2f1] p-4 sm:p-5 space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-sm font-semibold text-[#1f2937]">
+                          {formSection === 1 ? 'Personal & Contact' : 'Mentor Profile'}
+                        </h3>
+                        <span className="rounded-full bg-[#f3ecff] px-2.5 py-1 text-[11px] font-medium text-[#5b2c91]">
+                          Section {formSection} of 2
+                        </span>
                       </div>
 
-                      <div>
-                        <label htmlFor="mobile" className="block text-xs font-medium text-[#6b7280] mb-1">
-                          Mobile Number
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            id="mobile"
-                            type="tel"
-                            className="flex-1 rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                            placeholder="+91 98765 43210"
-                            value={form.mobile}
-                            onChange={(event) => updateField('mobile', event.target.value)}
-                          />
-                          <button
-                            type="button"
-                            className={`rounded-md px-3 py-2 text-xs font-semibold border ${
-                              phoneVerified
-                                ? 'border-[#22c55e] text-[#15803d] bg-[#f0fdf4]'
-                                : 'border-[#5b2c91] text-[#5b2c91] bg-white'
-                            }`}
-                            onClick={() => openOtpModal('phone')}
-                            disabled={loading || !form.mobile.trim() || phoneVerified}
-                          >
-                            {phoneVerified ? 'Verified' : 'Verify'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <label htmlFor="dob" className="block text-xs font-medium text-[#6b7280] mb-1">
-                          Date of Birth
-                        </label>
-                        <input
-                          id="dob"
-                          type="date"
-                          className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                          value={form.dob}
-                          onChange={(event) => updateField('dob', event.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="gender" className="block text-xs font-medium text-[#6b7280] mb-1">
-                          Gender
-                        </label>
-                        <select
-                          id="gender"
-                          className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                          value={form.gender}
-                          onChange={(event) => updateField('gender', event.target.value)}
-                        >
-                          <option value="">Select Gender</option>
-                          <option>Female</option>
-                          <option>Male</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="cityState" className="block text-xs font-medium text-[#6b7280] mb-1">
-                        City / State
-                      </label>
-                      <input
-                        id="cityState"
-                        className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                        placeholder="e.g. Tiruchirappalli, Tamil Nadu"
-                        value={form.cityState}
-                        onChange={(event) => updateField('cityState', event.target.value)}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-[#6b7280] mb-1">
-                        Languages Spoken
-                      </label>
-                      <div className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          {languagesOptions.map((lang) => (
-                            <label key={lang} className="inline-flex items-center gap-2 text-sm text-[#111827] cursor-pointer">
+                      {formSection === 1 && (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div>
+                              <label htmlFor="firstName" className="block text-xs font-medium text-[#6b7280] mb-1">
+                                First name
+                              </label>
                               <input
-                                type="checkbox"
-                                className="accent-[#5b2c91] w-4 h-4 cursor-pointer"
-                                checked={selectedLanguages.includes(lang)}
-                                onChange={() => toggleMultiCheckbox(lang, setSelectedLanguages)}
+                                id="firstName"
+                                className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                                placeholder="e.g. Priya"
+                                value={form.firstName}
+                                onChange={(event) => updateField('firstName', event.target.value)}
                               />
-                              <span>{lang}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-xs text-[#6b7280] mt-1">
-                        Select one or more languages.
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-[#6b7280] mb-1">
-                        Mentor Care Areas
-                      </label>
-                      <div className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {careAreaOptions.map((area) => (
-                            <label key={area} className="inline-flex items-center gap-2 text-sm text-[#111827] cursor-pointer">
+                            </div>
+                            <div>
+                              <label htmlFor="lastName" className="block text-xs font-medium text-[#6b7280] mb-1">
+                                Last name
+                              </label>
                               <input
-                                type="checkbox"
-                                className="accent-[#5b2c91] w-4 h-4 cursor-pointer"
-                                checked={selectedCareAreas.includes(area)}
-                                onChange={() => toggleMultiCheckbox(area, setSelectedCareAreas)}
+                                id="lastName"
+                                className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                                placeholder="e.g. Sharma"
+                                value={form.lastName}
+                                onChange={(event) => updateField('lastName', event.target.value)}
                               />
-                              <span>{area}</span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div>
+                              <label htmlFor="email" className="block text-xs font-medium text-[#6b7280] mb-1">
+                                Email
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  id="email"
+                                  type="email"
+                                  className="flex-1 rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                                  placeholder="name@example.com"
+                                  value={form.email}
+                                  onChange={(event) => updateField('email', event.target.value)}
+                                />
+                                <button
+                                  type="button"
+                                  className={`rounded-md px-3 py-2 text-xs font-semibold border ${
+                                    emailVerified
+                                      ? 'border-[#22c55e] text-[#15803d] bg-[#f0fdf4]'
+                                      : 'border-[#5b2c91] text-[#5b2c91] bg-white'
+                                  }`}
+                                  onClick={() => openOtpModal('email')}
+                                  disabled={loading || !form.email.trim() || emailVerified}
+                                >
+                                  {emailVerified ? 'Verified' : 'Verify'}
+                                </button>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label htmlFor="mobile" className="block text-xs font-medium text-[#6b7280] mb-1">
+                                Mobile Number
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  id="mobile"
+                                  type="tel"
+                                  className="flex-1 rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                                  placeholder="+91 98765 43210"
+                                  value={form.mobile}
+                                  onChange={(event) => updateField('mobile', event.target.value)}
+                                />
+                                <button
+                                  type="button"
+                                  className={`rounded-md px-3 py-2 text-xs font-semibold border ${
+                                    phoneVerified
+                                      ? 'border-[#22c55e] text-[#15803d] bg-[#f0fdf4]'
+                                      : 'border-[#5b2c91] text-[#5b2c91] bg-white'
+                                  }`}
+                                  onClick={() => openOtpModal('phone')}
+                                  disabled={loading || !form.mobile.trim() || phoneVerified}
+                                >
+                                  {phoneVerified ? 'Verified' : 'Verify'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div>
+                              <label htmlFor="dob" className="block text-xs font-medium text-[#6b7280] mb-1">
+                                Date of Birth
+                              </label>
+                              <input
+                                id="dob"
+                                type="date"
+                                className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                                value={form.dob}
+                                onChange={(event) => updateField('dob', event.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor="gender" className="block text-xs font-medium text-[#6b7280] mb-1">
+                                Gender
+                              </label>
+                              <select
+                                id="gender"
+                                className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                                value={form.gender}
+                                onChange={(event) => updateField('gender', event.target.value)}
+                              >
+                                <option value="">Select Gender</option>
+                                <option>Female</option>
+                                <option>Male</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label htmlFor="cityState" className="block text-xs font-medium text-[#6b7280] mb-1">
+                              City / State
                             </label>
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-xs text-[#6b7280] mt-1">
-                        Select one or more care areas.
-                      </p>
-                    </div>
+                            <input
+                              id="cityState"
+                              className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                              placeholder="e.g. Tiruchirappalli, Tamil Nadu"
+                              value={form.cityState}
+                              onChange={(event) => updateField('cityState', event.target.value)}
+                            />
+                          </div>
 
-                    <div>
-                      <label htmlFor="qualification" className="block text-xs font-medium text-[#6b7280] mb-1">
-                        Educational Qualification
-                      </label>
-                      <input
-                        id="qualification"
-                        className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                        placeholder="e.g. PhD in Psychology"
-                        value={form.qualification}
-                        onChange={(event) => updateField('qualification', event.target.value)}
-                      />
-                    </div>
+                          <div>
+                            <label className="block text-xs font-medium text-[#6b7280] mb-1">
+                              Languages Spoken
+                            </label>
+                            <div className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5">
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                {languagesOptions.map((lang) => (
+                                  <label key={lang} className="inline-flex items-center gap-2 text-sm text-[#111827] cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      className="accent-[#5b2c91] w-4 h-4 cursor-pointer"
+                                      checked={selectedLanguages.includes(lang)}
+                                      onChange={() => toggleMultiCheckbox(lang, setSelectedLanguages)}
+                                    />
+                                    <span>{lang}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-xs text-[#6b7280] mt-1">
+                              Select one or more languages.
+                            </p>
+                          </div>
+                        </>
+                      )}
 
-                    <div>
-                      <label htmlFor="bio" className="block text-xs font-medium text-[#6b7280] mb-1">
-                        Brief Bio
-                      </label>
-                      <textarea
-                        id="bio"
-                        rows={3}
-                        className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all resize-none"
-                        placeholder="Tell us a bit about your professional background..."
-                        value={form.bio}
-                        onChange={(event) => updateField('bio', event.target.value)}
-                      />
-                    </div>
+                      {formSection === 2 && (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-[#6b7280] mb-1">
+                              Mentor Care Areas
+                            </label>
+                            <div className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {careAreaOptions.map((area) => (
+                                  <label key={area} className="inline-flex items-center gap-2 text-sm text-[#111827] cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      className="accent-[#5b2c91] w-4 h-4 cursor-pointer"
+                                      checked={selectedCareAreas.includes(area)}
+                                      onChange={() => toggleMultiCheckbox(area, setSelectedCareAreas)}
+                                    />
+                                    <span>{area}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-xs text-[#6b7280] mt-1">
+                              Select one or more care areas.
+                            </p>
+                          </div>
 
-                    <div>
-                      <label htmlFor="mentorPassword" className="block text-xs font-medium text-[#6b7280] mb-1">
-                        Create password
-                      </label>
-                      <input
-                        id="mentorPassword"
-                        type="password"
-                        className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                        placeholder="Minimum 6 characters"
-                        value={form.password}
-                        onChange={(event) => updateField('password', event.target.value)}
-                      />
-                    </div>
+                          <div>
+                            <label htmlFor="qualification" className="block text-xs font-medium text-[#6b7280] mb-1">
+                              Educational Qualification
+                            </label>
+                            <input
+                              id="qualification"
+                              className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                              placeholder="e.g. PhD in Psychology"
+                              value={form.qualification}
+                              onChange={(event) => updateField('qualification', event.target.value)}
+                            />
+                          </div>
 
-                    <label className="flex items-start gap-2 text-xs sm:text-sm text-[#6b7280] cursor-pointer">
-                      <input
-                        id="consent"
-                        type="checkbox"
-                        className="mt-0.5 sm:mt-1 accent-[#5b2c91] w-4 h-4 cursor-pointer"
-                        checked={form.consent}
-                        onChange={(event) => updateField('consent', event.target.checked)}
-                      />
-                      <span>I agree to share my information for background verification purposes.</span>
-                    </label>
+                          <div>
+                            <label htmlFor="bio" className="block text-xs font-medium text-[#6b7280] mb-1">
+                              Brief Bio
+                            </label>
+                            <textarea
+                              id="bio"
+                              rows={3}
+                              className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all resize-none"
+                              placeholder="Tell us a bit about your professional background..."
+                              value={form.bio}
+                              onChange={(event) => updateField('bio', event.target.value)}
+                            />
+                          </div>
+
+                          <div>
+                            <label htmlFor="mentorPassword" className="block text-xs font-medium text-[#6b7280] mb-1">
+                              Create password
+                            </label>
+                            <input
+                              id="mentorPassword"
+                              type="password"
+                              className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                              placeholder="Minimum 6 characters"
+                              value={form.password}
+                              onChange={(event) => updateField('password', event.target.value)}
+                            />
+                          </div>
+
+                          <label className="flex items-start gap-2 text-xs sm:text-sm text-[#6b7280] cursor-pointer">
+                            <input
+                              id="consent"
+                              type="checkbox"
+                              className="mt-0.5 sm:mt-1 accent-[#5b2c91] w-4 h-4 cursor-pointer"
+                              checked={form.consent}
+                              onChange={(event) => updateField('consent', event.target.checked)}
+                            />
+                            <span>I agree to share my information for background verification purposes.</span>
+                          </label>
+                        </>
+                      )}
+                    </section>
 
                     {(errorMessage || infoMessage) && (
                       <p className={`text-sm ${errorMessage ? 'text-red-600' : 'text-green-700'}`}>
@@ -552,20 +572,43 @@ const MentorRegister = () => {
                       </p>
                     )}
 
-                    <button
-                      type="submit"
-                      className="w-full rounded-md bg-[#5b2c91] hover:bg-[#4a2374] text-white py-3 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]"
-                      disabled={loading}
-                    >
-                      {loading ? 'Submitting...' : 'Submit Application'}
-                    </button>
+                    <div className="flex items-center justify-end gap-3">
+                      {formSection === 2 && (
+                        <button
+                          type="button"
+                          className="rounded-md border border-[#d7d0e2] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#f9fafb]"
+                          onClick={() => setFormSection(1)}
+                        >
+                          Back
+                        </button>
+                      )}
+                      {formSection === 1 ? (
+                        <button
+                          type="button"
+                          className="rounded-md bg-[#5b2c91] hover:bg-[#4a2374] text-white px-4 py-2 text-sm font-semibold transition-all duration-200"
+                          onClick={() => setFormSection(2)}
+                        >
+                          Next
+                        </button>
+                      ) : (
+                        <button
+                          type="submit"
+                          className="rounded-md bg-[#5b2c91] hover:bg-[#4a2374] text-white px-4 py-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]"
+                          disabled={loading}
+                        >
+                          {loading ? 'Submitting...' : 'Submit Application'}
+                        </button>
+                      )}
+                    </div>
 
-                    <p className="text-center text-xs text-[#6b7280] leading-relaxed">
-                      By continuing, you agree to our{' '}
-                      <a href="/terms" className="underline hover:text-[#5b2c91]">Terms &amp; Conditions</a>
-                      {' '}and{' '}
-                      <a href="/privacy" className="underline hover:text-[#5b2c91]">Privacy Policy</a>
-                    </p>
+                    {formSection === 2 && (
+                      <p className="text-center text-xs text-[#6b7280] leading-relaxed">
+                        By continuing, you agree to our{' '}
+                        <a href="/terms" className="underline hover:text-[#5b2c91]">Terms &amp; Conditions</a>
+                        {' '}and{' '}
+                        <a href="/privacy" className="underline hover:text-[#5b2c91]">Privacy Policy</a>
+                      </p>
+                    )}
                   </form>
                 </div>
               </div>
@@ -660,3 +703,4 @@ const MentorRegister = () => {
 };
 
 export default MentorRegister;
+

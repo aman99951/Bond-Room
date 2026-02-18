@@ -45,9 +45,10 @@ const OnboardingStatus = () => {
   }, [mentor?.id]);
 
   const status = onboarding?.status || {};
-  const normalizedStatus = String(status?.current_status || '').toLowerCase();
-  const normalizedFinal = String(status?.final_approval_status || '').toLowerCase();
-  const isComplete = normalizedStatus === 'completed' || normalizedFinal === 'completed';
+  const normalizedStatus = String(
+    status?.current_status || status?.final_approval_status || ''
+  ).toLowerCase();
+  const isComplete = normalizedStatus === 'completed';
   const currentStatusLabel = (status?.current_status || 'pending').replace('_', ' ');
 
   useEffect(() => {
