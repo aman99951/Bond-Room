@@ -21,6 +21,7 @@ import BookSession from './menties/pages/BookSession';
 import BookingSuccess from './menties/pages/BookingSuccess';
 import Feedback from './menties/pages/Feedback';
 import MentorProfile from './menties/pages/MentorProfile';
+import MenteeZoomMeeting from './menties/pages/ZoomMeeting';
 import MentorVerifyIdentity from './mentors/pages/VerifyIdentity';
 import MentorOnboardingStatus from './mentors/pages/OnboardingStatus';
 import MentorTrainingModules from './mentors/pages/TrainingModules';
@@ -30,6 +31,7 @@ import MentorImpactDashboard from './mentors/pages/ImpactDashboard';
 import MentorMySessions from './mentors/pages/MySessions';
 import MentorSessionRequests from './mentors/pages/SessionRequests';
 import MentorSessionCompleted from './mentors/pages/SessionCompleted';
+import MentorZoomMeeting from './mentors/pages/ZoomMeeting';
 import MentorImpact from './mentors/pages/ImpactDashboard';
 import MentorAvailability from './mentors/pages/ManageAvailability';
 import MentorMyprofilePage from './mentors/pages/Myprofile';
@@ -261,6 +263,7 @@ const AppLayout = () => {
         <Route path="book-session" element={<BookSession />} />
         <Route path="booking-success" element={<BookingSuccess />} />
         <Route path="feedback" element={<Feedback />} />
+        <Route path="mentee-zoom-meeting" element={<MenteeZoomMeeting />} />
         <Route path="mentor-profile" element={<MentorProfile />} />
         <Route
           path="mentor-impact-dashboard"
@@ -290,6 +293,7 @@ const AppLayout = () => {
         <Route path="mentor-mentee-profile/:sessionId" element={<MentorMenteeProfile />} />
         <Route path="mentor-session-requests" element={<MentorSessionRequests />} />
         <Route path="mentor-session-completed" element={<MentorSessionCompleted />} />
+        <Route path="mentor-zoom-meeting" element={<MentorZoomMeeting />} />
         <Route path="mentor-availability" element={<MentorAvailability />} />
         <Route path="mentor-myprofile" element={<MentorMyprofilePage />} />
         <Route path="*" element={<ReturnToPreviousRoute />} />

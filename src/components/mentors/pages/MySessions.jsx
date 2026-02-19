@@ -65,25 +65,6 @@ const getMenteeName = (session) => {
   return 'Mentee';
 };
 
-const RETURN_AFTER_MEETING_KEY = 'mentor_session_return_after_meeting';
-const MIN_RETURN_DELAY_MS = 10000;
-
-const setReturnAfterMeeting = (sessionId) => {
-  if (!sessionId) return;
-  const payload = { id: sessionId, startedAt: Date.now() };
-  localStorage.setItem(RETURN_AFTER_MEETING_KEY, JSON.stringify(payload));
-};
-
-const getReturnAfterMeeting = () => {
-  const raw = localStorage.getItem(RETURN_AFTER_MEETING_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-};
-
 const isUpcomingStatus = (session) => {
   const start = new Date(session?.scheduled_start || '');
   const status = session?.status || '';
@@ -157,30 +138,6 @@ const MySessions = () => {
     };
   }, [mentor?.id]);
 
-  useEffect(() => {
-    const handleReturn = () => {
-      const payload = getReturnAfterMeeting();
-      if (!payload?.id || !payload?.startedAt) return;
-      if (Date.now() - payload.startedAt < MIN_RETURN_DELAY_MS) return;
-      localStorage.removeItem(RETURN_AFTER_MEETING_KEY);
-      setSelectedSessionId(payload.id);
-      navigate('/mentor-session-completed');
-    };
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        handleReturn();
-      }
-    };
-
-    window.addEventListener('focus', handleReturn);
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => {
-      window.removeEventListener('focus', handleReturn);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, [navigate]);
-
   const filteredSessions = useMemo(() => {
     return sessions.filter((session) => {
       if (filterValue === 'Upcoming') {
@@ -221,7 +178,7 @@ const MySessions = () => {
       const end = new Date(session.scheduled_end || session.scheduled_start);
       const dayIndex = Math.floor((start - weekStart) / (1000 * 60 * 60 * 24));
       const hourIndex = hours.findIndex((label) => parseHourLabel(label) === start.getHours());
-      const joinUrl = session?.host_join_url || session?.join_url || '';
+      const joinUrl = session?.join_url || session?.host_join_url || '';
       return {
         id: session.id,
         dayIndex,
@@ -235,9 +192,13 @@ const MySessions = () => {
     });
   }, [sessionsThisWeek, weekStart]);
 
-  const openJoinLink = (url) => {
+  const openJoinLink = (url, sessionId) => {
     if (!url) return false;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    const params = new URLSearchParams({
+      url,
+      sessionId: String(sessionId || ''),
+    });
+    navigate(`/mentor-zoom-meeting?${params.toString()}`);
     return true;
   };
 
@@ -246,16 +207,14 @@ const MySessions = () => {
     setJoinError('');
     const existing = getJoinUrl(session);
     if (existing) {
-      if (openJoinLink(existing)) {
-        setSelectedSessionId(session.id);
-        setReturnAfterMeeting(session.id);
-      }
+      setSelectedSessionId(session.id);
+      openJoinLink(existing, session.id);
       return;
     }
     setJoiningId(session.id);
     try {
       const response = await mentorApi.getSessionJoinLink(session.id);
-      const url = response?.host_join_url || response?.join_url || '';
+      const url = response?.join_url || response?.host_join_url || '';
       if (url) {
         setSessions((prev) =>
           prev.map((item) =>
@@ -268,10 +227,8 @@ const MySessions = () => {
               : item
           )
         );
-        if (openJoinLink(url)) {
-          setSelectedSessionId(session.id);
-          setReturnAfterMeeting(session.id);
-        }
+        setSelectedSessionId(session.id);
+        openJoinLink(url, session.id);
       } else {
         setJoinError('Join link not ready yet.');
       }
@@ -282,7 +239,7 @@ const MySessions = () => {
     }
   };
 
-const getJoinUrl = (session) => session?.joinUrl || session?.host_join_url || session?.join_url || '';
+  const getJoinUrl = (session) => session?.joinUrl || session?.join_url || session?.host_join_url || '';
 
   return (
     <div className="p-4 sm:p-6 bg-transparent">

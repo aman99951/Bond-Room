@@ -13,21 +13,12 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [focusedField, setFocusedField] = useState(null);
   const [mounted, setMounted] = useState(false);
-  const [shakeError, setShakeError] = useState(false);
   const navigate = useNavigate();
   const { loading, login } = useMenteeAuth();
 
   useEffect(() => {
     setTimeout(() => setMounted(true), 100);
   }, []);
-
-  useEffect(() => {
-    if (errorMessage) {
-      setShakeError(true);
-      const timer = setTimeout(() => setShakeError(false), 600);
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -640,7 +631,7 @@ const Login = () => {
 
                   {/* Error Message */}
                   {errorMessage && (
-                    <div className={shakeError ? 'shake-animation' : ''}>
+                    <div className="shake-animation">
                       <p className="text-sm text-red-600 error-enter flex items-center gap-1">
                         <span>⚠️</span> {errorMessage}
                       </p>

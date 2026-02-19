@@ -68,7 +68,7 @@ const isCompletedStatus = (session) => {
 
 const isFeedbackEligible = (session) => session?.status === 'completed';
 
-const getJoinUrl = (session) => session?.join_url || session?.joinUrl || '';
+const getJoinUrl = (session) => session?.join_url || session?.joinUrl || session?.host_join_url || '';
 
 const isPastSession = (session) => {
   const end = new Date(session?.scheduled_end || session?.scheduled_start || '');
@@ -201,9 +201,13 @@ const MySessions = () => {
     });
   }, [filteredSessions, weekStart, weekEnd]);
 
-  const openJoinLink = (url) => {
+  const openJoinLink = (url, sessionId) => {
     if (!url) return false;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    const params = new URLSearchParams({
+      url,
+      sessionId: String(sessionId || ''),
+    });
+    navigate(`/mentee-zoom-meeting?${params.toString()}`);
     return true;
   };
 
@@ -212,7 +216,8 @@ const MySessions = () => {
     setJoinError('');
     const existing = getJoinUrl(session);
     if (existing) {
-      openJoinLink(existing);
+      setSelectedSessionId(session.id);
+      openJoinLink(existing, session.id);
       return;
     }
     setJoiningId(session.id);
@@ -231,7 +236,8 @@ const MySessions = () => {
               : item
           )
         );
-        openJoinLink(url);
+        setSelectedSessionId(session.id);
+        openJoinLink(url, session.id);
       } else {
         setJoinError('Join link not ready yet.');
       }

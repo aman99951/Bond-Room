@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import logo from './assets/logo.png';
 import heroLeft from './assets/left.png';
 import heroRight from './assets/right.png';
@@ -22,6 +22,8 @@ import {
 import './LandingPage.css';
 
 const LandingPage = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     const previousBodyBackground = document.body.style.background;
     const previousHtmlBackground = document.documentElement.style.background;
@@ -37,15 +39,15 @@ const LandingPage = () => {
   return (
     <div className="landing-figma-root min-h-screen font-['DM_Sans'] text-gray-900">
       {/* Header */}
-      <header className="max-w-7xl mx-auto px-6 py-5 lg:px-8">
-        <div className="flex flex-col lg:grid lg:grid-cols-[auto_1fr_auto] gap-4 lg:gap-6 items-start lg:items-center">
+      <header className="max-w-7xl mx-auto px-6 py-4 lg:py-5 lg:px-8">
+        <div className="flex items-center justify-between lg:grid lg:grid-cols-[auto_1fr_auto] gap-4 lg:gap-6">
           {/* Logo */}
           <div className="flex items-center">
             <img src={logo} alt="Bond Room" className="h-12 w-auto" />
           </div>
 
-          {/* Navigation - Hidden on mobile */}
-          <nav className="hidden md:flex justify-center gap-7">
+          {/* Navigation - Desktop */}
+          <nav className="hidden lg:flex justify-center gap-7">
             <a href="#about" className="text-gray-600 hover:text-gray-900 font-medium text-sm transition-colors">
               About
             </a>
@@ -57,8 +59,8 @@ const LandingPage = () => {
             </a>
           </nav>
 
-          {/* Actions */}
-          <div className="flex gap-3 w-full lg:w-auto">
+          {/* Actions - Desktop */}
+          <div className="hidden lg:flex gap-3 w-full lg:w-auto">
             <a
               className="text-gray-600 hover:text-gray-900 font-semibold text-sm px-5 py-2.5 rounded-lg transition-all hover:-translate-y-0.5"
               href="/login"
@@ -72,25 +74,56 @@ const LandingPage = () => {
               Get Started
             </a>
           </div>
+
+          {/* Mobile / Tablet Menu Trigger (visual) */}
+          <button
+            type="button"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="landing-mobile-menu-btn inline-flex lg:hidden items-center justify-center"
+          >
+            {mobileMenuOpen ? (
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 7h14M5 12h14M5 17h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            )}
+          </button>
         </div>
 
-        {/* Mobile Navigation */}
-        <nav className="flex md:hidden gap-6 mt-4 border-t border-gray-100 pt-4">
-          <a href="#about" className="text-gray-600 hover:text-gray-900 font-medium text-sm">
-            About
-          </a>
-          <a href="#safety" className="text-gray-600 hover:text-gray-900 font-medium text-sm">
-            Safety
-          </a>
-          <a href="#stories" className="text-gray-600 hover:text-gray-900 font-medium text-sm">
-            Stories
-          </a>
-        </nav>
+        {/* Mobile / Tablet Navigation */}
+        {mobileMenuOpen && (
+          <div className="landing-mobile-panel lg:hidden">
+            <nav className="landing-mobile-nav flex gap-6 border-t border-gray-100 pt-3">
+              <a href="#about" className="text-gray-600 hover:text-gray-900 font-medium text-sm" onClick={() => setMobileMenuOpen(false)}>
+                About
+              </a>
+              <a href="#safety" className="text-gray-600 hover:text-gray-900 font-medium text-sm" onClick={() => setMobileMenuOpen(false)}>
+                Safety
+              </a>
+              <a href="#stories" className="text-gray-600 hover:text-gray-900 font-medium text-sm" onClick={() => setMobileMenuOpen(false)}>
+                Stories
+              </a>
+            </nav>
+            <div className="landing-mobile-panel-actions">
+              <a href="/login" onClick={() => setMobileMenuOpen(false)}>
+                Log in
+              </a>
+              <a href="/register" onClick={() => setMobileMenuOpen(false)}>
+                Get Started
+              </a>
+            </div>
+          </div>
+        )}
       </header>
 
       <main>
         {/* Hero Section */}
-        <section className="max-w-7xl mx-auto px-6 py-8 lg:py-12 lg:px-8">
+        <section className="max-w-7xl mx-auto px-6 py-6 sm:py-8 lg:py-12 lg:px-8">
           <div className="hero-figma-grid">
             <div className="hero-figma-copy">
               <h1 className="hero-figma-title">
