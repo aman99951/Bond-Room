@@ -24,6 +24,7 @@ export const menteeApi = {
 
   listMentors: (params = {}) => apiClient.get(`/mentors/${buildQuery(params)}`),
   getMentorById: (mentorId) => apiClient.get(`/mentors/${mentorId}/`),
+  getMentorReviews: (mentorId) => apiClient.get(`/mentors/${mentorId}/reviews/`),
   getRecommendedMentors: (params = {}) => apiClient.get(`/mentors/recommended/${buildQuery(params)}`),
 
   listAvailabilitySlots: (params = {}) =>

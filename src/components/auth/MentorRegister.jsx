@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import mentorLeft from '../assets/teach1.png';
 import mentorBottom from '../assets/teach2.png';
 import imageContainer from '../assets/Image Container.png';
 import { useMentorAuth } from '../../apis/apihook/useMentorAuth';
+import { authApi } from '../../apis/api/authApi';
 import {
   getPendingMentorRegistration,
   setPendingMentorRegistration,
@@ -18,7 +19,7 @@ const MentorRegister = () => {
   const careAreaOptions = ['Anxiety', 'Relationships', 'Academic Stress'];
   const pendingMentor = useMemo(() => getPendingMentorRegistration(), []);
   const navigate = useNavigate();
-  const { loading, registerMentor, sendMentorOtp, verifyMentorOtp, login } = useMentorAuth();
+  const { registerMentor, sendMentorOtp, verifyMentorOtp } = useMentorAuth();
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
@@ -33,6 +34,13 @@ const MentorRegister = () => {
     channel: 'email',
     otp: '',
   });
+  const [actionBusy, setActionBusy] = useState({
+    sendEmail: false,
+    sendPhone: false,
+    verifyEmail: false,
+    verifyPhone: false,
+    submit: false,
+  });
   const [formSection, setFormSection] = useState(1);
   const [form, setForm] = useState({
     firstName: '',
@@ -41,11 +49,22 @@ const MentorRegister = () => {
     mobile: '',
     dob: '',
     gender: '',
-    cityState: '',
+    stateName: '',
+    cityName: '',
     qualification: '',
     bio: '',
     consent: false,
-    password: '',
+  });
+  const [stateOptions, setStateOptions] = useState([]);
+  const [cityOptions, setCityOptions] = useState([]);
+  const [locationBusy, setLocationBusy] = useState({
+    states: false,
+    cities: false,
+  });
+  const [locationError, setLocationError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState({
+    email: 0,
+    phone: 0,
   });
   const isDev = Boolean(import.meta?.env?.DEV);
 
@@ -70,8 +89,88 @@ const MentorRegister = () => {
       setPhoneVerified(false);
       setPhoneHint('');
     }
+    if (key === 'stateName') {
+      setForm((prev) => ({ ...prev, stateName: value, cityName: '' }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [key]: value }));
   };
+
+  useEffect(() => {
+    let active = true;
+
+    const loadStates = async () => {
+      setLocationBusy((prev) => ({ ...prev, states: true }));
+      setLocationError('');
+      try {
+        const response = await authApi.getLocationStates();
+        if (!active) return;
+        const states = Array.isArray(response?.states) ? response.states : [];
+        setStateOptions(states);
+      } catch (err) {
+        if (!active) return;
+        setStateOptions([]);
+        setLocationError(err?.message || 'Unable to load states.');
+      } finally {
+        if (active) {
+          setLocationBusy((prev) => ({ ...prev, states: false }));
+        }
+      }
+    };
+
+    loadStates();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!form.stateName) {
+      setCityOptions([]);
+      return;
+    }
+
+    let active = true;
+
+    const loadCities = async () => {
+      setLocationBusy((prev) => ({ ...prev, cities: true }));
+      setLocationError('');
+      try {
+        const response = await authApi.getLocationCities(form.stateName);
+        if (!active) return;
+        const cities = Array.isArray(response?.cities) ? response.cities : [];
+        setCityOptions(cities);
+      } catch (err) {
+        if (!active) return;
+        setCityOptions([]);
+        setLocationError(err?.message || 'Unable to load cities for selected state.');
+      } finally {
+        if (active) {
+          setLocationBusy((prev) => ({ ...prev, cities: false }));
+        }
+      }
+    };
+
+    loadCities();
+    return () => {
+      active = false;
+    };
+  }, [form.stateName]);
+
+  useEffect(() => {
+    if (!resendCooldown.email && !resendCooldown.phone) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setResendCooldown((prev) => ({
+        email: prev.email > 0 ? prev.email - 1 : 0,
+        phone: prev.phone > 0 ? prev.phone - 1 : 0,
+      }));
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [resendCooldown.email, resendCooldown.phone]);
 
   const validateRegistrationForm = () => {
     if (
@@ -81,8 +180,9 @@ const MentorRegister = () => {
       !form.mobile.trim() ||
       !form.dob ||
       !form.gender ||
-      !form.cityState.trim() ||
-      !form.password
+      !form.stateName ||
+      !form.cityName ||
+      !form.mobile.trim()
     ) {
       return 'Please fill all required fields to continue.';
     }
@@ -101,7 +201,7 @@ const MentorRegister = () => {
       mobile: form.mobile.trim(),
       dob: form.dob,
       gender: form.gender,
-      city_state: form.cityState.trim(),
+      city_state: `${form.cityName}, ${form.stateName}`,
       languages: selectedLanguages,
       care_areas: selectedCareAreas,
       preferred_formats: [],
@@ -110,7 +210,6 @@ const MentorRegister = () => {
       qualification: form.qualification.trim(),
       bio: form.bio.trim(),
       consent: form.consent,
-      password: form.password,
     };
   };
 
@@ -124,7 +223,6 @@ const MentorRegister = () => {
     setPendingMentorRegistration({
       mentorId: mentor?.id,
       email: form.email.trim().toLowerCase(),
-      password: form.password,
       mobile: form.mobile.trim(),
     });
 
@@ -138,10 +236,12 @@ const MentorRegister = () => {
 
   const handleSendOtp = async (channel, options = {}) => {
     const { registerIfNeeded = true } = options;
+    const sendKey = channel === 'email' ? 'sendEmail' : 'sendPhone';
     setErrorMessage('');
     setInfoMessage('');
     setOtpErrorMessage('');
     setOtpInfoMessage('');
+    setActionBusy((prev) => ({ ...prev, [sendKey]: true }));
 
     try {
       let currentMentorId = mentorId || pendingMentor?.mentorId || null;
@@ -161,6 +261,7 @@ const MentorRegister = () => {
       if (channel === 'phone' && response?.otp) {
         setPhoneHint(`Test OTP: ${response.otp}`);
       }
+      setResendCooldown((prev) => ({ ...prev, [channel]: 30 }));
       const successMessage = `${channel === 'email' ? 'Email' : 'Phone'} OTP sent successfully.`;
       setInfoMessage(successMessage);
       setOtpInfoMessage(successMessage);
@@ -168,10 +269,13 @@ const MentorRegister = () => {
       const message = err?.message || 'Unable to send OTP.';
       setErrorMessage(message);
       setOtpErrorMessage(message);
+    } finally {
+      setActionBusy((prev) => ({ ...prev, [sendKey]: false }));
     }
   };
 
   const handleVerifyOtp = async (channel, otp) => {
+    const verifyKey = channel === 'email' ? 'verifyEmail' : 'verifyPhone';
     const currentMentorId = mentorId || pendingMentor?.mentorId;
     if (!currentMentorId) {
       const message = 'Please complete registration details first, then request OTP.';
@@ -189,6 +293,7 @@ const MentorRegister = () => {
     setInfoMessage('');
     setOtpErrorMessage('');
     setOtpInfoMessage('');
+    setActionBusy((prev) => ({ ...prev, [verifyKey]: true }));
     try {
       await verifyMentorOtp(currentMentorId, channel, otp);
       if (channel === 'email') {
@@ -202,6 +307,8 @@ const MentorRegister = () => {
       const message = err?.message || 'OTP verification failed.';
       setErrorMessage(message);
       setOtpErrorMessage(message);
+    } finally {
+      setActionBusy((prev) => ({ ...prev, [verifyKey]: false }));
     }
   };
 
@@ -234,16 +341,24 @@ const MentorRegister = () => {
       return;
     }
 
+    setActionBusy((prev) => ({ ...prev, submit: true }));
     try {
       const mentor = await ensureMentorRegistered();
-      await login(form.email.trim().toLowerCase(), form.password, 'mentors');
       setMentorId(mentor?.id || null);
       navigate('/mentor-verify-identity');
     } catch (err) {
       setErrorMessage(err?.message || 'Unable to submit mentor application right now.');
+    } finally {
+      setActionBusy((prev) => ({ ...prev, submit: false }));
     }
   };
 
+  const isOtpSending =
+    otpModal.channel === 'email' ? actionBusy.sendEmail : actionBusy.sendPhone;
+  const isOtpVerifying =
+    otpModal.channel === 'email' ? actionBusy.verifyEmail : actionBusy.verifyPhone;
+  const activeCooldown = resendCooldown[otpModal.channel] || 0;
+  const formatCooldown = (seconds) => `00:${String(seconds).padStart(2, '0')}`;
   return (
     <div className="min-h-screen text-[#1f2937] flex flex-col">
       <TopAuth />
@@ -380,7 +495,13 @@ const MentorRegister = () => {
                                       : 'border-[#5b2c91] text-[#5b2c91] bg-white'
                                   }`}
                                   onClick={() => openOtpModal('email')}
-                                  disabled={loading || !form.email.trim() || emailVerified}
+                                  disabled={
+                                    actionBusy.sendEmail
+                                    || actionBusy.verifyEmail
+                                    || actionBusy.submit
+                                    || !form.email.trim()
+                                    || emailVerified
+                                  }
                                 >
                                   {emailVerified ? 'Verified' : 'Verify'}
                                 </button>
@@ -408,7 +529,13 @@ const MentorRegister = () => {
                                       : 'border-[#5b2c91] text-[#5b2c91] bg-white'
                                   }`}
                                   onClick={() => openOtpModal('phone')}
-                                  disabled={loading || !form.mobile.trim() || phoneVerified}
+                                  disabled={
+                                    actionBusy.sendPhone
+                                    || actionBusy.verifyPhone
+                                    || actionBusy.submit
+                                    || !form.mobile.trim()
+                                    || phoneVerified
+                                  }
                                 >
                                   {phoneVerified ? 'Verified' : 'Verify'}
                                 </button>
@@ -446,17 +573,69 @@ const MentorRegister = () => {
                             </div>
                           </div>
 
-                          <div>
-                            <label htmlFor="cityState" className="block text-xs font-medium text-[#6b7280] mb-1">
-                              City / State
-                            </label>
-                            <input
-                              id="cityState"
-                              className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                              placeholder="e.g. Tiruchirappalli, Tamil Nadu"
-                              value={form.cityState}
-                              onChange={(event) => updateField('cityState', event.target.value)}
-                            />
+                          <div className="rounded-xl border border-[#e6e2f1] bg-[#f9f7ff] p-4">
+                            <p className="text-xs font-semibold tracking-[0.04em] text-[#5b2c91] uppercase">Location Details</p>
+                            <p className="mt-1 text-xs text-[#6b7280]">
+                              Select your state first, then choose your city.
+                            </p>
+
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label htmlFor="stateName" className="block text-xs font-medium text-[#6b7280] mb-1">
+                                  State
+                                </label>
+                                <select
+                                  id="stateName"
+                                  className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                                  value={form.stateName}
+                                  onChange={(event) => updateField('stateName', event.target.value)}
+                                  disabled={locationBusy.states}
+                                >
+                                  <option value="">{locationBusy.states ? 'Loading states...' : 'Select State'}</option>
+                                  {stateOptions.map((stateName) => (
+                                    <option key={stateName} value={stateName}>
+                                      {stateName}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label htmlFor="cityName" className="block text-xs font-medium text-[#6b7280] mb-1">
+                                  City
+                                </label>
+                                <select
+                                  id="cityName"
+                                  className="w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2.5 text-sm text-[#111827] disabled:bg-[#f3f4f6] disabled:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
+                                  value={form.cityName}
+                                  onChange={(event) => updateField('cityName', event.target.value)}
+                                  disabled={!form.stateName || locationBusy.cities}
+                                >
+                                  <option value="">
+                                    {!form.stateName
+                                      ? 'Select State First'
+                                      : locationBusy.cities
+                                        ? 'Loading cities...'
+                                        : 'Select City'}
+                                  </option>
+                                  {cityOptions.map((cityName) => (
+                                    <option key={cityName} value={cityName}>
+                                      {cityName}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            {locationError && (
+                              <p className="mt-2 text-xs text-red-600">{locationError}</p>
+                            )}
+
+                            {form.stateName && form.cityName && (
+                              <div className="mt-3 inline-flex items-center rounded-full border border-[#d9c7f7] bg-white px-3 py-1 text-xs text-[#4a2374]">
+                                {form.cityName}, {form.stateName}
+                              </div>
+                            )}
                           </div>
 
                           <div>
@@ -538,20 +717,6 @@ const MentorRegister = () => {
                             />
                           </div>
 
-                          <div>
-                            <label htmlFor="mentorPassword" className="block text-xs font-medium text-[#6b7280] mb-1">
-                              Create password
-                            </label>
-                            <input
-                              id="mentorPassword"
-                              type="password"
-                              className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
-                              placeholder="Minimum 6 characters"
-                              value={form.password}
-                              onChange={(event) => updateField('password', event.target.value)}
-                            />
-                          </div>
-
                           <label className="flex items-start gap-2 text-xs sm:text-sm text-[#6b7280] cursor-pointer">
                             <input
                               id="consent"
@@ -594,9 +759,9 @@ const MentorRegister = () => {
                         <button
                           type="submit"
                           className="rounded-md bg-[#5b2c91] hover:bg-[#4a2374] text-white px-4 py-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]"
-                          disabled={loading}
+                          disabled={actionBusy.submit}
                         >
-                          {loading ? 'Submitting...' : 'Submit Application'}
+                          {actionBusy.submit ? 'Submitting...' : 'Submit Application'}
                         </button>
                       )}
                     </div>
@@ -665,16 +830,20 @@ const MentorRegister = () => {
                 type="button"
                 className="text-xs text-[#5b2c91] underline disabled:opacity-60"
                 onClick={() => handleSendOtp(otpModal.channel, { registerIfNeeded: false })}
-                disabled={loading}
+                disabled={isOtpSending || isOtpVerifying || activeCooldown > 0}
               >
-                Resend OTP
+                {isOtpSending
+                  ? 'Sending...'
+                  : activeCooldown > 0
+                    ? `Resend OTP in ${formatCooldown(activeCooldown)}`
+                    : 'Resend OTP'}
               </button>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   className="rounded-md border border-[#d7d0e2] px-3 py-1.5 text-xs text-[#374151]"
                   onClick={closeOtpModal}
-                  disabled={loading}
+                  disabled={isOtpSending || isOtpVerifying}
                 >
                   Cancel
                 </button>
@@ -682,9 +851,9 @@ const MentorRegister = () => {
                   type="button"
                   className="rounded-md bg-[#5b2c91] text-white px-3 py-1.5 text-xs"
                   onClick={() => handleVerifyOtp(otpModal.channel, otpModal.otp)}
-                  disabled={loading}
+                  disabled={isOtpSending || isOtpVerifying}
                 >
-                  Verify OTP
+                  {isOtpVerifying ? 'Verifying...' : 'Verify OTP'}
                 </button>
               </div>
             </div>

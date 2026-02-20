@@ -77,6 +77,35 @@ export const useMenteeAuth = () => {
     [run]
   );
 
+  const loginWithMobile = useCallback(
+    (mobile, otp, selectedRole = null) =>
+      run(async () => {
+        const requestedRole =
+          selectedRole === 'mentors' || selectedRole === 'mentor'
+            ? 'mentor'
+            : selectedRole === 'menties' || selectedRole === 'mentee'
+              ? 'mentee'
+              : null;
+        const tokens = await authApi.verifyMobileLoginOtp({
+          mobile,
+          otp,
+          role: requestedRole,
+        });
+        const payload = decodeJwtPayload(tokens?.access);
+        const role = payload?.role || requestedRole || 'mentee';
+        if (requestedRole && role !== requestedRole) {
+          throw new Error(`This mobile is registered as ${role}, not ${requestedRole}.`);
+        }
+        return setAuthSession({
+          accessToken: tokens?.access,
+          refreshToken: tokens?.refresh,
+          role,
+          email: payload?.email || '',
+        });
+      }),
+    [run]
+  );
+
   const logout = useCallback(
     () =>
       run(async () => {
@@ -100,6 +129,7 @@ export const useMenteeAuth = () => {
     sendParentOtp,
     verifyParentOtp,
     login,
+    loginWithMobile,
     logout,
   };
 };

@@ -81,6 +81,7 @@ export const useMentorScreenData = () => {
   const [mentor, setMentor] = useState(null);
   const [availability, setAvailability] = useState(dayOrder.map(() => []));
   const [review, setReview] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -106,6 +107,7 @@ export const useMentorScreenData = () => {
             setMentor(null);
             setAvailability(dayOrder.map(() => []));
             setReview(null);
+            setReviews([]);
             setLoading(false);
           }
           return;
@@ -122,13 +124,14 @@ export const useMentorScreenData = () => {
           if (!cancelled) {
             setAvailability(dayOrder.map(() => []));
             setReview(null);
+            setReviews([]);
           }
           return;
         }
 
-        const [slotsResponse, feedbackResponse] = await Promise.allSettled([
+        const [slotsResponse, reviewsResponse] = await Promise.allSettled([
           menteeApi.listAvailabilitySlots({ mentor_id: mentorId }),
-          menteeApi.listSessionFeedback({ mentor_id: mentorId }),
+          menteeApi.getMentorReviews(mentorId),
         ]);
 
         if (!cancelled) {
@@ -138,11 +141,31 @@ export const useMentorScreenData = () => {
             setAvailability(dayOrder.map(() => []));
           }
 
-          if (feedbackResponse.status === 'fulfilled') {
-            const feedbackList = normalizeList(feedbackResponse.value);
-            setReview(toReviewData(feedbackList[0]));
+          if (reviewsResponse.status === 'fulfilled') {
+            const summary = reviewsResponse.value?.summary || {};
+            const recentFeedback = Array.isArray(reviewsResponse.value?.recent_feedback)
+              ? reviewsResponse.value.recent_feedback
+              : [];
+            setReviews(recentFeedback);
+            setReview(toReviewData(recentFeedback[0] || null));
+            setMentor((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    rating:
+                      summary?.average_rating !== undefined && summary?.average_rating !== null
+                        ? Number(summary.average_rating)
+                        : prev.rating,
+                    reviews:
+                      summary?.total_reviews !== undefined && summary?.total_reviews !== null
+                        ? Number(summary.total_reviews)
+                        : prev.reviews,
+                  }
+                : prev
+            );
           } else {
             setReview(null);
+            setReviews([]);
           }
         }
       } catch (err) {
@@ -151,6 +174,7 @@ export const useMentorScreenData = () => {
           setMentor(null);
           setAvailability(dayOrder.map(() => []));
           setReview(null);
+          setReviews([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -167,6 +191,7 @@ export const useMentorScreenData = () => {
     mentor,
     availability,
     review,
+    reviews,
     loading,
     error,
   };

@@ -84,6 +84,19 @@ const isPublicPath = (pathname) => {
   return pathname.startsWith('/needs-assessment/');
 };
 
+const isCompletedStatus = (value) => {
+  const normalized = String(value || '').toLowerCase();
+  return normalized === 'completed' || normalized === 'verified';
+};
+
+const canAccessMentorDashboard = (status) => {
+  const onboardingStatus = status || {};
+  return (
+    isCompletedStatus(onboardingStatus.application_status) &&
+    isCompletedStatus(onboardingStatus.identity_status)
+  );
+};
+
 const AuthExpiryWatcher = () => {
   const location = useLocation();
 
@@ -187,12 +200,8 @@ const MentorDashboardGuard = ({ children }) => {
       }
       try {
         const response = await mentorApi.getMentorOnboarding(mentor.id);
-        const statusValue =
-          response?.status?.current_status ||
-          response?.status?.final_approval_status ||
-          '';
         if (!cancelled) {
-          setAllowed(String(statusValue).toLowerCase() === 'completed');
+          setAllowed(canAccessMentorDashboard(response?.status));
         }
       } catch {
         if (!cancelled) {

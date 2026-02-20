@@ -18,7 +18,7 @@ const VerifyParent = () => {
   const [infoMessage, setInfoMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [otpHint, setOtpHint] = useState('');
-  const { loading, sendParentOtp, verifyParentOtp, login } = useMenteeAuth();
+  const { loading, sendParentOtp, verifyParentOtp, loginWithMobile } = useMenteeAuth();
 
   const parentMobileMasked =
     state?.parentMobileMasked ||
@@ -52,7 +52,7 @@ const VerifyParent = () => {
     setErrorMessage('');
     setInfoMessage('');
 
-    if (!pendingMentee?.menteeId || !pendingMentee?.email || !pendingMentee?.password) {
+    if (!pendingMentee?.menteeId || !pendingMentee?.parentMobile) {
       setErrorMessage('Registration session expired. Please register again.');
       return;
     }
@@ -64,7 +64,7 @@ const VerifyParent = () => {
 
     try {
       await verifyParentOtp(pendingMentee.menteeId, otp);
-      await login(pendingMentee.email, pendingMentee.password, 'menties');
+      await loginWithMobile(pendingMentee.parentMobile, '123456', 'menties');
       clearPendingMenteeRegistration();
       navigate('/needs-assessment');
     } catch (err) {

@@ -10,10 +10,9 @@ const SessionCompleted = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
-  const [note, setNote] = useState('');
-  const [amount, setAmount] = useState('');
   const [issueCategory, setIssueCategory] = useState('other');
   const [issueDescription, setIssueDescription] = useState('');
+  const [claimSuccessPopupOpen, setClaimSuccessPopupOpen] = useState(false);
 
   const sessionId = useMemo(() => getSelectedSessionId(), []);
 
@@ -55,14 +54,16 @@ const SessionCompleted = () => {
     try {
       await mentorApi.updateSession(session.id, { status: 'completed' });
       const payload = { action: selected };
-      if (amount) payload.amount = Number(amount);
-      if (note) payload.note = note;
       if (selected === 'report') {
         payload.issue_category = issueCategory;
-        payload.issue_description = issueDescription || note;
+        payload.issue_description = issueDescription;
       }
       await mentorApi.submitSessionDisposition(session.id, payload);
-      setInfoMessage('Session disposition saved successfully.');
+      if (selected === 'claim') {
+        setClaimSuccessPopupOpen(true);
+      } else {
+        setInfoMessage('Session disposition saved successfully.');
+      }
     } catch (err) {
       setError(err?.message || 'Unable to process session disposition.');
     } finally {
@@ -73,15 +74,15 @@ const SessionCompleted = () => {
   const cards = [
     {
       id: 'claim',
-      title: 'Claim Payment',
-      desc: 'Add ₹500 to your payout balance.',
+      title: 'Claim Session',
+      desc: 'Mark this session as claimed.',
       icon: Wallet,
       tone: 'purple',
     },
     {
       id: 'donate',
-      title: 'Donate Session',
-      desc: 'Contribute funds to support underprivileged students.',
+      title: 'Complementary Service',
+      desc: 'Mark this session as a complementary service.',
       icon: Heart,
       tone: 'yellow',
     },
@@ -166,29 +167,6 @@ const SessionCompleted = () => {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="block text-xs text-[#6b7280] mb-1">Notes (optional)</label>
-            <textarea
-              rows={3}
-              className="w-full rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-sm"
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="Add a note for this disposition."
-            />
-          </div>
-          {(selected === 'claim' || selected === 'donate') && (
-            <div>
-              <label className="block text-xs text-[#6b7280] mb-1">Amount (optional)</label>
-              <input
-                type="number"
-                min="0"
-                className="w-full rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-sm"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-                placeholder="500"
-              />
-            </div>
-          )}
           {selected === 'report' && (
             <>
               <div>
@@ -239,8 +217,28 @@ const SessionCompleted = () => {
           )}
         </div>
       </div>
+
+      {claimSuccessPopupOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="w-full max-w-sm rounded-2xl border border-[#e6e2f1] bg-white p-6 shadow-2xl text-center">
+            <h3 className="text-lg font-semibold text-[#1f2937]">Claim Session</h3>
+            <p className="mt-2 text-sm text-[#4b5563]">
+              Added successfully.
+            </p>
+            <button
+              type="button"
+              className="mt-5 inline-flex rounded-full bg-[#5b2c91] text-white px-6 py-2 text-sm font-semibold"
+              onClick={() => setClaimSuccessPopupOpen(false)}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default SessionCompleted;
+
+

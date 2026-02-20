@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { useMentorScreenData } from './useMentorScreenData';
 
 const MentorDetails = () => {
-  const { mentor, availability, review, loading, error } = useMentorScreenData();
+  const { mentor, availability, review, reviews, loading, error } = useMentorScreenData();
   const mentorIdSuffix = mentor?.id ? `?mentorId=${mentor.id}` : '';
   const rating = mentor?.rating != null ? Number(mentor.rating).toFixed(1) : '';
   const reviewCount = mentor?.reviews != null ? Number(mentor.reviews) : null;
   const reviewStars = review?.rating ? '*'.repeat(Math.max(1, Math.min(5, Number(review.rating)))) : '';
+  const reviewList = Array.isArray(reviews) ? reviews.slice(0, 3) : [];
   const displayName = mentor?.name || (mentor?.id ? `Mentor #${mentor.id}` : '');
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [showReadMore, setShowReadMore] = useState(false);
@@ -254,7 +255,7 @@ const MentorDetails = () => {
                   className="text-[#111827] text-sm sm:text-base"
                   style={{ fontFamily: 'Inter', lineHeight: '24px', fontWeight: 600 }}
                 >
-                  {review ? 'Recent Feedback' : 'No Feedback Yet'}
+                  {reviewList.length > 0 ? 'Recent Feedback' : review ? 'Recent Feedback' : 'No Feedback Yet'}
                 </span>
                 <span
                   className="text-[#f4b740] text-base sm:text-lg"
@@ -263,7 +264,35 @@ const MentorDetails = () => {
                   {reviewStars}
                 </span>
               </div>
-              {review?.comments && (
+              {reviewList.length > 0 ? (
+                <div className="mt-3 space-y-3">
+                  {reviewList.map((item) => (
+                    <div key={item.id} className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[#111827] text-xs font-semibold">Mentee review</span>
+                        <span className="text-[#f4b740] text-sm leading-none">
+                          {'*'.repeat(Math.max(1, Math.min(5, Number(item?.rating || 0))))}
+                        </span>
+                      </div>
+                      {item?.comments ? (
+                        <p
+                          className="mt-1 text-sm sm:text-base"
+                          style={{
+                            fontFamily: 'DM Sans',
+                            lineHeight: '24px',
+                            fontWeight: 400,
+                          }}
+                        >
+                          "{item.comments}"
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs text-[#6b7280]">No comment provided.</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                review?.comments && (
                 <p
                   className="mt-2 text-sm sm:text-base w-full lg:w-[598.67px] lg:h-[48px]"
                   style={{
@@ -274,6 +303,7 @@ const MentorDetails = () => {
                 >
                   "{review.comments}"
                 </p>
+                )
               )}
             </div>
           </div>

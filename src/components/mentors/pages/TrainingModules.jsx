@@ -79,6 +79,14 @@ const TrainingModules = () => {
   const allModulesCompleted = modules.length > 0 && completedCount === modules.length;
   const quizPassed = Boolean(quizStatus?.quiz_passed);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/mentor-impact-dashboard');
+  };
+
   return (
     <div className="min-h-screen bg-transparent text-[#1f2937] flex flex-col">
       <TopAuth />
@@ -88,7 +96,7 @@ const TrainingModules = () => {
           <button
             type="button"
             className="inline-flex items-center gap-2 text-sm text-[#6b7280] hover:text-[#1f2937] mb-4"
-            onClick={() => navigate('/mentor-onboarding-status')}
+            onClick={handleBack}
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Back

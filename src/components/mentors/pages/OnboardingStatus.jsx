@@ -45,26 +45,19 @@ const OnboardingStatus = () => {
   }, [mentor?.id]);
 
   const status = onboarding?.status || {};
-  const normalizedStatus = String(
-    status?.current_status || status?.final_approval_status || ''
-  ).toLowerCase();
-  const isComplete = normalizedStatus === 'completed';
-  const currentStatusLabel = (status?.current_status || 'pending').replace('_', ' ');
-
-  useEffect(() => {
-    if (!isComplete) return;
-    const timeoutId = window.setTimeout(() => {
-      navigate('/mentor-impact-dashboard');
-    }, 400);
-    return () => window.clearTimeout(timeoutId);
-  }, [isComplete, navigate]);
+  const isCompleted = (value) => value === 'completed' || value === 'verified';
+  const applicationDone = isCompleted(status?.application_status);
+  const identityDone = isCompleted(status?.identity_status);
+  const trainingDone = isCompleted(status?.training_status);
+  const accessReady = applicationDone && identityDone;
+  const currentStatusLabel = status?.current_status || 'pending';
+  const currentStatusText = String(currentStatusLabel).replace(/_/g, ' ');
 
   const steps = useMemo(
     () => [
-      { key: 'application_status', label: 'Application Submitted' },
-      { key: 'identity_status', label: 'Document Verification' },
-      { key: 'training_status', label: 'Training Module', link: '/mentor-training-modules' },
-      { key: 'final_approval_status', label: 'Final Approval' },
+      { key: 'application_status', label: 'Application Submitted', required: true },
+      { key: 'identity_status', label: 'Document Verification', required: true },
+      { key: 'training_status', label: 'Training Module', link: '/mentor-training-modules', optional: true },
     ],
     []
   );
@@ -147,7 +140,7 @@ const OnboardingStatus = () => {
                   <div className="inline-flex items-center gap-2 text-sm text-[#6b7280]">
                     <span>Current Status:</span>
                     <span className={`rounded-full text-xs px-3 py-1 ${getBadgeClasses(status?.current_status)}`}>
-                      {currentStatusLabel}
+                      {currentStatusText}
                     </span>
                   </div>
                 </div>
@@ -155,7 +148,7 @@ const OnboardingStatus = () => {
                 <div className="mt-2">
                   <div className="relative px-2 sm:px-6">
                     <div className="hidden sm:block absolute left-6 right-6 top-4 h-px bg-[#e5e7eb]" aria-hidden="true" />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-center">
                       {steps.map((step, index) => {
                         const value = status?.[step.key] || 'pending';
                         const label = getStatusLabel(value);
@@ -191,6 +184,11 @@ const OnboardingStatus = () => {
                             <p className={`mt-3 text-sm font-medium ${value === 'pending' ? 'text-[#6b7280]' : 'text-[#1f2937]'}`}>
                               {step.label}
                             </p>
+                            {step.optional && (
+                              <span className="mt-1 inline-flex rounded-full bg-[#ede9fe] px-2 py-0.5 text-[10px] font-medium text-[#5b2c91]">
+                                Optional
+                              </span>
+                            )}
                             <span className={`mt-1 inline-flex rounded-md text-xs px-2 py-0.5 ${getBadgeClasses(value)}`}>
                               {label}
                             </span>
@@ -220,26 +218,37 @@ const OnboardingStatus = () => {
                 </div>
 
                 <div className="rounded-xl bg-[#f3ebff] p-5 text-sm text-[#5b2c91]">
-                  {isComplete ? (
+                  {accessReady ? (
                     <>
-                      <p className="font-semibold text-[#5b2c91]">Onboarding Complete</p>
+                      <p className="font-semibold text-[#5b2c91]">Dashboard Access Ready</p>
                       <p className="mt-1 text-sm text-[#5b2c91]">
-                        You are fully approved. Redirecting to your dashboard now.
+                        Required steps are complete. Training is optional and can be completed anytime.
                       </p>
-                      <button
-                        type="button"
-                        className="mt-3 inline-flex rounded-md bg-[#5b2c91] text-white px-4 py-2 text-xs font-semibold"
-                        onClick={() => navigate('/mentor-impact-dashboard')}
-                      >
-                        Go to Dashboard
-                      </button>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex rounded-md bg-[#5b2c91] text-white px-4 py-2 text-xs font-semibold"
+                          onClick={() => navigate('/mentor-impact-dashboard')}
+                        >
+                          Skip Training & Go Dashboard
+                        </button>
+                        {!trainingDone && (
+                          <button
+                            type="button"
+                            className="inline-flex rounded-md border border-[#c9b5e8] bg-white text-[#5b2c91] px-4 py-2 text-xs font-semibold"
+                            onClick={() => navigate('/mentor-training-modules')}
+                          >
+                            Do Training Now
+                          </button>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <>
                       <p className="font-semibold text-[#5b2c91]">Verification in Progress</p>
                       <p className="mt-1 text-sm text-[#5b2c91]">
                         You will be notified via email and SMS once the document verification is complete.
-                        This step is essential before you can access training modules.
+                        Dashboard unlocks after Application Submitted and Document Verification are completed.
                       </p>
                     </>
                   )}

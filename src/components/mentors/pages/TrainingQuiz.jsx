@@ -115,6 +115,38 @@ const TrainingQuiz = () => {
   const activeQuestions = Array.isArray(attempt?.questions) ? attempt.questions : [];
   const hasPendingAttempt = attempt?.status === 'pending' && activeQuestions.length > 0;
   const blockNavigation = hasPendingAttempt && !isPassed;
+  const antiCheatEnabled = hasPendingAttempt && !isPassed;
+
+  useEffect(() => {
+    if (!antiCheatEnabled) return undefined;
+
+    const preventDefault = (event) => {
+      event.preventDefault();
+    };
+
+    const handleKeyDown = (event) => {
+      const key = String(event.key || '').toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && ['a', 'c', 'x'].includes(key)) {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener('copy', preventDefault);
+    document.addEventListener('cut', preventDefault);
+    document.addEventListener('contextmenu', preventDefault);
+    document.addEventListener('selectstart', preventDefault);
+    document.addEventListener('dragstart', preventDefault);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('copy', preventDefault);
+      document.removeEventListener('cut', preventDefault);
+      document.removeEventListener('contextmenu', preventDefault);
+      document.removeEventListener('selectstart', preventDefault);
+      document.removeEventListener('dragstart', preventDefault);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [antiCheatEnabled]);
 
   useEffect(() => {
     if (!blockNavigation) return undefined;
@@ -361,7 +393,7 @@ const TrainingQuiz = () => {
             )}
 
             {!loading && canAttemptQuiz && !isPassed && hasPendingAttempt && (
-              <div className="mt-6">
+              <div className="mt-6 select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>
                 <div className="rounded-xl border border-[#e5e7eb] bg-[#faf8ff] p-4">
                   <p className="text-sm text-[#4b5563]">
                     Answered <span className="font-semibold text-[#1f2937]">{answeredCount}</span> of{' '}

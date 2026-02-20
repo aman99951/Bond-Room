@@ -19,7 +19,6 @@ const initialForm = {
   parentConsent: false,
   parentMobile: '',
   recordConsent: false,
-  password: '',
 };
 
 const Register = () => {
@@ -49,7 +48,7 @@ const Register = () => {
     setErrorMessage('');
     setOtpHint('');
 
-    if (!form.firstName || !form.lastName || !form.grade || !form.email || !form.dob || !form.gender || !form.password) {
+    if (!form.firstName || !form.lastName || !form.grade || !form.email || !form.dob || !form.gender) {
       setErrorMessage('Please fill all required fields to continue.');
       return;
     }
@@ -77,7 +76,6 @@ const Register = () => {
         parent_guardian_consent: form.parentConsent,
         parent_mobile: form.parentMobile.trim(),
         record_consent: form.recordConsent,
-        password: form.password,
       });
 
       const otpResponse = await sendParentOtp(mentee.id, form.parentMobile.trim());
@@ -88,7 +86,6 @@ const Register = () => {
       setPendingMenteeRegistration({
         menteeId: mentee.id,
         email: form.email.trim().toLowerCase(),
-        password: form.password,
         parentMobile: form.parentMobile.trim(),
       });
       setAssessmentDraft({});
@@ -291,18 +288,6 @@ const Register = () => {
                       <span className="block text-xs text-muted">All sessions are recorded to ensure student safety and quality of mentorship. Learn more.</span>
                     </span>
                   </label>
-
-                  <div>
-                    <label htmlFor="registerPassword" className="text-xs text-muted">Create password</label>
-                    <input
-                      id="registerPassword"
-                      type="password"
-                      className="mt-1 w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm"
-                      placeholder="Minimum 6 characters"
-                      value={form.password}
-                      onChange={(event) => updateField('password', event.target.value)}
-                    />
-                  </div>
 
                   {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
                   {!errorMessage && otpHint && <p className="text-sm text-[#5b2c91]">{otpHint}</p>}

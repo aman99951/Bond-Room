@@ -1,53 +1,72 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Download, Star, Video, Leaf, Clock } from 'lucide-react';
 import { mentorApi } from '../../../apis/api/mentorApi';
 import { useMentorData } from '../../../apis/apihook/useMentorData';
+import { getAuthSession } from '../../../apis/api/storage';
 
 const ImpactDashboard = () => {
+  const navigate = useNavigate();
   const { mentor } = useMentorData();
   const [dashboard, setDashboard] = useState(null);
+  const [onboardingStatus, setOnboardingStatus] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [feedbackList, setFeedbackList] = useState([]);
+  const [payoutTransactions, setPayoutTransactions] = useState([]);
   const [ledgerPage, setLedgerPage] = useState(1);
+  const [donatedPopupOpen, setDonatedPopupOpen] = useState(false);
+  const [sessionsPopupOpen, setSessionsPopupOpen] = useState(false);
+  const [claimedPopupOpen, setClaimedPopupOpen] = useState(false);
+  const [ratingPopupOpen, setRatingPopupOpen] = useState(false);
+  const [markPaidLoadingId, setMarkPaidLoadingId] = useState(null);
+  const [claimedPopupMessage, setClaimedPopupMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const ledgerPageSize = 5;
+  const sessionRole = getAuthSession()?.role || '';
+  const canMarkPaid = sessionRole === 'mentor' || sessionRole === 'admin';
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadDashboard = useCallback(async (isMountedRef) => {
     if (!mentor?.id) {
+      if (isMountedRef?.current) setDashboard(null);
       setLoading(false);
-      return undefined;
+      return;
     }
-
-    const loadDashboard = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const [dashboardResponse, sessionResponse, feedbackResponse] = await Promise.all([
-          mentorApi.getMentorImpactDashboard(mentor.id),
-          mentorApi.listSessions({ mentor_id: mentor.id }),
-          mentorApi.listSessionFeedback({ mentor_id: mentor.id }),
-        ]);
-        if (!cancelled) {
-          setDashboard(dashboardResponse || null);
-          setSessions(Array.isArray(sessionResponse) ? sessionResponse : sessionResponse?.results || []);
-          setFeedbackList(Array.isArray(feedbackResponse) ? feedbackResponse : feedbackResponse?.results || []);
-        }
-      } catch (err) {
-        if (!cancelled) setError(err?.message || 'Unable to load impact dashboard.');
-      } finally {
-        if (!cancelled) setLoading(false);
+    setLoading(true);
+    setError('');
+    try {
+      const [dashboardResponse, sessionResponse, feedbackResponse, payoutResponse, onboardingResponse] = await Promise.all([
+        mentorApi.getMentorImpactDashboard(mentor.id),
+        mentorApi.listSessions({ mentor_id: mentor.id }),
+        mentorApi.listSessionFeedback({ mentor_id: mentor.id }),
+        mentorApi.listPayoutTransactions({ mentor_id: mentor.id }),
+        mentorApi.getMentorOnboarding(mentor.id),
+      ]);
+      if (isMountedRef?.current) {
+        setDashboard(dashboardResponse || null);
+        setOnboardingStatus(onboardingResponse?.status || null);
+        setSessions(Array.isArray(sessionResponse) ? sessionResponse : sessionResponse?.results || []);
+        setFeedbackList(Array.isArray(feedbackResponse) ? feedbackResponse : feedbackResponse?.results || []);
+        setPayoutTransactions(Array.isArray(payoutResponse) ? payoutResponse : payoutResponse?.results || []);
       }
-    };
-
-    loadDashboard();
-    return () => {
-      cancelled = true;
-    };
+    } catch (err) {
+      if (isMountedRef?.current) setError(err?.message || 'Unable to load impact dashboard.');
+    } finally {
+      if (isMountedRef?.current) setLoading(false);
+    }
   }, [mentor?.id]);
 
+  useEffect(() => {
+    const isMountedRef = { current: true };
+    loadDashboard(isMountedRef);
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [loadDashboard]);
+
   const summary = dashboard?.summary || {};
+  const trainingStatus = String(onboardingStatus?.training_status || '').toLowerCase();
+  const showTrainingPendingCard = Boolean(trainingStatus) && trainingStatus !== 'completed';
   const topicStats = useMemo(
     () => (Array.isArray(dashboard?.topic_stats) ? dashboard.topic_stats : []),
     [dashboard?.topic_stats]
@@ -79,8 +98,12 @@ const ImpactDashboard = () => {
       const feedback = feedbackMap[String(entry.session)] || null;
       return {
         id: entry.id,
+        sessionId: entry.session,
         date: entry.decided_at || entry.updated_at || '',
-        mentee: session?.mentee ? `Mentee #${session.mentee}` : `Session #${entry.session}`,
+        mentee:
+          session?.mentee_name ||
+          [session?.mentee_first_name, session?.mentee_last_name].filter(Boolean).join(' ') ||
+          (session?.mentee ? `Mentee #${session.mentee}` : `Session #${entry.session}`),
         duration: session?.duration_minutes ? `${session.duration_minutes} min` : '—',
         status: entry.action || entry.status,
         rating: feedback?.rating ? Number(feedback.rating) : 0,
@@ -88,6 +111,30 @@ const ImpactDashboard = () => {
       };
     });
   }, [ledger, feedbackMap, sessionMap]);
+
+  const donatedRows = useMemo(
+    () => ledgerRows.filter((row) => String(row.status || '').toLowerCase() === 'donate'),
+    [ledgerRows]
+  );
+  const claimedPayoutRows = useMemo(
+    () =>
+      payoutTransactions
+        .filter((row) => String(row.transaction_type || '').toLowerCase() === 'session_claim')
+        .map((item) => {
+          const session = sessionMap[String(item.session)] || null;
+          return {
+            id: item.id,
+            sessionId: item.session,
+            amount: Number(item.amount || 0),
+            status: String(item.status || 'pending').toLowerCase(),
+            menteeName:
+              session?.mentee_name ||
+              [session?.mentee_first_name, session?.mentee_last_name].filter(Boolean).join(' ') ||
+              (session?.mentee ? `Mentee #${session.mentee}` : `Session #${item.session || item.id}`),
+          };
+        }),
+    [payoutTransactions, sessionMap]
+  );
 
   const totalLedgerPages = useMemo(
     () => Math.max(1, Math.ceil(ledgerRows.length / ledgerPageSize)),
@@ -108,6 +155,26 @@ const ImpactDashboard = () => {
     if (status === 'donate') return 'Donated';
     if (status === 'report') return 'Reported';
     return status || 'Pending';
+  };
+
+  const getPayoutStatusLabel = (status) => {
+    const normalized = String(status || '').toLowerCase();
+    if (!normalized) return 'Pending';
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
+
+  const handleMarkPaid = async (payoutId) => {
+    setClaimedPopupMessage('');
+    setMarkPaidLoadingId(payoutId);
+    try {
+      await mentorApi.markPayoutTransactionPaid(payoutId, {});
+      setClaimedPopupMessage('Payout marked as paid successfully.');
+      await loadDashboard({ current: true });
+    } catch (err) {
+      setClaimedPopupMessage(err?.message || 'Unable to mark payout as paid right now.');
+    } finally {
+      setMarkPaidLoadingId(null);
+    }
   };
 
   const handleExport = () => {
@@ -246,9 +313,39 @@ const ImpactDashboard = () => {
 
   const topicRows = isInitialLoading
     ? loadingTopicPlaceholders
-    : normalizedTopics.length
+      : normalizedTopics.length
       ? normalizedTopics
       : [{ label: 'No data', value: 0, count: 0 }];
+
+  const sessionDetailRows = useMemo(
+    () =>
+      sessions.map((item) => ({
+        id: item.id,
+        menteeName:
+          item.mentee_name ||
+          [item.mentee_first_name, item.mentee_last_name].filter(Boolean).join(' ') ||
+          (item.mentee ? `Mentee #${item.mentee}` : `Session #${item.id}`),
+        status: item.status || 'pending',
+        duration: item.duration_minutes ? `${item.duration_minutes} min` : '—',
+      })),
+    [sessions]
+  );
+  const ratingDetailRows = useMemo(
+    () =>
+      feedbackList.map((item, index) => {
+        const session = sessionMap[String(item.session)] || null;
+        return {
+          id: item.id || `${item.session || 'session'}-${index + 1}`,
+          sessionId: item.session || session?.id || '-',
+          menteeName:
+            session?.mentee_name ||
+            [session?.mentee_first_name, session?.mentee_last_name].filter(Boolean).join(' ') ||
+            (session?.mentee ? `Mentee #${session.mentee}` : `Session #${item.session || item.id || index + 1}`),
+          rating: Number(item.rating || 0),
+        };
+      }),
+    [feedbackList, sessionMap]
+  );
 
   return (
     <div className="min-h-screen bg-transparent text-[#111827] p-6 sm:p-8 rounded-2xl">
@@ -267,8 +364,26 @@ const ImpactDashboard = () => {
           </button>
         </div>
 
+        {showTrainingPendingCard && (
+          <button
+            type="button"
+            className="mt-5 w-full rounded-xl border border-[#d9c8f5] bg-gradient-to-r from-[#f5f0ff] to-white p-4 text-left hover:border-[#c9b5e8] transition"
+            onClick={() => navigate('/mentor-training-modules')}
+          >
+            <p className="text-xs uppercase tracking-[0.08em] text-[#7c3aed]">Optional</p>
+            <p className="mt-1 text-base font-semibold text-[#5b2c91]">Training Module Pending</p>
+            <p className="mt-1 text-xs text-[#6b7280]">
+              You can continue mentoring now. Click here anytime to complete training modules.
+            </p>
+          </button>
+        )}
+
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm">
+          <button
+            type="button"
+            className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm text-left hover:border-[#c9b5e8] transition cursor-pointer"
+            onClick={() => setSessionsPopupOpen(true)}
+          >
             <p
               className="text-[#333333]"
               style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
@@ -286,28 +401,38 @@ const ImpactDashboard = () => {
             <p className="mt-1 text-[11px] text-[#6b7280]">
               {isInitialLoading ? 'Loading metrics...' : sessionChangeLabel}
             </p>
-          </div>
-          <div className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm">
+          </button>
+          <button
+            type="button"
+            className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm text-left hover:border-[#c9b5e8] transition cursor-pointer"
+            onClick={() => setDonatedPopupOpen(true)}
+          >
             <div className="flex items-center justify-between">
               <p
                 className="text-[#333333]"
                 style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
               >
-                Total Donated
+                Total Complementary Service
               </p>
-              <span className="text-[11px] text-[#9ca3af]">This month</span>
             </div>
             <div className="mt-2 flex items-center gap-2">
               <span className="h-8 w-8 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center">
                 <Leaf className="h-4 w-4" />
               </span>
               <span className="text-[24px] font-semibold text-[#16a34a]">
-                ₹{summary.total_donated || 0}
+                {isInitialLoading ? '--' : donatedRows.length}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#6b7280]">All time</p>
-          </div>
-          <div className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm">
+            <p className="mt-1 text-[11px] text-[#6b7280]">Total complementary sessions</p>
+          </button>
+          <button
+            type="button"
+            className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm text-left hover:border-[#c9b5e8] transition cursor-pointer"
+            onClick={() => {
+              setClaimedPopupMessage('');
+              setClaimedPopupOpen(true);
+            }}
+          >
             <p
               className="text-[#333333]"
               style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
@@ -323,8 +448,12 @@ const ImpactDashboard = () => {
               </span>
             </div>
             <p className="mt-1 text-[11px] text-[#6b7280]">Pending payout: ₹{summary.pending_payout || 0}</p>
-          </div>
-          <div className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm">
+          </button>
+          <button
+            type="button"
+            className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm text-left hover:border-[#c9b5e8] transition cursor-pointer"
+            onClick={() => setRatingPopupOpen(true)}
+          >
             <p
               className="text-[#333333]"
               style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
@@ -338,7 +467,7 @@ const ImpactDashboard = () => {
               <span className="text-[24px] font-semibold text-[#f59e0b]">{summary.average_rating || 0}</span>
             </div>
             <p className="mt-1 text-[11px] text-[#6b7280]">Based on {reviewCount} reviews</p>
-          </div>
+          </button>
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-3">
@@ -510,9 +639,211 @@ const ImpactDashboard = () => {
           </div>
         )}
       </div>
+
+      {donatedPopupOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#e6e2f1] bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-[#111827]">Total Complementary Sessions</h3>
+              <button
+                type="button"
+                className="text-xs text-[#5b2c91] underline"
+                onClick={() => setDonatedPopupOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f8fafc] text-[#6b7280]">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Mentee Name</th>
+                    <th className="px-3 py-2 font-medium">Session ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {donatedRows.length > 0 ? (
+                    donatedRows.map((row) => (
+                      <tr key={`donated-${row.id}`} className="border-t border-[#f1f5f9] text-[#374151]">
+                        <td className="px-3 py-2">{row.mentee}</td>
+                        <td className="px-3 py-2">#{row.sessionId}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="border-t border-[#f1f5f9] text-[#6b7280]">
+                      <td className="px-3 py-3" colSpan={2}>
+                        No donated sessions yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sessionsPopupOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#e6e2f1] bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-[#111827]">Total Sessions</h3>
+              <button
+                type="button"
+                className="text-xs text-[#5b2c91] underline"
+                onClick={() => setSessionsPopupOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f8fafc] text-[#6b7280]">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Mentee Name</th>
+                    <th className="px-3 py-2 font-medium">Session ID</th>
+                    <th className="px-3 py-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sessionDetailRows.length > 0 ? (
+                    sessionDetailRows.map((row) => (
+                      <tr key={`session-${row.id}`} className="border-t border-[#f1f5f9] text-[#374151]">
+                        <td className="px-3 py-2">{row.menteeName}</td>
+                        <td className="px-3 py-2">#{row.id}</td>
+                        <td className="px-3 py-2">{getStatusLabel(row.status)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="border-t border-[#f1f5f9] text-[#6b7280]">
+                      <td className="px-3 py-3" colSpan={3}>
+                        No sessions yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {claimedPopupOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="w-full max-w-3xl rounded-2xl border border-[#e6e2f1] bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-[#111827]">Total Claimed</h3>
+              <button
+                type="button"
+                className="text-xs text-[#5b2c91] underline"
+                onClick={() => {
+                  setClaimedPopupMessage('');
+                  setClaimedPopupOpen(false);
+                }}
+              >
+                Close
+              </button>
+            </div>
+            {claimedPopupMessage && (
+              <p className="mt-3 rounded-lg bg-[#f8fafc] px-3 py-2 text-xs text-[#0f172a] border border-[#e2e8f0]">
+                {claimedPopupMessage}
+              </p>
+            )}
+            <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f8fafc] text-[#6b7280]">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Mentee Name</th>
+                    <th className="px-3 py-2 font-medium">Session ID</th>
+                    <th className="px-3 py-2 font-medium">Amount</th>
+                    <th className="px-3 py-2 font-medium">Status</th>
+                    <th className="px-3 py-2 font-medium">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {claimedPayoutRows.length > 0 ? (
+                    claimedPayoutRows.map((row) => (
+                      <tr key={`claimed-${row.id}`} className="border-t border-[#f1f5f9] text-[#374151]">
+                        <td className="px-3 py-2">{row.menteeName}</td>
+                        <td className="px-3 py-2">#{row.sessionId}</td>
+                        <td className="px-3 py-2">₹{row.amount}</td>
+                        <td className="px-3 py-2">{getPayoutStatusLabel(row.status)}</td>
+                        <td className="px-3 py-2">
+                          {canMarkPaid && row.status !== 'paid' ? (
+                            <button
+                              type="button"
+                              className="rounded-md bg-[#5b2c91] px-2.5 py-1 text-[11px] text-white disabled:opacity-60"
+                              disabled={markPaidLoadingId === row.id}
+                              onClick={() => handleMarkPaid(row.id)}
+                            >
+                              {markPaidLoadingId === row.id ? 'Processing...' : 'Mark Paid'}
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-[#6b7280]">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="border-t border-[#f1f5f9] text-[#6b7280]">
+                      <td className="px-3 py-3" colSpan={5}>
+                        No claimed sessions yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ratingPopupOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#e6e2f1] bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-[#111827]">Avg. Rating</h3>
+              <button
+                type="button"
+                className="text-xs text-[#5b2c91] underline"
+                onClick={() => setRatingPopupOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f8fafc] text-[#6b7280]">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Mentee Name</th>
+                    <th className="px-3 py-2 font-medium">Session ID</th>
+                    <th className="px-3 py-2 font-medium">Rating</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ratingDetailRows.length > 0 ? (
+                    ratingDetailRows.map((row) => (
+                      <tr key={`rating-${row.id}`} className="border-t border-[#f1f5f9] text-[#374151]">
+                        <td className="px-3 py-2">{row.menteeName}</td>
+                        <td className="px-3 py-2">#{row.sessionId}</td>
+                        <td className="px-3 py-2">{row.rating}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="border-t border-[#f1f5f9] text-[#6b7280]">
+                      <td className="px-3 py-3" colSpan={3}>
+                        No ratings yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default ImpactDashboard;
-

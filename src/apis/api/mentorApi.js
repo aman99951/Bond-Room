@@ -59,6 +59,8 @@ export const mentorApi = {
   listMentorWallets: (params = {}) => apiClient.get(`/mentor-wallets/${buildQuery(params)}`),
   listPayoutTransactions: (params = {}) =>
     apiClient.get(`/payout-transactions/${buildQuery(params)}`),
+  markPayoutTransactionPaid: (payoutId, payload = {}) =>
+    apiClient.post(`/payout-transactions/${payoutId}/mark-paid/`, payload),
   listDonationTransactions: (params = {}) =>
     apiClient.get(`/donation-transactions/${buildQuery(params)}`),
   listSessionIssueReports: (params = {}) =>
