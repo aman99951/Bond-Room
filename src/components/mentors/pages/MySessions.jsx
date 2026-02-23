@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search, ChevronDown, Calendar, Table, Clock, Video, ArrowRight, Filter, X } from 'lucide-react';
 import { mentorApi } from '../../../apis/api/mentorApi';
 import { useMentorData } from '../../../apis/apihook/useMentorData';
 import { setSelectedSessionId } from '../../../apis/api/storage';
@@ -241,43 +241,72 @@ const MySessions = () => {
 
   const getJoinUrl = (session) => session?.joinUrl || session?.join_url || session?.host_join_url || '';
 
-  return (
-    <div className="p-4 sm:p-6 bg-transparent">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <h1
-          className="text-[#111827]"
-          style={{ fontFamily: 'DM Sans', fontSize: '30px', lineHeight: '36px', fontWeight: 700 }}
-        >
-          My Sessions
-        </h1>
+return (
+  <div className="min-h-screenp-4 sm:p-6 lg:p-8">
+    {/* Header Section */}
+    <div className="mb-8">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        {/* Title with decorative element */}
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
+            <Calendar className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+              My Sessions
+            </h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Manage and track all your mentoring sessions
+            </p>
+          </div>
+        </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-4 py-2 text-xs text-[#6b7280] min-w-[220px]">
-            <Search className="h-4 w-4 text-[#9ca3af]" />
+        {/* Controls Section */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          {/* Search Input */}
+          <div className="relative w-full sm:w-auto">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
-              className="outline-none text-xs bg-transparent w-full"
+              type="text"
+              className="h-11 w-full rounded-xl border-0 bg-white pl-11 pr-4 text-sm text-gray-900 shadow-sm ring-1 ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-[#5D3699] sm:w-64 transition-all duration-200"
               placeholder="Search mentee..."
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
             />
-          </label>
+            {searchValue && (
+              <button
+                onClick={() => setSearchValue('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-3 w-3 text-gray-400" />
+              </button>
+            )}
+          </div>
 
+          {/* Filter Dropdown */}
           <div className="relative" tabIndex={0} onBlur={() => setFilterOpen(false)}>
             <button
               type="button"
-              className="inline-flex items-center justify-between gap-2 rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#6b7280] min-w-[140px]"
+              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 sm:w-40 transition-all duration-200"
               onClick={() => setFilterOpen((o) => !o)}
             >
-              Filter: {filterValue}
-              <ChevronDown className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <span>{filterValue}</span>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
             </button>
             {filterOpen && (
-              <ul className="absolute z-10 mt-1 w-full rounded-md border border-[#e5e7eb] bg-white text-[#111827] text-xs shadow">
+              <ul className="absolute z-20 mt-2 w-full origin-top-right rounded-xl border-0 bg-white py-2 shadow-xl ring-1 ring-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
                 {filterOptions.map((opt) => (
                   <li key={opt}>
                     <button
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-[#f3f4f6]"
+                      className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
+                        filterValue === opt
+                          ? 'bg-[#5D3699]/10 text-[#5D3699] font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
                         setFilterValue(opt);
@@ -292,22 +321,27 @@ const MySessions = () => {
             )}
           </div>
 
+          {/* Week Filter Dropdown */}
           <div className="relative" tabIndex={0} onBlur={() => setWeekFilterOpen(false)}>
             <button
               type="button"
-              className="inline-flex items-center justify-between gap-2 rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#6b7280] min-w-[120px]"
+              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 sm:w-36 transition-all duration-200"
               onClick={() => setWeekFilterOpen((o) => !o)}
             >
-              {weekFilterValue}
-              <ChevronDown className="h-4 w-4" />
+              <span>{weekFilterValue}</span>
+              <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${weekFilterOpen ? 'rotate-180' : ''}`} />
             </button>
             {weekFilterOpen && (
-              <ul className="absolute z-10 mt-1 w-full rounded-md border border-[#e5e7eb] bg-white text-[#111827] text-xs shadow">
+              <ul className="absolute z-20 mt-2 w-full origin-top-right rounded-xl border-0 bg-white py-2 shadow-xl ring-1 ring-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
                 {weekFilterOptions.map((opt) => (
                   <li key={opt}>
                     <button
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-[#f3f4f6]"
+                      className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
+                        weekFilterValue === opt
+                          ? 'bg-[#5D3699]/10 text-[#5D3699] font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
                         setWeekFilterValue(opt);
@@ -322,40 +356,61 @@ const MySessions = () => {
             )}
           </div>
 
-          <div className="inline-flex rounded-full border border-[#e5e7eb] bg-white overflow-hidden">
+          {/* View Toggle */}
+          <div className="flex h-11 items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-gray-200">
             <button
-              className={`px-4 py-2 text-xs ${view === 'calendar' ? 'bg-[#5D3699] text-white' : 'text-[#6b7280]'}`}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                view === 'calendar'
+                  ? 'bg-[#5D3699] text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
               onClick={() => setView('calendar')}
             >
-              Calendar
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Calendar</span>
             </button>
             <button
-              className={`px-4 py-2 text-xs ${view === 'table' ? 'bg-[#5D3699] text-white' : 'text-[#6b7280]'}`}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                view === 'table'
+                  ? 'bg-[#5D3699] text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
               onClick={() => setView('table')}
             >
-              Table
+              <Table className="h-4 w-4" />
+              <span className="hidden sm:inline">Table</span>
             </button>
           </div>
         </div>
       </div>
+    </div>
 
-      {view === 'calendar' ? (
-        <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white overflow-x-auto shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]">
-          <div className="min-w-[1100px]" style={{ height: '716px' }}>
-            <div className="grid grid-cols-[120px_repeat(7,142px)] border-b border-[#e5e7eb] text-xs text-[#6b7280]">
-              <div className="p-3" />
+    {/* Calendar View */}
+    {view === 'calendar' ? (
+      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <div className="min-w-[1100px]">
+            {/* Calendar Header */}
+            <div className="grid grid-cols-[100px_repeat(7,1fr)] bg-gray-50">
+              <div className="p-4" />
               {days.map((d) => (
-                <div key={d.label} className={`p-3 text-center border-l border-r border-[#e5e7eb] ${d.active ? 'bg-[#f8fafc]' : ''}`}>
-                  <div className={`text-xs ${d.active ? 'text-[#5D3699] font-semibold' : 'text-[#6b7280]'}`}>{d.label}</div>
+                <div
+                  key={d.label}
+                  className={`p-4 text-center border-l border-gray-100 transition-colors ${
+                    d.active ? 'bg-[#5D3699]/5' : ''
+                  }`}
+                >
+                  <div className={`text-xs font-medium uppercase tracking-wider ${
+                    d.active ? 'text-[#5D3699]' : 'text-gray-400'
+                  }`}>
+                    {d.label}
+                  </div>
                   <div
-                    className={`mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full ${
-                      d.active ? 'bg-[#5D3699] text-white' : ''
-                    }`}
-                    style={
+                    className={`mt-2 inline-flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold transition-all ${
                       d.active
-                        ? { fontFamily: 'Inter', fontSize: '16px', lineHeight: '20px', fontWeight: 600, color: '#ffffff' }
-                        : { fontFamily: 'DM Sans', fontSize: '22px', lineHeight: '28px', fontWeight: 700, color: '#1A202C' }
-                    }
+                        ? 'bg-[#5D3699] text-white shadow-lg shadow-[#5D3699]/30'
+                        : 'text-gray-800'
+                    }`}
                   >
                     {d.date.getDate()}
                   </div>
@@ -363,161 +418,228 @@ const MySessions = () => {
               ))}
             </div>
 
-            {hours.map((h, idx) => {
-              const rowHasJoin = calendarEntries.some((s) => s.hourIndex === idx && !s.isPast);
-              return (
-              <div key={h} className="grid grid-cols-[120px_repeat(7,142px)] border-b border-[#e5e7eb] text-xs">
-                <div
-                  className="p-3 text-[#6b7280]"
-                  style={{ fontFamily: 'DM Sans', fontSize: '14px', lineHeight: '20px', fontWeight: 400, textAlign: 'right' }}
-                >
-                  {h}
-                </div>
-                {days.map((d, c) => {
-                  const session = calendarEntries.find((s) => s.dayIndex === c && s.hourIndex === idx);
-                  return (
-                    <div
-                      key={`${h}-${d.label}`}
-                      className={`border-l border-r border-[#e5e7eb] p-2 ${rowHasJoin ? 'h-24' : 'h-16'} relative ${d.active ? 'bg-[#f8fafc]' : ''}`}
-                    >
-                      {session && (
+            {/* Calendar Body */}
+            <div className="divide-y divide-gray-100">
+              {hours.map((h, idx) => {
+                const rowHasJoin = calendarEntries.some((s) => s.hourIndex === idx && !s.isPast);
+                return (
+                  <div key={h} className="grid grid-cols-[100px_repeat(7,1fr)]">
+                    <div className="flex items-start justify-end p-3 pr-4 text-xs font-medium text-gray-400">
+                      {h}
+                    </div>
+                    {days.map((d, c) => {
+                      const session = calendarEntries.find((s) => s.dayIndex === c && s.hourIndex === idx);
+                      return (
                         <div
-                          className={`absolute inset-2 rounded-[6px] px-2 py-2 ${
-                            session.tone === 'light'
-                              ? 'bg-[#f3f4f6] text-[#374151]'
-                              : 'bg-[#5D3699] text-white'
-                          } ${session.isPast ? 'opacity-50' : ''}`}
+                          key={`${h}-${d.label}`}
+                          className={`relative border-l border-gray-100 p-2 transition-colors ${
+                            rowHasJoin ? 'min-h-[100px]' : 'min-h-[70px]'
+                          } ${d.active ? 'bg-[#5D3699]/[0.02]' : 'hover:bg-gray-50/50'}`}
                         >
-                          <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => {
-                              setSelectedSessionId(session.id);
-                              if (session?.tone === 'light') {
-                                navigate('/mentor-session-completed');
-                              }
-                            }}
-                            onKeyDown={(event) => {
-                              if (event.key === 'Enter') {
+                          {session && (
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
                                 setSelectedSessionId(session.id);
                                 if (session?.tone === 'light') {
                                   navigate('/mentor-session-completed');
                                 }
-                              }
-                            }}
-                            className="flex flex-col items-center gap-0.5"
-                          >
-                            <button
-                              type="button"
-                              className="max-w-full truncate text-center underline-offset-2 hover:underline"
-                              style={{ fontFamily: 'Inter', fontSize: '13px', lineHeight: '18px', fontWeight: 600 }}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                navigate(`/mentor-mentee-profile/${session.id}`);
                               }}
-                            >
-                              {session.title}
-                            </button>
-                            <div
-                              style={{
-                                fontFamily: 'DM Sans',
-                                fontSize: '11px',
-                                lineHeight: '15px',
-                                fontWeight: 400,
-                                textAlign: 'center',
-                                textDecoration: session.tone === 'light' ? 'line-through' : 'none',
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter') {
+                                  setSelectedSessionId(session.id);
+                                  if (session?.tone === 'light') {
+                                    navigate('/mentor-session-completed');
+                                  }
+                                }
                               }}
+                              className={`group absolute inset-2 flex flex-col rounded-xl p-3 transition-all duration-200 cursor-pointer ${
+                                session.tone === 'light'
+                                  ? 'bg-gray-100 hover:bg-gray-200 ring-1 ring-gray-200'
+                                  : 'bg-[#5D3699] hover:bg-[#4a2b7a] shadow-lg shadow-[#5D3699]/20'
+                              } ${session.isPast ? 'opacity-60' : ''}`}
                             >
-                              {session.time}
-                            </div>
-                          </div>
-                          {!session.isPast && (
-                            <div className="mt-1 flex justify-center">
                               <button
                                 type="button"
+                                className={`text-left text-sm font-semibold truncate transition-colors ${
+                                  session.tone === 'light'
+                                    ? 'text-gray-800 hover:text-[#5D3699]'
+                                    : 'text-white'
+                                }`}
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  handleJoin(session);
+                                  navigate(`/mentor-mentee-profile/${session.id}`);
                                 }}
-                                className="inline-flex items-center justify-center rounded-full border border-white/60 bg-white/20 px-2 py-0.5 text-[9px] font-semibold text-white disabled:opacity-70"
-                                disabled={joiningId === session.id}
                               >
-                                {joiningId === session.id ? 'Joining...' : 'Join'}
+                                {session.title}
                               </button>
+                              <div className={`mt-1 flex items-center gap-1 text-xs ${
+                                session.tone === 'light' ? 'text-gray-500' : 'text-white/80'
+                              }`}>
+                                <Clock className="h-3 w-3" />
+                                <span className={session.tone === 'light' ? 'line-through' : ''}>
+                                  {session.time}
+                                </span>
+                              </div>
+                              {!session.isPast && (
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleJoin(session);
+                                  }}
+                                  className="mt-auto flex items-center justify-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/30 disabled:opacity-50"
+                                  disabled={joiningId === session.id}
+                                >
+                                  <Video className="h-3 w-3" />
+                                  {joiningId === session.id ? 'Joining...' : 'Join Now'}
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-            })}
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      ) : (
-        <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white overflow-x-auto shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]">
-          <table className="min-w-[640px] w-full text-xs">
-            <thead className="bg-[#f8fafc] text-[#6b7280]">
-              <tr>
-                <th className="text-left p-3 border-b border-[#e5e7eb]">Mentee</th>
-                <th className="text-left p-3 border-b border-[#e5e7eb]">Date</th>
-                <th className="text-left p-3 border-b border-[#e5e7eb]">Time</th>
-                <th className="text-left p-3 border-b border-[#e5e7eb]">Type</th>
-                <th className="text-left p-3 border-b border-[#e5e7eb]">Join</th>
+      </div>
+    ) : (
+      /* Table View */
+      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px]">
+            <thead>
+              <tr className="bg-gray-50/80">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Mentee
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Date
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Time
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Action
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-100">
               {filteredSessions.map((session) => (
-                <tr key={session.id} className="border-b border-[#e5e7eb]">
-                  <td className="p-3 text-[#111827]">
+                <tr
+                  key={session.id}
+                  className="group transition-colors hover:bg-gray-50/50"
+                >
+                  <td className="px-6 py-4">
                     <button
                       type="button"
-                      className="text-left text-[#5D3699] hover:underline"
+                      className="flex items-center gap-3 text-left"
                       onClick={() => navigate(`/mentor-mentee-profile/${session.id}`)}
                     >
-                      {getMenteeName(session)}
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#5D3699]/10 text-sm font-semibold text-[#5D3699]">
+                        {getMenteeName(session).charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-900 group-hover:text-[#5D3699] transition-colors">
+                          {getMenteeName(session)}
+                        </span>
+                      </div>
                     </button>
                   </td>
-                  <td className="p-3 text-[#6b7280]">{formatDateLabel(session.scheduled_start)}</td>
-                  <td className="p-3 text-[#6b7280]">{formatTimeRange(session.scheduled_start, session.scheduled_end)}</td>
-                  <td className="p-3 text-[#6b7280]">{session.status || 'Session'}</td>
-                  <td className="p-3">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      {formatDateLabel(session.scheduled_start)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Clock className="h-4 w-4 text-gray-400" />
+                      {formatTimeRange(session.scheduled_start, session.scheduled_end)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+                        isPastSession(session)
+                          ? 'bg-gray-100 text-gray-600'
+                          : 'bg-green-50 text-green-700 ring-1 ring-green-600/20'
+                      }`}
+                    >
+                      {isPastSession(session) ? 'Completed' : session.status || 'Scheduled'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
                     {!isPastSession(session) ? (
                       <button
                         type="button"
                         onClick={() => handleJoin(session)}
-                        className="inline-flex items-center rounded-md bg-[#5D3699] px-3 py-1.5 text-[11px] text-white disabled:opacity-70"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#5D3699] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={joiningId === session.id}
                       >
+                        <Video className="h-4 w-4" />
                         {joiningId === session.id ? 'Joining...' : 'Join Call'}
+                        <ArrowRight className="h-4 w-4" />
                       </button>
                     ) : (
-                      <span className="text-[#cbd5f5]">Ended</span>
+                      <span className="inline-flex items-center gap-1.5 text-sm text-gray-400">
+                        <span className="h-2 w-2 rounded-full bg-gray-300" />
+                        Session Ended
+                      </span>
                     )}
                   </td>
                 </tr>
               ))}
               {!filteredSessions.length && (
-                <tr className="border-b border-[#e5e7eb]">
-                  <td className="p-3 text-xs text-[#6b7280]" colSpan={5}>
-                    No sessions found for this view.
+                <tr>
+                  <td colSpan={5} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                        <Calendar className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">No sessions found</p>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Try adjusting your filters or search criteria
+                        </p>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      )}
-      {(loading || error) && (
-        <div className={`mt-3 text-xs ${error ? 'text-red-600' : 'text-[#6b7280]'}`}>
-          {error || 'Loading sessions...'}
-        </div>
-      )}
-      {joinError && <div className="mt-2 text-xs text-red-600">{joinError}</div>}
-    </div>
-  );
+      </div>
+    )}
+
+    {/* Loading & Error States */}
+    {(loading || error) && (
+      <div className={`mt-6 flex items-center justify-center gap-2 rounded-xl p-4 ${
+        error ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'
+      }`}>
+        {loading && (
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-[#5D3699]" />
+        )}
+        <span className="text-sm font-medium">{error || 'Loading sessions...'}</span>
+      </div>
+    )}
+
+    {joinError && (
+      <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-600 ring-1 ring-red-100">
+        <span className="font-medium">{joinError}</span>
+      </div>
+    )}
+  </div>
+);
 };
 
 export default MySessions;
