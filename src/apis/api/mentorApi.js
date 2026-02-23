@@ -46,6 +46,8 @@ export const mentorApi = {
   deleteAvailabilitySlot: (slotId) => apiClient.delete(`/mentor-availability-slots/${slotId}/`),
 
   listSessions: (params = {}) => apiClient.get(`/sessions/${buildQuery(params)}`),
+  getSessionRequestStats: (params = {}) =>
+    apiClient.get(`/sessions/request-stats/${buildQuery(params)}`),
   getSessionById: (sessionId) => apiClient.get(`/sessions/${sessionId}/`),
   getMenteeProfileBySession: (sessionId) => apiClient.get(`/sessions/${sessionId}/mentee-profile/`),
   updateSession: (sessionId, payload) => apiClient.patch(`/sessions/${sessionId}/`, payload),

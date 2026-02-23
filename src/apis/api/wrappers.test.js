@@ -134,6 +134,7 @@ test("mentorApi maps every wrapper to correct endpoint", async () => {
     { fnName: "updateAvailabilitySlot", args: [8, {}], expectedMethod: "patch", expectedPath: "/mentor-availability-slots/8/" },
     { fnName: "deleteAvailabilitySlot", args: [8], expectedMethod: "delete", expectedPath: "/mentor-availability-slots/8/" },
     { fnName: "listSessions", args: [{ mentor_id: 22 }], expectedMethod: "get", expectedPath: "/sessions/?mentor_id=22" },
+    { fnName: "getSessionRequestStats", args: [{ mentor_id: 22 }], expectedMethod: "get", expectedPath: "/sessions/request-stats/?mentor_id=22" },
     { fnName: "getSessionById", args: [44], expectedMethod: "get", expectedPath: "/sessions/44/" },
     { fnName: "getMenteeProfileBySession", args: [44], expectedMethod: "get", expectedPath: "/sessions/44/mentee-profile/" },
     { fnName: "updateSession", args: [44, {}], expectedMethod: "patch", expectedPath: "/sessions/44/" },

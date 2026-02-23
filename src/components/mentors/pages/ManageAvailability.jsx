@@ -501,40 +501,52 @@ const ManageAvailability = () => {
     dragPayloadRef.current = null;
   };
 
-  return (
-    <div className="min-h-screen bg-transparent">
-      <div className="rounded-2xl bg-transparent text-white p-6 sm:p-8">
+ return (
+  <div className="min-h-screen py-4 px-3 sm:px-6 lg:px-8">
+    <div className="max-w-[1400px] mx-auto">
+      {/* Header Section */}
+      <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-4 sm:p-6 mb-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2
-              className="text-[#111827]"
-              style={{ fontFamily: 'DM Sans', fontSize: '30px', lineHeight: '36px', fontWeight: 700 }}
-            >
+          {/* Title Section */}
+          <div className="space-y-1">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
               Manage Availability
             </h2>
-            <p className="mt-1 text-xs text-[#6b7280]">Timezone: {timezoneLabel}</p>
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{timezoneLabel}</span>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-[#6b7280]">
-            <div className="flex items-center gap-2">
+
+          {/* Controls Section */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {/* Week Navigation */}
+            <div className="flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-2">
               <button
                 type="button"
-                className="h-8 w-8 rounded-full border border-[#e6e2f1] grid place-items-center text-[#6b7280]"
+                className="w-8 h-8 rounded-lg bg-white hover:bg-[#5D3699]/10 border border-slate-300 hover:border-[#5D3699] flex items-center justify-center text-slate-700 hover:text-[#5D3699] transition-all duration-200"
                 onClick={() => handleWeekChange(-1)}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="text-[#111827]">{weekLabel}</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-800 min-w-[80px] text-center">
+                {weekLabel}
+              </span>
               <button
                 type="button"
-                className="h-8 w-8 rounded-full border border-[#e6e2f1] grid place-items-center text-[#6b7280]"
+                className="w-8 h-8 rounded-lg bg-white hover:bg-[#5D3699]/10 border border-slate-300 hover:border-[#5D3699] flex items-center justify-center text-slate-700 hover:text-[#5D3699] transition-all duration-200"
                 onClick={() => handleWeekChange(1)}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
+
+            {/* Action Buttons */}
             <button
               type="button"
-              className="text-[#ef4444] text-xs font-semibold disabled:opacity-60"
+              className="px-3 sm:px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-semibold shadow-sm hover:shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleClearWeek}
               disabled={loading}
             >
@@ -542,7 +554,7 @@ const ManageAvailability = () => {
             </button>
             <button
               type="button"
-              className="rounded-full border border-[#d1d5db] px-3 py-1 text-xs text-[#111827] bg-white disabled:opacity-60"
+              className="px-3 sm:px-4 py-2 rounded-lg bg-white hover:bg-[#5D3699] border border-[#5D3699] text-[#5D3699] hover:text-white text-xs sm:text-sm font-semibold shadow-sm hover:shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleCopyWeek}
               disabled={loading}
             >
@@ -550,209 +562,322 @@ const ManageAvailability = () => {
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="mt-6 overflow-x-auto">
-          <div className="grid grid-flow-col auto-cols-[140px] gap-4 min-w-max">
-          {days.map((day) => {
-            const isToday = day.date && new Date().toDateString() === new Date(day.date).toDateString();
-            return (
-              <div
-                key={day.label}
-                className="relative"
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = 'move';
-                }}
-                onDragEnter={() => {
-                  dragTargetRef.current = day.label;
-                }}
-                onDrop={(e) => handleDropOnDay(e, day.label)}
-              >
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        {days.map((day) => {
+          const isToday = day.date && new Date().toDateString() === new Date(day.date).toDateString();
+          return (
+            <div
+              key={day.label}
+              className="group relative"
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+              }}
+              onDragEnter={() => {
+                dragTargetRef.current = day.label;
+              }}
+              onDrop={(e) => handleDropOnDay(e, day.label)}
+            >
+              {/* Day Card */}
+              <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden transition-all duration-200 hover:shadow-lg">
+                {/* Day Header */}
                 <div
-                  className={`rounded-t-md border border-white/10 py-2 text-center ${
-                    isToday ? 'bg-[#fdd253] text-[#1f2937]' : 'bg-transparent text-[#333333]'
+                  className={`relative px-3 py-3 text-center ${
+                    isToday
+                      ? 'bg-[#FDD253] text-black'
+                      : 'bg-[#5D3699] text-white'
                   }`}
                 >
-                  <div className="font-['Inter'] font-bold text-[16px] leading-[24px] tracking-[0px] text-center align-middle">
+                  {isToday && (
+                    <div className="absolute top-2 right-2">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#5D3699] opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#5D3699]"></span>
+                      </span>
+                    </div>
+                  )}
+                  <div className="font-bold text-sm sm:text-base">
                     {day.label}
                   </div>
-                  <div className={`mt-2 flex items-center justify-center gap-2 text-[10px] ${
-                    isToday ? 'text-[#5b2c91]' : 'text-[#333333]'
-                  }`}>
-                    <button type="button" onClick={() => handleOpenCopy(day.label)} aria-label="Copy day">
-                      <Copy className="h-3 w-3" />
-                    </button>
-                    <button type="button" aria-label="Clear day">
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-                <div className="rounded-b-md border border-white/10 bg-white h-[572px] px-2 py-3 text-[#1f2937] relative flex flex-col">
-                {copyOpen?.dayLabel === day.label && (
-                  <div
-                    ref={popoverRef}
-                    className="absolute left-3 top-10 z-10 w-[150px] rounded-lg border border-[#e6e2f1] bg-white shadow-xl p-3 text-xs"
-                  >
-                    <p className="text-[#1f2937] font-semibold mb-2">
-                      {copyOpen?.slot ? 'Copy slot to...' : 'Copy day to...'}
-                    </p>
-                    {dayLabels
-                      .filter((label) => label !== day.label)
-                      .map((label) => (
-                        <label key={label} className="mt-2 flex items-center gap-2 text-[#6b7280]">
-                          <input
-                            type="checkbox"
-                            className="accent-[#5b2c91]"
-                            checked={copyTargets.includes(label)}
-                            onChange={() => toggleCopyTarget(label)}
-                          />
-                          {label}
-                        </label>
-                      ))}
+                  <div className="mt-2 flex items-center justify-center gap-2">
                     <button
                       type="button"
-                      className="mt-3 w-full rounded-md bg-[#5b2c91] text-white py-1.5 text-xs disabled:opacity-60"
-                      disabled={!copyTargets.length || loading}
-                      onClick={handleApplyCopy}
+                      onClick={() => handleOpenCopy(day.label)}
+                      className="p-1.5 rounded-md hover:bg-white/20 transition-all duration-200"
+                      aria-label="Copy day"
                     >
-                      Apply
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      className="p-1.5 rounded-md hover:bg-white/20 transition-all duration-200"
+                      aria-label="Clear day"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                )}
-
-                <div className="space-y-2 flex-1 overflow-y-auto no-scrollbar pb-2">
-                  {day.slots.map((slot, idx) => (
-                    <div
-                      key={`${day.label}-${idx}`}
-                      draggable
-                      onDragStart={(e) => {
-                        const payload = { fromLabel: day.label, slotId: slot.id };
-                        dragPayloadRef.current = payload;
-                        dragTargetRef.current = null;
-                        dragDidDropRef.current = false;
-                        e.dataTransfer.effectAllowed = 'move';
-                        try {
-                          e.dataTransfer.setData('application/json', JSON.stringify(payload));
-                          e.dataTransfer.setData('text/plain', JSON.stringify(payload));
-                          e.dataTransfer.setData('text', JSON.stringify(payload));
-                        } catch {
-                          // ignore dataTransfer errors
-                        }
-                      }}
-                      onDragEnd={() => {
-                        if (
-                          !dragDidDropRef.current &&
-                          dragPayloadRef.current &&
-                          dragTargetRef.current &&
-                          dragTargetRef.current !== dragPayloadRef.current.fromLabel
-                        ) {
-                          scheduleMove(dragTargetRef.current, dragPayloadRef.current);
-                        }
-                        dragPayloadRef.current = null;
-                        dragTargetRef.current = null;
-                        dragDidDropRef.current = false;
-                      }}
-                      className={`rounded-lg border border-l-4 px-2 py-2 ${
-                        slot.tone === 'danger'
-                          ? 'border-[#fca5a5] border-l-[#ef4444] bg-[#fff1f2] text-[#b91c1c]'
-                          : 'border-[#e8e2f5] border-l-[#5b2c91] bg-[#f5f0ff] text-[#5b2c91]'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2">
-                          <div className="mt-1 grid grid-cols-2 gap-0.5 text-[#9ca3af]">
-                            {Array.from({ length: 6 }).map((_, dotIdx) => (
-                              <span key={dotIdx} className="h-1 w-1 rounded-full bg-current" />
-                            ))}
-                          </div>
-                          <div>
-                            <div className="text-[12px] font-semibold leading-[14px]">
-                              {slot.time}
-                            </div>
-                            <div className="text-[10px] leading-[12px] opacity-80">-to-</div>
-                            <div className="text-[12px] font-semibold leading-[14px]">
-                              {slot.end}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 text-[10px]">
-                          <button
-                            type="button"
-                            className="text-current"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleOpenCopy(day.label, slot);
-                            }}
-                            aria-label="Edit slot"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </button>
-                          <button type="button" onClick={() => handleDeleteSlot(slot.id)} aria-label="Delete slot">
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-                      {slot.tone === 'danger' && (
-                        <div className="mt-2 flex items-center gap-1 text-[10px]">
-                          <AlertTriangle className="h-3 w-3" />
-                          <span>Conflict</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
                 </div>
 
-                <button
-                  type="button"
-                  className="mt-2 w-[115px] h-[40px] rounded-[8px] border-2 border-dashed border-[#cbd5f5] text-xs text-[#6b7280] flex items-center justify-center gap-1 bg-white self-center"
-                  style={{ borderStyle: 'dashed', borderWidth: 2, borderImage: 'repeating-linear-gradient(90deg, #cbd5f5 0 6px, transparent 6px 10px) 1' }}
-                  onClick={() => addSlot(day.label)}
-                >
-                  <Plus className="h-3 w-3" />
-                  Add Slot
-                </button>
+                {/* Slots Container */}
+                <div className="relative p-3 bg-slate-50 min-h-[400px] flex flex-col">
+                  {/* Copy Popover */}
+                  {copyOpen?.dayLabel === day.label && (
+                    <div
+                      ref={popoverRef}
+                      className="absolute left-3 right-3 top-3 z-50 rounded-xl border border-slate-300 bg-white shadow-xl p-4"
+                    >
+                      <p className="text-slate-900 font-semibold mb-3 text-xs">
+                        {copyOpen?.slot ? '📋 Copy slot to...' : '📋 Copy day to...'}
+                      </p>
+                      <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                        {dayLabels
+                          .filter((label) => label !== day.label)
+                          .map((label) => (
+                            <label
+                              key={label}
+                              className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#5D3699]/10 cursor-pointer transition-colors duration-200"
+                            >
+                              <input
+                                type="checkbox"
+                                className="w-3.5 h-3.5 rounded border-slate-300 text-[#5D3699] focus:ring-2 focus:ring-[#5D3699] cursor-pointer"
+                                checked={copyTargets.includes(label)}
+                                onChange={() => toggleCopyTarget(label)}
+                              />
+                              <span className="text-xs font-medium text-slate-700">{label}</span>
+                            </label>
+                          ))}
+                      </div>
+                      <button
+                        type="button"
+                        className="mt-3 w-full rounded-lg bg-[#5D3699] hover:bg-[#4a2b7a] text-white py-2 text-xs font-semibold shadow-sm hover:shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!copyTargets.length || loading}
+                        onClick={handleApplyCopy}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Slots List */}
+                  <div className="space-y-2 flex-1 pb-2">
+                    {day.slots.map((slot, idx) => (
+                      <div
+                        key={`${day.label}-${idx}`}
+                        draggable
+                        onDragStart={(e) => {
+                          const payload = { fromLabel: day.label, slotId: slot.id };
+                          dragPayloadRef.current = payload;
+                          dragTargetRef.current = null;
+                          dragDidDropRef.current = false;
+                          e.dataTransfer.effectAllowed = 'move';
+                          try {
+                            e.dataTransfer.setData('application/json', JSON.stringify(payload));
+                            e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+                            e.dataTransfer.setData('text', JSON.stringify(payload));
+                          } catch {
+                            // ignore dataTransfer errors
+                          }
+                        }}
+                        onDragEnd={() => {
+                          if (
+                            !dragDidDropRef.current &&
+                            dragPayloadRef.current &&
+                            dragTargetRef.current &&
+                            dragTargetRef.current !== dragPayloadRef.current.fromLabel
+                          ) {
+                            scheduleMove(dragTargetRef.current, dragPayloadRef.current);
+                          }
+                          dragPayloadRef.current = null;
+                          dragTargetRef.current = null;
+                          dragDidDropRef.current = false;
+                        }}
+                        className={`group/slot relative rounded-lg p-2.5 cursor-move transition-all duration-200 hover:shadow-md ${
+                          slot.tone === 'danger'
+                            ? 'bg-red-50 border-l-4 border-red-500'
+                            : 'bg-[#5D3699]/10 border-l-4 border-[#5D3699]'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2 flex-1">
+                            {/* Drag Handle */}
+                            <div className="mt-1 grid grid-cols-2 gap-0.5 opacity-40 group-hover/slot:opacity-100 transition-opacity">
+                              {Array.from({ length: 6 }).map((_, dotIdx) => (
+                                <span
+                                  key={dotIdx}
+                                  className={`h-1 w-1 rounded-full ${
+                                    slot.tone === 'danger' ? 'bg-red-400' : 'bg-[#5D3699]/70'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            
+                            {/* Time Display */}
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-xs font-bold ${
+                                slot.tone === 'danger' ? 'text-red-700' : 'text-[#5D3699]'
+                              }`}>
+                                {slot.time}
+                              </div>
+                              <div className={`text-[10px] font-medium my-0.5 ${
+                                slot.tone === 'danger' ? 'text-red-500' : 'text-[#5D3699]/80'
+                              }`}>
+                                to
+                              </div>
+                              <div className={`text-xs font-bold ${
+                                slot.tone === 'danger' ? 'text-red-700' : 'text-[#5D3699]'
+                              }`}>
+                                {slot.end}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex flex-col gap-1">
+                            <button
+                              type="button"
+                              className={`p-1 rounded transition-all duration-200 ${
+                                slot.tone === 'danger'
+                                  ? 'text-red-600 hover:bg-red-100'
+                                  : 'text-[#5D3699] hover:bg-[#5D3699]/15'
+                              }`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleOpenCopy(day.label, slot);
+                              }}
+                              aria-label="Edit slot"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSlot(slot.id)}
+                              className={`p-1 rounded transition-all duration-200 ${
+                                slot.tone === 'danger'
+                                  ? 'text-red-600 hover:bg-red-100'
+                                  : 'text-[#5D3699] hover:bg-[#5D3699]/15'
+                              }`}
+                              aria-label="Delete slot"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Conflict Badge */}
+                        {slot.tone === 'danger' && (
+                          <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-red-700 bg-red-100 rounded px-2 py-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            <span>Conflict</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Slot Button */}
+                  <button
+                    type="button"
+                    className="mt-2 w-full h-10 rounded-lg border-2 border-dashed border-[#5D3699]/40 text-xs font-semibold text-[#5D3699] flex items-center justify-center gap-1.5 bg-white hover:bg-[#5D3699]/10 hover:border-[#5D3699] transition-all duration-200"
+                    onClick={() => addSlot(day.label)}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Slot
+                  </button>
+                </div>
               </div>
             </div>
-          )})}
-          </div>
-        </div>
-        {(loading || error) && (
-          <div className={`mt-3 text-xs ${error ? 'text-red-600' : 'text-[#6b7280]'}`}>
-            {error || 'Loading availability...'}
-          </div>
-        )}
+          );
+        })}
       </div>
-      {pendingMove && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-[#e6e2f1]">
-            <h3 className="text-lg font-semibold text-[#111827]">Move availability?</h3>
-            <p className="mt-2 text-sm text-[#6b7280]">
-              Move {formatTime(pendingMove.slot.start_time)} - {formatTime(pendingMove.slot.end_time)} from{' '}
-              {pendingMove.fromLabel} to {pendingMove.toLabel}?
-            </p>
-            <div className="mt-5 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                className="rounded-md border border-[#e5e7eb] px-4 py-2 text-sm text-[#6b7280]"
-                onClick={() => setPendingMove(null)}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="rounded-md bg-[#5b2c91] px-4 py-2 text-sm text-white"
-                onClick={handleConfirmMove}
-                disabled={loading}
-              >
-                {loading ? 'Saving...' : 'Save'}
-              </button>
+
+      {/* Loading/Error Messages */}
+      {(loading || error) && (
+        <div className="mt-4">
+          <div
+            className={`rounded-xl p-3 shadow-sm ${
+              error
+                ? 'bg-red-50 border border-red-200 text-red-700'
+                : 'bg-blue-50 border border-blue-200 text-blue-700'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {!error && (
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+              <span className="text-xs font-medium">{error || 'Loading availability...'}</span>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+
+    {/* Move Confirmation Modal */}
+    {pendingMove && (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+          {/* Modal Header */}
+          <div className="bg-[#5D3699] px-6 py-4">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Move Availability
+            </h3>
+          </div>
+
+          {/* Modal Content */}
+          <div className="p-6">
+            <p className="text-slate-700 text-sm leading-relaxed">
+              Move slot{' '}
+              <span className="font-bold text-[#5D3699]">
+                {formatTime(pendingMove.slot.start_time)} - {formatTime(pendingMove.slot.end_time)}
+              </span>{' '}
+              from{' '}
+              <span className="font-bold text-slate-900">{pendingMove.fromLabel}</span> to{' '}
+              <span className="font-bold text-slate-900">{pendingMove.toLabel}</span>?
+            </p>
+          </div>
+
+          {/* Modal Actions */}
+          <div className="px-6 pb-6 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              className="px-5 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setPendingMove(null)}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="px-5 py-2.5 rounded-lg bg-[#5D3699] hover:bg-[#4a2b7a] text-white font-semibold text-sm shadow-sm hover:shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleConfirmMove}
+              disabled={loading}
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </span>
+              ) : (
+                'Confirm'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
 };
 
 export default ManageAvailability;
