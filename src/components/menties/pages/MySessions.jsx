@@ -81,7 +81,8 @@ const isCompletedStatus = (session) => {
 
 const isFeedbackEligible = (session) => session?.status === 'completed';
 
-const getJoinUrl = (session) => session?.join_url || session?.joinUrl || session?.host_join_url || '';
+const getJoinUrl = (session) =>
+  session?.join_url || session?.meeting_url || session?.joinUrl || session?.host_join_url || '';
 
 const isPastSession = (session) => {
   const end = new Date(session?.scheduled_end || session?.scheduled_start || '');
@@ -219,11 +220,12 @@ const MySessions = () => {
 
   const openJoinLink = (url, sessionId) => {
     if (!url) return false;
-    const params = new URLSearchParams({
-      url,
-      sessionId: String(sessionId || ''),
-    });
-    navigate(`/mentee-zoom-meeting?${params.toString()}`);
+    setSelectedSessionId(sessionId);
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      window.location.assign(url);
+      return true;
+    }
+    navigate(url);
     return true;
   };
 
@@ -231,28 +233,29 @@ const MySessions = () => {
     if (!session?.id) return;
     setJoinError('');
     const existing = getJoinUrl(session);
-    if (existing) {
-      setSelectedSessionId(session.id);
+    const isWrongRolePath =
+      typeof existing === 'string' && existing.includes('/mentor-meeting-room');
+    if (existing && !isWrongRolePath) {
       openJoinLink(existing, session.id);
       return;
     }
     setJoiningId(session.id);
     try {
       const response = await menteeApi.getSessionJoinLink(session.id);
-      const url = response?.join_url || response?.host_join_url || '';
+      const url = response?.meeting_url || response?.join_url || response?.host_join_url || '';
       if (url) {
         setSessions((prev) =>
           prev.map((item) =>
             item.id === session.id
               ? {
                   ...item,
+                  meeting_url: response?.meeting_url || item.meeting_url,
                   join_url: response?.join_url || item.join_url,
                   host_join_url: response?.host_join_url || item.host_join_url,
                 }
               : item
           )
         );
-        setSelectedSessionId(session.id);
         openJoinLink(url, session.id);
       } else {
         setJoinError('Join link not ready yet.');

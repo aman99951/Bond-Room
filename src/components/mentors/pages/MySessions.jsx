@@ -5,6 +5,18 @@ import { mentorApi } from '../../../apis/api/mentorApi';
 import { useMentorData } from '../../../apis/apihook/useMentorData';
 import { setSelectedSessionId } from '../../../apis/api/storage';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+
+const resolveMediaUrl = (value) => {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('/')) {
+    const base = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
+    return base ? `${base}${value}` : value;
+  }
+  return value;
+};
+
 const hours = [
   '08:00 AM',
   '09:00 AM',
@@ -55,15 +67,36 @@ const formatDateLabel = (value) => {
 };
 
 const getMenteeName = (session) => {
-  const fullName = [session?.mentee_first_name, session?.mentee_last_name]
+  const profileFromSession =
+    typeof session?.mentee === 'object' && session?.mentee
+      ? [session?.mentee?.first_name, session?.mentee?.last_name].filter(Boolean).join(' ').trim()
+      : '';
+  const fullName = [
+    session?.mentee_first_name,
+    session?.mentee_last_name,
+  ]
     .filter(Boolean)
     .join(' ')
     .trim();
   if (fullName) return fullName;
+  if (profileFromSession) return profileFromSession;
   if (session?.mentee_name) return session.mentee_name;
-  if (session?.mentee) return `Mentee #${session.mentee}`;
+  if (typeof session?.mentee === 'number' || typeof session?.mentee === 'string') {
+    return `Mentee #${session.mentee}`;
+  }
   return 'Mentee';
 };
+
+const hasConcreteMenteeName = (session) => {
+  const label = getMenteeName(session);
+  if (!label) return false;
+  if (label === 'Mentee') return false;
+  if (/^Mentee #/i.test(label)) return false;
+  return true;
+};
+
+const getMenteeAvatar = (session) =>
+  resolveMediaUrl(session?.mentee_avatar || session?.mentee?.avatar || '');
 
 const isUpcomingStatus = (session) => {
   const start = new Date(session?.scheduled_start || '');
@@ -125,7 +158,51 @@ const MySessions = () => {
       try {
         const response = await mentorApi.listSessions({ mentor_id: mentor.id });
         const list = Array.isArray(response) ? response : response?.results || [];
-        if (!cancelled) setSessions(list);
+        if (!cancelled) {
+          setSessions(list);
+        }
+        const sessionsMissingName = list.filter((session) => !hasConcreteMenteeName(session));
+        if (!sessionsMissingName.length || cancelled) {
+          return;
+        }
+        const results = await Promise.all(
+          sessionsMissingName.map(async (session) => {
+            try {
+              const profile = await mentorApi.getMenteeProfileBySession(session.id);
+              const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
+              const avatar = profile?.avatar || '';
+              if (!fullName && !avatar) return null;
+              return [session.id, fullName, avatar];
+            } catch {
+              return null;
+            }
+          })
+        );
+        if (!cancelled) {
+          const nextSessionDataMap = {};
+          results.forEach((entry) => {
+            if (!entry) return;
+            const [sessionId, fullName, avatar] = entry;
+            if (!sessionId) return;
+            nextSessionDataMap[sessionId] = {
+              fullName: fullName || '',
+              avatar: avatar || '',
+            };
+          });
+          if (Object.keys(nextSessionDataMap).length) {
+            setSessions((prev) =>
+              prev.map((item) =>
+                nextSessionDataMap[item.id]
+                  ? {
+                      ...item,
+                      mentee_name: nextSessionDataMap[item.id].fullName || item.mentee_name,
+                      mentee_avatar: nextSessionDataMap[item.id].avatar || item.mentee_avatar,
+                    }
+                  : item
+              )
+            );
+          }
+        }
       } catch (err) {
         if (!cancelled) setError(err?.message || 'Unable to load sessions.');
       } finally {
@@ -178,12 +255,14 @@ const MySessions = () => {
       const end = new Date(session.scheduled_end || session.scheduled_start);
       const dayIndex = Math.floor((start - weekStart) / (1000 * 60 * 60 * 24));
       const hourIndex = hours.findIndex((label) => parseHourLabel(label) === start.getHours());
-      const joinUrl = session?.join_url || session?.host_join_url || '';
+      const joinUrl = session?.meeting_url || session?.join_url || session?.host_join_url || '';
+      const menteeName = (getMenteeName(session) || '').trim() || 'Mentee';
       return {
         id: session.id,
         dayIndex,
         hourIndex,
-        title: getMenteeName(session),
+        title: menteeName,
+        menteeAvatar: getMenteeAvatar(session),
         time: formatTimeRange(session.scheduled_start, session.scheduled_end),
         tone: session.status === 'completed' ? 'light' : 'dark',
         isPast: !Number.isNaN(end.getTime()) && end < now,
@@ -194,11 +273,12 @@ const MySessions = () => {
 
   const openJoinLink = (url, sessionId) => {
     if (!url) return false;
-    const params = new URLSearchParams({
-      url,
-      sessionId: String(sessionId || ''),
-    });
-    navigate(`/mentor-zoom-meeting?${params.toString()}`);
+    setSelectedSessionId(sessionId);
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      window.location.assign(url);
+      return true;
+    }
+    navigate(url);
     return true;
   };
 
@@ -206,28 +286,29 @@ const MySessions = () => {
     if (!session?.id) return;
     setJoinError('');
     const existing = getJoinUrl(session);
-    if (existing) {
-      setSelectedSessionId(session.id);
+    const isWrongRolePath =
+      typeof existing === 'string' && existing.includes('/mentee-meeting-room');
+    if (existing && !isWrongRolePath) {
       openJoinLink(existing, session.id);
       return;
     }
     setJoiningId(session.id);
     try {
       const response = await mentorApi.getSessionJoinLink(session.id);
-      const url = response?.join_url || response?.host_join_url || '';
+      const url = response?.meeting_url || response?.join_url || response?.host_join_url || '';
       if (url) {
         setSessions((prev) =>
           prev.map((item) =>
             item.id === session.id
               ? {
                   ...item,
+                  meeting_url: response?.meeting_url || item.meeting_url,
                   join_url: response?.join_url || item.join_url,
                   host_join_url: response?.host_join_url || item.host_join_url,
                 }
               : item
           )
         );
-        setSelectedSessionId(session.id);
         openJoinLink(url, session.id);
       } else {
         setJoinError('Join link not ready yet.');
@@ -239,7 +320,8 @@ const MySessions = () => {
     }
   };
 
-  const getJoinUrl = (session) => session?.joinUrl || session?.join_url || session?.host_join_url || '';
+  const getJoinUrl = (session) =>
+    session?.host_join_url || session?.meeting_url || session?.joinUrl || session?.join_url || '';
 
 return (
   <div className="min-h-screenp-4 sm:p-6 lg:p-8">
@@ -433,7 +515,7 @@ return (
                         <div
                           key={`${h}-${d.label}`}
                           className={`relative border-l border-gray-100 p-2 transition-colors ${
-                            rowHasJoin ? 'min-h-[100px]' : 'min-h-[70px]'
+                            rowHasJoin ? 'min-h-[110px]' : 'min-h-[70px]'
                           } ${d.active ? 'bg-[#5D3699]/[0.02]' : 'hover:bg-gray-50/50'}`}
                         >
                           {session && (
@@ -460,20 +542,40 @@ return (
                                   : 'bg-[#5D3699] hover:bg-[#4a2b7a] shadow-lg shadow-[#5D3699]/20'
                               } ${session.isPast ? 'opacity-60' : ''}`}
                             >
-                              <button
-                                type="button"
-                                className={`text-left text-sm font-semibold truncate transition-colors ${
-                                  session.tone === 'light'
-                                    ? 'text-gray-800 hover:text-[#5D3699]'
-                                    : 'text-white'
-                                }`}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  navigate(`/mentor-mentee-profile/${session.id}`);
-                                }}
-                              >
-                                {session.title}
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  className={`flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-full text-[10px] font-semibold ${
+                                    session.tone === 'light'
+                                      ? 'bg-[#e5e7eb] text-[#374151]'
+                                      : 'bg-white/25 text-white'
+                                  }`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    navigate(`/mentor-mentee-profile/${session.id}`);
+                                  }}
+                                >
+                                  {session.menteeAvatar ? (
+                                    <img src={session.menteeAvatar} alt="" className="h-full w-full object-cover" />
+                                  ) : (
+                                    (session.title || 'M').charAt(0).toUpperCase()
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`min-w-0 flex-1 text-left text-sm font-semibold truncate transition-colors ${
+                                    session.tone === 'light'
+                                      ? 'text-gray-800 hover:text-[#5D3699]'
+                                      : 'text-white'
+                                  }`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    navigate(`/mentor-mentee-profile/${session.id}`);
+                                  }}
+                                >
+                                  {session.title}
+                                </button>
+                              </div>
                               <div className={`mt-1 flex items-center gap-1 text-xs ${
                                 session.tone === 'light' ? 'text-gray-500' : 'text-white/80'
                               }`}>
@@ -545,7 +647,11 @@ return (
                       onClick={() => navigate(`/mentor-mentee-profile/${session.id}`)}
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#5D3699]/10 text-sm font-semibold text-[#5D3699]">
-                        {getMenteeName(session).charAt(0).toUpperCase()}
+                        {getMenteeAvatar(session) ? (
+                          <img src={getMenteeAvatar(session)} alt="" className="h-full w-full rounded-full object-cover" />
+                        ) : (
+                          getMenteeName(session).charAt(0).toUpperCase()
+                        )}
                       </div>
                       <div>
                         <span className="font-medium text-gray-900 group-hover:text-[#5D3699] transition-colors">
