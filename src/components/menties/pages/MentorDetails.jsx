@@ -24,7 +24,6 @@ const MentorDetails = () => {
   const mentorIdSuffix = mentor?.id ? `?mentorId=${mentor.id}` : '';
   const rating = mentor?.rating != null ? Number(mentor.rating).toFixed(1) : '';
   const reviewCount = mentor?.reviews != null ? Number(mentor.reviews) : null;
-  const reviewStars = review?.rating ? '*'.repeat(Math.max(1, Math.min(5, Number(review.rating)))) : '';
   const reviewList = Array.isArray(reviews) ? reviews.slice(0, 3) : [];
   const displayName = mentor?.name || (mentor?.id ? `Mentor #${mentor.id}` : '');
   const [aboutExpanded, setAboutExpanded] = useState(false);

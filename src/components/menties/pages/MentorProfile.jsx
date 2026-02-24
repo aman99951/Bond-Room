@@ -25,7 +25,6 @@ const MentorProfile = () => {
   const { mentor, availability, review, loading, error } = useMentorScreenData();
   const rating = mentor?.rating != null ? Number(mentor.rating).toFixed(1) : '';
   const reviewCount = mentor?.reviews != null ? Number(mentor.reviews) : null;
-  const reviewStars = review?.rating ? '*'.repeat(Math.max(1, Math.min(5, Number(review.rating)))) : '';
   const displayName = mentor?.name || (mentor?.id ? `Mentor #${mentor.id}` : '');
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [showReadMore, setShowReadMore] = useState(false);

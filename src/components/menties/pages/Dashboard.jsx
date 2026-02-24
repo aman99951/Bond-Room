@@ -615,7 +615,7 @@ return (
         <div className="rounded-xl border border-[#e5e7eb] bg-white shadow-sm overflow-hidden">
           {recentSessions.length > 0 ? (
             <div className="divide-y divide-[#e5e7eb]">
-              {recentSessions.map((s, index) => (
+              {recentSessions.map((s) => (
                 <div
                   key={s.id}
                   className="flex items-center justify-between p-4 transition-colors hover:bg-[#f5f3ff]/30"

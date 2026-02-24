@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import arrowLeft from '../../assets/Container (2).png';
-import arrowRight from '../../assets/Container (1).png';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { getSelectedMentorId, setLastBooking, setSelectedMentorId } from '../../../apis/api/storage';
 import {
