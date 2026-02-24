@@ -4,7 +4,24 @@ import arrowLeft from '../../assets/Container (2).png';
 import arrowRight from '../../assets/Container (1).png';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { getSelectedMentorId, setLastBooking, setSelectedMentorId } from '../../../apis/api/storage';
-
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Star,
+  Globe,
+  BookOpen,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeft,
+  User,
+  CheckCircle2,
+  MessageCircle,
+  Sparkles,
+  Video,
+  AlertCircle
+} from 'lucide-react';
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const normalizeList = (payload) => {
@@ -297,247 +314,457 @@ const BookSession = () => {
 
   const currentSelectedTimeLabel = selectedSlot?.label || 'Select time';
 
-  return (
-    <div className="p-3 sm:p-4 md:p-6 bg-transparent min-h-screen">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h1 className="text-base sm:text-lg md:text-xl font-semibold text-[#111827]">
-          {mentor?.name ? `Book Session with ${mentor.name}` : 'Book Session'}
-        </h1>
-        <div className="inline-flex items-center gap-2 rounded-full bg-[#ecfdf3] text-[#1f7a3f] px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium w-fit">
-          <span className="inline-flex h-3 w-3 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-[#1f7a3f] text-white text-[8px] sm:text-[10px] flex-shrink-0">
-            OK
+return (
+  <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
+    <div className="mx-auto max-w-full">
+      {/* Back Link */}
+      <Link
+        to="/mentors"
+        className="mb-6 inline-flex items-center gap-2 text-sm text-[#6b7280] transition-colors hover:text-[#5D3699]"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Mentors
+      </Link>
+
+      {/* Header */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
+            <Calendar className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
+              {mentor?.name ? `Book with ${mentor.name}` : 'Book Session'}
+            </h1>
+            <p className="mt-0.5 text-sm text-[#6b7280]">
+              Select a date and time that works for you
+            </p>
+          </div>
+        </div>
+
+        {/* Safety Badge */}
+        <div className="inline-flex items-center gap-2 self-start rounded-full bg-[#ecfdf3] px-4 py-2 ring-1 ring-[#10b981]/20">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#10b981]">
+            <Shield className="h-3.5 w-3.5 text-white" />
+          </div>
+          <span className="text-xs font-medium text-[#10b981]">
+            Sessions are monitored for safety
           </span>
-          <span className="whitespace-nowrap">Sessions are monitored for safety</span>
         </div>
       </div>
 
-      <div className="rounded-xl sm:rounded-2xl border border-[#e5e7eb] bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)] overflow-hidden">
-        <div className="flex flex-col lg:grid lg:grid-cols-[320px_1fr] xl:grid-cols-[356px_1fr]">
-          <aside className="p-4 sm:p-6 md:p-8 border-b lg:border-b-0 lg:border-r border-[#eef2f7] space-y-4 sm:space-y-6 w-full">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                {mentor?.avatar ? (
-                  <img
-                    src={mentor.avatar}
-                    alt={mentor?.name || 'Mentor'}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300" />
-                )}
+      {/* Main Card */}
+      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
+        <div className="flex flex-col lg:grid lg:grid-cols-[360px_1fr]">
+          {/* Left Sidebar - Mentor Info */}
+          <aside className="border-b border-[#e5e7eb] bg-[#f8fafc] p-6 lg:border-b-0 lg:border-r lg:p-8">
+            {/* Mentor Header */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-shrink-0">
+                <div className="h-16 w-16 overflow-hidden rounded-xl bg-[#f5f3ff] ring-2 ring-white shadow-md">
+                  {mentor?.avatar ? (
+                    <img
+                      src={mentor.avatar}
+                      alt={mentor?.name || 'Mentor'}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <User className="h-8 w-8 text-[#5D3699]" />
+                    </div>
+                  )}
+                </div>
+                {/* Online indicator */}
+                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white bg-[#10b981]" />
               </div>
               <div className="min-w-0">
-                <div className="text-[#111827] font-bold text-base sm:text-lg md:text-xl leading-tight truncate">
+                <h2 className="text-lg font-bold text-[#111827] truncate">
                   {mentor?.name || 'Mentor'}
-                </div>
-                <div className="text-[10px] sm:text-xs text-[#6b7280]">
-                  {mentor?.location || 'Location not specified'}
-                </div>
+                </h2>
+                {mentor?.location && (
+                  <div className="mt-0.5 flex items-center gap-1.5 text-sm text-[#6b7280]">
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span className="truncate">{mentor.location}</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-[#6b7280] border-b border-[#e5e7eb] pb-4 sm:pb-6">
-              <div className="flex items-center gap-1">
-                <span className="text-[#f4b740]">*</span>
-                <span className="text-[#111827] font-semibold text-sm">
-                  {mentor?.rating !== null && mentor?.rating !== undefined ? Number(mentor.rating).toFixed(1) : '--'}
+            {/* Stats */}
+            <div className="mt-6 flex items-center gap-4 rounded-xl bg-white p-4 ring-1 ring-[#e5e7eb]">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < Math.floor(mentor?.rating || 0)
+                          ? 'fill-[#f59e0b] text-[#f59e0b]'
+                          : 'text-[#e5e7eb]'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm font-bold text-[#111827]">
+                  {mentor?.rating !== null && mentor?.rating !== undefined
+                    ? Number(mentor.rating).toFixed(1)
+                    : '--'}
                 </span>
               </div>
-              <span className="text-[#9ca3af] text-xs sm:text-sm">({mentor?.reviews ?? 0} reviews)</span>
-              <span className="text-[#9ca3af] text-xs sm:text-sm">
-                <span className="font-bold text-black">{mentor?.sessions ?? 0}</span> sessions
-              </span>
+              <div className="h-4 w-px bg-[#e5e7eb]" />
+              <div className="flex items-center gap-1 text-sm text-[#6b7280]">
+                <MessageCircle className="h-3.5 w-3.5" />
+                <span>{mentor?.reviews ?? 0}</span>
+              </div>
+              <div className="h-4 w-px bg-[#e5e7eb]" />
+              <div className="flex items-center gap-1 text-sm text-[#6b7280]">
+                <Video className="h-3.5 w-3.5" />
+                <span className="font-semibold text-[#111827]">{mentor?.sessions ?? 0}</span>
+              </div>
             </div>
 
-            <div className="space-y-4 sm:space-y-6">
-              <div>
-                <div className="text-[#6b7280] text-xs sm:text-sm font-semibold tracking-wider uppercase">
-                  EXPERTISE
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1.5 sm:gap-2">
-                  {(mentor?.expertise || []).map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full bg-[#F1F5F9] px-2 sm:px-3 py-1 text-[9px] sm:text-[10px] text-[#334155]"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                  {!mentor?.expertise?.length && (
-                    <span className="rounded-full bg-[#F1F5F9] px-2 sm:px-3 py-1 text-[9px] sm:text-[10px] text-[#334155]">
-                      Not specified
-                    </span>
-                  )}
-                </div>
+            {/* Expertise */}
+            <div className="mt-6">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                <BookOpen className="h-4 w-4" />
+                Expertise
               </div>
-
-              <div>
-                <div className="text-[#6b7280] text-xs sm:text-sm font-semibold tracking-wider uppercase">
-                  LANGUAGES
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1.5 sm:gap-2">
-                  {(mentor?.languages || []).map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full bg-[#F1F5F9] px-2 sm:px-3 py-1 text-[9px] sm:text-[10px] text-[#334155]"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                  {!mentor?.languages?.length && (
-                    <span className="rounded-full bg-[#F1F5F9] px-2 sm:px-3 py-1 text-[9px] sm:text-[10px] text-[#334155]">
-                      Not specified
-                    </span>
-                  )}
-                </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(mentor?.expertise || []).map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center rounded-full bg-[#f5f3ff] px-3 py-1.5 text-xs font-medium text-[#5D3699]"
+                  >
+                    {t}
+                  </span>
+                ))}
+                {!mentor?.expertise?.length && (
+                  <span className="text-xs text-[#9ca3af]">Not specified</span>
+                )}
               </div>
+            </div>
 
-              <div>
-                <div className="text-[#6b7280] text-xs sm:text-sm font-semibold tracking-wider uppercase">
-                  MY STORY
-                </div>
-                <p className="mt-2 text-[#6b7280] text-xs sm:text-sm leading-relaxed">
+            {/* Languages */}
+            <div className="mt-6">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                <Globe className="h-4 w-4" />
+                Languages
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(mentor?.languages || []).map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-[#6b7280] ring-1 ring-[#e5e7eb]"
+                  >
+                    <Globe className="h-3 w-3" />
+                    {t}
+                  </span>
+                ))}
+                {!mentor?.languages?.length && (
+                  <span className="text-xs text-[#9ca3af]">Not specified</span>
+                )}
+              </div>
+            </div>
+
+            {/* Bio */}
+            <div className="mt-6">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                <Sparkles className="h-4 w-4" />
+                My Story
+              </div>
+              <div className="mt-3 rounded-xl bg-white p-4 ring-1 ring-[#e5e7eb]">
+                <p className="text-sm italic leading-relaxed text-[#6b7280]">
                   "{mentor?.bio || 'Bio not provided yet.'}"
                 </p>
-                <button className="mt-2 text-[10px] sm:text-xs text-[#5D3699] underline">
+                <button
+                  type="button"
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#5D3699] hover:underline"
+                >
                   Read full bio
+                  <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
             </div>
           </aside>
 
-          <div className="flex flex-col md:grid md:grid-cols-1 lg:grid-cols-[1fr_220px] xl:grid-cols-[1fr_260px] gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6 md:p-8 w-full">
-            <section className="space-y-3 sm:space-y-4 w-full">
-              <div className="flex items-center justify-between mb-2 sm:mb-4">
-                <button
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full text-[#6B7280] flex items-center justify-center hover:bg-gray-100 transition-colors"
-                  onClick={() => handleMonthChange(-1)}
-                >
-                  <img src={arrowLeft} alt="Previous month" className="h-3 w-1.5 sm:h-3.5 sm:w-2" />
-                </button>
-                <h2 className="text-[#111827] text-base sm:text-lg font-semibold">
-                  {monthLabel}
-                </h2>
-                <button
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full text-[#6B7280] flex items-center justify-center hover:bg-gray-100 transition-colors"
-                  onClick={() => handleMonthChange(1)}
-                >
-                  <img src={arrowRight} alt="Next month" className="h-3 w-1.5 sm:h-3.5 sm:w-2" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-3 text-center">
-                {days.map((d) => (
-                  <div
-                    key={d}
-                    className="font-medium text-[#9ca3af] text-[10px] sm:text-xs py-1 sm:py-2"
+          {/* Right Section - Calendar & Time Slots */}
+          <div className="p-6 lg:p-8">
+            <div className="grid gap-6 lg:grid-cols-[1fr_240px] lg:gap-8">
+              {/* Calendar */}
+              <section>
+                {/* Month Navigation */}
+                <div className="mb-6 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => handleMonthChange(-1)}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
                   >
-                    {d}
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <h2 className="text-lg font-semibold text-[#111827]">
+                    {monthLabel}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => handleMonthChange(1)}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="rounded-xl bg-[#f8fafc] p-4 ring-1 ring-[#e5e7eb]">
+                  {/* Days Header */}
+                  <div className="mb-3 grid grid-cols-7 gap-2">
+                    {days.map((d) => (
+                      <div
+                        key={d}
+                        className="text-center text-xs font-semibold uppercase tracking-wider text-[#9ca3af]"
+                      >
+                        {d}
+                      </div>
+                    ))}
                   </div>
-                ))}
 
-                {dates.map((d, i) => {
-                  const isEmpty = d === '';
-                  const dateValue = d ? new Date(monthDate.getFullYear(), monthDate.getMonth(), Number(d)) : null;
-                  const dateKey = dateValue ? toDateKey(dateValue) : '';
-                  const isSelected = Boolean(dateKey) && dateKey === selectedDateKey;
-                  const isUnavailable = Boolean(dateKey) && !availableDateSet.has(dateKey);
+                  {/* Dates Grid */}
+                  <div className="grid grid-cols-7 gap-2">
+                    {dates.map((d, i) => {
+                      const isEmpty = d === '';
+                      const dateValue = d
+                        ? new Date(monthDate.getFullYear(), monthDate.getMonth(), Number(d))
+                        : null;
+                      const dateKey = dateValue ? toDateKey(dateValue) : '';
+                      const isSelected = Boolean(dateKey) && dateKey === selectedDateKey;
+                      const isUnavailable = Boolean(dateKey) && !availableDateSet.has(dateKey);
+                      const isToday = dateKey === toDateKey(new Date());
 
-                  return (
-                    <div
-                      key={`${d}-${i}`}
-                      onClick={() => handleDateSelect(d)}
-                      className={`
-                        h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9
-                        flex items-center justify-center
-                        rounded-full
-                        text-xs sm:text-sm
-                        mx-auto
-                        cursor-pointer
-                        transition-colors
-                        ${isEmpty ? 'text-transparent cursor-default' : ''}
-                        ${isSelected ? 'bg-[#f4b740] text-[#5D3699] font-semibold' : ''}
-                        ${!isEmpty && !isSelected && !isUnavailable ? 'hover:bg-gray-100 text-[#111827]' : ''}
-                        ${isUnavailable ? 'text-[#9CA3AF] opacity-60 cursor-not-allowed' : ''}
-                      `}
-                    >
-                      {d || '.'}
+                      return (
+                        <button
+                          key={`${d}-${i}`}
+                          type="button"
+                          onClick={() => !isEmpty && !isUnavailable && handleDateSelect(d)}
+                          disabled={isEmpty || isUnavailable}
+                          className={`
+                            relative flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all
+                            ${isEmpty ? 'cursor-default' : ''}
+                            ${isSelected
+                              ? 'bg-[#5D3699] text-white shadow-md shadow-[#5D3699]/30'
+                              : ''
+                            }
+                            ${!isEmpty && !isSelected && !isUnavailable
+                              ? 'bg-white text-[#111827] ring-1 ring-[#e5e7eb] hover:ring-[#5D3699] hover:bg-[#f5f3ff]'
+                              : ''
+                            }
+                            ${isUnavailable
+                              ? 'cursor-not-allowed bg-transparent text-[#d1d5db]'
+                              : ''
+                            }
+                            ${isToday && !isSelected
+                              ? 'ring-2 ring-[#5D3699]/30'
+                              : ''
+                            }
+                          `}
+                        >
+                          {d || ''}
+                          {isToday && !isSelected && (
+                            <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#5D3699]" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-[#6b7280]">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-[#5D3699]" />
+                    <span>Selected</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-white ring-1 ring-[#e5e7eb]" />
+                    <span>Available</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-[#f5f3ff]" />
+                    <span>Unavailable</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Time Slots */}
+              <aside className="border-t border-[#e5e7eb] pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+                    <Clock className="h-5 w-5 text-[#5D3699]" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-[#111827]">
+                      Available Times
+                    </h3>
+                    <p className="text-xs text-[#6b7280]">
+                      {selectedDateKey ? formatDateLabel(selectedDateKey) : 'Select a date'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Time Slot Buttons */}
+                <div className="mt-4 space-y-2">
+                  {selectedDateSlots.length > 0 ? (
+                    selectedDateSlots.map((slot) => {
+                      const isSelected = slot.id === selectedSlotId;
+
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          onClick={() => setSelectedSlotId(slot.id)}
+                          className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+                            isSelected
+                              ? 'bg-[#5D3699] text-white shadow-md shadow-[#5D3699]/20'
+                              : 'bg-white text-[#111827] ring-1 ring-[#e5e7eb] hover:ring-[#5D3699] hover:bg-[#f5f3ff]'
+                          }`}
+                        >
+                          <span>{slot.label}</span>
+                          {isSelected && (
+                            <CheckCircle2 className="h-4 w-4" />
+                          )}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center rounded-xl bg-[#f8fafc] py-8 text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white ring-1 ring-[#e5e7eb]">
+                        <Clock className="h-6 w-6 text-[#9ca3af]" />
+                      </div>
+                      <p className="mt-3 text-sm font-medium text-[#111827]">
+                        No times available
+                      </p>
+                      <p className="mt-1 text-xs text-[#6b7280]">
+                        Please select another date
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
-            </section>
+                  )}
+                </div>
 
-            <aside className="border-t md:border-t lg:border-t-0 lg:border-l border-[#eef2f7] pt-4 sm:pt-6 lg:pt-0 lg:pl-4 xl:pl-6">
-              <div className="text-[#111827] text-base sm:text-lg font-semibold">
-                Available Times
-              </div>
-              <div className="mt-1 text-[#6b7280] text-xs sm:text-sm">
-                {selectedDateKey ? formatDateLabel(selectedDateKey) : 'No slot selected'}
-              </div>
-
-              <div className="mt-3 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full">
-                {selectedDateSlots.map((slot) => {
-                  const isSelected = slot.id === selectedSlotId;
-
-                  return (
-                    <button
-                      key={slot.id}
-                      className={`
-                        rounded-lg border
-                        px-2 sm:px-3
-                        py-2 sm:py-2.5
-                        text-[10px] sm:text-xs md:text-sm
-                        transition-colors
-                        min-h-[40px] sm:min-h-[44px] md:min-h-[46px]
-                        ${isSelected
-                          ? 'border-[#5D3699] bg-[#EFF6FF] text-[#5D3699] font-semibold'
-                          : 'border-[#e5e7eb] text-[#111827] hover:border-[#5D3699] hover:bg-[#F9FAFB]'
-                        }
-                      `}
-                      onClick={() => setSelectedSlotId(slot.id)}
-                    >
-                      {slot.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {!selectedDateSlots.length && (
-                <p className="mt-3 text-xs text-[#9CA3AF]">No available times for this day.</p>
-              )}
-            </aside>
+                {/* Selected Summary */}
+                {selectedSlot && (
+                  <div className="mt-4 rounded-xl bg-[#f5f3ff] p-4">
+                    <div className="flex items-center gap-2 text-xs font-medium text-[#5D3699]">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Selected Time
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-[#111827]">
+                      {currentSelectedTimeLabel}
+                    </p>
+                  </div>
+                )}
+              </aside>
+            </div>
           </div>
         </div>
 
-        <div className="px-3 sm:px-4 md:px-5 py-3 sm:py-4 border-t border-[#eef2f7]">
-          <button
-            type="button"
-            onClick={handleConfirmBooking}
-            disabled={submitting || loading || !selectedSlot}
-            className="block rounded-lg bg-[#5D3699] text-white text-center w-full py-3 sm:py-3.5 md:py-4 text-sm sm:text-base font-semibold hover:bg-[#4a2b7a] transition-colors disabled:opacity-70"
-          >
-            {submitting ? 'Confirming...' : `Confirm Booking for ${currentSelectedTimeLabel}`}
-          </button>
+        {/* Footer CTA */}
+        <div className="border-t border-[#e5e7eb] bg-[#f8fafc] p-4 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#5D3699]">
+                <Video className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-[#111827]">
+                  {selectedSlot ? 'Ready to book?' : 'Select a time slot'}
+                </p>
+                <p className="text-xs text-[#6b7280]">
+                  {selectedSlot
+                    ? `Session with ${mentor?.name || 'Mentor'}`
+                    : 'Choose a date and time above'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleConfirmBooking}
+              disabled={submitting || loading || !selectedSlot}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-8 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Confirming...
+                </>
+              ) : (
+                <>
+                  <Calendar className="h-5 w-5" />
+                  Confirm Booking
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {(loading || error) && (
-        <div className={`mt-3 text-center text-xs sm:text-sm ${error ? 'text-red-600' : 'text-[#6b7280]'}`}>
-          {error || 'Loading available slots...'}
+      {/* Loading/Error States */}
+      {loading && (
+        <div className="mt-6 flex items-center justify-center gap-3 rounded-xl bg-white p-6 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#e5e7eb] border-t-[#5D3699]" />
+          <span className="text-sm font-medium text-[#6b7280]">Loading available slots...</span>
         </div>
       )}
 
-      <div className="mt-4 text-center">
-        <Link
-          to="/mentors"
-          className="text-[10px] sm:text-xs text-[#6b7280] underline hover:text-[#5D3699] transition-colors"
-        >
-          {'<-'} Go Back to Mentors
-        </Link>
+      {error && (
+        <div className="mt-6 flex items-center gap-3 rounded-xl bg-red-50 p-4 ring-1 ring-red-100">
+          <AlertCircle className="h-5 w-5 text-red-600" />
+          <span className="text-sm text-red-600">{error}</span>
+        </div>
+      )}
+
+      {/* Session Info */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+              <Video className="h-5 w-5 text-[#5D3699]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#111827]">Video Call</p>
+              <p className="text-xs text-[#6b7280]">Secure video session</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+              <Clock className="h-5 w-5 text-[#5D3699]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#111827]">30 Minutes</p>
+              <p className="text-xs text-[#6b7280]">Session duration</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50">
+              <Shield className="h-5 w-5 text-[#10b981]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#111827]">Safe & Secure</p>
+              <p className="text-xs text-[#6b7280]">Monitored sessions</p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Help Text */}
+      <p className="mt-6 text-center text-xs text-[#9ca3af]">
+        Need help? Contact our support team at support@bondroom.com
+      </p>
     </div>
-  );
+  </div>
+);
 };
 
 export default BookSession;

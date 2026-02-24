@@ -6,11 +6,32 @@ import { menteeApi } from '../../apis/api/menteeApi';
 import { mentorApi } from '../../apis/api/mentorApi';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import { getAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
+import {
+  X,
+  LogOut,
+  ChevronRight,
+  Globe,
+  Clock,
+  RefreshCw,
+  Sparkles
+} from 'lucide-react';
 
 const normalizeList = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.results)) return payload.results;
   return [];
+};
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+
+const resolveMediaUrl = (value) => {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('/')) {
+    const base = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
+    return base ? `${base}${value}` : value;
+  }
+  return value;
 };
 
 const summarizeAvailability = (preferredTimes) => {
@@ -35,6 +56,8 @@ const Sidebar = ({ isOpen, onClose }) => {
   const [showLogout, setShowLogout] = useState(false);
   const [menteeName, setMenteeName] = useState('');
   const [mentorName, setMentorName] = useState('');
+  const [menteeAvatar, setMenteeAvatar] = useState('');
+  const [mentorAvatar, setMentorAvatar] = useState('');
   const [menteeId, setMenteeId] = useState(null);
   const [latestRequest, setLatestRequest] = useState(null);
   const [matchLanguage, setMatchLanguage] = useState('Not provided');
@@ -59,6 +82,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     return 'menties';
   })();
   const navRoutes = getRoutesForLayout(role, { sidebarOnly: true });
+  const displayName = role === 'mentors' ? mentorName || 'Mentor' : menteeName || 'User';
+  const displayAvatar = role === 'mentors' ? mentorAvatar : menteeAvatar;
 
   const loadMatchContext = async () => {
     if (role === 'mentors') return;
@@ -70,12 +95,14 @@ const Sidebar = ({ isOpen, onClose }) => {
       const currentMentee = mentees[0] || null;
 
       setMenteeName(currentMentee?.first_name || '');
+      setMenteeAvatar(resolveMediaUrl(currentMentee?.avatar || currentMentee?.profile_photo || ''));
       setMenteeId(currentMentee?.id ?? null);
 
       if (!currentMentee?.id) {
         setLatestRequest(null);
         setMatchLanguage('Not provided');
         setMatchAvailability('Not provided');
+        setMenteeAvatar('');
         return;
       }
 
@@ -87,6 +114,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       setMatchLanguage(latest?.language || 'Not provided');
       setMatchAvailability(summarizeAvailability(latest?.preferred_times));
     } catch {
+      setMenteeAvatar('');
       setLatestRequest(null);
       setMatchLanguage('Not provided');
       setMatchAvailability('Not provided');
@@ -102,8 +130,10 @@ const Sidebar = ({ isOpen, onClose }) => {
           const mentors = normalizeList(await mentorApi.getMentors({ email: auth.email }));
           const currentMentor = mentors[0] || null;
           setMentorName(currentMentor?.first_name || '');
+          setMentorAvatar(resolveMediaUrl(currentMentor?.avatar || currentMentor?.profile_photo || ''));
         } catch {
           setMentorName('');
+          setMentorAvatar('');
         }
       };
       loadMentorContext();
@@ -161,39 +191,61 @@ const Sidebar = ({ isOpen, onClose }) => {
     }
   };
 
-  return (
-    <>
-      {isOpen && (
-        <div className="fixed inset-0 bg-[#5D3699]/40 z-40 md:hidden" onClick={onClose} />
-      )}
-      <aside
-        className={`w-full md:w-[260px] border-b md:border-r border-gray-100 bg-white md:h-screen z-50 overflow-y-auto ${
-          isOpen ? 'fixed inset-y-0 left-0' : 'hidden md:block'
-        }`}
-      >
-      <div className="px-5 py-5 flex items-center justify-between">
-        <img src={logo} alt="Bond Room" className="w-[75px] h-[65.5px] object-contain" />
+return (
+  <>
+    {/* Mobile Overlay */}
+    <div
+      className={`fixed inset-0 bg-[#5D3699]/50 backdrop-blur-sm z-40 transition-opacity duration-300 lg:hidden ${
+        isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+      onClick={onClose}
+      aria-hidden="true"
+    />
+
+    {/* Sidebar */}
+    <aside
+      className={`fixed lg:static inset-y-0 left-0 z-50 w-[280px] sm:w-[300px] lg:w-[260px] bg-white border-r border-[#e5e7eb] flex flex-col h-screen transform transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
+        <img
+          src={logo}
+          alt="Bond Room"
+          className="w-[70px] h-[60px] object-contain"
+        />
         <button
-          className="md:hidden h-8 w-8 rounded-full bg-gray-100 border border-gray-100 flex items-center justify-center"
+          type="button"
           onClick={onClose}
+          className="lg:hidden flex h-9 w-9 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
           aria-label="Close sidebar"
         >
-          <svg className="h-4 w-4 text-muted" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
+          <X className="h-5 w-5" />
         </button>
       </div>
 
-      <div className="px-5 pt-2 pb-4">
-        <div className="text-[#6b7280]" style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '24px', fontWeight: 400 }}>
-          Good Morning
-        </div>
-        <div className="text-[#111827]" style={{ fontFamily: 'DM Sans', fontSize: '20px', lineHeight: '28px', fontWeight: 600 }}>
-          {role === 'mentors' ? mentorName || 'Mentor' : menteeName || 'Rajeswari'}
+      {/* User Info */}
+      <div className="px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-[#f5f3ff] text-[#5D3699] font-semibold text-lg">
+            {displayAvatar ? (
+              <img src={displayAvatar} alt={`${displayName} profile`} className="h-full w-full object-cover" />
+            ) : (
+              displayName?.charAt(0)?.toUpperCase() || 'U'
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-[#6b7280]">Good Morning</p>
+            <p className="text-base font-semibold text-[#111827] truncate">
+              {displayName}
+            </p>
+          </div>
         </div>
       </div>
 
-      <nav className="px-4">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-2">
         <ul className="space-y-1">
           {navRoutes.map((item) => {
             const Icon = item.icon;
@@ -205,108 +257,144 @@ const Sidebar = ({ isOpen, onClose }) => {
                     if (onClose) onClose();
                   }}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-md ${
-                      isActive ? 'bg-[#eef2ff] text-[#5b2c91]' : 'text-[#6b7280] hover:bg-gray-50'
+                    `group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? 'bg-[#5D3699] text-white shadow-md shadow-[#5D3699]/20'
+                        : 'text-[#6b7280] hover:bg-[#f5f3ff] hover:text-[#5D3699]'
                     }`
                   }
                 >
-                  <Icon className="h-4 w-4 text-current" />
-                  <span style={{ fontFamily: 'Inter', fontSize: '16px', lineHeight: '24px', fontWeight: 500 }}>
-                    {item.label}
-                  </span>
+                  {({ isActive }) => (
+                    <>
+                      <Icon className={`h-5 w-5 flex-shrink-0 transition-colors ${
+                        isActive ? 'text-white' : 'text-[#9ca3af] group-hover:text-[#5D3699]'
+                      }`} />
+                      <span className="flex-1">{item.label}</span>
+                      {isActive && (
+                        <ChevronRight className="h-4 w-4 text-white/70" />
+                      )}
+                    </>
+                  )}
                 </NavLink>
               </li>
             );
           })}
-          <li className="pt-1">
-            <button
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[#6b7280] hover:bg-gray-50"
-              onClick={() => setShowLogout(true)}
-            >
-              <span className="h-4 w-4 text-current">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M10 17l5-5-5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M4 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  <path d="M14 5h6v14h-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </span>
-              <span>Logout</span>
-            </button>
-          </li>
         </ul>
+
+        {/* Logout Button */}
+        <div className="mt-4 pt-4 border-t border-[#e5e7eb]">
+          <button
+            type="button"
+            onClick={() => setShowLogout(true)}
+            className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#6b7280] transition-all duration-200 hover:bg-red-50 hover:text-red-600"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Logout</span>
+          </button>
+        </div>
       </nav>
 
+      {/* Match Info Card (for mentees only) */}
       {role !== 'mentors' && (
-        <div className="px-5 pt-5 mt-6">
-          <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-            <div className="text-sm font-semibold text-[#111827]">Why these matches?</div>
-            <p className="mt-1 text-xs text-[#6b7280]">
-              Our AI analyzed your recent input to find mentors best suited to support your current needs.
+        <div className="p-4 border-t border-[#e5e7eb]">
+          <div className="rounded-2xl bg-[#f5f3ff] p-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#5D3699]">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-sm font-semibold text-[#111827]">
+                Why these matches?
+              </h3>
+            </div>
+            
+            <p className="mt-2 text-xs text-[#6b7280] leading-relaxed">
+              Our AI analyzed your recent input to find mentors best suited to support your needs.
             </p>
 
-            <div className="mt-3 space-y-2 text-xs text-[#6b7280]">
-              <div className="flex items-center gap-2">
-                <span className="h-4 w-4 text-current">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M12 8v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    <circle cx="12" cy="16" r="1" fill="currentColor" />
-                  </svg>
-                </span>
-                <span>Language: {matchLanguage}</span>
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center gap-2 text-xs text-[#6b7280]">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white">
+                  <Globe className="h-3.5 w-3.5 text-[#5D3699]" />
+                </div>
+                <span>{matchLanguage}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="h-4 w-4 text-current">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </span>
-                <span>Availability: {matchAvailability}</span>
+              <div className="flex items-center gap-2 text-xs text-[#6b7280]">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white">
+                  <Clock className="h-3.5 w-3.5 text-[#5D3699]" />
+                </div>
+                <span>{matchAvailability}</span>
               </div>
             </div>
 
             <button
-              className="mt-3 text-xs text-[#5b2c91] underline disabled:opacity-60"
+              type="button"
               onClick={handleRefreshSuggestions}
               disabled={refreshingMatch}
+              className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-xs font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20 transition-all hover:bg-[#5D3699] hover:text-white disabled:opacity-60"
             >
-              {refreshingMatch ? 'Refreshing Suggestions...' : 'Rematch / Refresh Suggestions'}
+              <RefreshCw className={`h-3.5 w-3.5 ${refreshingMatch ? 'animate-spin' : ''}`} />
+              {refreshingMatch ? 'Refreshing...' : 'Refresh Suggestions'}
             </button>
+
             {refreshMessage && (
-              <div className={`mt-2 text-[11px] ${refreshMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={`mt-2 text-[11px] text-center ${
+                refreshMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'
+              }`}>
                 {refreshMessage}
-              </div>
+              </p>
             )}
           </div>
         </div>
       )}
-      {showLogout && (
-        <div className="fixed inset-0 bg-[#5D3699]/40 flex items-center justify-center z-[60]">
-          <div className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-lg">
-            <h2 className="text-lg font-semibold text-primary">Log out?</h2>
-            <p className="mt-2 text-sm text-muted">Are you sure you want to log out of Bond Room?</p>
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <button
-                className="rounded-md border border-default px-4 py-2 text-sm text-secondary"
-                onClick={() => setShowLogout(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="rounded-md bg-accent px-4 py-2 text-sm text-on-accent"
-                onClick={handleLogout}
-                disabled={loading}
-              >
-                {loading ? 'Logging out...' : 'Logout'}
-              </button>
+    </aside>
+
+    {/* Logout Modal */}
+    {showLogout && (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#5D3699]/50 backdrop-blur-sm p-4">
+        <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-[#e5e7eb]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
+              <LogOut className="h-6 w-6 text-red-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-[#111827]">Log out?</h2>
+              <p className="text-sm text-[#6b7280]">You'll need to sign in again.</p>
             </div>
           </div>
+          
+          <p className="mt-4 text-sm text-[#6b7280]">
+            Are you sure you want to log out of Bond Room?
+          </p>
+
+          <div className="mt-6 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowLogout(false)}
+              className="flex-1 rounded-xl bg-[#f5f3ff] px-4 py-2.5 text-sm font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loading}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-red-700 disabled:opacity-60"
+            >
+              {loading ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Logging out...
+                </>
+              ) : (
+                'Logout'
+              )}
+            </button>
+          </div>
         </div>
-      )}
-      </aside>
-    </>
-  );
+      </div>
+    )}
+  </>
+);
 };
 
 export default Sidebar;

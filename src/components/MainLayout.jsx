@@ -19,8 +19,8 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen md:h-screen flex flex-col bg-page">
-      <div className="md:hidden bg-surface border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen lg:h-screen flex flex-col bg-page">
+      <div className="lg:hidden bg-surface border-b border-gray-100 px-4 py-3 flex items-center justify-between">
         <button
           className="h-9 w-9 rounded-md border border-default flex items-center justify-center"
           onClick={() => setSidebarOpen(true)}
@@ -38,10 +38,10 @@ const MainLayout = () => {
         </div>
         <div className="h-9 w-9" />
       </div>
-      <div className="flex-1 flex flex-col md:overflow-hidden">
-        <div className="flex-1 flex flex-col md:flex-row md:overflow-hidden">
+      <div className="flex-1 flex flex-col lg:overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 md:overflow-y-auto flex flex-col" data-scroll-container="true" tabIndex={0} role="main">
+          <main className="flex-1 lg:overflow-y-auto flex flex-col" data-scroll-container="true" tabIndex={0} role="main">
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1">
               <Outlet />
             </div>
