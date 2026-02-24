@@ -34,6 +34,16 @@ export const menteeApi = {
   getSessionById: (sessionId) => apiClient.get(`/sessions/${sessionId}/`),
   createSession: (payload) => apiClient.post('/sessions/', payload),
   getSessionJoinLink: (sessionId) => apiClient.post(`/sessions/${sessionId}/join-link/`),
+  listSessionMeetingSignals: (sessionId, params = {}) =>
+    apiClient.get(`/sessions/${sessionId}/meeting-signals/${buildQuery(params)}`),
+  sendSessionMeetingSignal: (sessionId, payload) =>
+    apiClient.post(`/sessions/${sessionId}/meeting-signals/`, payload),
+  updateSessionRecording: (sessionId, payload) =>
+    apiClient.post(`/sessions/${sessionId}/recording/`, payload),
+  analyzeSessionTranscript: (sessionId, payload) =>
+    apiClient.post(`/sessions/${sessionId}/analyze-transcript/`, payload),
+  listSessionAbuseIncidents: (sessionId) =>
+    apiClient.get(`/sessions/${sessionId}/abuse-incidents/`),
 
   getSessionFeedback: (sessionId) => apiClient.get(`/sessions/${sessionId}/feedback/`),
   submitSessionFeedback: (sessionId, payload) => apiClient.post(`/sessions/${sessionId}/feedback/`, payload),

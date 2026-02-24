@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import topRightIcon from '../../assets/Vector (1).png';
 import { menteeApi } from '../../../apis/api/menteeApi';
-import { setSelectedMentorId } from '../../../apis/api/storage';
+import { setSelectedMentorId, setSelectedSessionId } from '../../../apis/api/storage';
 import { useMenteeData } from '../../../apis/apihook/useMenteeData';
 
 const quickActions = [
@@ -69,7 +69,7 @@ const getRelativeStart = (value) => {
   return `Starts in ${Math.round(diffHrs / 24)}d`;
 };
 
-const getJoinUrl = (session) => session?.join_url || session?.joinUrl || '';
+const getJoinUrl = (session) => session?.join_url || session?.meeting_url || session?.joinUrl || '';
 
 const RecommendationCard = ({ mentor }) => {
   const [expanded, setExpanded] = useState(false);
@@ -201,7 +201,11 @@ const Dashboard = () => {
 
   const openJoinLink = (url) => {
     if (!url) return false;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      window.location.assign(url);
+      return true;
+    }
+    navigate(url);
     return true;
   };
 
@@ -210,7 +214,10 @@ const Dashboard = () => {
     setJoinError('');
 
     const existing = getJoinUrl(upcomingSession);
-    if (existing) {
+    const isWrongRolePath =
+      typeof existing === 'string' && existing.includes('/mentor-meeting-room');
+    if (existing && !isWrongRolePath) {
+      setSelectedSessionId(upcomingSession.id);
       openJoinLink(existing);
       return;
     }
@@ -218,17 +225,19 @@ const Dashboard = () => {
     setJoinLoading(true);
     try {
       const response = await menteeApi.getSessionJoinLink(upcomingSession.id);
-      const url = response?.join_url || response?.host_join_url || '';
+      const url = response?.meeting_url || response?.join_url || response?.host_join_url || '';
       if (url) {
         setUpcomingSession((prev) =>
           prev
             ? {
                 ...prev,
+                meeting_url: response?.meeting_url || prev.meeting_url,
                 join_url: response?.join_url || prev.join_url,
                 host_join_url: response?.host_join_url || prev.host_join_url,
               }
             : prev
         );
+        setSelectedSessionId(upcomingSession.id);
         openJoinLink(url);
       } else {
         setJoinError('Join link not ready yet.');
