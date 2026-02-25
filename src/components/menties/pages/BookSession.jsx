@@ -3,6 +3,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { getSelectedMentorId, setLastBooking, setSelectedMentorId } from '../../../apis/api/storage';
 import {
+  INDIA_TIMEZONE,
+  buildDateKey,
+  formatIndiaDateKey,
+  getIndiaTimeLabel,
+  indiaDateKeyToLabel,
+  parseDateKey,
+} from '../../../utils/indiaTime';
+import {
   Calendar,
   Clock,
   MapPin,
@@ -49,27 +57,16 @@ const toMentorData = (mentor) => ({
 });
 
 const toDateKey = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return formatIndiaDateKey(value);
 };
 
-const formatTimeInZone = (value, timeZone = '') => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: timeZone || undefined,
-  });
+const formatTimeInZone = (value) => {
+  return getIndiaTimeLabel(value, { hour12: true });
 };
 
-const formatTimeRangeInZone = (start, end, timeZone = '') => {
-  const startLabel = formatTimeInZone(start, timeZone);
-  const endLabel = formatTimeInZone(end, timeZone);
+const formatTimeRangeInZone = (start, end) => {
+  const startLabel = formatTimeInZone(start);
+  const endLabel = formatTimeInZone(end);
   if (!startLabel && !endLabel) return '';
   if (!startLabel) return endLabel;
   if (!endLabel) return startLabel;
@@ -77,9 +74,9 @@ const formatTimeRangeInZone = (start, end, timeZone = '') => {
 };
 
 const formatDateLabel = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'No date selected';
-  return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+  const key = parseDateKey(value) ? value : toDateKey(value);
+  if (!key) return 'No date selected';
+  return indiaDateKeyToLabel(key, { weekday: 'long', month: 'long', day: 'numeric' });
 };
 
 const mapAvailabilitySlots = (payload) =>
@@ -88,7 +85,7 @@ const mapAvailabilitySlots = (payload) =>
     .map((slot) => ({
       ...slot,
       dateKey: toDateKey(slot.start_time),
-      label: formatTimeRangeInZone(slot.start_time, slot.end_time, slot.timezone),
+      label: formatTimeRangeInZone(slot.start_time, slot.end_time),
     }))
     .filter((slot) => slot.dateKey && slot.label)
     .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
@@ -193,8 +190,10 @@ const BookSession = () => {
           if (availableSlots[0]) {
             setSelectedDateKey(availableSlots[0].dateKey);
             setSelectedSlotId(availableSlots[0].id);
-            const firstDate = new Date(availableSlots[0].start_time);
-            setMonthDate(new Date(firstDate.getFullYear(), firstDate.getMonth(), 1));
+            const firstDateParts = parseDateKey(availableSlots[0].dateKey);
+            if (firstDateParts) {
+              setMonthDate(new Date(firstDateParts.year, firstDateParts.month - 1, 1));
+            }
           } else {
             setSelectedDateKey('');
             setSelectedSlotId(null);
@@ -258,8 +257,7 @@ const BookSession = () => {
 
   const handleDateSelect = (dayValue) => {
     if (!dayValue) return;
-    const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), Number(dayValue));
-    const dateKey = toDateKey(date);
+    const dateKey = buildDateKey(monthDate.getFullYear(), monthDate.getMonth(), Number(dayValue));
     if (!availableDateSet.has(dateKey)) return;
     setSelectedDateKey(dateKey);
   };
@@ -287,7 +285,7 @@ const BookSession = () => {
         scheduled_start: selectedSlot.start_time,
         scheduled_end: selectedSlot.end_time,
         duration_minutes: durationMinutes,
-        timezone: selectedSlot.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+        timezone: INDIA_TIMEZONE,
         mode: 'online',
         status: 'requested',
         topic_tags: mentor.expertise?.slice(0, 3) || [],
@@ -529,13 +527,12 @@ return (
                   <div className="grid grid-cols-7 gap-2">
                     {dates.map((d, i) => {
                       const isEmpty = d === '';
-                      const dateValue = d
-                        ? new Date(monthDate.getFullYear(), monthDate.getMonth(), Number(d))
-                        : null;
-                      const dateKey = dateValue ? toDateKey(dateValue) : '';
+                      const dateKey = d
+                        ? buildDateKey(monthDate.getFullYear(), monthDate.getMonth(), Number(d))
+                        : '';
                       const isSelected = Boolean(dateKey) && dateKey === selectedDateKey;
                       const isUnavailable = Boolean(dateKey) && !availableDateSet.has(dateKey);
-                      const isToday = dateKey === toDateKey(new Date());
+                      const isToday = dateKey === formatIndiaDateKey(new Date());
 
                       return (
                         <button

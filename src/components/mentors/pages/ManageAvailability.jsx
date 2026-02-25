@@ -2,38 +2,38 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Copy, Trash2, Plus, AlertTriangle, Pencil } from 'lucide-react';
 import { mentorApi } from '../../../apis/api/mentorApi';
 import { useMentorData } from '../../../apis/apihook/useMentorData';
+import {
+  INDIA_TIMEZONE,
+  addDaysToDateKey,
+  diffDateKeys,
+  formatIndiaDateKey,
+  getIndiaTimeLabel,
+  getIndiaWeekStartKey,
+  indiaDateKeyToLabel,
+  indiaDateTimeToIso,
+  parseDateKey,
+} from '../../../utils/indiaTime';
 
 const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const ALLOWED_START_MINUTES = 8 * 60;
 const ALLOWED_END_MINUTES = 19 * 60;
 
-const getStartOfWeek = (date) => {
-  const copy = new Date(date);
-  const day = (copy.getDay() + 6) % 7;
-  copy.setDate(copy.getDate() - day);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-};
-
-const buildWeekDays = (startDate) =>
+const buildWeekDays = (startDateKey) =>
   dayLabels.map((label, index) => {
-    const date = new Date(startDate);
-    date.setDate(startDate.getDate() + index);
-    return { label, date, slots: [] };
+    const dateKey = addDaysToDateKey(startDateKey, index);
+    const parts = parseDateKey(dateKey);
+    return { label, dateKey, dayNumber: parts?.day || 0, slots: [] };
   });
 
-const formatWeekRange = (startDate) => {
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + 6);
-  const startLabel = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
-  const endLabel = endDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+const formatWeekRange = (startDateKey) => {
+  const endDateKey = addDaysToDateKey(startDateKey, 6);
+  const startLabel = indiaDateKeyToLabel(startDateKey, { month: 'short', day: 'numeric' });
+  const endLabel = indiaDateKeyToLabel(endDateKey, { month: 'short', day: 'numeric' });
   return `${startLabel} - ${endLabel}`;
 };
 
 const formatTime = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  return getIndiaTimeLabel(value, { hour12: false });
 };
 
 const parseTime = (value) => {
@@ -41,10 +41,12 @@ const parseTime = (value) => {
   return { hour: Number.isNaN(hour) ? 0 : hour, minute: Number.isNaN(minute) ? 0 : minute };
 };
 
-const isWithinAllowedWindow = (startDate, endDate) => {
-  if (!startDate || !endDate) return false;
-  const startMinutes = startDate.getHours() * 60 + startDate.getMinutes();
-  const endMinutes = endDate.getHours() * 60 + endDate.getMinutes();
+const isWithinAllowedWindow = (startLabel, endLabel) => {
+  if (!startLabel || !endLabel) return false;
+  const startTime = parseTime(startLabel);
+  const endTime = parseTime(endLabel);
+  const startMinutes = startTime.hour * 60 + startTime.minute;
+  const endMinutes = endTime.hour * 60 + endTime.minute;
   return startMinutes >= ALLOWED_START_MINUTES && endMinutes <= ALLOWED_END_MINUTES;
 };
 
@@ -60,8 +62,8 @@ const ManageAvailability = () => {
   const dragPayloadRef = useRef(null);
   const dragTargetRef = useRef(null);
   const dragDidDropRef = useRef(false);
-  const [weekStart, setWeekStart] = useState(() => getStartOfWeek(new Date()));
-  const [days, setDays] = useState(() => buildWeekDays(getStartOfWeek(new Date())));
+  const [weekStartKey, setWeekStartKey] = useState(() => getIndiaWeekStartKey(new Date()));
+  const [days, setDays] = useState(() => buildWeekDays(getIndiaWeekStartKey(new Date())));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -74,27 +76,27 @@ const ManageAvailability = () => {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
-  const weekLabel = useMemo(() => formatWeekRange(weekStart), [weekStart]);
-  const timezoneLabel = mentor?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const weekLabel = useMemo(() => formatWeekRange(weekStartKey), [weekStartKey]);
+  const timezoneLabel = INDIA_TIMEZONE;
 
-  const loadSlots = async (startDate) => {
+  const loadSlots = async (startDateKey) => {
     if (!mentor?.id) return;
     setLoading(true);
     setError('');
     try {
       const response = await mentorApi.listAvailabilitySlots({
         mentor_id: mentor.id,
-        start_from: startDate.toISOString(),
+        start_from: indiaDateTimeToIso(startDateKey, '00:00'),
       });
       const list = Array.isArray(response) ? response : response?.results || [];
-      const weekEnd = new Date(startDate);
-      weekEnd.setDate(startDate.getDate() + 7);
-      const nextDays = buildWeekDays(startDate);
+      const weekEndKey = addDaysToDateKey(startDateKey, 7);
+      const nextDays = buildWeekDays(startDateKey);
       list.forEach((slot) => {
-        const start = new Date(slot.start_time);
-        if (Number.isNaN(start.getTime())) return;
-        if (start < startDate || start >= weekEnd) return;
-        const dayIndex = (start.getDay() + 6) % 7;
+        const slotDateKey = formatIndiaDateKey(slot.start_time);
+        if (!slotDateKey) return;
+        if (slotDateKey < startDateKey || slotDateKey >= weekEndKey) return;
+        const dayIndex = diffDateKeys(startDateKey, slotDateKey);
+        if (Number.isNaN(dayIndex) || dayIndex < 0 || dayIndex > 6) return;
         const day = nextDays[dayIndex];
         if (!day) return;
         day.slots.push({
@@ -119,9 +121,9 @@ const ManageAvailability = () => {
       setLoading(false);
       return;
     }
-    loadSlots(weekStart);
+    loadSlots(weekStartKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mentor?.id, weekStart]);
+  }, [mentor?.id, weekStartKey]);
 
   const _handleDrop = async (targetLabel, payload) => {
     if (!payload) return;
@@ -146,26 +148,24 @@ const ManageAvailability = () => {
     });
 
     if (!movedSlot?.id) return;
-    const startTime = new Date(movedSlot.start_time);
-    const endTime = new Date(movedSlot.end_time);
-    const targetStart = new Date(targetDay.date);
-    targetStart.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-    const targetEnd = new Date(targetDay.date);
-    targetEnd.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
+    const targetStartLabel = formatTime(movedSlot.start_time);
+    const targetEndLabel = formatTime(movedSlot.end_time);
+    const targetStartIso = indiaDateTimeToIso(targetDay.dateKey, targetStartLabel);
+    const targetEndIso = indiaDateTimeToIso(targetDay.dateKey, targetEndLabel);
 
     try {
       await mentorApi.createAvailabilitySlot({
         mentor: mentor?.id,
-        start_time: targetStart.toISOString(),
-        end_time: targetEnd.toISOString(),
+        start_time: targetStartIso,
+        end_time: targetEndIso,
         timezone: timezoneLabel,
         is_available: true,
       });
       await mentorApi.deleteAvailabilitySlot(movedSlot.id);
-      await loadSlots(weekStart);
+      await loadSlots(weekStartKey);
     } catch (err) {
       setError(err?.message || 'Unable to update slot.');
-      await loadSlots(weekStart);
+      await loadSlots(weekStartKey);
     }
   };
 
@@ -180,14 +180,8 @@ const ManageAvailability = () => {
       setError('Unable to move slot. Please try again.');
       return;
     }
-    const startTime = new Date(slot.start_time);
-    const endTime = new Date(slot.end_time);
-    const targetStart = new Date(targetDay.date);
-    targetStart.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-    const targetEnd = new Date(targetDay.date);
-    targetEnd.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
-    const targetStartLabel = formatTime(targetStart);
-    const targetEndLabel = formatTime(targetEnd);
+    const targetStartLabel = formatTime(slot.start_time);
+    const targetEndLabel = formatTime(slot.end_time);
     if (hasDuplicateSlot(targetDay.slots, targetStartLabel, targetEndLabel)) {
       setError('This time slot already exists for that day.');
       return;
@@ -210,31 +204,25 @@ const ManageAvailability = () => {
     setLoading(true);
     setError('');
     try {
-      const startTime = new Date(pendingMove.slot.start_time);
-      const endTime = new Date(pendingMove.slot.end_time);
-      const targetStart = new Date(targetDay.date);
-      targetStart.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-      const targetEnd = new Date(targetDay.date);
-      targetEnd.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
-      const targetStartLabel = formatTime(targetStart);
-      const targetEndLabel = formatTime(targetEnd);
+      const targetStartLabel = formatTime(pendingMove.slot.start_time);
+      const targetEndLabel = formatTime(pendingMove.slot.end_time);
       if (hasDuplicateSlot(targetDay.slots, targetStartLabel, targetEndLabel)) {
         setError('This time slot already exists for that day.');
         return;
       }
-      if (!isWithinAllowedWindow(targetStart, targetEnd)) {
+      if (!isWithinAllowedWindow(targetStartLabel, targetEndLabel)) {
         setError('Slots must be between 08:00 and 19:00.');
         return;
       }
       await mentorApi.createAvailabilitySlot({
         mentor: mentor.id,
-        start_time: targetStart.toISOString(),
-        end_time: targetEnd.toISOString(),
+        start_time: indiaDateTimeToIso(targetDay.dateKey, targetStartLabel),
+        end_time: indiaDateTimeToIso(targetDay.dateKey, targetEndLabel),
         timezone: timezoneLabel,
         is_available: true,
       });
       await mentorApi.deleteAvailabilitySlot(pendingMove.slot.id);
-      await loadSlots(weekStart);
+      await loadSlots(weekStartKey);
       setPendingMove(null);
     } catch (err) {
       setError(err?.message || 'Unable to move slot.');
@@ -266,15 +254,7 @@ const ManageAvailability = () => {
       setError('Availability slots are limited to 08:00-19:00.');
       return;
     }
-    const dayIndex = dayLabels.indexOf(dayLabel);
-    const startDate = new Date(weekStart);
-    startDate.setDate(weekStart.getDate() + dayIndex);
-    const { hour: startHour, minute: startMinute } = parseTime(preset.time);
-    const { hour: endHour, minute: endMinute } = parseTime(preset.end);
-    startDate.setHours(startHour, startMinute, 0, 0);
-    const endDate = new Date(startDate);
-    endDate.setHours(endHour, endMinute, 0, 0);
-    if (!isWithinAllowedWindow(startDate, endDate)) {
+    if (!isWithinAllowedWindow(preset.time, preset.end)) {
       setError('Slots must be between 08:00 and 19:00.');
       return;
     }
@@ -282,12 +262,12 @@ const ManageAvailability = () => {
     try {
       await mentorApi.createAvailabilitySlot({
         mentor: mentor.id,
-        start_time: startDate.toISOString(),
-        end_time: endDate.toISOString(),
+        start_time: indiaDateTimeToIso(targetDay.dateKey, preset.time),
+        end_time: indiaDateTimeToIso(targetDay.dateKey, preset.end),
         timezone: timezoneLabel,
         is_available: true,
       });
-      await loadSlots(weekStart);
+      await loadSlots(weekStartKey);
     } catch (err) {
       setError(err?.message || 'Unable to add availability slot.');
     }
@@ -298,16 +278,14 @@ const ManageAvailability = () => {
     setError('');
     try {
       await mentorApi.deleteAvailabilitySlot(slotId);
-      await loadSlots(weekStart);
+      await loadSlots(weekStartKey);
     } catch (err) {
       setError(err?.message || 'Unable to remove availability slot.');
     }
   };
 
   const handleWeekChange = (direction) => {
-    const nextStart = new Date(weekStart);
-    nextStart.setDate(weekStart.getDate() + direction * 7);
-    setWeekStart(getStartOfWeek(nextStart));
+    setWeekStartKey((prev) => addDaysToDateKey(prev, direction * 7));
   };
 
   const handleClearWeek = async () => {
@@ -318,7 +296,7 @@ const ManageAvailability = () => {
     setError('');
     try {
       await Promise.all(slotIds.map((slotId) => mentorApi.deleteAvailabilitySlot(slotId)));
-      await loadSlots(weekStart);
+      await loadSlots(weekStartKey);
     } catch (err) {
       setError(err?.message || 'Unable to clear availability slots.');
     } finally {
@@ -333,21 +311,20 @@ const ManageAvailability = () => {
     setLoading(true);
     setError('');
     try {
-      const nextWeekStart = new Date(weekStart);
-      nextWeekStart.setDate(weekStart.getDate() + 7);
+      const nextWeekStartKey = addDaysToDateKey(weekStartKey, 7);
       const response = await mentorApi.listAvailabilitySlots({
         mentor_id: mentor.id,
-        start_from: nextWeekStart.toISOString(),
+        start_from: indiaDateTimeToIso(nextWeekStartKey, '00:00'),
       });
       const list = Array.isArray(response) ? response : response?.results || [];
-      const weekEnd = new Date(nextWeekStart);
-      weekEnd.setDate(nextWeekStart.getDate() + 7);
-      const nextWeekDays = buildWeekDays(nextWeekStart);
+      const weekEndKey = addDaysToDateKey(nextWeekStartKey, 7);
+      const nextWeekDays = buildWeekDays(nextWeekStartKey);
       list.forEach((slot) => {
-        const start = new Date(slot.start_time);
-        if (Number.isNaN(start.getTime())) return;
-        if (start < nextWeekStart || start >= weekEnd) return;
-        const dayIndex = (start.getDay() + 6) % 7;
+        const slotDateKey = formatIndiaDateKey(slot.start_time);
+        if (!slotDateKey) return;
+        if (slotDateKey < nextWeekStartKey || slotDateKey >= weekEndKey) return;
+        const dayIndex = diffDateKeys(nextWeekStartKey, slotDateKey);
+        if (Number.isNaN(dayIndex) || dayIndex < 0 || dayIndex > 6) return;
         const day = nextWeekDays[dayIndex];
         if (!day) return;
         day.slots.push({
@@ -361,34 +338,41 @@ const ManageAvailability = () => {
       });
 
       const requests = sourceSlots.map((slot) => {
-        const startDate = new Date(slot.start_time);
-        const endDate = new Date(slot.end_time);
-        startDate.setDate(startDate.getDate() + 7);
-        endDate.setDate(endDate.getDate() + 7);
-        if (!isWithinAllowedWindow(startDate, endDate)) {
+        const sourceDateKey = formatIndiaDateKey(slot.start_time);
+        if (!sourceDateKey) {
           return null;
         }
-        const dayIndex = (startDate.getDay() + 6) % 7;
+        const targetDateKey = addDaysToDateKey(sourceDateKey, 7);
+        if (targetDateKey < nextWeekStartKey || targetDateKey >= weekEndKey) {
+          return null;
+        }
+        const dayIndex = diffDateKeys(nextWeekStartKey, targetDateKey);
+        if (Number.isNaN(dayIndex) || dayIndex < 0 || dayIndex > 6) {
+          return null;
+        }
         const targetDay = nextWeekDays[dayIndex];
         if (!targetDay) {
           return null;
         }
-        const startLabel = formatTime(startDate);
-        const endLabel = formatTime(endDate);
+        const startLabel = formatTime(slot.start_time);
+        const endLabel = formatTime(slot.end_time);
         if (hasDuplicateSlot(targetDay.slots, startLabel, endLabel)) {
+          return null;
+        }
+        if (!isWithinAllowedWindow(startLabel, endLabel)) {
           return null;
         }
         targetDay.slots.push({ time: startLabel, end: endLabel });
         return mentorApi.createAvailabilitySlot({
           mentor: mentor.id,
-          start_time: startDate.toISOString(),
-          end_time: endDate.toISOString(),
+          start_time: indiaDateTimeToIso(targetDateKey, startLabel),
+          end_time: indiaDateTimeToIso(targetDateKey, endLabel),
           timezone: timezoneLabel,
           is_available: true,
         });
       });
       await Promise.all(requests.filter(Boolean));
-      setWeekStart(getStartOfWeek(nextWeekStart));
+      setWeekStartKey(nextWeekStartKey);
     } catch (err) {
       setError(err?.message || 'Unable to copy week availability.');
     } finally {
@@ -428,14 +412,8 @@ const ManageAvailability = () => {
           (targetDay.slots || []).map((slot) => `${slot.time}-${slot.end}`)
         );
         sourceSlots.forEach((slot) => {
-          const startTime = new Date(slot.start_time);
-          const endTime = new Date(slot.end_time);
-          const targetStart = new Date(targetDay.date);
-          targetStart.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-          const targetEnd = new Date(targetDay.date);
-          targetEnd.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
-          const targetStartLabel = formatTime(targetStart);
-          const targetEndLabel = formatTime(targetEnd);
+          const targetStartLabel = formatTime(slot.start_time);
+          const targetEndLabel = formatTime(slot.end_time);
           const duplicateKey = `${targetStartLabel}-${targetEndLabel}`;
           if (existingTimes.has(duplicateKey)) {
             return;
@@ -443,15 +421,15 @@ const ManageAvailability = () => {
           if (hasDuplicateSlot(targetDay.slots, targetStartLabel, targetEndLabel)) {
             return;
           }
-          if (!isWithinAllowedWindow(targetStart, targetEnd)) {
+          if (!isWithinAllowedWindow(targetStartLabel, targetEndLabel)) {
             return;
           }
           existingTimes.add(duplicateKey);
           requests.push(
             mentorApi.createAvailabilitySlot({
               mentor: mentor.id,
-              start_time: targetStart.toISOString(),
-              end_time: targetEnd.toISOString(),
+              start_time: indiaDateTimeToIso(targetDay.dateKey, targetStartLabel),
+              end_time: indiaDateTimeToIso(targetDay.dateKey, targetEndLabel),
               timezone: timezoneLabel,
               is_available: true,
             })
@@ -461,7 +439,7 @@ const ManageAvailability = () => {
       if (requests.length) {
         await Promise.all(requests);
       }
-      await loadSlots(weekStart);
+      await loadSlots(weekStartKey);
       setCopyOpen(null);
       setCopyTargets([]);
     } catch (err) {
@@ -567,7 +545,7 @@ const ManageAvailability = () => {
       {/* Calendar Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {days.map((day) => {
-          const isToday = day.date && new Date().toDateString() === new Date(day.date).toDateString();
+          const isToday = day.dateKey === formatIndiaDateKey(new Date());
           return (
             <div
               key={day.label}

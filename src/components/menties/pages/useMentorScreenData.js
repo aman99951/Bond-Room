@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { getSelectedMentorId, setSelectedMentorId } from '../../../apis/api/storage';
+import { INDIA_TIMEZONE, formatIndiaDateKey, getIndiaTimeLabel, parseDateKey } from '../../../utils/indiaTime';
 
 const dayOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -11,20 +12,13 @@ const normalizeList = (payload) => {
   return [];
 };
 
-const formatTimeInZone = (dateLike, timeZone = '') => {
-  if (!dateLike) return '';
-  const date = new Date(dateLike);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: timeZone || undefined,
-  });
+const formatTimeInZone = (dateLike) => {
+  return getIndiaTimeLabel(dateLike, { hour12: true });
 };
 
-const formatTimeRangeInZone = (startTime, endTime, timeZone = '') => {
-  const startLabel = formatTimeInZone(startTime, timeZone);
-  const endLabel = formatTimeInZone(endTime, timeZone);
+const formatTimeRangeInZone = (startTime, endTime) => {
+  const startLabel = formatTimeInZone(startTime);
+  const endLabel = formatTimeInZone(endTime);
   if (!startLabel && !endLabel) return '';
   if (!startLabel) return endLabel;
   if (!endLabel) return startLabel;
@@ -52,10 +46,12 @@ const buildAvailabilityMap = (slots) => {
   const map = new Map(dayOrder.map((day) => [day, []]));
   normalizeList(slots).forEach((slot) => {
     if (!slot?.start_time) return;
-    const date = new Date(slot.start_time);
-    if (Number.isNaN(date.getTime())) return;
-    const day = dayOrder[(date.getDay() + 6) % 7];
-    const time = formatTimeRangeInZone(slot.start_time, slot.end_time, slot.timezone);
+    const dateKey = formatIndiaDateKey(slot.start_time);
+    const parts = parseDateKey(dateKey);
+    if (!parts) return;
+    const dayDate = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+    const day = dayOrder[(dayDate.getUTCDay() + 6) % 7];
+    const time = formatTimeRangeInZone(slot.start_time, slot.end_time);
     if (!time) return;
     const existing = map.get(day) || [];
     if (!existing.includes(time)) map.set(day, [...existing, time]);
@@ -194,5 +190,6 @@ export const useMentorScreenData = () => {
     reviews,
     loading,
     error,
+    timezone: INDIA_TIMEZONE,
   };
 };
