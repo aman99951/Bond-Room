@@ -4,6 +4,15 @@ import { Search, ChevronDown, Calendar, Table, Clock, Video, ArrowRight, Filter,
 import { mentorApi } from '../../../apis/api/mentorApi';
 import { useMentorData } from '../../../apis/apihook/useMentorData';
 import { setSelectedSessionId } from '../../../apis/api/storage';
+import {
+  addDaysToDateKey,
+  diffDateKeys,
+  formatIndiaDateKey,
+  getIndiaTimeLabel,
+  getIndiaWeekStartKey,
+  indiaDateKeyToLabel,
+  parseDateKey,
+} from '../../../utils/indiaTime';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
 
@@ -34,14 +43,6 @@ const hours = [
 
 const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const getStartOfWeek = (date) => {
-  const copy = new Date(date);
-  const day = (copy.getDay() + 6) % 7;
-  copy.setDate(copy.getDate() - day);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-};
-
 const parseHourLabel = (label) => {
   const [time, meridiem] = label.split(' ');
   const [hour] = time.split(':').map((val) => Number(val));
@@ -52,18 +53,23 @@ const parseHourLabel = (label) => {
 };
 
 const formatTimeRange = (startValue, endValue) => {
-  const start = new Date(startValue);
-  const end = new Date(endValue);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 'Time TBD';
-  const startLabel = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  const endLabel = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const startLabel = getIndiaTimeLabel(startValue, { hour12: true });
+  const endLabel = getIndiaTimeLabel(endValue, { hour12: true });
+  if (!startLabel || !endLabel) return 'Time TBD';
   return `${startLabel} - ${endLabel}`;
 };
 
 const formatDateLabel = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Date TBD';
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  const dateKey = formatIndiaDateKey(value);
+  if (!dateKey) return 'Date TBD';
+  return indiaDateKeyToLabel(dateKey, { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const getIndiaHour = (value) => {
+  const label = getIndiaTimeLabel(value, { hour12: false });
+  const [hour] = String(label || '').split(':');
+  const numericHour = Number(hour);
+  return Number.isNaN(numericHour) ? -1 : numericHour;
 };
 
 const getMenteeName = (session) => {
@@ -126,24 +132,21 @@ const MySessions = () => {
   const [searchValue, setSearchValue] = useState('');
   const filterOptions = ['All Types', 'Upcoming', 'Completed'];
   const weekFilterOptions = ['This Week', 'All Time'];
-  const weekStart = useMemo(() => getStartOfWeek(new Date()), []);
-  const weekEnd = useMemo(() => {
-    const end = new Date(weekStart);
-    end.setDate(weekStart.getDate() + 7);
-    return end;
-  }, [weekStart]);
+  const weekStartKey = useMemo(() => getIndiaWeekStartKey(new Date()), []);
+  const weekEndKey = useMemo(() => addDaysToDateKey(weekStartKey, 7), [weekStartKey]);
   const days = useMemo(
     () =>
       dayLabels.map((label, index) => {
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + index);
+        const dateKey = addDaysToDateKey(weekStartKey, index);
+        const parts = parseDateKey(dateKey);
         return {
           label,
-          date,
-          active: new Date().toDateString() === date.toDateString(),
+          dateKey,
+          dayNumber: parts?.day || 0,
+          active: formatIndiaDateKey(new Date()) === dateKey,
         };
       }),
-    [weekStart]
+    [weekStartKey]
   );
 
   useEffect(() => {
@@ -224,9 +227,8 @@ const MySessions = () => {
         if (session.status !== 'completed') return false;
       }
       if (weekFilterValue === 'This Week') {
-        const start = new Date(session.scheduled_start);
-        if (Number.isNaN(start.getTime())) return false;
-        if (start < weekStart || start >= weekEnd) return false;
+        const sessionDateKey = formatIndiaDateKey(session?.scheduled_start);
+        if (!sessionDateKey || sessionDateKey < weekStartKey || sessionDateKey >= weekEndKey) return false;
       }
       if (searchValue.trim()) {
         const query = searchValue.trim().toLowerCase();
@@ -237,14 +239,14 @@ const MySessions = () => {
       }
       return true;
     });
-  }, [filterValue, sessions, weekFilterValue, weekStart, weekEnd, searchValue]);
+  }, [filterValue, sessions, weekFilterValue, weekStartKey, weekEndKey, searchValue]);
 
   const sessionsThisWeek = useMemo(() => {
     return filteredSessions.filter((session) => {
-      const start = new Date(session.scheduled_start);
-      return !Number.isNaN(start.getTime()) && start >= weekStart && start < weekEnd;
+      const sessionDateKey = formatIndiaDateKey(session?.scheduled_start);
+      return Boolean(sessionDateKey && sessionDateKey >= weekStartKey && sessionDateKey < weekEndKey);
     });
-  }, [filteredSessions, weekStart, weekEnd]);
+  }, [filteredSessions, weekStartKey, weekEndKey]);
 
   const calendarEntries = useMemo(() => {
     const now = new Date();
@@ -253,8 +255,10 @@ const MySessions = () => {
       .map((session) => {
       const start = new Date(session.scheduled_start);
       const end = new Date(session.scheduled_end || session.scheduled_start);
-      const dayIndex = Math.floor((start - weekStart) / (1000 * 60 * 60 * 24));
-      const hourIndex = hours.findIndex((label) => parseHourLabel(label) === start.getHours());
+      const sessionDateKey = formatIndiaDateKey(session.scheduled_start);
+      const dayIndex = sessionDateKey ? diffDateKeys(weekStartKey, sessionDateKey) : -1;
+      const indiaHour = getIndiaHour(session.scheduled_start);
+      const hourIndex = hours.findIndex((label) => parseHourLabel(label) === indiaHour);
       const joinUrl = session?.meeting_url || session?.join_url || session?.host_join_url || '';
       const menteeName = (getMenteeName(session) || '').trim() || 'Mentee';
       return {
@@ -269,7 +273,7 @@ const MySessions = () => {
         joinUrl,
       };
     });
-  }, [sessionsThisWeek, weekStart]);
+  }, [sessionsThisWeek, weekStartKey]);
 
   const openJoinLink = (url, sessionId) => {
     if (!url) return false;
@@ -477,7 +481,7 @@ return (
               <div className="p-4" />
               {days.map((d) => (
                 <div
-                  key={d.label}
+                  key={`${d.label}-${d.dateKey}`}
                   className={`p-4 text-center border-l border-gray-100 transition-colors ${
                     d.active ? 'bg-[#5D3699]/5' : ''
                   }`}
@@ -494,7 +498,7 @@ return (
                         : 'text-gray-800'
                     }`}
                   >
-                    {d.date.getDate()}
+                    {d.dayNumber}
                   </div>
                 </div>
               ))}

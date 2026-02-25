@@ -16,6 +16,15 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { setSelectedSessionId } from '../../../apis/api/storage';
+import {
+  addDaysToDateKey,
+  diffDateKeys,
+  formatIndiaDateKey,
+  getIndiaTimeLabel,
+  getIndiaWeekStartKey,
+  indiaDateKeyToLabel,
+  parseDateKey,
+} from '../../../utils/indiaTime';
 
 const hours = [
   '08:00 AM',
@@ -38,34 +47,24 @@ const normalizeList = (payload) => {
   return [];
 };
 
-const startOfWeek = (date) => {
-  const nextDate = new Date(date);
-  const day = (nextDate.getDay() + 6) % 7;
-  nextDate.setDate(nextDate.getDate() - day);
-  nextDate.setHours(0, 0, 0, 0);
-  return nextDate;
-};
-
-const endOfWeek = (date) => {
-  const nextDate = new Date(date);
-  nextDate.setDate(nextDate.getDate() + 7);
-  nextDate.setHours(0, 0, 0, 0);
-  return nextDate;
-};
-
 const formatDate = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '-';
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  const key = formatIndiaDateKey(value);
+  if (!key) return '-';
+  return indiaDateKeyToLabel(key, { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 const formatTimeRange = (startValue, endValue) => {
-  const start = new Date(startValue);
-  const end = new Date(endValue);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '-';
-  const startLabel = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  const endLabel = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const startLabel = getIndiaTimeLabel(startValue, { hour12: true });
+  const endLabel = getIndiaTimeLabel(endValue, { hour12: true });
+  if (!startLabel || !endLabel) return '-';
   return `${startLabel} - ${endLabel}`;
+};
+
+const getIndiaHour = (value) => {
+  const label = getIndiaTimeLabel(value, { hour12: false });
+  const [hour] = String(label || '').split(':');
+  const numericHour = Number(hour);
+  return Number.isNaN(numericHour) ? -1 : numericHour;
 };
 
 const isUpcomingStatus = (session) => {
@@ -148,33 +147,31 @@ const MySessions = () => {
     };
   }, []);
 
-  const weekStart = useMemo(() => startOfWeek(new Date()), []);
-  const weekEnd = useMemo(() => endOfWeek(weekStart), [weekStart]);
+  const weekStartKey = useMemo(() => getIndiaWeekStartKey(new Date()), []);
+  const weekEndKey = useMemo(() => addDaysToDateKey(weekStartKey, 7), [weekStartKey]);
 
   const days = useMemo(() => {
     const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return labels.map((label, index) => {
-      const date = new Date(weekStart);
-      date.setDate(weekStart.getDate() + index);
-      const now = new Date();
+      const dateKey = addDaysToDateKey(weekStartKey, index);
+      const parts = parseDateKey(dateKey);
       return {
         label,
-        date: date.getDate(),
-        iso: date.toISOString().slice(0, 10),
-        active:
-          date.getDate() === now.getDate() &&
-          date.getMonth() === now.getMonth() &&
-          date.getFullYear() === now.getFullYear(),
+        date: parts?.day || 0,
+        iso: dateKey,
+        active: formatIndiaDateKey(new Date()) === dateKey,
       };
     });
-  }, [weekStart]);
+  }, [weekStartKey]);
 
   const enrichedSessions = useMemo(() => {
     return sessions.map((session) => {
       const start = new Date(session.scheduled_start);
       const end = new Date(session.scheduled_end || session.scheduled_start);
-      const dayIndex = Number.isNaN(start.getTime()) ? -1 : (start.getDay() + 6) % 7;
-      const hourIndex = Number.isNaN(start.getTime()) ? -1 : Math.max(0, start.getHours() - 8);
+      const sessionDateKey = formatIndiaDateKey(session.scheduled_start);
+      const dayIndex = sessionDateKey ? diffDateKeys(weekStartKey, sessionDateKey) : -1;
+      const indiaHour = getIndiaHour(session.scheduled_start);
+      const hourIndex = indiaHour >= 0 ? Math.max(0, indiaHour - 8) : -1;
       const mentorInfo = mentorMap[String(session.mentor)] || {};
       const mentorName = mentorInfo?.name || `Mentor #${session.mentor}`;
       const tone = ['completed', 'canceled', 'no_show'].includes(session.status) ? 'light' : 'dark';
@@ -190,33 +187,31 @@ const MySessions = () => {
         timeRange: formatTimeRange(session.scheduled_start, session.scheduled_end),
       };
     });
-  }, [sessions, mentorMap]);
+  }, [sessions, mentorMap, weekStartKey]);
 
   const filteredSessions = useMemo(() => {
     return enrichedSessions.filter((session) => {
       if (filterValue === 'Upcoming' && !isUpcomingStatus(session)) return false;
       if (filterValue === 'Completed' && !isCompletedStatus(session)) return false;
       if (weekFilterValue === 'This Week') {
-        const start = new Date(session?.scheduled_start || '');
-        if (Number.isNaN(start.getTime())) return false;
-        if (start < weekStart || start >= weekEnd) return false;
+        const sessionDateKey = formatIndiaDateKey(session?.scheduled_start);
+        if (!sessionDateKey || sessionDateKey < weekStartKey || sessionDateKey >= weekEndKey) return false;
       }
       if (searchValue.trim()) {
         return session.mentorName.toLowerCase().includes(searchValue.trim().toLowerCase());
       }
       return true;
     });
-  }, [enrichedSessions, filterValue, weekFilterValue, weekStart, weekEnd, searchValue]);
+  }, [enrichedSessions, filterValue, weekFilterValue, weekStartKey, weekEndKey, searchValue]);
 
   const calendarSessions = useMemo(() => {
     return filteredSessions.filter((session) => {
-      const start = new Date(session?.scheduled_start || '');
-      if (Number.isNaN(start.getTime())) return false;
-      if (start < weekStart || start >= weekEnd) return false;
+      const sessionDateKey = formatIndiaDateKey(session?.scheduled_start);
+      if (!sessionDateKey || sessionDateKey < weekStartKey || sessionDateKey >= weekEndKey) return false;
       if (session?.status === 'requested') return false;
       return session.dayIndex >= 0 && session.hourIndex >= 0 && session.hourIndex < hours.length;
     });
-  }, [filteredSessions, weekStart, weekEnd]);
+  }, [filteredSessions, weekStartKey, weekEndKey]);
 
   const openJoinLink = (url, sessionId) => {
     if (!url) return false;
