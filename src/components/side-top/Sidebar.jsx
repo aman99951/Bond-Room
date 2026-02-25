@@ -130,7 +130,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           const mentors = normalizeList(await mentorApi.getMentors({ email: auth.email }));
           const currentMentor = mentors[0] || null;
           setMentorName(currentMentor?.first_name || '');
-          setMentorAvatar(resolveMediaUrl(currentMentor?.avatar || currentMentor?.profile_photo || ''));
+          setMentorAvatar(resolveMediaUrl(currentMentor?.profile_photo || currentMentor?.avatar || ''));
         } catch {
           setMentorName('');
           setMentorAvatar('');
@@ -141,6 +141,21 @@ const Sidebar = ({ isOpen, onClose }) => {
       loadMatchContext();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
+
+  useEffect(() => {
+    if (role !== 'mentors') return undefined;
+
+    const handleMentorAvatarUpdated = (event) => {
+      const nextAvatar = resolveMediaUrl(event?.detail?.avatar || '');
+      if (!nextAvatar) return;
+      setMentorAvatar(nextAvatar);
+    };
+
+    window.addEventListener('mentor:avatar-updated', handleMentorAvatarUpdated);
+    return () => {
+      window.removeEventListener('mentor:avatar-updated', handleMentorAvatarUpdated);
+    };
   }, [role]);
 
   const handleLogout = async () => {

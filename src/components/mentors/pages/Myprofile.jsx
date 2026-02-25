@@ -33,6 +33,13 @@ const resolveMediaUrl = (value) => {
   return value;
 };
 
+const withCacheBuster = (url, versionToken) => {
+  if (!url) return '';
+  if (!versionToken) return url;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${encodeURIComponent(versionToken)}`;
+};
+
 const Myprofile = () => {
   const { mentor, error: mentorError, setMentor } = useMentorData();
   const [profile, setProfile] = useState(null);
@@ -72,7 +79,12 @@ const Myprofile = () => {
       experience: profileData?.years_experience ? String(profileData.years_experience) : '',
       bio: mentorData?.bio || '',
     });
-    setPhotoPreview(resolveMediaUrl(profileData?.profile_photo));
+    setPhotoPreview(
+      withCacheBuster(
+        resolveMediaUrl(profileData?.profile_photo),
+        profileData?.updated_at || ''
+      )
+    );
   };
 
   useEffect(() => {
@@ -92,7 +104,12 @@ const Myprofile = () => {
         ]);
         if (!cancelled) {
           setProfile(profileResponse || null);
-          setPhotoPreview(resolveMediaUrl(profileResponse?.profile_photo));
+          setPhotoPreview(
+            withCacheBuster(
+              resolveMediaUrl(profileResponse?.profile_photo),
+              profileResponse?.updated_at || ''
+            )
+          );
           setStats({
             sessions_completed: impactResponse?.summary?.completed_sessions || 0,
             average_rating: impactResponse?.summary?.average_rating || 0,
@@ -173,7 +190,22 @@ const Myprofile = () => {
       formData.append('profile_photo', file);
       const updatedProfile = await mentorApi.updateMentorProfile(mentor.id, formData);
       setProfile(updatedProfile || profile);
-      setPhotoPreview(resolveMediaUrl(updatedProfile?.profile_photo) || photoPreview);
+      const resolvedPhoto = resolveMediaUrl(updatedProfile?.profile_photo);
+      const nextPhoto = withCacheBuster(
+        resolvedPhoto,
+        updatedProfile?.updated_at || Date.now()
+      );
+      setPhotoPreview(nextPhoto || photoPreview);
+      if (resolvedPhoto) {
+        setMentor((prev) => (prev ? { ...prev, avatar: resolvedPhoto, profile_photo: resolvedPhoto } : prev));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('mentor:avatar-updated', {
+              detail: { avatar: resolvedPhoto },
+            })
+          );
+        }
+      }
       setSuccess('Profile photo updated successfully.');
     } catch (err) {
       setError(err?.message || 'Unable to update profile photo.');
