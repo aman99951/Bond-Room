@@ -12,7 +12,8 @@ import MentorSessions from '../components/mentors/pages/MySessions';
 import MentorSessionRequests from '../components/mentors/pages/SessionRequests';
 import MentorAvailability from '../components/mentors/pages/ManageAvailability';
 import MentorMyprofilePage from '../components/mentors/pages/Myprofile';
-import { Home, Calendar, Users, User } from 'lucide-react';
+import SessionRecords from '../components/shared/SessionRecords';
+import { Home, Calendar, Users, User, FileText } from 'lucide-react';
 
 export const navRoutes = [
   {
@@ -28,6 +29,13 @@ export const navRoutes = [
     path: '/my-sessions',
     icon: Calendar,
     component: MySessions,
+    roles: ['menties'],
+  },
+  {
+    label: 'Session Records',
+    path: '/session-records',
+    icon: FileText,
+    component: SessionRecords,
     roles: ['menties'],
   },
   {
@@ -91,6 +99,13 @@ export const navRoutes = [
     path: '/mentor-sessions',
     icon: Calendar,
     component: MentorSessions,
+    roles: ['mentors'],
+  },
+  {
+    label: 'Session Records',
+    path: '/mentor-session-records',
+    icon: FileText,
+    component: SessionRecords,
     roles: ['mentors'],
   },
   {

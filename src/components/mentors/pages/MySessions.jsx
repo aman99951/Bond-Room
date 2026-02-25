@@ -475,9 +475,9 @@ return (
     {view === 'calendar' ? (
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[1100px]">
+          <div className="min-w-[1250px]">
             {/* Calendar Header */}
-            <div className="grid grid-cols-[100px_repeat(7,1fr)] bg-gray-50">
+            <div className="grid grid-cols-[100px_repeat(7,minmax(150px,1fr))] bg-gray-50">
               <div className="p-4" />
               {days.map((d) => (
                 <div
@@ -509,7 +509,7 @@ return (
               {hours.map((h, idx) => {
                 const rowHasJoin = calendarEntries.some((s) => s.hourIndex === idx && !s.isPast);
                 return (
-                  <div key={h} className="grid grid-cols-[100px_repeat(7,1fr)]">
+                  <div key={h} className="grid grid-cols-[100px_repeat(7,minmax(150px,1fr))]">
                     <div className="flex items-start justify-end p-3 pr-4 text-xs font-medium text-gray-400">
                       {h}
                     </div>
@@ -580,11 +580,11 @@ return (
                                   {session.title}
                                 </button>
                               </div>
-                              <div className={`mt-1 flex items-center gap-1 text-xs ${
+                              <div className={`mt-1 flex min-w-0 items-center gap-1 text-xs ${
                                 session.tone === 'light' ? 'text-gray-500' : 'text-white/80'
                               }`}>
                                 <Clock className="h-3 w-3" />
-                                <span className={session.tone === 'light' ? 'line-through' : ''}>
+                                <span className={`block min-w-0 whitespace-nowrap ${session.tone === 'light' ? 'line-through' : ''}`}>
                                   {session.time}
                                 </span>
                               </div>

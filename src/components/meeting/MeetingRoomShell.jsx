@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
-  Download,
   Mic,
   MicOff,
   PhoneOff,
@@ -28,6 +27,14 @@ const normalizeSignalPayload = (value) => {
   return value;
 };
 
+const isSuppressedRtcError = (message) => {
+  const text = String(message || '').toLowerCase();
+  return (
+    text.includes("failed to execute 'setremotedescription'") &&
+    text.includes('order of m-lines')
+  );
+};
+
 const MeetingRoomShell = ({
   api,
   participantRole,
@@ -40,28 +47,50 @@ const MeetingRoomShell = ({
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const localStreamRef = useRef(null);
+  const remoteStreamRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const senderRef = useRef({ audio: null, video: null });
   const pollIntervalRef = useRef(null);
+  const recordingStatusPollIntervalRef = useRef(null);
   const lastSignalIdRef = useRef(0);
   const offerSentRef = useRef(false);
   const recorderRef = useRef(null);
   const recordingChunksRef = useRef([]);
+  const transcriptSegmentsRef = useRef([]);
   const recognitionRef = useRef(null);
   const autoMonitoringRef = useRef(false);
+  const autoStartCompletedRef = useRef(false);
+  const summaryRequestedRef = useRef(false);
+  const remoteStreamStateCleanupRef = useRef(null);
+  const remoteMediaSignalRef = useRef({ micEnabled: null, cameraEnabled: null });
+  const placeholderVideoTrackRef = useRef(null);
+  const cameraTracksRef = useRef(new Set());
+  const recordingMixedStreamRef = useRef(null);
+  const recordingCanvasRef = useRef(null);
+  const recordingCanvasRafRef = useRef(null);
+  const recordingAudioContextRef = useRef(null);
+  const recordingAudioDestinationRef = useRef(null);
+  const recordingAudioNodesRef = useRef([]);
+  const recordingAudioTrackIdsRef = useRef(new Set());
 
   const [error, setError] = useState('');
   const [connectionState, setConnectionState] = useState('idle');
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [remoteMicEnabled, setRemoteMicEnabled] = useState(null);
+  const [remoteCameraEnabled, setRemoteCameraEnabled] = useState(null);
   const [recording, setRecording] = useState(false);
-  const [recordingUrl, setRecordingUrl] = useState('');
+  const [recordingStatus, setRecordingStatus] = useState('not_started');
   const [monitoring, setMonitoring] = useState(false);
+  const [monitoringStatus, setMonitoringStatus] = useState(false);
   const [analysisInput, setAnalysisInput] = useState('');
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [alert, setAlert] = useState(null);
   const [incidents, setIncidents] = useState([]);
+  const [meetingSummary, setMeetingSummary] = useState('');
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const isMentorToolsEnabled = participantRole === 'mentor';
+  const showManualMentorTools = false;
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const sessionId = Number(searchParams.get('sessionId') || 0);
@@ -73,10 +102,253 @@ const MeetingRoomShell = ({
 
   const appendError = useCallback((message) => {
     if (!message) return;
+    if (isSuppressedRtcError(message)) return;
     setError(String(message));
   }, []);
 
+  const stopRecordingComposition = useCallback(() => {
+    if (recordingCanvasRafRef.current) {
+      window.cancelAnimationFrame(recordingCanvasRafRef.current);
+      recordingCanvasRafRef.current = null;
+    }
+    recordingAudioNodesRef.current.forEach(({ source, gain }) => {
+      try {
+        source.disconnect();
+      } catch {
+        // no-op
+      }
+      try {
+        gain.disconnect();
+      } catch {
+        // no-op
+      }
+    });
+    recordingAudioNodesRef.current = [];
+    recordingAudioTrackIdsRef.current.clear();
+
+    if (recordingAudioContextRef.current) {
+      try {
+        recordingAudioContextRef.current.close();
+      } catch {
+        // no-op
+      }
+      recordingAudioContextRef.current = null;
+    }
+    recordingAudioDestinationRef.current = null;
+
+    const mixedStream = recordingMixedStreamRef.current;
+    if (mixedStream) {
+      mixedStream.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch {
+          // no-op
+        }
+      });
+      recordingMixedStreamRef.current = null;
+    }
+    recordingCanvasRef.current = null;
+  }, []);
+
+  const attachStreamAudioToRecording = useCallback((stream) => {
+    const context = recordingAudioContextRef.current;
+    const destination = recordingAudioDestinationRef.current;
+    if (!context || !destination || !stream) return;
+
+    stream.getAudioTracks().forEach((track) => {
+      if (!track || track.readyState !== 'live') return;
+      if (recordingAudioTrackIdsRef.current.has(track.id)) return;
+      try {
+        const trackStream = new MediaStream([track]);
+        const source = context.createMediaStreamSource(trackStream);
+        const gain = context.createGain();
+        gain.gain.value = 1;
+        source.connect(gain);
+        gain.connect(destination);
+        recordingAudioNodesRef.current.push({ source, gain });
+        recordingAudioTrackIdsRef.current.add(track.id);
+      } catch {
+        // no-op
+      }
+    });
+  }, []);
+
+  const createMixedRecordingStream = useCallback(() => {
+    const localStream = localStreamRef.current;
+    if (!localStream) return null;
+    const mixedStream = new MediaStream();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1280;
+    canvas.height = 720;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    recordingCanvasRef.current = canvas;
+
+    const drawFrame = () => {
+      const width = canvas.width;
+      const height = canvas.height;
+      const panelWidth = Math.floor(width / 2);
+      const localVideo = localVideoRef.current;
+      const remoteVideo = remoteVideoRef.current;
+      const canDrawLocal = Boolean(localVideo && localVideo.readyState >= 2);
+      const canDrawRemote = Boolean(remoteVideo && remoteVideo.readyState >= 2);
+
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, width, height);
+
+      if (canDrawLocal && canDrawRemote) {
+        ctx.drawImage(remoteVideo, 0, 0, panelWidth, height);
+        ctx.drawImage(localVideo, panelWidth, 0, panelWidth, height);
+      } else if (canDrawLocal) {
+        ctx.drawImage(localVideo, 0, 0, width, height);
+      } else if (canDrawRemote) {
+        ctx.drawImage(remoteVideo, 0, 0, width, height);
+      } else {
+        ctx.fillStyle = '#6b7280';
+        ctx.font = 'bold 42px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Recording Meeting...', width / 2, height / 2);
+      }
+
+      recordingCanvasRafRef.current = window.requestAnimationFrame(drawFrame);
+    };
+    drawFrame();
+
+    const canvasStream = canvas.captureStream(15);
+    const canvasTrack = canvasStream.getVideoTracks()[0];
+    if (canvasTrack) {
+      mixedStream.addTrack(canvasTrack);
+    }
+
+    try {
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextCtor) {
+        const audioContext = new AudioContextCtor();
+        const audioDestination = audioContext.createMediaStreamDestination();
+        recordingAudioContextRef.current = audioContext;
+        recordingAudioDestinationRef.current = audioDestination;
+        try {
+          audioContext.resume();
+        } catch {
+          // no-op
+        }
+        attachStreamAudioToRecording(localStream);
+        attachStreamAudioToRecording(remoteStreamRef.current);
+        audioDestination.stream.getAudioTracks().forEach((track) => mixedStream.addTrack(track));
+      }
+    } catch {
+      // no-op
+    }
+
+    recordingMixedStreamRef.current = mixedStream;
+    return mixedStream;
+  }, [attachStreamAudioToRecording]);
+
+  const detachRemoteStreamStateListeners = useCallback(() => {
+    if (remoteStreamStateCleanupRef.current) {
+      remoteStreamStateCleanupRef.current();
+      remoteStreamStateCleanupRef.current = null;
+    }
+  }, []);
+
+  const syncRemoteMediaState = useCallback((stream) => {
+    if (!stream) {
+      setRemoteMicEnabled(null);
+      setRemoteCameraEnabled(null);
+      return;
+    }
+    const hasLiveAudio = stream
+      .getAudioTracks()
+      .some((track) => track.readyState === 'live' && !track.muted);
+    const hasLiveVideo = stream
+      .getVideoTracks()
+      .some((track) => track.readyState === 'live' && !track.muted);
+    const signalState = remoteMediaSignalRef.current || {};
+    setRemoteMicEnabled(
+      typeof signalState.micEnabled === 'boolean' ? signalState.micEnabled : hasLiveAudio
+    );
+    setRemoteCameraEnabled(
+      typeof signalState.cameraEnabled === 'boolean' ? signalState.cameraEnabled : hasLiveVideo
+    );
+  }, []);
+
+  const attachRemoteStreamStateListeners = useCallback(
+    (stream) => {
+      detachRemoteStreamStateListeners();
+      if (!stream) {
+        setRemoteMicEnabled(null);
+        setRemoteCameraEnabled(null);
+        return;
+      }
+
+      const listeners = [];
+      const bindTrack = (track) => {
+        if (!track || typeof track.addEventListener !== 'function') return;
+        const handleTrackState = () => syncRemoteMediaState(stream);
+        track.addEventListener('mute', handleTrackState);
+        track.addEventListener('unmute', handleTrackState);
+        track.addEventListener('ended', handleTrackState);
+        listeners.push({ track, handleTrackState });
+      };
+
+      stream.getTracks().forEach(bindTrack);
+
+      const handleAddTrack = (event) => {
+        bindTrack(event?.track);
+        syncRemoteMediaState(stream);
+      };
+      const handleRemoveTrack = () => {
+        syncRemoteMediaState(stream);
+      };
+
+      if (typeof stream.addEventListener === 'function') {
+        stream.addEventListener('addtrack', handleAddTrack);
+        stream.addEventListener('removetrack', handleRemoveTrack);
+      }
+
+      syncRemoteMediaState(stream);
+
+      remoteStreamStateCleanupRef.current = () => {
+        listeners.forEach(({ track, handleTrackState }) => {
+          try {
+            track.removeEventListener('mute', handleTrackState);
+            track.removeEventListener('unmute', handleTrackState);
+            track.removeEventListener('ended', handleTrackState);
+          } catch {
+            // no-op
+          }
+        });
+        if (typeof stream.removeEventListener === 'function') {
+          stream.removeEventListener('addtrack', handleAddTrack);
+          stream.removeEventListener('removetrack', handleRemoveTrack);
+        }
+      };
+    },
+    [detachRemoteStreamStateListeners, syncRemoteMediaState]
+  );
+
   const stopMediaTracks = useCallback(() => {
+    detachRemoteStreamStateListeners();
+    stopRecordingComposition();
+    remoteMediaSignalRef.current = { micEnabled: null, cameraEnabled: null };
+    remoteStreamRef.current = null;
+    cameraTracksRef.current.forEach((track) => {
+      try {
+        track.stop();
+      } catch {
+        // no-op
+      }
+    });
+    cameraTracksRef.current.clear();
+    if (placeholderVideoTrackRef.current) {
+      try {
+        placeholderVideoTrackRef.current.stop();
+      } catch {
+        // no-op
+      }
+      placeholderVideoTrackRef.current = null;
+    }
     const localStream = localStreamRef.current;
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());
@@ -88,9 +360,11 @@ const MeetingRoomShell = ({
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = null;
     }
-  }, []);
+    setRemoteMicEnabled(null);
+    setRemoteCameraEnabled(null);
+  }, [detachRemoteStreamStateListeners, stopRecordingComposition]);
 
-  const stopSpeechMonitoring = useCallback(() => {
+  const stopSpeechMonitoring = useCallback(async () => {
     autoMonitoringRef.current = false;
     const recognition = recognitionRef.current;
     if (recognition) {
@@ -103,9 +377,24 @@ const MeetingRoomShell = ({
       recognitionRef.current = null;
     }
     setMonitoring(false);
-  }, []);
+    setMonitoringStatus(false);
+    if (isMentorToolsEnabled && sessionId) {
+      const recordingActive = Boolean(recorderRef.current && recorderRef.current.state !== 'inactive');
+      try {
+        await api.updateSessionRecording(sessionId, {
+          status: recordingActive ? 'recording' : 'stopped',
+          metadata: {
+            monitoring_started: false,
+          },
+        });
+      } catch {
+        // no-op
+      }
+    }
+  }, [api, isMentorToolsEnabled, sessionId]);
 
   const closePeerConnection = useCallback(() => {
+    detachRemoteStreamStateListeners();
     const peer = peerConnectionRef.current;
     if (peer) {
       try {
@@ -120,7 +409,7 @@ const MeetingRoomShell = ({
       senderRef.current = { audio: null, video: null };
     }
     setConnectionState('closed');
-  }, []);
+  }, [detachRemoteStreamStateListeners]);
 
   const stopPolling = useCallback(() => {
     if (pollIntervalRef.current) {
@@ -128,6 +417,49 @@ const MeetingRoomShell = ({
       pollIntervalRef.current = null;
     }
   }, []);
+
+  const stopRecordingStatusPolling = useCallback(() => {
+    if (recordingStatusPollIntervalRef.current) {
+      window.clearInterval(recordingStatusPollIntervalRef.current);
+      recordingStatusPollIntervalRef.current = null;
+    }
+  }, []);
+
+  const applyRecordingSnapshot = useCallback(
+    (payload) => {
+      const nextStatus = String(payload?.status || 'not_started').toLowerCase();
+      const metadata = payload?.metadata && typeof payload.metadata === 'object' ? payload.metadata : {};
+      const nextMonitoring = Boolean(metadata.monitoring_started);
+      setRecordingStatus(nextStatus);
+      setMonitoringStatus(nextMonitoring);
+      if (participantRole === 'mentor') {
+        setRecording(nextStatus === 'recording');
+      }
+      const savedSummary = String(metadata.meeting_summary || '').trim();
+      if (savedSummary) {
+        setMeetingSummary(savedSummary);
+      }
+    },
+    [participantRole]
+  );
+
+  const pollRecordingStatus = useCallback(async () => {
+    if (!sessionId || typeof api.getSessionRecording !== 'function') return;
+    try {
+      const response = await api.getSessionRecording(sessionId);
+      applyRecordingSnapshot(response);
+    } catch {
+      // no-op: recording status sync should not interrupt the meeting flow.
+    }
+  }, [api, applyRecordingSnapshot, sessionId]);
+
+  const startRecordingStatusPolling = useCallback(() => {
+    if (recordingStatusPollIntervalRef.current) return;
+    pollRecordingStatus();
+    recordingStatusPollIntervalRef.current = window.setInterval(() => {
+      pollRecordingStatus();
+    }, 2000);
+  }, [pollRecordingStatus]);
 
   const sendSignal = useCallback(
     async (signalType, payload) => {
@@ -139,6 +471,35 @@ const MeetingRoomShell = ({
     },
     [api, sessionId]
   );
+
+  const publishLocalMediaState = useCallback(
+    async (nextMicEnabled, nextCameraEnabled) => {
+      if (!sessionId) return;
+      try {
+        await sendSignal('media_state', {
+          mic_enabled: Boolean(nextMicEnabled),
+          camera_enabled: Boolean(nextCameraEnabled),
+        });
+      } catch (err) {
+        appendError(err?.message || 'Unable to share media state.');
+      }
+    },
+    [appendError, sendSignal, sessionId]
+  );
+
+  const createPlaceholderVideoTrack = useCallback(() => {
+    if (typeof document === 'undefined') return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = 16;
+    canvas.height = 16;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    const stream = canvas.captureStream(1);
+    return stream.getVideoTracks()[0] || null;
+  }, []);
 
   const loadIncidents = useCallback(async () => {
     if (!sessionId) return;
@@ -192,11 +553,14 @@ const MeetingRoomShell = ({
     peer.ontrack = (event) => {
       const [stream] = event.streams;
       if (!stream || !remoteVideoRef.current) return;
+      remoteStreamRef.current = stream;
       remoteVideoRef.current.srcObject = stream;
+      attachRemoteStreamStateListeners(stream);
+      attachStreamAudioToRecording(stream);
     };
     peerConnectionRef.current = peer;
     return peer;
-  }, [appendError, sendSignal]);
+  }, [appendError, attachRemoteStreamStateListeners, attachStreamAudioToRecording, sendSignal]);
 
   const createOfferIfNeeded = useCallback(async () => {
     if (!sessionId || participantRole !== 'mentor' || offerSentRef.current) return;
@@ -257,6 +621,18 @@ const MeetingRoomShell = ({
             }
             continue;
           }
+          if (signalType === 'media_state') {
+            const nextMic = typeof payload?.mic_enabled === 'boolean' ? payload.mic_enabled : null;
+            const nextCamera = typeof payload?.camera_enabled === 'boolean' ? payload.camera_enabled : null;
+            remoteMediaSignalRef.current = { micEnabled: nextMic, cameraEnabled: nextCamera };
+            if (typeof nextMic === 'boolean') {
+              setRemoteMicEnabled(nextMic);
+            }
+            if (typeof nextCamera === 'boolean') {
+              setRemoteCameraEnabled(nextCamera);
+            }
+            continue;
+          }
           if (signalType === 'bye') {
             closePeerConnection();
             stopMediaTracks();
@@ -306,11 +682,16 @@ const MeetingRoomShell = ({
     stream.getTracks().forEach((track) => {
       const sender = peer.addTrack(track, stream);
       if (track.kind === 'audio') senderRef.current.audio = sender;
-      if (track.kind === 'video') senderRef.current.video = sender;
+      if (track.kind === 'video') {
+        senderRef.current.video = sender;
+        cameraTracksRef.current.add(track);
+      }
     });
-  }, [ensurePeerConnection]);
+    await publishLocalMediaState(true, true);
+    return stream;
+  }, [ensurePeerConnection, publishLocalMediaState]);
 
-  const startSpeechMonitoring = useCallback(() => {
+  const startSpeechMonitoring = useCallback(async () => {
     if (!isMentorToolsEnabled) return;
     if (!hasSpeechRecognition || monitoring) return;
     const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -324,12 +705,14 @@ const MeetingRoomShell = ({
 
     recognition.onresult = (event) => {
       const transcript = Array.from(event.results)
+        .slice(event.resultIndex)
         .filter((item) => item.isFinal)
         .map((item) => item[0]?.transcript || '')
         .join(' ')
         .trim();
       if (transcript) {
-        setAnalysisInput(transcript);
+        transcriptSegmentsRef.current.push(transcript);
+        setAnalysisInput((prev) => [prev, transcript].filter(Boolean).join(' '));
         analyzeTranscript(transcript);
       }
     };
@@ -351,29 +734,54 @@ const MeetingRoomShell = ({
     recognition.start();
     recognitionRef.current = recognition;
     setMonitoring(true);
-  }, [analyzeTranscript, hasSpeechRecognition, isMentorToolsEnabled, monitoring]);
+    setMonitoringStatus(true);
+
+    if (sessionId) {
+      const recordingActive = Boolean(recorderRef.current && recorderRef.current.state !== 'inactive');
+      try {
+        await api.updateSessionRecording(sessionId, {
+          status: recordingActive ? 'recording' : 'not_started',
+          metadata: {
+            monitoring_started: true,
+          },
+        });
+      } catch {
+        // no-op
+      }
+    }
+  }, [analyzeTranscript, api, hasSpeechRecognition, isMentorToolsEnabled, monitoring, sessionId]);
 
   const stopRecording = useCallback(async () => {
     const recorder = recorderRef.current;
     const hadActiveRecorder = Boolean(recorder && recorder.state !== 'inactive');
     if (hadActiveRecorder) {
       recorder.stop();
+    } else {
+      stopRecordingComposition();
     }
     recorderRef.current = null;
     setRecording(false);
+    setRecordingStatus('stopped');
     if (isMentorToolsEnabled && sessionId && hadActiveRecorder) {
+      const monitoringActive = Boolean(autoMonitoringRef.current);
       try {
-        await api.updateSessionRecording(sessionId, { status: 'stopped' });
+        await api.updateSessionRecording(sessionId, {
+          status: 'stopped',
+          metadata: {
+            recording_started: false,
+            monitoring_started: monitoringActive,
+          },
+        });
       } catch (err) {
         appendError(err?.message || 'Unable to update recording status.');
       }
     }
-  }, [api, appendError, isMentorToolsEnabled, sessionId]);
+  }, [api, appendError, isMentorToolsEnabled, sessionId, stopRecordingComposition]);
 
   const startRecording = useCallback(async () => {
     if (!isMentorToolsEnabled) return;
-    const stream = localStreamRef.current;
-    if (!stream) {
+    const localStream = localStreamRef.current;
+    if (!localStream) {
       appendError('Local media stream is not ready for recording.');
       return;
     }
@@ -382,6 +790,11 @@ const MeetingRoomShell = ({
       return;
     }
     try {
+      const stream = createMixedRecordingStream();
+      if (!stream || !stream.getTracks().length) {
+        appendError('Unable to build mixed recording stream.');
+        return;
+      }
       const recorder = new MediaRecorder(stream);
       recordingChunksRef.current = [];
       recorder.ondataavailable = (event) => {
@@ -391,134 +804,142 @@ const MeetingRoomShell = ({
       };
       recorder.onstop = async () => {
         const chunks = recordingChunksRef.current;
-        if (!chunks.length) return;
-        const blob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
-        const nextUrl = URL.createObjectURL(blob);
-        setRecordingUrl((prev) => {
-          if (prev) URL.revokeObjectURL(prev);
-          return nextUrl;
-        });
-        if (!sessionId) return;
         try {
-          await api.updateSessionRecording(sessionId, {
-            status: 'stopped',
-            file_size_bytes: blob.size,
-            metadata: {
-              mime_type: recorder.mimeType || 'video/webm',
-            },
+          if (!chunks.length || !sessionId) return;
+          const blob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
+          const monitoringActive = Boolean(autoMonitoringRef.current);
+          const file = new File([blob], `session-${sessionId}-${Date.now()}.webm`, {
+            type: recorder.mimeType || 'video/webm',
           });
+          const formData = new FormData();
+          formData.append('status', 'uploaded');
+          formData.append('file_size_bytes', String(blob.size));
+          formData.append('recording_file', file);
+          formData.append(
+            'metadata',
+            JSON.stringify({
+              mime_type: recorder.mimeType || 'video/webm',
+              recording_started: false,
+              monitoring_started: monitoringActive,
+            })
+          );
+          await api.updateSessionRecording(sessionId, formData);
         } catch (err) {
           appendError(err?.message || 'Unable to persist recording metadata.');
+        } finally {
+          stopRecordingComposition();
         }
       };
       recorder.start(1000);
       recorderRef.current = recorder;
       setRecording(true);
+      setRecordingStatus('recording');
       if (sessionId) {
+        const monitoringActive = Boolean(autoMonitoringRef.current);
         await api.updateSessionRecording(sessionId, {
           status: 'recording',
           metadata: {
             role: participantRole,
             source: 'browser_media_recorder',
+            recording_started: true,
+            monitoring_started: monitoringActive,
           },
         });
       }
     } catch (err) {
+      stopRecordingComposition();
       appendError(err?.message || 'Unable to start recording.');
     }
-  }, [api, appendError, isMentorToolsEnabled, participantRole, sessionId]);
+  }, [
+    api,
+    appendError,
+    createMixedRecordingStream,
+    isMentorToolsEnabled,
+    participantRole,
+    sessionId,
+    stopRecordingComposition,
+  ]);
+
+  const generateMeetingSummary = useCallback(async () => {
+    if (!isMentorToolsEnabled || !sessionId) return;
+    if (summaryRequestedRef.current) return;
+    const transcript = transcriptSegmentsRef.current.join(' ').trim() || String(analysisInput || '').trim();
+    if (!transcript) return;
+
+    summaryRequestedRef.current = true;
+    setSummaryLoading(true);
+    try {
+      const response = await api.analyzeSessionTranscript(sessionId, {
+        transcript,
+        speaker_role: 'system',
+        generate_summary: true,
+      });
+      const nextSummary = String(response?.summary || '').trim();
+      if (nextSummary) {
+        setMeetingSummary(nextSummary);
+      }
+      if (response?.summary_error) {
+        appendError(response.summary_error);
+      }
+      await pollRecordingStatus();
+    } catch (err) {
+      appendError(err?.message || 'Unable to generate meeting summary.');
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [analysisInput, api, appendError, isMentorToolsEnabled, pollRecordingStatus, sessionId]);
 
   const toggleMic = useCallback(async () => {
     const stream = localStreamRef.current;
     if (!stream) return;
     const nextEnabled = !micEnabled;
     try {
-      if (!nextEnabled) {
-        stream.getAudioTracks().forEach((track) => {
-          track.stop();
-          stream.removeTrack(track);
-        });
-        const peer = peerConnectionRef.current;
-        const senders = peer ? peer.getSenders() : [];
-        for (const sender of senders) {
-          if (sender === senderRef.current.audio || sender?.track?.kind === 'audio') {
-            try {
-              sender.track?.stop();
-            } catch {
-              // no-op
-            }
-            await sender.replaceTrack(null);
-          }
-        }
-        if (!senders.length && senderRef.current.audio) {
-          await senderRef.current.audio.replaceTrack(null);
-        }
-      } else {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const nextTrack = audioStream.getAudioTracks()[0];
-        if (nextTrack) {
-          stream.addTrack(nextTrack);
-          if (senderRef.current.audio) {
-            await senderRef.current.audio.replaceTrack(nextTrack);
-          } else if (peerConnectionRef.current) {
-            senderRef.current.audio = peerConnectionRef.current.addTrack(nextTrack, stream);
-          }
-        }
-      }
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = nextEnabled;
+      });
       setMicEnabled(nextEnabled);
+      await publishLocalMediaState(nextEnabled, cameraEnabled);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
     } catch (err) {
       appendError(err?.message || 'Unable to toggle microphone.');
     }
-  }, [appendError, micEnabled]);
+  }, [appendError, cameraEnabled, micEnabled, publishLocalMediaState]);
 
   const toggleCamera = useCallback(async () => {
     const stream = localStreamRef.current;
     if (!stream) return;
     const nextEnabled = !cameraEnabled;
     try {
-      if (!nextEnabled) {
-        stream.getVideoTracks().forEach((track) => {
-          track.stop();
-          stream.removeTrack(track);
-        });
-        const peer = peerConnectionRef.current;
-        const senders = peer ? peer.getSenders() : [];
-        for (const sender of senders) {
-          if (sender === senderRef.current.video || sender?.track?.kind === 'video') {
-            try {
-              sender.track?.stop();
-            } catch {
-              // no-op
-            }
-            await sender.replaceTrack(null);
-          }
-        }
-        if (!senders.length && senderRef.current.video) {
-          await senderRef.current.video.replaceTrack(null);
-        }
-      } else {
+      const currentTracks = stream.getVideoTracks();
+      if (nextEnabled && currentTracks.length === 0) {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const nextTrack = videoStream.getVideoTracks()[0];
-        if (nextTrack) {
-          stream.addTrack(nextTrack);
-          if (senderRef.current.video) {
-            await senderRef.current.video.replaceTrack(nextTrack);
-          } else if (peerConnectionRef.current) {
-            senderRef.current.video = peerConnectionRef.current.addTrack(nextTrack, stream);
-          }
+        if (!nextTrack) {
+          throw new Error('Unable to access camera.');
         }
+        if (senderRef.current.video) {
+          await senderRef.current.video.replaceTrack(nextTrack);
+        } else if (peerConnectionRef.current) {
+          senderRef.current.video = peerConnectionRef.current.addTrack(nextTrack, stream);
+        }
+        stream.addTrack(nextTrack);
       }
+
+      stream.getVideoTracks().forEach((track) => {
+        track.enabled = nextEnabled;
+      });
+
       setCameraEnabled(nextEnabled);
+      await publishLocalMediaState(micEnabled, nextEnabled);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
     } catch (err) {
       appendError(err?.message || 'Unable to toggle camera.');
     }
-  }, [appendError, cameraEnabled]);
+  }, [appendError, cameraEnabled, micEnabled, publishLocalMediaState]);
 
   const leaveMeeting = useCallback(async () => {
     if (sessionId) {
@@ -529,8 +950,10 @@ const MeetingRoomShell = ({
       }
       setSelectedSessionId(sessionId);
     }
-    stopSpeechMonitoring();
+    await stopSpeechMonitoring();
+    await generateMeetingSummary();
     await stopRecording();
+    stopRecordingStatusPolling();
     stopPolling();
     closePeerConnection();
     stopMediaTracks();
@@ -538,10 +961,12 @@ const MeetingRoomShell = ({
   }, [
     closePeerConnection,
     exitPath,
+    generateMeetingSummary,
     navigate,
     sendSignal,
     sessionId,
     stopMediaTracks,
+    stopRecordingStatusPolling,
     stopPolling,
     stopRecording,
     stopSpeechMonitoring,
@@ -558,8 +983,20 @@ const MeetingRoomShell = ({
       setSelectedSessionId(sessionId);
       setConnectionState('connecting');
       try {
-        await initializeLocalMedia();
-        if (cancelled) return;
+        const localStream = await initializeLocalMedia();
+        if (cancelled) {
+          if (localStream) {
+            localStream.getTracks().forEach((track) => {
+              try {
+                track.stop();
+              } catch {
+                // no-op
+              }
+            });
+          }
+          return;
+        }
+        startRecordingStatusPolling();
         startPolling();
         await pollSignals();
         await createOfferIfNeeded();
@@ -579,10 +1016,10 @@ const MeetingRoomShell = ({
       cancelled = true;
       stopSpeechMonitoring();
       stopRecording();
+      stopRecordingStatusPolling();
       stopPolling();
       closePeerConnection();
       stopMediaTracks();
-      if (recordingUrl) URL.revokeObjectURL(recordingUrl);
     };
   }, [
     appendError,
@@ -592,13 +1029,34 @@ const MeetingRoomShell = ({
     isMentorToolsEnabled,
     loadIncidents,
     pollSignals,
-    recordingUrl,
     sessionId,
+    startRecordingStatusPolling,
     startPolling,
     stopMediaTracks,
+    stopRecordingStatusPolling,
     stopPolling,
     stopRecording,
     stopSpeechMonitoring,
+  ]);
+
+  useEffect(() => {
+    if (!isMentorToolsEnabled) return;
+    if (connectionState !== 'connected') return;
+    if (autoStartCompletedRef.current) return;
+
+    autoStartCompletedRef.current = true;
+    const startTools = async () => {
+      await startRecording();
+      await startSpeechMonitoring();
+      await pollRecordingStatus();
+    };
+    startTools();
+  }, [
+    connectionState,
+    isMentorToolsEnabled,
+    pollRecordingStatus,
+    startRecording,
+    startSpeechMonitoring,
   ]);
 
   return (
@@ -610,6 +1068,24 @@ const MeetingRoomShell = ({
             <p className="text-xs text-[#6b7280] sm:text-sm">
               Session #{sessionId || '-'} | Role: {participantRole} | Connection: {connectionState}
             </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${
+                  recordingStatus === 'recording'
+                    ? 'bg-[#dcfce7] text-[#166534]'
+                    : 'bg-[#f3f4f6] text-[#374151]'
+                }`}
+              >
+                Recording: {recordingStatus === 'recording' ? 'Started' : 'Not Started'}
+              </span>
+              <span
+                className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${
+                  monitoringStatus ? 'bg-[#ede9fe] text-[#5b21b6]' : 'bg-[#f3f4f6] text-[#374151]'
+                }`}
+              >
+                Monitoring: {monitoringStatus ? 'Started' : 'Not Started'}
+              </span>
+            </div>
           </div>
           <button
             type="button"
@@ -625,6 +1101,18 @@ const MeetingRoomShell = ({
       {error ? (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
+        </div>
+      ) : null}
+
+      {meetingSummary ? (
+        <div className="mb-4 rounded-xl border border-[#d1fae5] bg-[#ecfdf5] px-4 py-3 text-sm text-[#065f46]">
+          <div className="text-xs font-semibold uppercase tracking-wide text-[#047857]">Meeting Summary</div>
+          <div className="mt-1">{meetingSummary}</div>
+        </div>
+      ) : null}
+      {summaryLoading ? (
+        <div className="mb-4 rounded-xl border border-[#dbeafe] bg-[#eff6ff] px-4 py-3 text-xs text-[#1d4ed8]">
+          Generating meeting summary...
         </div>
       ) : null}
 
@@ -654,13 +1142,59 @@ const MeetingRoomShell = ({
           <div className="border-b border-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#374151]">
             Your Camera
           </div>
-          <video ref={localVideoRef} autoPlay muted playsInline className="h-[240px] w-full bg-[#111827] object-cover sm:h-[320px]" />
+          <div className="relative">
+            <video ref={localVideoRef} autoPlay muted playsInline className="h-[240px] w-full bg-[#111827] object-cover sm:h-[320px]" />
+            {!cameraEnabled ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-semibold text-white">
+                Camera Off
+              </div>
+            ) : null}
+            {!cameraEnabled || !micEnabled ? (
+              <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1">
+                {!cameraEnabled ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
+                    <VideoOff className="h-3 w-3" />
+                    Camera Off
+                  </span>
+                ) : null}
+                {!micEnabled ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
+                    <MicOff className="h-3 w-3" />
+                    Mic Off
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
         <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
           <div className="border-b border-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#374151]">
             Peer Camera
           </div>
-          <video ref={remoteVideoRef} autoPlay playsInline className="h-[240px] w-full bg-[#111827] object-cover sm:h-[320px]" />
+          <div className="relative">
+            <video ref={remoteVideoRef} autoPlay playsInline className="h-[240px] w-full bg-[#111827] object-cover sm:h-[320px]" />
+            {remoteCameraEnabled === false ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-semibold text-white">
+                Camera Off
+              </div>
+            ) : null}
+            {remoteCameraEnabled === false || remoteMicEnabled === false ? (
+              <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1">
+                {remoteCameraEnabled === false ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
+                    <VideoOff className="h-3 w-3" />
+                    Camera Off
+                  </span>
+                ) : null}
+                {remoteMicEnabled === false ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
+                    <MicOff className="h-3 w-3" />
+                    Mic Off
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -682,47 +1216,38 @@ const MeetingRoomShell = ({
             {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
             {cameraEnabled ? 'Stop Camera' : 'Start Camera'}
           </button>
-          <button
-            type="button"
-            onClick={recording ? stopRecording : startRecording}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white ${
-              recording ? 'bg-[#ef4444] hover:bg-[#dc2626]' : 'bg-[#2563eb] hover:bg-[#1d4ed8]'
-            }`}
-            hidden={!isMentorToolsEnabled}
-          >
-            {recording ? 'Stop Recording' : 'Start Recording'}
-          </button>
-          <button
-            type="button"
-            onClick={monitoring ? stopSpeechMonitoring : startSpeechMonitoring}
-            disabled={!hasSpeechRecognition}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#7c3aed] px-3 py-2 text-xs font-semibold text-white hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:bg-[#c4b5fd]"
-            hidden={!isMentorToolsEnabled}
-          >
-            {monitoring ? 'Stop Monitoring' : 'Start Monitoring'}
-          </button>
+          {showManualMentorTools ? (
+            <>
+              <button
+                type="button"
+                onClick={recording ? stopRecording : startRecording}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white ${
+                  recording ? 'bg-[#ef4444] hover:bg-[#dc2626]' : 'bg-[#2563eb] hover:bg-[#1d4ed8]'
+                }`}
+                hidden={!isMentorToolsEnabled}
+              >
+                {recording ? 'Stop Recording' : 'Start Recording'}
+              </button>
+              <button
+                type="button"
+                onClick={monitoring ? stopSpeechMonitoring : startSpeechMonitoring}
+                disabled={!hasSpeechRecognition}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#7c3aed] px-3 py-2 text-xs font-semibold text-white hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:bg-[#c4b5fd]"
+                hidden={!isMentorToolsEnabled}
+              >
+                {monitoring ? 'Stop Monitoring' : 'Start Monitoring'}
+              </button>
+            </>
+          ) : null}
         </div>
-        {isMentorToolsEnabled && !hasSpeechRecognition ? (
+        {showManualMentorTools && isMentorToolsEnabled && !hasSpeechRecognition ? (
           <p className="mt-2 text-xs text-[#6b7280]">
             Browser speech recognition is unavailable. Use manual transcript input below.
           </p>
         ) : null}
       </div>
 
-      {isMentorToolsEnabled && recordingUrl ? (
-        <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white p-3">
-          <a
-            href={recordingUrl}
-            download={`session-${sessionId}-recording.webm`}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#059669] px-3 py-2 text-xs font-semibold text-white hover:bg-[#047857]"
-          >
-            <Download className="h-4 w-4" />
-            Download Recording
-          </a>
-        </div>
-      ) : null}
-
-      {isMentorToolsEnabled ? (
+      {showManualMentorTools && isMentorToolsEnabled ? (
       <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white p-3 sm:p-4">
         <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#111827]">
           <AlertTriangle className="h-4 w-4 text-[#f59e0b]" />

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Copy, Trash2, Plus, AlertTriangle, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Trash2, Plus, CheckCircle2, Pencil } from 'lucide-react';
 import { mentorApi } from '../../../apis/api/mentorApi';
 import { useMentorData } from '../../../apis/apihook/useMentorData';
 import {
@@ -105,7 +105,7 @@ const ManageAvailability = () => {
           end_time: slot.end_time,
           time: formatTime(slot.start_time),
           end: formatTime(slot.end_time),
-          tone: slot.is_available ? 'purple' : 'danger',
+          tone: slot.is_available ? 'purple' : 'scheduled',
         });
       });
       setDays(nextDays);
@@ -333,7 +333,7 @@ const ManageAvailability = () => {
           end_time: slot.end_time,
           time: formatTime(slot.start_time),
           end: formatTime(slot.end_time),
-          tone: slot.is_available ? 'purple' : 'danger',
+          tone: slot.is_available ? 'purple' : 'scheduled',
         });
       });
 
@@ -673,8 +673,8 @@ const ManageAvailability = () => {
                           dragDidDropRef.current = false;
                         }}
                         className={`group/slot relative rounded-lg p-2.5 cursor-move transition-all duration-200 hover:shadow-md ${
-                          slot.tone === 'danger'
-                            ? 'bg-red-50 border-l-4 border-red-500'
+                          slot.tone === 'scheduled'
+                            ? 'bg-green-50 border-l-4 border-green-500'
                             : 'bg-[#5D3699]/10 border-l-4 border-[#5D3699]'
                         }`}
                       >
@@ -686,7 +686,7 @@ const ManageAvailability = () => {
                                 <span
                                   key={dotIdx}
                                   className={`h-1 w-1 rounded-full ${
-                                    slot.tone === 'danger' ? 'bg-red-400' : 'bg-[#5D3699]/70'
+                                    slot.tone === 'scheduled' ? 'bg-green-500' : 'bg-[#5D3699]/70'
                                   }`}
                                 />
                               ))}
@@ -695,17 +695,17 @@ const ManageAvailability = () => {
                             {/* Time Display */}
                             <div className="flex-1 min-w-0">
                               <div className={`text-xs font-bold ${
-                                slot.tone === 'danger' ? 'text-red-700' : 'text-[#5D3699]'
+                                slot.tone === 'scheduled' ? 'text-green-700' : 'text-[#5D3699]'
                               }`}>
                                 {slot.time}
                               </div>
                               <div className={`text-[10px] font-medium my-0.5 ${
-                                slot.tone === 'danger' ? 'text-red-500' : 'text-[#5D3699]/80'
+                                slot.tone === 'scheduled' ? 'text-green-600' : 'text-[#5D3699]/80'
                               }`}>
                                 to
                               </div>
                               <div className={`text-xs font-bold ${
-                                slot.tone === 'danger' ? 'text-red-700' : 'text-[#5D3699]'
+                                slot.tone === 'scheduled' ? 'text-green-700' : 'text-[#5D3699]'
                               }`}>
                                 {slot.end}
                               </div>
@@ -717,8 +717,8 @@ const ManageAvailability = () => {
                             <button
                               type="button"
                               className={`p-1 rounded transition-all duration-200 ${
-                                slot.tone === 'danger'
-                                  ? 'text-red-600 hover:bg-red-100'
+                                slot.tone === 'scheduled'
+                                  ? 'text-green-700 hover:bg-green-100'
                                   : 'text-[#5D3699] hover:bg-[#5D3699]/15'
                               }`}
                               onClick={(event) => {
@@ -733,8 +733,8 @@ const ManageAvailability = () => {
                               type="button"
                               onClick={() => handleDeleteSlot(slot.id)}
                               className={`p-1 rounded transition-all duration-200 ${
-                                slot.tone === 'danger'
-                                  ? 'text-red-600 hover:bg-red-100'
+                                slot.tone === 'scheduled'
+                                  ? 'text-green-700 hover:bg-green-100'
                                   : 'text-[#5D3699] hover:bg-[#5D3699]/15'
                               }`}
                               aria-label="Delete slot"
@@ -744,11 +744,11 @@ const ManageAvailability = () => {
                           </div>
                         </div>
 
-                        {/* Conflict Badge */}
-                        {slot.tone === 'danger' && (
-                          <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-red-700 bg-red-100 rounded px-2 py-1">
-                            <AlertTriangle className="h-3 w-3" />
-                            <span>Conflict</span>
+                        {/* Status Badge */}
+                        {slot.tone === 'scheduled' && (
+                          <div className="mt-2 flex items-center gap-1 rounded bg-green-100 px-2 py-1 text-[10px] font-semibold text-green-700">
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>Scheduled</span>
                           </div>
                         )}
                       </div>

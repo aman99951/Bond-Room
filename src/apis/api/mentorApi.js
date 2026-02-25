@@ -53,9 +53,11 @@ export const mentorApi = {
   updateSession: (sessionId, payload) => apiClient.patch(`/sessions/${sessionId}/`, payload),
   getSessionJoinLink: (sessionId) => apiClient.post(`/sessions/${sessionId}/join-link/`),
   listSessionMeetingSignals: (sessionId, params = {}) =>
-    apiClient.get(`/sessions/${sessionId}/meeting-signals/${buildQuery(params)}`),
+    apiClient.get(`/sessions/${sessionId}/meeting-signals/${buildQuery(params)}`, { trackLoading: false }),
   sendSessionMeetingSignal: (sessionId, payload) =>
     apiClient.post(`/sessions/${sessionId}/meeting-signals/`, payload),
+  getSessionRecording: (sessionId) =>
+    apiClient.get(`/sessions/${sessionId}/recording/`, { trackLoading: false }),
   updateSessionRecording: (sessionId, payload) =>
     apiClient.post(`/sessions/${sessionId}/recording/`, payload),
   analyzeSessionTranscript: (sessionId, payload) =>

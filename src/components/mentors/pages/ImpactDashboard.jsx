@@ -382,7 +382,7 @@ const ImpactDashboard = () => {
           <button
             type="button"
             className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm text-left hover:border-[#c9b5e8] transition cursor-pointer"
-            onClick={() => setSessionsPopupOpen(true)}
+            onClick={() => navigate('/mentor-session-records')}
           >
             <p
               className="text-[#333333]"

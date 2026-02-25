@@ -36,6 +36,7 @@ import MentorImpact from './mentors/pages/ImpactDashboard';
 import MentorAvailability from './mentors/pages/ManageAvailability';
 import MentorMyprofilePage from './mentors/pages/Myprofile';
 import MentorMenteeProfile from './mentors/pages/MenteeProfile';
+import SessionRecords from './shared/SessionRecords';
 import AdminPortal from './admin/AdminPortal';
 import LandingPage from './LandingPage';
 import {
@@ -266,6 +267,7 @@ const AppLayout = () => {
         >
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="my-sessions" element={<MySessions />} />
+        <Route path="session-records" element={<SessionRecords />} />
         <Route path="mentors" element={<Mentors />} />
         <Route path="profile" element={<Profile />} />
         <Route path="mentor-details" element={<MentorDetails />} />
@@ -300,6 +302,7 @@ const AppLayout = () => {
           )}
         />
         <Route path="mentor-sessions" element={<MentorMySessions />} />
+        <Route path="mentor-session-records" element={<SessionRecords />} />
         <Route path="mentor-mentee-profile/:sessionId" element={<MentorMenteeProfile />} />
         <Route path="mentor-session-requests" element={<MentorSessionRequests />} />
         <Route path="mentor-session-completed" element={<MentorSessionCompleted />} />

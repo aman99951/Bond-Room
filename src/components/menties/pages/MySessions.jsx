@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Search,
   ChevronDown,
@@ -89,6 +89,13 @@ const isPastSession = (session) => {
   return end < new Date();
 };
 
+const isMentorStartedSession = (session) => {
+  const status = String(session?.status || '').toLowerCase();
+  if (!['approved', 'scheduled'].includes(status)) return false;
+  if (!session?.mentor_joined_at) return false;
+  return !isPastSession(session);
+};
+
 const MySessions = () => {
   const navigate = useNavigate();
   const [view, setView] = useState('calendar');
@@ -103,11 +110,44 @@ const MySessions = () => {
   const [error, setError] = useState('');
   const [joinError, setJoinError] = useState('');
   const [joiningId, setJoiningId] = useState(null);
+  const [meetingInvite, setMeetingInvite] = useState(null);
+  const mentorStartedBySessionRef = useRef({});
+  const joinedMeetingSessionIdsRef = useRef(new Set());
+  const pollingRef = useRef(null);
   const filterOptions = ['All Types', 'Upcoming', 'Completed'];
   const weekFilterOptions = ['This Week', 'All Time'];
 
   useEffect(() => {
     let cancelled = false;
+
+    const updateMentorStartSignals = (sessionItems) => {
+      const next = {};
+      let latestInvite = null;
+
+      sessionItems.forEach((session) => {
+        const sessionId = String(session?.id || '');
+        if (!sessionId) return;
+        const startedAt = String(session?.mentor_joined_at || '');
+        next[sessionId] = startedAt;
+
+        const alreadyJoined = joinedMeetingSessionIdsRef.current.has(sessionId);
+        if (!alreadyJoined && startedAt && isMentorStartedSession(session)) {
+          if (
+            !latestInvite ||
+            new Date(startedAt).getTime() > new Date(latestInvite.mentor_joined_at || 0).getTime()
+          ) {
+            latestInvite = session;
+          }
+        }
+      });
+
+      mentorStartedBySessionRef.current = next;
+      if (latestInvite) {
+        setMeetingInvite(latestInvite);
+      } else {
+        setMeetingInvite(null);
+      }
+    };
 
     const loadSessions = async () => {
       setLoading(true);
@@ -130,6 +170,7 @@ const MySessions = () => {
         });
         setSessions(sessionItems);
         setMentorMap(nextMentorMap);
+        updateMentorStartSignals(sessionItems);
       } catch (err) {
         if (!cancelled) {
           setError(err?.message || 'Unable to load sessions.');
@@ -141,9 +182,26 @@ const MySessions = () => {
       }
     };
 
+    const pollSessions = async () => {
+      try {
+        const sessionResponse = await menteeApi.listSessions();
+        if (cancelled) return;
+        const sessionItems = normalizeList(sessionResponse);
+        setSessions(sessionItems);
+        updateMentorStartSignals(sessionItems);
+      } catch {
+        // no-op for silent polling
+      }
+    };
+
     loadSessions();
+    pollingRef.current = window.setInterval(pollSessions, 5000);
     return () => {
       cancelled = true;
+      if (pollingRef.current) {
+        window.clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
     };
   }, []);
 
@@ -227,10 +285,13 @@ const MySessions = () => {
   const handleJoin = async (session) => {
     if (!session?.id) return;
     setJoinError('');
+    const sessionKey = String(session.id);
     const existing = getJoinUrl(session);
     const isWrongRolePath =
       typeof existing === 'string' && existing.includes('/mentor-meeting-room');
     if (existing && !isWrongRolePath) {
+      joinedMeetingSessionIdsRef.current.add(sessionKey);
+      setMeetingInvite((prev) => (String(prev?.id || '') === sessionKey ? null : prev));
       openJoinLink(existing, session.id);
       return;
     }
@@ -251,6 +312,8 @@ const MySessions = () => {
               : item
           )
         );
+        joinedMeetingSessionIdsRef.current.add(sessionKey);
+        setMeetingInvite((prev) => (String(prev?.id || '') === sessionKey ? null : prev));
         openJoinLink(url, session.id);
       } else {
         setJoinError('Join link not ready yet.');
@@ -426,13 +489,34 @@ return (
       </div>
     )}
 
+    {meetingInvite ? (
+      <div className="mb-4 rounded-xl border border-[#d8b4fe] bg-[#faf5ff] px-4 py-3 shadow-sm ring-1 ring-[#f3e8ff]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-[#4c1d95]">
+            Your mentor has started the meeting. You can join now.
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleJoin(meetingInvite)}
+              disabled={joiningId === meetingInvite.id}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4a2b7a] disabled:opacity-50"
+            >
+              <Video className="h-3.5 w-3.5" />
+              {joiningId === meetingInvite.id ? 'Joining...' : 'Join Meeting'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+
     {/* Calendar View */}
     {view === 'calendar' ? (
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[820px] lg:min-w-[1000px]">
+          <div className="min-w-[1120px] lg:min-w-[1310px]">
             {/* Calendar Header */}
-            <div className="grid grid-cols-[74px_repeat(7,minmax(96px,1fr))] bg-[#f8fafc] lg:grid-cols-[100px_repeat(7,1fr)]">
+            <div className="grid grid-cols-[74px_repeat(7,minmax(140px,1fr))] bg-[#f8fafc] lg:grid-cols-[100px_repeat(7,minmax(170px,1fr))]">
               <div className="p-2.5 lg:p-4" />
               {days.map((d) => (
                 <div
@@ -467,7 +551,7 @@ return (
                   (s) => s.hourIndex === idx && isFeedbackEligible(s)
                 );
                 return (
-                  <div key={h} className="grid grid-cols-[74px_repeat(7,minmax(96px,1fr))] lg:grid-cols-[100px_repeat(7,1fr)]">
+                  <div key={h} className="grid grid-cols-[74px_repeat(7,minmax(140px,1fr))] lg:grid-cols-[100px_repeat(7,minmax(170px,1fr))]">
                     <div className="flex items-start justify-end p-2.5 pr-3 text-[10px] font-medium text-[#9ca3af] sm:text-xs lg:p-3 lg:pr-4">
                       {h}
                     </div>
@@ -522,7 +606,7 @@ return (
                                 session.tone === 'light' ? 'text-[#6b7280]' : 'text-white/80'
                               }`}>
                                 <Clock className="h-3 w-3 shrink-0 lg:h-3.5 lg:w-3.5" />
-                                <span className={`truncate ${session.tone === 'light' ? 'line-through' : ''}`}>
+                                <span className={`block min-w-0 whitespace-nowrap ${session.tone === 'light' ? 'line-through' : ''}`}>
                                   {session.timeRange}
                                 </span>
                               </div>

@@ -36,7 +36,7 @@ const toError = (response, payload) => {
 };
 
 const request = async (path, options = {}) => {
-  const { method = 'GET', data, headers = {}, auth = true } = options;
+  const { method = 'GET', data, headers = {}, auth = true, trackLoading = true } = options;
   const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
 
   const finalHeaders = { ...headers };
@@ -51,7 +51,9 @@ const request = async (path, options = {}) => {
     }
   }
 
-  beginApiRequest();
+  if (trackLoading) {
+    beginApiRequest();
+  }
   try {
     const response = await fetch(buildUrl(path), {
       method,
@@ -75,7 +77,9 @@ const request = async (path, options = {}) => {
 
     return payload;
   } finally {
-    endApiRequest();
+    if (trackLoading) {
+      endApiRequest();
+    }
   }
 };
 

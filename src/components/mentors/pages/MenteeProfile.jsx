@@ -3,6 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { mentorApi } from '../../../apis/api/mentorApi';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+
+const resolveMediaUrl = (value) => {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('/')) {
+    const base = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
+    return base ? `${base}${value}` : value;
+  }
+  return value;
+};
+
 const formatDate = (value) => {
   if (!value) return 'Not provided';
   const date = new Date(value);
@@ -65,8 +77,10 @@ const MenteeProfile = () => {
     return value || 'MN';
   }, [mentee]);
 
-  const details = useMemo(
-    () => [
+  const details = useMemo(() => {
+    const assessment = mentee?.latest_assessment || {};
+    const preferences = mentee?.assessment_preferences || {};
+    return [
       { label: 'First Name', value: toDisplayValue(mentee?.first_name) },
       { label: 'Last Name', value: toDisplayValue(mentee?.last_name) },
       { label: 'Email', value: toDisplayValue(mentee?.email) },
@@ -76,9 +90,45 @@ const MenteeProfile = () => {
       { label: 'City / State', value: toDisplayValue(mentee?.city_state) },
       { label: 'Timezone', value: toDisplayValue(mentee?.timezone) },
       { label: 'Parent Contact', value: toDisplayValue(mentee?.parent_mobile) },
-    ],
-    [mentee]
-  );
+      { label: 'Language', value: toDisplayValue(assessment?.language) },
+      { label: 'Session Mode', value: toDisplayValue(assessment?.session_mode) },
+      {
+        label: 'Comfort Level',
+        value: toDisplayValue(assessment?.comfort_level || preferences?.comfort_level),
+      },
+      {
+        label: 'Session Duration',
+        value: preferences?.preferred_session_minutes
+          ? `${preferences.preferred_session_minutes} mins`
+          : 'Not provided',
+      },
+    ];
+  }, [mentee]);
+
+  const menteeAvatarUrl = useMemo(() => resolveMediaUrl(mentee?.avatar || ''), [mentee?.avatar]);
+
+  const selectedAssessments = useMemo(() => {
+    const assessment = mentee?.latest_assessment || {};
+    const preferences = mentee?.assessment_preferences || {};
+
+    const toText = (value) => {
+      if (Array.isArray(value)) {
+        const cleaned = value.map((item) => String(item || '').trim()).filter(Boolean);
+        return cleaned.length ? cleaned.join(', ') : '';
+      }
+      return String(value || '').trim();
+    };
+
+    const values = [
+      { label: 'Feeling', value: toText(assessment.feeling) },
+      { label: 'Cause', value: toText(assessment.feeling_cause) },
+      { label: 'Support Needed', value: toText(assessment.support_type) },
+      { label: 'Topics', value: toText(assessment.topics) },
+      { label: 'Additional Notes', value: toText(assessment.free_text) },
+    ];
+
+    return values.filter((item) => item.value);
+  }, [mentee]);
 
   return (
     <div className="p-4 sm:p-6 bg-transparent">
@@ -121,13 +171,21 @@ const MenteeProfile = () => {
           <div className="mt-6 grid gap-4 lg:grid-cols-[320px_1fr]">
             <div className="rounded-2xl border border-[#e6e2f1] bg-white p-6 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]">
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-[#ede9fe] text-[#5b2c91] flex items-center justify-center text-xl font-semibold">
-                  {initials}
-                </div>
+                {menteeAvatarUrl ? (
+                  <img
+                    src={menteeAvatarUrl}
+                    alt={menteeName}
+                    className="h-16 w-16 rounded-full object-cover ring-2 ring-[#ede9fe]"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-[#ede9fe] text-[#5b2c91] flex items-center justify-center text-xl font-semibold">
+                    {initials}
+                  </div>
+                )}
                 <div className="min-w-0">
                   <div className="text-base font-semibold text-[#1f2937] truncate">{menteeName}</div>
                   <div className="text-sm text-[#6b7280]">
-                    {toDisplayValue(mentee.grade)} • {toDisplayValue(mentee.gender)}
+                    {toDisplayValue(mentee.grade)} | {toDisplayValue(mentee.gender)}
                   </div>
                 </div>
               </div>
@@ -151,6 +209,22 @@ const MenteeProfile = () => {
                     {formatConsent(mentee?.record_consent)}
                   </span>
                 </div>
+              </div>
+
+              <div className="mt-5 border-t border-[#eef2ff] pt-4">
+                <h3 className="text-sm font-semibold text-[#111827]">Selected Assessments</h3>
+                {selectedAssessments.length ? (
+                  <div className="mt-3 space-y-2">
+                    {selectedAssessments.map((item) => (
+                      <div key={item.label} className="rounded-lg border border-[#eef2ff] bg-[#faf8ff] px-3 py-2">
+                        <div className="text-[11px] text-[#6b7280]">{item.label}</div>
+                        <div className="mt-1 text-sm font-medium text-[#111827] break-words">{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-[#6b7280]">No assessment selections found.</p>
+                )}
               </div>
             </div>
 
@@ -189,3 +263,4 @@ const MenteeProfile = () => {
 };
 
 export default MenteeProfile;
+
