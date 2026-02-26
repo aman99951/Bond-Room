@@ -17,6 +17,11 @@ const rtcConfig = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 };
 
+const CLOUDINARY_CLOUD_NAME = String(import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
+const CLOUDINARY_UPLOAD_PRESET = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '').trim();
+const CLOUDINARY_UPLOAD_FOLDER = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_FOLDER || 'bond-room').trim();
+const SERVERLESS_MAX_UPLOAD_BYTES = Number(import.meta.env.VITE_SERVERLESS_MAX_UPLOAD_BYTES || 4 * 1024 * 1024);
+
 const toArray = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.results)) return payload.results;
@@ -467,6 +472,35 @@ const MeetingRoomShell = ({
     }, 2000);
   }, [pollRecordingStatus]);
 
+  const uploadRecordingToCloudinary = useCallback(async (file, sessionIdValue) => {
+    if (!file || !CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) return null;
+    const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
+    const cloudinaryForm = new FormData();
+    cloudinaryForm.append('file', file);
+    cloudinaryForm.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    cloudinaryForm.append('folder', CLOUDINARY_UPLOAD_FOLDER);
+    if (sessionIdValue) {
+      cloudinaryForm.append('public_id', `session-${sessionIdValue}-${Date.now()}`);
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      body: cloudinaryForm,
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message =
+        String(payload?.error?.message || payload?.message || '').trim() ||
+        'Cloud storage upload failed.';
+      throw new Error(message);
+    }
+    return {
+      secureUrl: String(payload?.secure_url || payload?.url || '').trim(),
+      publicId: String(payload?.public_id || '').trim(),
+      bytes: Number(payload?.bytes || 0),
+    };
+  }, []);
+
   const sendSignal = useCallback(
     async (signalType, payload) => {
       if (!sessionId) return;
@@ -837,19 +871,86 @@ const MeetingRoomShell = ({
           const file = new File([blob], `session-${sessionId}-${Date.now()}.webm`, {
             type: recorder.mimeType || 'video/webm',
           });
-          const formData = new FormData();
-          formData.append('status', 'uploaded');
-          formData.append('file_size_bytes', String(blob.size));
-          formData.append('recording_file', file);
-          formData.append(
-            'metadata',
-            JSON.stringify({
-              mime_type: recorder.mimeType || 'video/webm',
-              recording_started: false,
-              monitoring_started: monitoringActive,
-            })
-          );
-          await api.updateSessionRecording(sessionId, formData);
+          const metadataBase = {
+            mime_type: recorder.mimeType || 'video/webm',
+            recording_started: false,
+            monitoring_started: monitoringActive,
+          };
+          let persisted = false;
+
+          if (CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET) {
+            try {
+              const cloudUpload = await uploadRecordingToCloudinary(file, sessionId);
+              if (cloudUpload?.secureUrl) {
+                await api.updateSessionRecording(sessionId, {
+                  status: 'uploaded',
+                  file_size_bytes: String(blob.size),
+                  recording_url: cloudUpload.secureUrl,
+                  storage_key: cloudUpload.publicId || '',
+                  metadata: {
+                    ...metadataBase,
+                    storage_provider: 'cloudinary',
+                    storage_mode: 'direct_upload',
+                  },
+                });
+                persisted = true;
+              }
+            } catch (err) {
+              appendError(err?.message || 'Unable to upload recording to cloud storage.');
+            }
+          }
+
+          if (!persisted && blob.size > SERVERLESS_MAX_UPLOAD_BYTES) {
+            try {
+              await api.updateSessionRecording(sessionId, {
+                status: 'failed',
+                file_size_bytes: String(blob.size),
+                metadata: {
+                  ...metadataBase,
+                  upload_skipped_reason: 'payload_too_large_for_serverless',
+                  max_serverless_upload_bytes: SERVERLESS_MAX_UPLOAD_BYTES,
+                },
+              });
+            } catch {
+              // no-op
+            }
+            appendError(
+              'Recording is too large for serverless upload. Configure Cloudinary upload env vars in frontend.'
+            );
+            persisted = true;
+          }
+
+          if (!persisted) {
+            const formData = new FormData();
+            formData.append('status', 'uploaded');
+            formData.append('file_size_bytes', String(blob.size));
+            formData.append('recording_file', file);
+            formData.append('metadata', JSON.stringify(metadataBase));
+            try {
+              await api.updateSessionRecording(sessionId, formData);
+            } catch (err) {
+              if (err?.status === 413) {
+                try {
+                  await api.updateSessionRecording(sessionId, {
+                    status: 'failed',
+                    file_size_bytes: String(blob.size),
+                    metadata: {
+                      ...metadataBase,
+                      upload_skipped_reason: 'payload_too_large_for_serverless',
+                      max_serverless_upload_bytes: SERVERLESS_MAX_UPLOAD_BYTES,
+                    },
+                  });
+                } catch {
+                  // no-op
+                }
+                appendError(
+                  'Recording upload exceeded deployment size limits. Configure Cloudinary direct upload.'
+                );
+              } else {
+                throw err;
+              }
+            }
+          }
         } catch (err) {
           appendError(err?.message || 'Unable to persist recording metadata.');
         } finally {
@@ -884,6 +985,7 @@ const MeetingRoomShell = ({
     participantRole,
     sessionId,
     stopRecordingComposition,
+    uploadRecordingToCloudinary,
   ]);
 
   const generateMeetingSummary = useCallback(async () => {
