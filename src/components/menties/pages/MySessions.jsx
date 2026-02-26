@@ -118,12 +118,44 @@ const getJoinUnavailableLabel = (session) => {
   return 'Not Joinable';
 };
 
+const parseDateMs = (value) => {
+  const parsed = new Date(value || '');
+  const millis = parsed.getTime();
+  return Number.isNaN(millis) ? null : millis;
+};
+
 const isMentorStartedSession = (session) => {
   const status = String(session?.status || '').toLowerCase();
   if (!['approved', 'scheduled'].includes(status)) return false;
   if (isConnectionClosed(session)) return false;
-  if (!session?.mentor_joined_at) return false;
-  return !isPastSession(session);
+  const mentorJoinedAtMs = parseDateMs(session?.mentor_joined_at);
+  if (!mentorJoinedAtMs) return false;
+
+  const nowMs = Date.now();
+  const scheduledStartMs = parseDateMs(session?.scheduled_start);
+  let scheduledEndMs = parseDateMs(session?.scheduled_end);
+
+  if (!scheduledEndMs && scheduledStartMs) {
+    const minutes = Number(session?.duration_minutes || 45);
+    scheduledEndMs = scheduledStartMs + Math.max(15, minutes) * 60 * 1000;
+  }
+
+  if (!scheduledStartMs || !scheduledEndMs) {
+    return !isPastSession(session) && nowMs - mentorJoinedAtMs <= 2 * 60 * 60 * 1000;
+  }
+
+  const earlyJoinWindowMs = 15 * 60 * 1000;
+  const lateJoinWindowMs = 60 * 60 * 1000;
+  const inCurrentWindow =
+    nowMs >= scheduledStartMs - earlyJoinWindowMs && nowMs <= scheduledEndMs + lateJoinWindowMs;
+  if (!inCurrentWindow) return false;
+
+  const inJoinTimestampWindow =
+    mentorJoinedAtMs >= scheduledStartMs - earlyJoinWindowMs &&
+    mentorJoinedAtMs <= scheduledEndMs + lateJoinWindowMs &&
+    mentorJoinedAtMs <= nowMs + 60 * 1000;
+
+  return inJoinTimestampWindow;
 };
 
 const MySessions = () => {
