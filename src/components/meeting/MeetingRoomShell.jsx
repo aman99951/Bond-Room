@@ -473,7 +473,49 @@ const MeetingRoomShell = ({
   }, [pollRecordingStatus]);
 
   const uploadRecordingToCloudinary = useCallback(async (file, sessionIdValue) => {
-    if (!file || !CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) return null;
+    if (!file) return null;
+
+    const normalizeUploadResponse = (payload) => ({
+      secureUrl: String(payload?.secure_url || payload?.url || '').trim(),
+      publicId: String(payload?.public_id || '').trim(),
+      bytes: Number(payload?.bytes || 0),
+    });
+
+    if (typeof api.getSessionRecordingUploadSignature === 'function' && sessionIdValue) {
+      const signaturePayload = await api.getSessionRecordingUploadSignature(sessionIdValue, {});
+      const uploadUrl = String(signaturePayload?.upload_url || '').trim();
+      const apiKey = String(signaturePayload?.api_key || '').trim();
+      const timestamp = String(signaturePayload?.timestamp || '').trim();
+      const signature = String(signaturePayload?.signature || '').trim();
+      const folder = String(signaturePayload?.folder || '').trim();
+      const publicId = String(signaturePayload?.public_id || '').trim();
+
+      if (uploadUrl && apiKey && timestamp && signature) {
+        const signedForm = new FormData();
+        signedForm.append('file', file);
+        signedForm.append('api_key', apiKey);
+        signedForm.append('timestamp', timestamp);
+        signedForm.append('signature', signature);
+        if (folder) signedForm.append('folder', folder);
+        if (publicId) signedForm.append('public_id', publicId);
+
+        const signedResponse = await fetch(uploadUrl, {
+          method: 'POST',
+          body: signedForm,
+        });
+        const signedPayload = await signedResponse.json().catch(() => ({}));
+        if (!signedResponse.ok) {
+          const message =
+            String(signedPayload?.error?.message || signedPayload?.message || '').trim() ||
+            'Cloud storage upload failed.';
+          throw new Error(message);
+        }
+        return normalizeUploadResponse(signedPayload);
+      }
+    }
+
+    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) return null;
+
     const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
     const cloudinaryForm = new FormData();
     cloudinaryForm.append('file', file);
@@ -494,12 +536,8 @@ const MeetingRoomShell = ({
         'Cloud storage upload failed.';
       throw new Error(message);
     }
-    return {
-      secureUrl: String(payload?.secure_url || payload?.url || '').trim(),
-      publicId: String(payload?.public_id || '').trim(),
-      bytes: Number(payload?.bytes || 0),
-    };
-  }, []);
+    return normalizeUploadResponse(payload);
+  }, [api]);
 
   const sendSignal = useCallback(
     async (signalType, payload) => {
@@ -878,7 +916,10 @@ const MeetingRoomShell = ({
           };
           let persisted = false;
 
-          if (CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET) {
+          if (
+            typeof api.getSessionRecordingUploadSignature === 'function' ||
+            (CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET)
+          ) {
             try {
               const cloudUpload = await uploadRecordingToCloudinary(file, sessionId);
               if (cloudUpload?.secureUrl) {
@@ -915,7 +956,7 @@ const MeetingRoomShell = ({
               // no-op
             }
             appendError(
-              'Recording is too large for serverless upload. Configure Cloudinary upload env vars in frontend.'
+              'Recording is too large for serverless upload. Configure backend Cloudinary signing or frontend Cloudinary upload env vars.'
             );
             persisted = true;
           }

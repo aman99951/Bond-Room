@@ -58,6 +58,8 @@ export const mentorApi = {
     apiClient.post(`/sessions/${sessionId}/meeting-signals/`, payload),
   getSessionRecording: (sessionId) =>
     apiClient.get(`/sessions/${sessionId}/recording/`, { trackLoading: false }),
+  getSessionRecordingUploadSignature: (sessionId, payload = {}) =>
+    apiClient.post(`/sessions/${sessionId}/recording-upload-signature/`, payload),
   updateSessionRecording: (sessionId, payload) =>
     apiClient.post(`/sessions/${sessionId}/recording/`, payload),
   analyzeSessionTranscript: (sessionId, payload) =>
