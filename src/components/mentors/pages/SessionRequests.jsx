@@ -47,8 +47,8 @@ const formatTimeRange = (startValue, endValue) => {
   const start = new Date(startValue);
   const end = new Date(endValue);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 'Time TBD';
-  const startLabel = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  const endLabel = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const startLabel = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  const endLabel = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
   return `${startLabel} - ${endLabel}`;
 };
 

@@ -1,12 +1,24 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMentorScreenData } from './useMentorScreenData';
+import { menteeApi } from '../../../apis/api/menteeApi';
+import { setLastBooking } from '../../../apis/api/storage';
+import {
+  addDaysToDateKey,
+  formatIndiaDateKey,
+  INDIA_TIMEZONE,
+  getIndiaTimeLabel,
+  getIndiaWeekStartKey,
+  indiaDateKeyToLabel,
+} from '../../../utils/indiaTime';
 import {
   MapPin,
   Star,
   Calendar,
   Clock,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Award,
   Globe,
   BookOpen,
@@ -19,16 +31,96 @@ import {
   Quote
 } from 'lucide-react';
 
+const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
 const MentorDetails = () => {
-  const { mentor, availability, review, reviews, loading, error } = useMentorScreenData();
+  const navigate = useNavigate();
+  const { mentor, availabilitySlots, review, reviews, loading, error } = useMentorScreenData();
   const mentorIdSuffix = mentor?.id ? `?mentorId=${mentor.id}` : '';
   const rating = mentor?.rating != null ? Number(mentor.rating).toFixed(1) : '';
   const reviewCount = mentor?.reviews != null ? Number(mentor.reviews) : null;
   const reviewList = Array.isArray(reviews) ? reviews.slice(0, 3) : [];
   const displayName = mentor?.name || (mentor?.id ? `Mentor #${mentor.id}` : '');
+  const [weekStartKey, setWeekStartKey] = useState(() => getIndiaWeekStartKey(new Date()));
+  const [bookingSlotKey, setBookingSlotKey] = useState('');
+  const [confirmSlot, setConfirmSlot] = useState(null);
+  const [bookingError, setBookingError] = useState('');
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [showReadMore, setShowReadMore] = useState(false);
   const aboutRef = useRef(null);
+
+  const weekColumns = useMemo(
+    () =>
+      WEEK_DAYS.map((day, index) => {
+        const dateKey = addDaysToDateKey(weekStartKey, index);
+        return {
+          day,
+          dateKey,
+          dateLabel: indiaDateKeyToLabel(dateKey, { month: 'short', day: 'numeric' }),
+        };
+      }),
+    [weekStartKey]
+  );
+
+  const weekRangeLabel = useMemo(() => {
+    const startLabel = indiaDateKeyToLabel(weekStartKey, { month: 'short', day: 'numeric' });
+    const endLabel = indiaDateKeyToLabel(addDaysToDateKey(weekStartKey, 6), { month: 'short', day: 'numeric' });
+    if (!startLabel || !endLabel) return 'This Week';
+    return `${startLabel} - ${endLabel}`;
+  }, [weekStartKey]);
+
+  const availabilityByDate = useMemo(() => {
+    const map = {};
+    weekColumns.forEach((column) => {
+      map[column.dateKey] = [];
+    });
+    (Array.isArray(availabilitySlots) ? availabilitySlots : []).forEach((slot) => {
+      const start = slot?.start_time;
+      if (!start) return;
+      const dateKey = formatIndiaDateKey(start);
+      if (!map[dateKey]) return;
+      const slotId = Number(slot?.id);
+      if (!slotId) return;
+      const startDate = new Date(start);
+      const endDate = new Date(slot?.end_time || start);
+      const startMs = Number.isNaN(startDate.getTime()) ? 0 : startDate.getTime();
+      const endMs = Number.isNaN(endDate.getTime()) ? startMs : endDate.getTime();
+      const startLabel = getIndiaTimeLabel(startDate, { hour12: true });
+      const endLabel = getIndiaTimeLabel(endDate, { hour12: true });
+      const label = endLabel ? `${startLabel} - ${endLabel}` : startLabel;
+      if (!label) return;
+      const entries = map[dateKey];
+      const duplicate = entries.some((entry) => entry.id === slotId);
+      if (!duplicate) {
+        entries.push({
+          id: slotId,
+          label,
+          startMs,
+          endMs,
+          startTime: start,
+          endTime: slot?.end_time || start,
+          isAvailable: slot?.is_available !== false,
+        });
+      }
+    });
+    Object.keys(map).forEach((dateKey) => {
+      map[dateKey].sort((a, b) => {
+        if (a.startMs !== b.startMs) return a.startMs - b.startMs;
+        return a.endMs - b.endMs;
+      });
+    });
+    return map;
+  }, [availabilitySlots, weekColumns]);
+
+  const availabilityByDay = useMemo(
+    () => weekColumns.map((column) => availabilityByDate[column.dateKey] || []),
+    [availabilityByDate, weekColumns]
+  );
+
+  const maxSlotRows = useMemo(() => {
+    const counts = availabilityByDay.map((times) => times.length);
+    return Math.max(1, ...counts);
+  }, [availabilityByDay]);
 
   useEffect(() => {
     if (aboutExpanded) return undefined;
@@ -45,22 +137,82 @@ const MentorDetails = () => {
     return () => window.removeEventListener('resize', checkOverflow);
   }, [mentor?.bio, aboutExpanded]);
 
+  const openBookingConfirm = (slot) => {
+    if (!slot || bookingSlotKey) return;
+    setBookingError('');
+    setConfirmSlot(slot);
+  };
+
+  const closeBookingConfirm = () => {
+    if (bookingSlotKey) return;
+    setConfirmSlot(null);
+  };
+
+  const handleBookSlot = async () => {
+    const slot = confirmSlot;
+    if (!mentor?.id || !slot?.id || !slot?.startTime || !slot?.endTime) {
+      setBookingError('Unable to book this slot right now.');
+      return;
+    }
+
+    const slotKey = `${slot.id}`;
+    setBookingError('');
+    setBookingSlotKey(slotKey);
+
+    try {
+      const start = new Date(slot.startTime);
+      const end = new Date(slot.endTime);
+      const durationMinutes = Math.max(
+        15,
+        Math.round((end.getTime() - start.getTime()) / (1000 * 60))
+      );
+
+      const created = await menteeApi.createSession({
+        mentor: mentor.id,
+        availability_slot: slot.id,
+        scheduled_start: slot.startTime,
+        scheduled_end: slot.endTime,
+        duration_minutes: durationMinutes,
+        timezone: INDIA_TIMEZONE,
+        mode: 'online',
+        status: 'requested',
+        topic_tags: Array.isArray(mentor?.areas) ? mentor.areas.slice(0, 3) : [],
+      });
+
+      setLastBooking({
+        sessionId: created?.id,
+        mentorId: mentor.id,
+        mentorName: mentor.name,
+        mentorAvatar: mentor.avatar,
+        durationMinutes,
+        scheduledStart: slot.startTime,
+      });
+
+      navigate(created?.id ? `/booking-success?sessionId=${created.id}` : '/booking-success');
+    } catch (err) {
+      setBookingError(err?.message || 'Failed to book slot. Please try again.');
+    } finally {
+      setBookingSlotKey('');
+      setConfirmSlot(null);
+    }
+  };
+
 return (
-  <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
-    <div className="mx-auto max-w-full">
+  <div className="min-h-screen bg-transparent p-3 sm:p-5 lg:p-8">
+    <div className="mx-auto max-w-6xl">
       {/* Back Link */}
       <Link
         to="/mentors"
-        className="mb-6 inline-flex items-center gap-2 text-sm text-[#6b7280] transition-colors hover:text-[#5D3699]"
+        className="mb-4 inline-flex items-center gap-2 text-sm text-[#6b7280] transition-colors hover:text-[#5D3699] sm:mb-6"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to recommendations
       </Link>
 
       {/* Main Grid */}
-      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+      <div className="grid gap-5 lg:gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         {/* Left Sidebar - Mentor Card */}
-        <div className="space-y-6">
+        <div className="space-y-5 xl:sticky xl:top-6 xl:self-start">
           <aside className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
             {/* Header Background */}
             <div className="relative h-24 bg-[#5D3699]">
@@ -72,7 +224,7 @@ return (
             </div>
 
             {/* Avatar & Info */}
-            <div className="px-6 pb-6">
+            <div className="px-4 pb-5 sm:px-6 sm:pb-6">
               <div className="-mt-12 flex flex-col items-center text-center">
                 {/* Avatar */}
                 <div className="relative">
@@ -133,7 +285,7 @@ return (
 
                 {/* Rating */}
                 {(rating || reviewCount != null) && (
-                  <div className="mt-4 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-4 py-3">
+                  <div className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl bg-[#f8fafc] px-4 py-3">
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star
@@ -159,7 +311,7 @@ return (
               {/* CTA Button */}
               <Link
                 to={`/book-session${mentorIdSuffix}`}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md"
               >
                 <Calendar className="h-5 w-5" />
                 Schedule Session
@@ -188,7 +340,7 @@ return (
           </aside>
 
           {/* Quick Contact Card */}
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-5">
             <h3 className="text-sm font-semibold text-[#111827]">Quick Info</h3>
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-3 text-sm text-[#6b7280]">
@@ -208,7 +360,7 @@ return (
         </div>
 
         {/* Right Section - Details */}
-        <section className="space-y-6">
+        <section className="space-y-5 sm:space-y-6">
           {/* Loading/Error State */}
           {(loading || error) && (
             <div className={`flex items-center gap-3 rounded-xl p-4 ${
@@ -224,7 +376,7 @@ return (
           )}
 
           {/* About Section */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
                 <User className="h-5 w-5 text-[#5D3699]" />
@@ -266,7 +418,7 @@ return (
           </div>
 
           {/* Wisdom Areas */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
                 <BookOpen className="h-5 w-5 text-[#5D3699]" />
@@ -294,7 +446,7 @@ return (
           </div>
 
           {/* Availability */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
@@ -302,55 +454,96 @@ return (
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-[#111827]">Availability This Week</h2>
-                  <p className="text-xs text-[#6b7280]">Select a time slot to book</p>
+                  <p className="text-xs text-[#6b7280]">Click any time slot to book instantly</p>
                 </div>
               </div>
-             
+              <div className="inline-flex items-center gap-2 self-start rounded-lg bg-[#f8fafc] px-2 py-1.5 ring-1 ring-[#e5e7eb] sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setWeekStartKey((prev) => addDaysToDateKey(prev, -7))}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                  aria-label="Previous week"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-xs font-semibold text-[#374151]">{weekRangeLabel}</span>
+                <button
+                  type="button"
+                  onClick={() => setWeekStartKey((prev) => addDaysToDateKey(prev, 7))}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                  aria-label="Next week"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Calendar Grid */}
-            <div className="mt-6 overflow-x-auto">
-              <div className="min-w-[500px]">
-                {/* Days Header */}
+            <div className="mt-4 overflow-x-auto">
+              <div className="min-w-[700px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
                 <div className="grid grid-cols-7 gap-2 border-b border-[#e5e7eb] pb-3">
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                  {weekColumns.map((column) => (
                     <div
-                      key={day}
-                      className="text-center text-xs font-semibold uppercase tracking-wider text-[#6b7280]"
+                      key={column.dateKey}
+                      className="text-center"
                     >
-                      {day}
+                      <div className="text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                        {column.day}
+                      </div>
+                      <div className="mt-1 text-[11px] font-medium text-[#5D3699]">
+                        {column.dateLabel || '--'}
+                      </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Time Slots */}
                 <div className="mt-3 grid grid-cols-7 gap-2">
-                  {(availability || []).map((times, dayIndex) => (
-                    <div key={dayIndex} className="flex flex-col items-center gap-2">
-                      {times.length === 0 ? (
-                        <div className="flex h-10 w-full items-center justify-center rounded-lg bg-[#f8fafc] text-[10px] text-[#9ca3af]">
-                          —
-                        </div>
-                      ) : (
-                        times.map((time) => (
+                  {weekColumns.map((column, dayIndex) => (
+                    <div key={column.dateKey} className="space-y-2">
+                      {Array.from({ length: maxSlotRows }).map((_, rowIndex) => {
+                        const slot = availabilityByDay[dayIndex]?.[rowIndex] || null;
+                        if (!slot) {
+                          return (
+                            <div
+                              key={`${column.dateKey}-empty-${rowIndex}`}
+                              className="flex h-10 items-center justify-center rounded-lg bg-white text-[10px] text-[#9ca3af] ring-1 ring-[#e5e7eb]"
+                            >
+                              --
+                            </div>
+                          );
+                        }
+                        const isSubmitting = bookingSlotKey === `${slot.id}`;
+                        const isBookable = slot?.isAvailable !== false;
+                        return (
                           <button
-                            key={time}
+                            key={`${column.dateKey}-${slot.id}-${rowIndex}`}
                             type="button"
-                            className="flex h-10 w-full items-center justify-center rounded-lg bg-[#5D3699]/10 text-xs font-medium text-[#5D3699] transition-all hover:bg-[#5D3699] hover:text-white"
+                            onClick={() => openBookingConfirm(slot)}
+                            disabled={Boolean(bookingSlotKey) || !isBookable}
+                            className={`flex h-10 w-full items-center justify-center rounded-lg px-2 text-[9px] font-bold whitespace-nowrap transition-all disabled:cursor-not-allowed ${
+                              isBookable
+                                ? 'bg-[#5D3699]/10 text-[#5D3699] hover:bg-[#5D3699] hover:text-white'
+                                : 'bg-[#e5e7eb] text-[#9ca3af] opacity-60'
+                            } ${bookingSlotKey ? 'disabled:opacity-60' : ''}`}
                           >
-                            {time}
+                            {isSubmitting ? 'Booking...' : slot.label}
                           </button>
-                        ))
-                      )}
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
               </div>
             </div>
+            {bookingError ? (
+              <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-100">
+                {bookingError}
+              </div>
+            ) : null}
           </div>
 
           {/* Reviews Section */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
                 <MessageCircle className="h-5 w-5 text-[#5D3699]" />
@@ -369,7 +562,7 @@ return (
                     key={item.id}
                     className="rounded-xl bg-[#f8fafc] p-4 ring-1 ring-[#e5e7eb]"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#5D3699]/10">
                           <User className="h-5 w-5 text-[#5D3699]" />
@@ -442,7 +635,7 @@ return (
           </div>
 
           {/* CTA Card */}
-          <div className="rounded-2xl bg-[#5D3699] p-6 text-white shadow-lg shadow-[#5D3699]/20">
+          <div className="rounded-2xl bg-[#5D3699] p-4 text-white shadow-lg shadow-[#5D3699]/20 sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-lg font-semibold">Ready to connect?</h3>
@@ -452,7 +645,7 @@ return (
               </div>
               <Link
                 to={`/book-session${mentorIdSuffix}`}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#5D3699] transition-all hover:bg-[#f5f3ff]"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#5D3699] transition-all hover:bg-[#f5f3ff] sm:w-auto"
               >
                 <Calendar className="h-5 w-5" />
                 Schedule Now
@@ -462,6 +655,45 @@ return (
         </section>
       </div>
     </div>
+    {confirmSlot ? (
+      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-[#e5e7eb] sm:p-6">
+          <h3 className="text-lg font-semibold text-[#111827]">Book This Session?</h3>
+          <p className="mt-2 text-sm text-[#4b5563]">
+            Do you want to book this session? A request will be sent to the mentor.
+          </p>
+          <div className="mt-4 rounded-xl bg-[#f8fafc] p-3 text-sm ring-1 ring-[#e5e7eb]">
+            <div className="font-semibold text-[#111827]">{displayName}</div>
+            <div className="mt-1 text-[#6b7280]">
+              {indiaDateKeyToLabel(formatIndiaDateKey(confirmSlot.startTime), {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric',
+              }) || '--'}
+            </div>
+            <div className="text-[#5D3699]">{confirmSlot.label}</div>
+          </div>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={closeBookingConfirm}
+              disabled={Boolean(bookingSlotKey)}
+              className="inline-flex items-center justify-center rounded-xl border border-[#d1d5db] px-4 py-2 text-sm font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleBookSlot}
+              disabled={Boolean(bookingSlotKey)}
+              className="inline-flex items-center justify-center rounded-xl bg-[#5D3699] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4a2b7a] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {bookingSlotKey ? 'Sending...' : 'Send Request'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
   </div>
 );
 };

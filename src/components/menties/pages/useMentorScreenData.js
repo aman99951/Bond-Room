@@ -56,7 +56,7 @@ const buildAvailabilityMap = (slots) => {
     const existing = map.get(day) || [];
     if (!existing.includes(time)) map.set(day, [...existing, time]);
   });
-  return dayOrder.map((day) => (map.get(day) || []).slice(0, 3));
+  return dayOrder.map((day) => map.get(day) || []);
 };
 
 const toReviewData = (feedback) => {
@@ -76,6 +76,7 @@ export const useMentorScreenData = () => {
 
   const [mentor, setMentor] = useState(null);
   const [availability, setAvailability] = useState(dayOrder.map(() => []));
+  const [availabilitySlots, setAvailabilitySlots] = useState([]);
   const [review, setReview] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +103,7 @@ export const useMentorScreenData = () => {
           if (!cancelled) {
             setMentor(null);
             setAvailability(dayOrder.map(() => []));
+            setAvailabilitySlots([]);
             setReview(null);
             setReviews([]);
             setLoading(false);
@@ -119,6 +121,7 @@ export const useMentorScreenData = () => {
         if (!mentorId) {
           if (!cancelled) {
             setAvailability(dayOrder.map(() => []));
+            setAvailabilitySlots([]);
             setReview(null);
             setReviews([]);
           }
@@ -132,9 +135,12 @@ export const useMentorScreenData = () => {
 
         if (!cancelled) {
           if (slotsResponse.status === 'fulfilled') {
-            setAvailability(buildAvailabilityMap(slotsResponse.value));
+            const slots = normalizeList(slotsResponse.value);
+            setAvailabilitySlots(slots);
+            setAvailability(buildAvailabilityMap(slots));
           } else {
             setAvailability(dayOrder.map(() => []));
+            setAvailabilitySlots([]);
           }
 
           if (reviewsResponse.status === 'fulfilled') {
@@ -169,6 +175,7 @@ export const useMentorScreenData = () => {
           setError(err?.message || 'Unable to load mentor data.');
           setMentor(null);
           setAvailability(dayOrder.map(() => []));
+          setAvailabilitySlots([]);
           setReview(null);
           setReviews([]);
         }
@@ -186,6 +193,7 @@ export const useMentorScreenData = () => {
   return {
     mentor,
     availability,
+    availabilitySlots,
     review,
     reviews,
     loading,
