@@ -32,17 +32,17 @@ export const navRoutes = [
     roles: ['menties'],
   },
   {
-    label: 'Session Records',
-    path: '/session-records',
-    icon: FileText,
-    component: SessionRecords,
-    roles: ['menties'],
-  },
-  {
     label: 'Mentors',
     path: '/mentors',
     icon: Users,
     component: Mentors,
+    roles: ['menties'],
+  },
+  {
+    label: 'Session Records',
+    path: '/session-records',
+    icon: FileText,
+    component: SessionRecords,
     roles: ['menties'],
   },
   {
@@ -102,13 +102,6 @@ export const navRoutes = [
     roles: ['mentors'],
   },
   {
-    label: 'Session Records',
-    path: '/mentor-session-records',
-    icon: FileText,
-    component: SessionRecords,
-    roles: ['mentors'],
-  },
-  {
     label: 'Session Requests',
     path: '/mentor-session-requests',
     icon: Calendar,
@@ -120,6 +113,13 @@ export const navRoutes = [
     path: '/mentor-availability',
     icon: Calendar,
     component: MentorAvailability,
+    roles: ['mentors'],
+  },
+  {
+    label: 'Session Records',
+    path: '/mentor-session-records',
+    icon: FileText,
+    component: SessionRecords,
     roles: ['mentors'],
   },
   {

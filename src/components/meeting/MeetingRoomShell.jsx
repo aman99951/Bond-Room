@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
+  Maximize2,
   Mic,
   MicOff,
+  Minimize2,
   PhoneOff,
   ShieldAlert,
   Video,
@@ -46,6 +48,7 @@ const MeetingRoomShell = ({
   const location = useLocation();
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const stageContainerRef = useRef(null);
   const localStreamRef = useRef(null);
   const remoteStreamRef = useRef(null);
   const peerConnectionRef = useRef(null);
@@ -72,6 +75,7 @@ const MeetingRoomShell = ({
   const recordingAudioDestinationRef = useRef(null);
   const recordingAudioNodesRef = useRef([]);
   const recordingAudioTrackIdsRef = useRef(new Set());
+  const sessionClosedSyncRef = useRef(false);
 
   const [error, setError] = useState('');
   const [connectionState, setConnectionState] = useState('idle');
@@ -79,10 +83,12 @@ const MeetingRoomShell = ({
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [remoteMicEnabled, setRemoteMicEnabled] = useState(null);
   const [remoteCameraEnabled, setRemoteCameraEnabled] = useState(null);
+  const [peerLabel, setPeerLabel] = useState('Peer');
   const [recording, setRecording] = useState(false);
   const [recordingStatus, setRecordingStatus] = useState('not_started');
   const [monitoring, setMonitoring] = useState(false);
   const [monitoringStatus, setMonitoringStatus] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [analysisInput, setAnalysisInput] = useState('');
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [alert, setAlert] = useState(null);
@@ -472,6 +478,19 @@ const MeetingRoomShell = ({
     [api, sessionId]
   );
 
+  const markSessionClosed = useCallback(async () => {
+    if (!sessionId) return;
+    if (sessionClosedSyncRef.current) return;
+    if (typeof api.updateSession !== 'function') return;
+
+    sessionClosedSyncRef.current = true;
+    try {
+      await api.updateSession(sessionId, { status: 'completed' });
+    } catch {
+      sessionClosedSyncRef.current = false;
+    }
+  }, [api, sessionId]);
+
   const publishLocalMediaState = useCallback(
     async (nextMicEnabled, nextCameraEnabled) => {
       if (!sessionId) return;
@@ -487,7 +506,7 @@ const MeetingRoomShell = ({
     [appendError, sendSignal, sessionId]
   );
 
-  const createPlaceholderVideoTrack = useCallback(() => {
+  const _createPlaceholderVideoTrack = useCallback(() => {
     if (typeof document === 'undefined') return null;
     const canvas = document.createElement('canvas');
     canvas.width = 16;
@@ -642,7 +661,14 @@ const MeetingRoomShell = ({
         }
       }
     },
-    [appendError, closePeerConnection, ensurePeerConnection, sendSignal, sessionId, stopMediaTracks]
+    [
+      appendError,
+      closePeerConnection,
+      ensurePeerConnection,
+      sendSignal,
+      sessionId,
+      stopMediaTracks,
+    ]
   );
 
   const pollSignals = useCallback(async () => {
@@ -913,7 +939,20 @@ const MeetingRoomShell = ({
     const nextEnabled = !cameraEnabled;
     try {
       const currentTracks = stream.getVideoTracks();
-      if (nextEnabled && currentTracks.length === 0) {
+      if (!nextEnabled) {
+        if (senderRef.current.video) {
+          await senderRef.current.video.replaceTrack(null);
+        }
+        currentTracks.forEach((track) => {
+          try {
+            track.stop();
+          } catch {
+            // no-op
+          }
+          stream.removeTrack(track);
+          cameraTracksRef.current.delete(track);
+        });
+      } else if (currentTracks.length === 0) {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const nextTrack = videoStream.getVideoTracks()[0];
         if (!nextTrack) {
@@ -924,12 +963,14 @@ const MeetingRoomShell = ({
         } else if (peerConnectionRef.current) {
           senderRef.current.video = peerConnectionRef.current.addTrack(nextTrack, stream);
         }
+        nextTrack.enabled = true;
         stream.addTrack(nextTrack);
+        cameraTracksRef.current.add(nextTrack);
+      } else {
+        currentTracks.forEach((track) => {
+          track.enabled = true;
+        });
       }
-
-      stream.getVideoTracks().forEach((track) => {
-        track.enabled = nextEnabled;
-      });
 
       setCameraEnabled(nextEnabled);
       await publishLocalMediaState(micEnabled, nextEnabled);
@@ -941,12 +982,39 @@ const MeetingRoomShell = ({
     }
   }, [appendError, cameraEnabled, micEnabled, publishLocalMediaState]);
 
+  const toggleFullscreen = useCallback(async () => {
+    const stageEl = stageContainerRef.current;
+    if (!stageEl || typeof document === 'undefined') return;
+
+    const currentFullscreenEl = document.fullscreenElement || document.webkitFullscreenElement;
+    try {
+      if (currentFullscreenEl) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+        return;
+      }
+      if (stageEl.requestFullscreen) {
+        await stageEl.requestFullscreen();
+      } else if (stageEl.webkitRequestFullscreen) {
+        stageEl.webkitRequestFullscreen();
+      }
+    } catch {
+      appendError('Unable to switch fullscreen mode.');
+    }
+  }, [appendError]);
+
   const leaveMeeting = useCallback(async () => {
     if (sessionId) {
       try {
         await sendSignal('bye', {});
       } catch {
         // no-op
+      }
+      if (participantRole === 'mentor') {
+        await markSessionClosed();
       }
       setSelectedSessionId(sessionId);
     }
@@ -962,7 +1030,9 @@ const MeetingRoomShell = ({
     closePeerConnection,
     exitPath,
     generateMeetingSummary,
+    markSessionClosed,
     navigate,
+    participantRole,
     sendSignal,
     sessionId,
     stopMediaTracks,
@@ -974,6 +1044,7 @@ const MeetingRoomShell = ({
 
   useEffect(() => {
     let cancelled = false;
+    sessionClosedSyncRef.current = false;
     if (!sessionId) {
       setError('Missing session ID. Please join from My Sessions.');
       return undefined;
@@ -1040,6 +1111,21 @@ const MeetingRoomShell = ({
   ]);
 
   useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const handleFullscreenChange = () => {
+      const currentFullscreenEl = document.fullscreenElement || document.webkitFullscreenElement;
+      setIsFullscreen(Boolean(currentFullscreenEl));
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    handleFullscreenChange();
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isMentorToolsEnabled) return;
     if (connectionState !== 'connected') return;
     if (autoStartCompletedRef.current) return;
@@ -1058,6 +1144,82 @@ const MeetingRoomShell = ({
     startRecording,
     startSpeechMonitoring,
   ]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveDisplayName = (firstName, lastName, fallback = '') => {
+      const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+      return fullName || String(fallback || '').trim();
+    };
+
+    const loadPeerLabel = async () => {
+      if (!sessionId || typeof api.getSessionById !== 'function') {
+        setPeerLabel('Peer');
+        return;
+      }
+      try {
+        const session = await api.getSessionById(sessionId);
+        if (cancelled) return;
+
+        if (participantRole === 'mentor') {
+          const menteeName = resolveDisplayName(
+            session?.mentee_first_name,
+            session?.mentee_last_name,
+            session?.mentee_name
+          );
+          if (menteeName) {
+            setPeerLabel(menteeName);
+            return;
+          }
+          if (session?.mentee) {
+            setPeerLabel(`Mentee #${session.mentee}`);
+            return;
+          }
+          setPeerLabel('Mentee');
+          return;
+        }
+
+        const mentorFromSession = typeof session?.mentor === 'object' ? session.mentor : null;
+        const mentorNameFromSession = resolveDisplayName(
+          mentorFromSession?.first_name,
+          mentorFromSession?.last_name,
+          session?.mentor_name || session?.mentor_full_name
+        );
+        if (mentorNameFromSession) {
+          setPeerLabel(mentorNameFromSession);
+          return;
+        }
+
+        if (session?.mentor && typeof api.getMentorById === 'function') {
+          try {
+            const mentor = await api.getMentorById(session.mentor);
+            if (cancelled) return;
+            const mentorName = resolveDisplayName(mentor?.first_name, mentor?.last_name);
+            setPeerLabel(mentorName || `Mentor #${session.mentor}`);
+            return;
+          } catch {
+            // no-op
+          }
+        }
+
+        if (session?.mentor) {
+          setPeerLabel(`Mentor #${session.mentor}`);
+          return;
+        }
+        setPeerLabel('Mentor');
+      } catch {
+        if (!cancelled) {
+          setPeerLabel('Peer');
+        }
+      }
+    };
+
+    loadPeerLabel();
+    return () => {
+      cancelled = true;
+    };
+  }, [api, participantRole, sessionId]);
 
   return (
     <div className="min-h-[75vh] p-3 sm:p-5 lg:p-6">
@@ -1137,64 +1299,110 @@ const MeetingRoomShell = ({
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
-          <div className="border-b border-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#374151]">
-            Your Camera
+      <div
+        ref={stageContainerRef}
+        className={`overflow-hidden bg-black ${
+          isFullscreen ? 'rounded-none border-0' : 'rounded-xl border border-[#e5e7eb]'
+        }`}
+      >
+        <div
+          className={`relative ${
+            isFullscreen ? 'h-[100vh] min-h-[100vh]' : 'h-[56vh] min-h-[320px] sm:h-[62vh] lg:h-[70vh]'
+          }`}
+        >
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            className={`h-full w-full bg-[#111827] object-cover ${
+              remoteCameraEnabled === false ? 'invisible' : 'visible'
+            }`}
+          />
+          {remoteCameraEnabled === false ? (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-sm font-semibold text-white">
+              Peer Camera Off
+            </div>
+          ) : null}
+          <div className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/65 px-2 py-1 text-[10px] font-semibold text-white sm:left-3 sm:top-3">
+            {peerLabel}
           </div>
-          <div className="relative">
-            <video ref={localVideoRef} autoPlay muted playsInline className="h-[240px] w-full bg-[#111827] object-cover sm:h-[320px]" />
-            {!cameraEnabled ? (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-semibold text-white">
-                Camera Off
+          {remoteCameraEnabled === false || remoteMicEnabled === false ? (
+            <div className="pointer-events-none absolute left-2 top-10 flex flex-wrap gap-1 sm:left-3 sm:top-12">
+              {remoteCameraEnabled === false ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
+                  <VideoOff className="h-3 w-3" />
+                  Camera Off
+                </span>
+              ) : null}
+              {remoteMicEnabled === false ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
+                  <MicOff className="h-3 w-3" />
+                  Mic Off
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="absolute bottom-3 right-3 w-[42vw] min-w-[120px] max-w-[180px] sm:w-[220px] sm:max-w-[220px] lg:w-[260px] lg:max-w-[260px]">
+            <div className="relative overflow-hidden rounded-lg border border-white/30 bg-[#111827] shadow-xl">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                muted
+                playsInline
+                className={`h-[92px] w-full object-cover sm:h-[128px] lg:h-[146px] ${
+                  cameraEnabled ? 'visible' : 'invisible'
+                }`}
+              />
+              {!cameraEnabled ? (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-xs font-semibold text-white">
+                  Camera Off
+                </div>
+              ) : null}
+              <div className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-black/65 px-2 py-0.5 text-[9px] font-semibold text-white sm:left-2 sm:top-2 sm:text-[10px]">
+                You
               </div>
-            ) : null}
-            {!cameraEnabled || !micEnabled ? (
-              <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1">
-                {!cameraEnabled ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
-                    <VideoOff className="h-3 w-3" />
-                    Camera Off
-                  </span>
-                ) : null}
-                {!micEnabled ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
-                    <MicOff className="h-3 w-3" />
-                    Mic Off
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
+              {!cameraEnabled || !micEnabled ? (
+                <div className="pointer-events-none absolute left-1.5 top-7 flex flex-wrap gap-1 sm:left-2 sm:top-8">
+                  {!cameraEnabled ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
+                      <VideoOff className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                      Cam Off
+                    </span>
+                  ) : null}
+                  {!micEnabled ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
+                      <MicOff className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                      Mic Off
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           </div>
-        </div>
-        <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
-          <div className="border-b border-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#374151]">
-            Peer Camera
-          </div>
-          <div className="relative">
-            <video ref={remoteVideoRef} autoPlay playsInline className="h-[240px] w-full bg-[#111827] object-cover sm:h-[320px]" />
-            {remoteCameraEnabled === false ? (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-semibold text-white">
-                Camera Off
+
+          {isFullscreen ? (
+            <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center px-3">
+              <div className="flex items-center gap-2 rounded-full bg-black/70 px-3 py-2 backdrop-blur">
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+                >
+                  {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                  {micEnabled ? 'Mic On' : 'Mic Off'}
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleCamera}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+                >
+                  {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                  {cameraEnabled ? 'Camera On' : 'Camera Off'}
+                </button>
               </div>
-            ) : null}
-            {remoteCameraEnabled === false || remoteMicEnabled === false ? (
-              <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1">
-                {remoteCameraEnabled === false ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
-                    <VideoOff className="h-3 w-3" />
-                    Camera Off
-                  </span>
-                ) : null}
-                {remoteMicEnabled === false ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
-                    <MicOff className="h-3 w-3" />
-                    Mic Off
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -1215,6 +1423,14 @@ const MeetingRoomShell = ({
           >
             {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
             {cameraEnabled ? 'Stop Camera' : 'Start Camera'}
+          </button>
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#f3f4f6] px-3 py-2 text-xs font-semibold text-[#111827] hover:bg-[#e5e7eb]"
+          >
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            {isFullscreen ? 'Exit Full Screen' : 'Full Screen'}
           </button>
           {showManualMentorTools ? (
             <>

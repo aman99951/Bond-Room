@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, Wallet, Heart, Flag, Clock, Calendar } from 'lucide-react';
 import { mentorApi } from '../../../apis/api/mentorApi';
 import { getSelectedSessionId } from '../../../apis/api/storage';
 
 const SessionCompleted = () => {
+  const navigate = useNavigate();
   const [selected, setSelected] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,6 @@ const SessionCompleted = () => {
   const [infoMessage, setInfoMessage] = useState('');
   const [issueCategory, setIssueCategory] = useState('other');
   const [issueDescription, setIssueDescription] = useState('');
-  const [claimSuccessPopupOpen, setClaimSuccessPopupOpen] = useState(false);
 
   const sessionId = useMemo(() => getSelectedSessionId(), []);
 
@@ -59,11 +60,8 @@ const SessionCompleted = () => {
         payload.issue_description = issueDescription;
       }
       await mentorApi.submitSessionDisposition(session.id, payload);
-      if (selected === 'claim') {
-        setClaimSuccessPopupOpen(true);
-      } else {
-        setInfoMessage('Session disposition saved successfully.');
-      }
+      setInfoMessage('Session disposition saved successfully.');
+      navigate('/mentor-sessions', { replace: true });
     } catch (err) {
       setError(err?.message || 'Unable to process session disposition.');
     } finally {
@@ -218,23 +216,6 @@ const SessionCompleted = () => {
         </div>
       </div>
 
-      {claimSuccessPopupOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
-          <div className="w-full max-w-sm rounded-2xl border border-[#e6e2f1] bg-white p-6 shadow-2xl text-center">
-            <h3 className="text-lg font-semibold text-[#1f2937]">Claim Session</h3>
-            <p className="mt-2 text-sm text-[#4b5563]">
-              Added successfully.
-            </p>
-            <button
-              type="button"
-              className="mt-5 inline-flex rounded-full bg-[#5b2c91] text-white px-6 py-2 text-sm font-semibold"
-              onClick={() => setClaimSuccessPopupOpen(false)}
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

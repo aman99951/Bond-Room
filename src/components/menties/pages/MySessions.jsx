@@ -78,8 +78,6 @@ const isCompletedStatus = (session) => {
   return ['completed', 'canceled', 'no_show'].includes(status);
 };
 
-const isFeedbackEligible = (session) => session?.status === 'completed';
-
 const getJoinUrl = (session) =>
   session?.join_url || session?.meeting_url || session?.joinUrl || session?.host_join_url || '';
 
@@ -89,9 +87,41 @@ const isPastSession = (session) => {
   return end < new Date();
 };
 
+const isConnectionClosed = (session) => {
+  const candidates = [
+    session?.connection_status,
+    session?.connectionStatus,
+    session?.connection_state,
+    session?.connectionState,
+    session?.meeting_connection_status,
+    session?.meeting_status,
+    session?.meetingStatus,
+  ];
+  return candidates.some((value) => String(value || '').trim().toLowerCase() === 'closed');
+};
+
+const isJoinableStatus = (session) => {
+  const status = String(session?.status || '').trim().toLowerCase();
+  return ['approved', 'scheduled'].includes(status);
+};
+
+const canJoinSession = (session) =>
+  isJoinableStatus(session) && !isPastSession(session) && !isConnectionClosed(session);
+
+const getJoinUnavailableLabel = (session) => {
+  if (isConnectionClosed(session)) return 'Session Closed';
+  if (isPastSession(session)) return 'Session Ended';
+  const status = String(session?.status || '').trim().toLowerCase();
+  if (status === 'requested') return 'Awaiting Approval';
+  if (status === 'canceled') return 'Session Canceled';
+  if (status === 'no_show') return 'No Show';
+  return 'Not Joinable';
+};
+
 const isMentorStartedSession = (session) => {
   const status = String(session?.status || '').toLowerCase();
   if (!['approved', 'scheduled'].includes(status)) return false;
+  if (isConnectionClosed(session)) return false;
   if (!session?.mentor_joined_at) return false;
   return !isPastSession(session);
 };
@@ -106,6 +136,7 @@ const MySessions = () => {
   const [searchValue, setSearchValue] = useState('');
   const [sessions, setSessions] = useState([]);
   const [mentorMap, setMentorMap] = useState({});
+  const [feedbackSessionIds, setFeedbackSessionIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [joinError, setJoinError] = useState('');
@@ -116,6 +147,22 @@ const MySessions = () => {
   const pollingRef = useRef(null);
   const filterOptions = ['All Types', 'Upcoming', 'Completed'];
   const weekFilterOptions = ['This Week', 'All Time'];
+
+  const hasFeedbackSubmitted = (session) => {
+    const sessionId = Number(session?.id || 0);
+    if (!sessionId) return false;
+    if (feedbackSessionIds.has(sessionId)) return true;
+    const embeddedFeedback = session?.feedback;
+    if (!embeddedFeedback || typeof embeddedFeedback !== 'object') return false;
+    if (embeddedFeedback?.id) return true;
+    if (embeddedFeedback?.submitted_at) return true;
+    if (embeddedFeedback?.rating !== undefined && embeddedFeedback?.rating !== null) return true;
+    if (String(embeddedFeedback?.comments || '').trim()) return true;
+    return false;
+  };
+
+  const isFeedbackEligible = (session) =>
+    String(session?.status || '').toLowerCase() === 'completed' && !hasFeedbackSubmitted(session);
 
   useEffect(() => {
     let cancelled = false;
@@ -153,14 +200,21 @@ const MySessions = () => {
       setLoading(true);
       setError('');
       try {
-        const [sessionResponse, mentorResponse] = await Promise.all([
+        const [sessionResponse, mentorResponse, feedbackResponse] = await Promise.all([
           menteeApi.listSessions(),
           menteeApi.listMentors(),
+          menteeApi.listSessionFeedback(),
         ]);
         if (cancelled) return;
         const sessionItems = normalizeList(sessionResponse);
         const mentorItems = normalizeList(mentorResponse);
+        const feedbackItems = normalizeList(feedbackResponse);
         const nextMentorMap = {};
+        const nextFeedbackSessionIds = new Set(
+          feedbackItems
+            .map((item) => Number(item?.session || 0))
+            .filter((value) => Number.isFinite(value) && value > 0)
+        );
         mentorItems.forEach((mentor) => {
           const fullName = `${mentor?.first_name || ''} ${mentor?.last_name || ''}`.trim();
           nextMentorMap[String(mentor.id)] = {
@@ -170,6 +224,7 @@ const MySessions = () => {
         });
         setSessions(sessionItems);
         setMentorMap(nextMentorMap);
+        setFeedbackSessionIds(nextFeedbackSessionIds);
         updateMentorStartSignals(sessionItems);
       } catch (err) {
         if (!cancelled) {
@@ -188,6 +243,19 @@ const MySessions = () => {
         if (cancelled) return;
         const sessionItems = normalizeList(sessionResponse);
         setSessions(sessionItems);
+        const nextFeedbackSessionIds = new Set(
+          sessionItems
+            .filter((item) => item?.feedback && typeof item.feedback === 'object')
+            .map((item) => Number(item?.id || 0))
+            .filter((value) => Number.isFinite(value) && value > 0)
+        );
+        if (nextFeedbackSessionIds.size) {
+          setFeedbackSessionIds((prev) => {
+            const merged = new Set(prev);
+            nextFeedbackSessionIds.forEach((id) => merged.add(id));
+            return merged;
+          });
+        }
         updateMentorStartSignals(sessionItems);
       } catch {
         // no-op for silent polling
@@ -224,7 +292,6 @@ const MySessions = () => {
 
   const enrichedSessions = useMemo(() => {
     return sessions.map((session) => {
-      const start = new Date(session.scheduled_start);
       const end = new Date(session.scheduled_end || session.scheduled_start);
       const sessionDateKey = formatIndiaDateKey(session.scheduled_start);
       const dayIndex = sessionDateKey ? diffDateKeys(weekStartKey, sessionDateKey) : -1;
@@ -284,6 +351,15 @@ const MySessions = () => {
 
   const handleJoin = async (session) => {
     if (!session?.id) return;
+    if (!isJoinableStatus(session)) {
+      setJoinError('Session is not available for joining.');
+      return;
+    }
+    if (isConnectionClosed(session)) {
+      setJoinError('Session connection is closed.');
+      return;
+    }
+    if (isPastSession(session)) return;
     setJoinError('');
     const sessionKey = String(session.id);
     const existing = getJoinUrl(session);
@@ -489,7 +565,7 @@ return (
       </div>
     )}
 
-    {meetingInvite ? (
+    {meetingInvite && canJoinSession(meetingInvite) ? (
       <div className="mb-4 rounded-xl border border-[#d8b4fe] bg-[#faf5ff] px-4 py-3 shadow-sm ring-1 ring-[#f3e8ff]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm text-[#4c1d95]">
@@ -546,7 +622,9 @@ return (
             {/* Calendar Body */}
             <div className="divide-y divide-[#e5e7eb]">
               {hours.map((h, idx) => {
-                const rowHasJoin = calendarSessions.some((s) => s.hourIndex === idx && !s.isPast);
+                const rowHasJoin = calendarSessions.some(
+                  (s) => s.hourIndex === idx && canJoinSession(s)
+                );
                 const rowHasFeedback = calendarSessions.some(
                   (s) => s.hourIndex === idx && isFeedbackEligible(s)
                 );
@@ -626,7 +704,7 @@ return (
     <span className="truncate lg:hidden">Feedback</span>
     <span className="hidden lg:inline">Leave Feedback</span>
   </button>
-                              ) : !session.isPast && (
+                               ) : canJoinSession(session) && (
                                 <button
                                   type="button"
                                   onClick={(event) => {
@@ -754,7 +832,7 @@ return (
                         <MessageSquare className="h-4 w-4" />
                         Leave Feedback
                       </button>
-                    ) : !isPastSession(session) ? (
+                    ) : canJoinSession(session) ? (
                       <button
                         type="button"
                         onClick={() => handleJoin(session)}
@@ -777,7 +855,7 @@ return (
                     ) : (
                       <span className="inline-flex items-center gap-1.5 text-sm text-[#9ca3af]">
                         <span className="h-2 w-2 rounded-full bg-[#e5e7eb]" />
-                        Session Ended
+                        {getJoinUnavailableLabel(session)}
                       </span>
                     )}
                   </td>

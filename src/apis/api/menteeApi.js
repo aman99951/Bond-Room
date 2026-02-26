@@ -33,6 +33,7 @@ export const menteeApi = {
   listSessions: (params = {}) => apiClient.get(`/sessions/${buildQuery(params)}`),
   getSessionById: (sessionId) => apiClient.get(`/sessions/${sessionId}/`),
   createSession: (payload) => apiClient.post('/sessions/', payload),
+  updateSession: (sessionId, payload) => apiClient.patch(`/sessions/${sessionId}/`, payload),
   getSessionJoinLink: (sessionId) => apiClient.post(`/sessions/${sessionId}/join-link/`),
   listSessionMeetingSignals: (sessionId, params = {}) =>
     apiClient.get(`/sessions/${sessionId}/meeting-signals/${buildQuery(params)}`, { trackLoading: false }),

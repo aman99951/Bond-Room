@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronDown, Calendar, Table, Clock, Video, ArrowRight, Filter, X } from 'lucide-react';
 import { mentorApi } from '../../../apis/api/mentorApi';
@@ -42,6 +42,12 @@ const hours = [
 ];
 
 const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const normalizeList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  return [];
+};
 
 const parseHourLabel = (label) => {
   const [time, meridiem] = label.split(' ');
@@ -116,11 +122,43 @@ const isPastSession = (session) => {
   return end < new Date();
 };
 
+const isConnectionClosed = (session) => {
+  const candidates = [
+    session?.connection_status,
+    session?.connectionStatus,
+    session?.connection_state,
+    session?.connectionState,
+    session?.meeting_connection_status,
+    session?.meeting_status,
+    session?.meetingStatus,
+  ];
+  return candidates.some((value) => String(value || '').trim().toLowerCase() === 'closed');
+};
+
+const isJoinableStatus = (session) => {
+  const status = String(session?.status || '').trim().toLowerCase();
+  return ['approved', 'scheduled'].includes(status);
+};
+
+const canJoinSession = (session) =>
+  isJoinableStatus(session) && !isPastSession(session) && !isConnectionClosed(session);
+
+const getJoinUnavailableLabel = (session) => {
+  if (isConnectionClosed(session)) return 'Session Closed';
+  if (isPastSession(session)) return 'Session Ended';
+  const status = String(session?.status || '').trim().toLowerCase();
+  if (status === 'requested') return 'Awaiting Approval';
+  if (status === 'canceled') return 'Session Canceled';
+  if (status === 'no_show') return 'No Show';
+  return 'Not Joinable';
+};
+
 const MySessions = () => {
   const [view, setView] = useState('calendar');
   const navigate = useNavigate();
   const { mentor } = useMentorData();
   const [sessions, setSessions] = useState([]);
+  const [dispositionSessionIds, setDispositionSessionIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [joinError, setJoinError] = useState('');
@@ -159,10 +197,20 @@ const MySessions = () => {
       setLoading(true);
       setError('');
       try {
-        const response = await mentorApi.listSessions({ mentor_id: mentor.id });
-        const list = Array.isArray(response) ? response : response?.results || [];
+        const [sessionResponse, dispositionResponse] = await Promise.all([
+          mentorApi.listSessions({ mentor_id: mentor.id }),
+          mentorApi.listSessionDispositions({ mentor_id: mentor.id }),
+        ]);
+        const list = normalizeList(sessionResponse);
+        const dispositions = normalizeList(dispositionResponse);
         if (!cancelled) {
           setSessions(list);
+          const nextDispositionSessionIds = new Set(
+            dispositions
+              .map((item) => Number(item?.session || 0))
+              .filter((value) => Number.isFinite(value) && value > 0)
+          );
+          setDispositionSessionIds(nextDispositionSessionIds);
         }
         const sessionsMissingName = list.filter((session) => !hasConcreteMenteeName(session));
         if (!sessionsMissingName.length || cancelled) {
@@ -218,6 +266,14 @@ const MySessions = () => {
     };
   }, [mentor?.id]);
 
+  const needsCompletionSelection = useCallback((session) => {
+    const status = String(session?.status || '').trim().toLowerCase();
+    if (status !== 'completed') return false;
+    const sessionId = Number(session?.id || 0);
+    if (!sessionId) return false;
+    return !dispositionSessionIds.has(sessionId);
+  }, [dispositionSessionIds]);
+
   const filteredSessions = useMemo(() => {
     return sessions.filter((session) => {
       if (filterValue === 'Upcoming') {
@@ -253,7 +309,6 @@ const MySessions = () => {
     return sessionsThisWeek
       .filter((session) => session?.status !== 'requested')
       .map((session) => {
-      const start = new Date(session.scheduled_start);
       const end = new Date(session.scheduled_end || session.scheduled_start);
       const sessionDateKey = formatIndiaDateKey(session.scheduled_start);
       const dayIndex = sessionDateKey ? diffDateKeys(weekStartKey, sessionDateKey) : -1;
@@ -261,7 +316,9 @@ const MySessions = () => {
       const hourIndex = hours.findIndex((label) => parseHourLabel(label) === indiaHour);
       const joinUrl = session?.meeting_url || session?.join_url || session?.host_join_url || '';
       const menteeName = (getMenteeName(session) || '').trim() || 'Mentee';
+      const connectionClosed = isConnectionClosed(session);
       return {
+        ...session,
         id: session.id,
         dayIndex,
         hourIndex,
@@ -270,10 +327,12 @@ const MySessions = () => {
         time: formatTimeRange(session.scheduled_start, session.scheduled_end),
         tone: session.status === 'completed' ? 'light' : 'dark',
         isPast: !Number.isNaN(end.getTime()) && end < now,
+        needsSelection: needsCompletionSelection(session),
+        connectionClosed,
         joinUrl,
       };
     });
-  }, [sessionsThisWeek, weekStartKey]);
+  }, [needsCompletionSelection, sessionsThisWeek, weekStartKey]);
 
   const openJoinLink = (url, sessionId) => {
     if (!url) return false;
@@ -288,6 +347,15 @@ const MySessions = () => {
 
   const handleJoin = async (session) => {
     if (!session?.id) return;
+    if (!isJoinableStatus(session)) {
+      setJoinError('Session is not available for joining.');
+      return;
+    }
+    if (isConnectionClosed(session)) {
+      setJoinError('Session connection is closed.');
+      return;
+    }
+    if (isPastSession(session)) return;
     setJoinError('');
     const existing = getJoinUrl(session);
     const isWrongRolePath =
@@ -326,6 +394,12 @@ const MySessions = () => {
 
   const getJoinUrl = (session) =>
     session?.host_join_url || session?.meeting_url || session?.joinUrl || session?.join_url || '';
+
+  const openSelectionSubmission = (sessionId) => {
+    if (!sessionId) return;
+    setSelectedSessionId(sessionId);
+    navigate('/mentor-session-completed');
+  };
 
 return (
   <div className="min-h-screenp-4 sm:p-6 lg:p-8">
@@ -507,7 +581,9 @@ return (
             {/* Calendar Body */}
             <div className="divide-y divide-gray-100">
               {hours.map((h, idx) => {
-                const rowHasJoin = calendarEntries.some((s) => s.hourIndex === idx && !s.isPast);
+                const rowHasAction = calendarEntries.some(
+                  (s) => s.hourIndex === idx && (canJoinSession(s) || s.needsSelection)
+                );
                 return (
                   <div key={h} className="grid grid-cols-[100px_repeat(7,minmax(150px,1fr))]">
                     <div className="flex items-start justify-end p-3 pr-4 text-xs font-medium text-gray-400">
@@ -519,7 +595,7 @@ return (
                         <div
                           key={`${h}-${d.label}`}
                           className={`relative border-l border-gray-100 p-2 transition-colors ${
-                            rowHasJoin ? 'min-h-[110px]' : 'min-h-[70px]'
+                            rowHasAction ? 'min-h-[110px]' : 'min-h-[70px]'
                           } ${d.active ? 'bg-[#5D3699]/[0.02]' : 'hover:bg-gray-50/50'}`}
                         >
                           {session && (
@@ -528,14 +604,14 @@ return (
                               tabIndex={0}
                               onClick={() => {
                                 setSelectedSessionId(session.id);
-                                if (session?.tone === 'light') {
+                                if (session?.needsSelection) {
                                   navigate('/mentor-session-completed');
                                 }
                               }}
                               onKeyDown={(event) => {
                                 if (event.key === 'Enter') {
                                   setSelectedSessionId(session.id);
-                                  if (session?.tone === 'light') {
+                                  if (session?.needsSelection) {
                                     navigate('/mentor-session-completed');
                                   }
                                 }
@@ -588,7 +664,7 @@ return (
                                   {session.time}
                                 </span>
                               </div>
-                              {!session.isPast && (
+                              {canJoinSession(session) && (
                                 <button
                                   type="button"
                                   onClick={(event) => {
@@ -602,6 +678,19 @@ return (
                                   {joiningId === session.id ? 'Joining...' : 'Join Now'}
                                 </button>
                               )}
+                              {!canJoinSession(session) && session.needsSelection ? (
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    openSelectionSubmission(session.id);
+                                  }}
+                                  className="mt-auto flex items-center justify-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-[#4a2b7a]"
+                                >
+                                  Submit Selection
+                                  <ArrowRight className="h-3 w-3" />
+                                </button>
+                              ) : null}
                             </div>
                           )}
                         </div>
@@ -688,7 +777,7 @@ return (
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    {!isPastSession(session) ? (
+                    {canJoinSession(session) ? (
                       <button
                         type="button"
                         onClick={() => handleJoin(session)}
@@ -699,10 +788,19 @@ return (
                         {joiningId === session.id ? 'Joining...' : 'Join Call'}
                         <ArrowRight className="h-4 w-4" />
                       </button>
+                    ) : needsCompletionSelection(session) ? (
+                      <button
+                        type="button"
+                        onClick={() => openSelectionSubmission(session.id)}
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#5D3699] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md"
+                      >
+                        Submit Selection
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 text-sm text-gray-400">
                         <span className="h-2 w-2 rounded-full bg-gray-300" />
-                        Session Ended
+                        {getJoinUnavailableLabel(session)}
                       </span>
                     )}
                   </td>

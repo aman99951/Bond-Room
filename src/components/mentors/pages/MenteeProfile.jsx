@@ -109,7 +109,6 @@ const MenteeProfile = () => {
 
   const selectedAssessments = useMemo(() => {
     const assessment = mentee?.latest_assessment || {};
-    const preferences = mentee?.assessment_preferences || {};
 
     const toText = (value) => {
       if (Array.isArray(value)) {
