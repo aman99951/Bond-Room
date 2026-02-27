@@ -13,8 +13,22 @@ import {
 } from 'lucide-react';
 import { setSelectedSessionId } from '../../apis/api/storage';
 
+const TURN_URL = String(import.meta.env.VITE_TURN_URL || '').trim();
+const TURN_USERNAME = String(import.meta.env.VITE_TURN_USERNAME || '').trim();
+const TURN_CREDENTIAL = String(import.meta.env.VITE_TURN_CREDENTIAL || '').trim();
+const STUN_URL = String(import.meta.env.VITE_STUN_URL || 'stun:stun.l.google.com:19302').trim();
+
+const rtcIceServers = [{ urls: STUN_URL }];
+if (TURN_URL && TURN_USERNAME && TURN_CREDENTIAL) {
+  rtcIceServers.push({
+    urls: TURN_URL,
+    username: TURN_USERNAME,
+    credential: TURN_CREDENTIAL,
+  });
+}
+
 const rtcConfig = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  iceServers: rtcIceServers,
 };
 
 const CLOUDINARY_CLOUD_NAME = String(import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
@@ -59,6 +73,7 @@ const MeetingRoomShell = ({
   const peerConnectionRef = useRef(null);
   const senderRef = useRef({ audio: null, video: null });
   const pollIntervalRef = useRef(null);
+  const reconnectIntervalRef = useRef(null);
   const recordingStatusPollIntervalRef = useRef(null);
   const lastSignalIdRef = useRef(0);
   const offerSentRef = useRef(false);
@@ -429,6 +444,13 @@ const MeetingRoomShell = ({
     }
   }, []);
 
+  const stopReconnectLoop = useCallback(() => {
+    if (reconnectIntervalRef.current) {
+      window.clearInterval(reconnectIntervalRef.current);
+      reconnectIntervalRef.current = null;
+    }
+  }, []);
+
   const stopRecordingStatusPolling = useCallback(() => {
     if (recordingStatusPollIntervalRef.current) {
       window.clearInterval(recordingStatusPollIntervalRef.current);
@@ -626,12 +648,41 @@ const MeetingRoomShell = ({
     [api, appendError, isMentorToolsEnabled, loadIncidents, participantRole, sessionId]
   );
 
+  const attachLocalTracksToPeer = useCallback((peer) => {
+    const stream = localStreamRef.current;
+    if (!peer || !stream) return;
+
+    const existingTrackIds = new Set(
+      peer
+        .getSenders()
+        .map((sender) => sender?.track?.id)
+        .filter(Boolean)
+    );
+
+    stream.getTracks().forEach((track) => {
+      if (!track || existingTrackIds.has(track.id)) return;
+      const sender = peer.addTrack(track, stream);
+      if (track.kind === 'audio') senderRef.current.audio = sender;
+      if (track.kind === 'video') {
+        senderRef.current.video = sender;
+        cameraTracksRef.current.add(track);
+      }
+    });
+  }, []);
+
   const ensurePeerConnection = useCallback(() => {
-    if (peerConnectionRef.current) return peerConnectionRef.current;
+    if (peerConnectionRef.current) {
+      attachLocalTracksToPeer(peerConnectionRef.current);
+      return peerConnectionRef.current;
+    }
 
     const peer = new RTCPeerConnection(rtcConfig);
     peer.onconnectionstatechange = () => {
-      setConnectionState(peer.connectionState || 'connecting');
+      const nextState = peer.connectionState || 'connecting';
+      setConnectionState(nextState);
+      if (participantRole === 'mentor' && (nextState === 'failed' || nextState === 'disconnected')) {
+        offerSentRef.current = false;
+      }
     };
     peer.onicecandidate = async (event) => {
       if (!event.candidate) return;
@@ -649,17 +700,33 @@ const MeetingRoomShell = ({
       attachRemoteStreamStateListeners(stream);
       attachStreamAudioToRecording(stream);
     };
+    attachLocalTracksToPeer(peer);
     peerConnectionRef.current = peer;
     return peer;
-  }, [appendError, attachRemoteStreamStateListeners, attachStreamAudioToRecording, sendSignal]);
+  }, [
+    appendError,
+    attachLocalTracksToPeer,
+    attachRemoteStreamStateListeners,
+    attachStreamAudioToRecording,
+    participantRole,
+    sendSignal,
+  ]);
 
-  const createOfferIfNeeded = useCallback(async () => {
-    if (!sessionId || participantRole !== 'mentor' || offerSentRef.current) return;
+  const createOfferIfNeeded = useCallback(async ({ force = false, iceRestart = false } = {}) => {
+    if (!sessionId || participantRole !== 'mentor') return;
+    if (!force && offerSentRef.current) return;
     const peer = ensurePeerConnection();
-    offerSentRef.current = true;
-    const offer = await peer.createOffer();
-    await peer.setLocalDescription(offer);
-    await sendSignal('offer', peer.localDescription || offer);
+    if (peer.signalingState !== 'stable') return;
+    try {
+      offerSentRef.current = true;
+      const offer = await peer.createOffer(iceRestart ? { iceRestart: true } : undefined);
+      await peer.setLocalDescription(offer);
+      await sendSignal('offer', peer.localDescription || offer);
+      setConnectionState('connecting');
+    } catch (err) {
+      offerSentRef.current = false;
+      throw err;
+    }
   }, [ensurePeerConnection, participantRole, sendSignal, sessionId]);
 
   const processSignals = useCallback(
@@ -702,6 +769,7 @@ const MeetingRoomShell = ({
               sdp: payload?.sdp || '',
             });
             await peer.setRemoteDescription(answerDescription);
+            offerSentRef.current = false;
             continue;
           }
           if (signalType === 'ice') {
@@ -725,8 +793,15 @@ const MeetingRoomShell = ({
             continue;
           }
           if (signalType === 'bye') {
+            // Ignore stale bye signals from previous attempts before signaling starts.
+            if (!peer.currentRemoteDescription && peer.signalingState === 'stable') {
+              continue;
+            }
             closePeerConnection();
-            stopMediaTracks();
+            offerSentRef.current = false;
+            if (participantRole === 'mentor') {
+              await createOfferIfNeeded({ force: true, iceRestart: true });
+            }
           }
         } catch (err) {
           appendError(err?.message || 'Unable to process meeting signal.');
@@ -736,10 +811,11 @@ const MeetingRoomShell = ({
     [
       appendError,
       closePeerConnection,
+      createOfferIfNeeded,
       ensurePeerConnection,
       sendSignal,
+      participantRole,
       sessionId,
-      stopMediaTracks,
     ]
   );
 
@@ -777,17 +853,10 @@ const MeetingRoomShell = ({
     }
 
     const peer = ensurePeerConnection();
-    stream.getTracks().forEach((track) => {
-      const sender = peer.addTrack(track, stream);
-      if (track.kind === 'audio') senderRef.current.audio = sender;
-      if (track.kind === 'video') {
-        senderRef.current.video = sender;
-        cameraTracksRef.current.add(track);
-      }
-    });
+    attachLocalTracksToPeer(peer);
     await publishLocalMediaState(true, true);
     return stream;
-  }, [ensurePeerConnection, publishLocalMediaState]);
+  }, [attachLocalTracksToPeer, ensurePeerConnection, publishLocalMediaState]);
 
   const startSpeechMonitoring = useCallback(async () => {
     if (!isMentorToolsEnabled) return;
@@ -1165,6 +1234,7 @@ const MeetingRoomShell = ({
     await generateMeetingSummary();
     await stopRecording();
     stopRecordingStatusPolling();
+    stopReconnectLoop();
     stopPolling();
     closePeerConnection();
     stopMediaTracks();
@@ -1179,6 +1249,7 @@ const MeetingRoomShell = ({
     sendSignal,
     sessionId,
     stopMediaTracks,
+    stopReconnectLoop,
     stopRecordingStatusPolling,
     stopPolling,
     stopRecording,
@@ -1231,6 +1302,7 @@ const MeetingRoomShell = ({
       stopSpeechMonitoring();
       stopRecording();
       stopRecordingStatusPolling();
+      stopReconnectLoop();
       stopPolling();
       closePeerConnection();
       stopMediaTracks();
@@ -1247,10 +1319,35 @@ const MeetingRoomShell = ({
     startRecordingStatusPolling,
     startPolling,
     stopMediaTracks,
+    stopReconnectLoop,
     stopRecordingStatusPolling,
     stopPolling,
     stopRecording,
     stopSpeechMonitoring,
+  ]);
+
+  useEffect(() => {
+    if (participantRole !== 'mentor' || !sessionId) return undefined;
+    if (connectionState === 'connected') {
+      stopReconnectLoop();
+      return undefined;
+    }
+    if (reconnectIntervalRef.current) return undefined;
+
+    reconnectIntervalRef.current = window.setInterval(() => {
+      if (!localStreamRef.current) return;
+      createOfferIfNeeded({ force: true, iceRestart: true }).catch(() => {
+        // no-op: retry loop should stay silent and non-blocking.
+      });
+    }, 6000);
+
+    return () => stopReconnectLoop();
+  }, [
+    connectionState,
+    createOfferIfNeeded,
+    participantRole,
+    sessionId,
+    stopReconnectLoop,
   ]);
 
   useEffect(() => {

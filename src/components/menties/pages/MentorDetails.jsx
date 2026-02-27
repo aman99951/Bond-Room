@@ -8,7 +8,6 @@ import {
   formatIndiaDateKey,
   INDIA_TIMEZONE,
   getIndiaTimeLabel,
-  getIndiaWeekStartKey,
   indiaDateKeyToLabel,
 } from '../../../utils/indiaTime';
 import {
@@ -31,7 +30,7 @@ import {
   Quote
 } from 'lucide-react';
 
-const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const CALENDAR_DAYS = 7;
 
 const MentorDetails = () => {
   const navigate = useNavigate();
@@ -41,7 +40,8 @@ const MentorDetails = () => {
   const reviewCount = mentor?.reviews != null ? Number(mentor.reviews) : null;
   const reviewList = Array.isArray(reviews) ? reviews.slice(0, 3) : [];
   const displayName = mentor?.name || (mentor?.id ? `Mentor #${mentor.id}` : '');
-  const [weekStartKey, setWeekStartKey] = useState(() => getIndiaWeekStartKey(new Date()));
+  const todayDateKey = formatIndiaDateKey(new Date());
+  const [weekStartKey, setWeekStartKey] = useState(() => todayDateKey);
   const [bookingSlotKey, setBookingSlotKey] = useState('');
   const [confirmSlot, setConfirmSlot] = useState(null);
   const [bookingError, setBookingError] = useState('');
@@ -51,10 +51,10 @@ const MentorDetails = () => {
 
   const weekColumns = useMemo(
     () =>
-      WEEK_DAYS.map((day, index) => {
+      Array.from({ length: CALENDAR_DAYS }).map((_, index) => {
         const dateKey = addDaysToDateKey(weekStartKey, index);
         return {
-          day,
+          day: indiaDateKeyToLabel(dateKey, { weekday: 'short' }) || '--',
           dateKey,
           dateLabel: indiaDateKeyToLabel(dateKey, { month: 'short', day: 'numeric' }),
         };
@@ -71,6 +71,7 @@ const MentorDetails = () => {
 
   const availabilityByDate = useMemo(() => {
     const map = {};
+    const nowMs = Date.now();
     weekColumns.forEach((column) => {
       map[column.dateKey] = [];
     });
@@ -78,13 +79,16 @@ const MentorDetails = () => {
       const start = slot?.start_time;
       if (!start) return;
       const dateKey = formatIndiaDateKey(start);
+      if (dateKey < todayDateKey) return;
       if (!map[dateKey]) return;
+      if (slot?.is_available === false) return;
       const slotId = Number(slot?.id);
       if (!slotId) return;
       const startDate = new Date(start);
       const endDate = new Date(slot?.end_time || start);
       const startMs = Number.isNaN(startDate.getTime()) ? 0 : startDate.getTime();
       const endMs = Number.isNaN(endDate.getTime()) ? startMs : endDate.getTime();
+      if (dateKey === todayDateKey && startMs <= nowMs) return;
       const startLabel = getIndiaTimeLabel(startDate, { hour12: true });
       const endLabel = getIndiaTimeLabel(endDate, { hour12: true });
       const label = endLabel ? `${startLabel} - ${endLabel}` : startLabel;
@@ -99,7 +103,7 @@ const MentorDetails = () => {
           endMs,
           startTime: start,
           endTime: slot?.end_time || start,
-          isAvailable: slot?.is_available !== false,
+          isAvailable: true,
         });
       }
     });
@@ -110,7 +114,12 @@ const MentorDetails = () => {
       });
     });
     return map;
-  }, [availabilitySlots, weekColumns]);
+  }, [availabilitySlots, todayDateKey, weekColumns]);
+
+  const canGoPrevWeek = useMemo(
+    () => addDaysToDateKey(weekStartKey, -7) >= todayDateKey,
+    [todayDateKey, weekStartKey]
+  );
 
   const availabilityByDay = useMemo(
     () => weekColumns.map((column) => availabilityByDate[column.dateKey] || []),
@@ -460,8 +469,9 @@ return (
               <div className="inline-flex items-center gap-2 self-start rounded-lg bg-[#f8fafc] px-2 py-1.5 ring-1 ring-[#e5e7eb] sm:self-auto">
                 <button
                   type="button"
-                  onClick={() => setWeekStartKey((prev) => addDaysToDateKey(prev, -7))}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                  onClick={() => setWeekStartKey((prev) => (canGoPrevWeek ? addDaysToDateKey(prev, -7) : prev))}
+                  disabled={!canGoPrevWeek}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                   aria-label="Previous week"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -479,59 +489,167 @@ return (
             </div>
 
             {/* Calendar Grid */}
-            <div className="mt-4 overflow-x-auto">
-              <div className="min-w-[700px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
-                <div className="grid grid-cols-7 gap-2 border-b border-[#e5e7eb] pb-3">
-                  {weekColumns.map((column) => (
+            <div className="mt-4">
+              <div className="space-y-3 md:hidden">
+                {weekColumns.map((column, dayIndex) => {
+                  const isTodayColumn = column.dateKey === todayDateKey;
+                  const dayNumber = Number(String(column.dateKey || '').split('-')[2] || 0);
+                  const daySlots = availabilityByDay[dayIndex] || [];
+                  return (
                     <div
-                      key={column.dateKey}
-                      className="text-center"
+                      key={`mobile-${column.dateKey}`}
+                      className={`rounded-xl p-3 ring-1 ${
+                        isTodayColumn ? 'bg-[#f5f0ff] ring-[#dfd2f6]' : 'bg-white ring-[#e5e7eb]'
+                      }`}
                     >
-                      <div className="text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
-                        {column.day}
+                      <div className="mb-3 flex items-center gap-3">
+                        <div
+                          className={`text-xs font-semibold uppercase tracking-wider ${
+                            isTodayColumn ? 'text-[#5D3699]' : 'text-[#6b7280]'
+                          }`}
+                        >
+                          {column.day}
+                        </div>
+                        {isTodayColumn ? (
+                          <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-[#5D3699] px-2 text-sm font-bold text-white">
+                            {dayNumber || '--'}
+                          </span>
+                        ) : (
+                          <span className="text-sm font-bold text-[#5D3699]">{dayNumber || '--'}</span>
+                        )}
                       </div>
-                      <div className="mt-1 text-[11px] font-medium text-[#5D3699]">
-                        {column.dateLabel || '--'}
+                      <div className="space-y-2">
+                        {daySlots.length > 0 ? (
+                          daySlots.map((slot) => {
+                            const isSubmitting = bookingSlotKey === `${slot.id}`;
+                            const startLabel = getIndiaTimeLabel(slot.startTime, { hour12: true }).toUpperCase();
+                            const endLabel = getIndiaTimeLabel(slot.endTime, { hour12: true }).toUpperCase();
+                            return (
+                              <button
+                                key={`mobile-slot-${column.dateKey}-${slot.id}`}
+                                type="button"
+                                onClick={() => openBookingConfirm(slot)}
+                                disabled={Boolean(bookingSlotKey)}
+                                className={`group flex h-14 w-full items-center justify-between rounded-xl border px-4 transition-all disabled:cursor-not-allowed ${
+                                  isSubmitting
+                                    ? 'border-[#5D3699] bg-[#5D3699] text-white'
+                                    : 'border-[#cfb9ef] bg-gradient-to-b from-white to-[#f7f1ff] text-[#4a2b7a] shadow-[0_2px_6px_rgba(93,54,153,0.1)]'
+                                } ${bookingSlotKey ? 'disabled:opacity-60' : ''}`}
+                              >
+                                <span className="text-sm font-bold tracking-wide">{startLabel || '--'}</span>
+                                <span className={`h-px w-8 ${isSubmitting ? 'bg-white/70' : 'bg-[#d5c3f1]'}`} />
+                                <span className="text-sm font-bold tracking-wide">{endLabel || '--'}</span>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <div className="flex h-12 items-center justify-center rounded-xl border border-dashed border-[#e5e7eb] bg-[#f9fafb] text-sm font-medium text-[#9ca3af]">
+                            No slots
+                          </div>
+                        )}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
 
-                <div className="mt-3 grid grid-cols-7 gap-2">
-                  {weekColumns.map((column, dayIndex) => (
-                    <div key={column.dateKey} className="space-y-2">
-                      {Array.from({ length: maxSlotRows }).map((_, rowIndex) => {
-                        const slot = availabilityByDay[dayIndex]?.[rowIndex] || null;
-                        if (!slot) {
-                          return (
-                            <div
-                              key={`${column.dateKey}-empty-${rowIndex}`}
-                              className="flex h-10 items-center justify-center rounded-lg bg-white text-[10px] text-[#9ca3af] ring-1 ring-[#e5e7eb]"
-                            >
-                              --
-                            </div>
-                          );
-                        }
-                        const isSubmitting = bookingSlotKey === `${slot.id}`;
-                        const isBookable = slot?.isAvailable !== false;
-                        return (
-                          <button
-                            key={`${column.dateKey}-${slot.id}-${rowIndex}`}
-                            type="button"
-                            onClick={() => openBookingConfirm(slot)}
-                            disabled={Boolean(bookingSlotKey) || !isBookable}
-                            className={`flex h-10 w-full items-center justify-center rounded-lg px-2 text-[9px] font-bold whitespace-nowrap transition-all disabled:cursor-not-allowed ${
-                              isBookable
-                                ? 'bg-[#5D3699]/10 text-[#5D3699] hover:bg-[#5D3699] hover:text-white'
-                                : 'bg-[#e5e7eb] text-[#9ca3af] opacity-60'
-                            } ${bookingSlotKey ? 'disabled:opacity-60' : ''}`}
+              <div className="hidden overflow-x-auto md:block">
+                <div className="min-w-[700px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
+                  <div className="grid grid-cols-7 gap-2 border-b border-[#e5e7eb] pb-3">
+                    {weekColumns.map((column) => {
+                      const isTodayColumn = column.dateKey === todayDateKey;
+                      const dayNumber = Number(String(column.dateKey || '').split('-')[2] || 0);
+                      const dayLabel = dayNumber || '--';
+                      return (
+                        <div
+                          key={column.dateKey}
+                          className="py-2 text-center"
+                        >
+                          <div
+                            className={`text-xs font-semibold uppercase tracking-wider ${
+                              isTodayColumn ? 'text-[#5D3699]' : 'text-[#6b7280]'
+                            }`}
                           >
-                            {isSubmitting ? 'Booking...' : slot.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ))}
+                            {column.day}
+                          </div>
+                          {isTodayColumn ? (
+                            <div className="mt-1.5 flex justify-center">
+                              <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-[12px] bg-[#5D3699] px-2 text-[22px] font-bold leading-none text-white shadow-[0_8px_16px_rgba(93,54,153,0.28)]">
+                                {dayLabel}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="mt-1 text-[22px] font-bold leading-none text-[#5D3699]">
+                              {dayLabel}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-7 gap-2">
+                    {weekColumns.map((column, dayIndex) => {
+                      const isTodayColumn = column.dateKey === todayDateKey;
+                      return (
+                        <div
+                          key={column.dateKey}
+                          className={`space-y-2 rounded-xl p-1.5 ${
+                            isTodayColumn ? 'bg-[#f5f0ff] ring-1 ring-[#e0d2f7]' : ''
+                          }`}
+                        >
+                          {Array.from({ length: maxSlotRows }).map((_, rowIndex) => {
+                            const slot = availabilityByDay[dayIndex]?.[rowIndex] || null;
+                            if (!slot) {
+                              return (
+                                <div
+                                  key={`${column.dateKey}-empty-${rowIndex}`}
+                                  className={`flex h-16 items-center justify-center rounded-xl border border-dashed text-sm font-semibold ${
+                                    isTodayColumn
+                                      ? 'border-[#dfd2f6] bg-white/75 text-[#b2a4ca]'
+                                      : 'border-[#e5e7eb] bg-white text-[#9ca3af]'
+                                  }`}
+                                >
+                                  --
+                                </div>
+                              );
+                            }
+                            const isSubmitting = bookingSlotKey === `${slot.id}`;
+                            const isBookable = slot?.isAvailable !== false;
+                            const startLabel = getIndiaTimeLabel(slot.startTime, { hour12: true }).toUpperCase();
+                            const endLabel = getIndiaTimeLabel(slot.endTime, { hour12: true }).toUpperCase();
+                            return (
+                              <button
+                                key={`${column.dateKey}-${slot.id}-${rowIndex}`}
+                                type="button"
+                                onClick={() => openBookingConfirm(slot)}
+                                disabled={Boolean(bookingSlotKey) || !isBookable}
+                                className={`group relative flex h-16 w-full items-center justify-center rounded-xl border px-2 transition-all disabled:cursor-not-allowed ${
+                                  isBookable
+                                    ? 'border-[#cfb9ef] bg-gradient-to-b from-white to-[#f7f1ff] text-[#4a2b7a] shadow-[0_2px_6px_rgba(93,54,153,0.1)] hover:-translate-y-[1px] hover:border-[#5D3699] hover:from-[#6f49af] hover:to-[#5D3699] hover:text-white hover:shadow-[0_10px_20px_rgba(93,54,153,0.28)]'
+                                    : 'border-[#e5e7eb] bg-[#f3f4f6] text-[#9ca3af] opacity-70'
+                                } ${bookingSlotKey ? 'disabled:opacity-60' : ''}`}
+                              >
+                                {isSubmitting ? (
+                                  <span className="text-[12px] font-semibold">Booking...</span>
+                                ) : (
+                                  <span className="flex w-full flex-col items-center leading-none">
+                                    <span className="text-[12px] font-bold tracking-wide">{startLabel || '--'}</span>
+                                    <span
+                                      className={`my-1 h-px w-10 ${
+                                        isBookable ? 'bg-[#d5c3f1] group-hover:bg-white/60' : 'bg-[#d1d5db]'
+                                      }`}
+                                    />
+                                    <span className="text-[12px] font-bold tracking-wide">{endLabel || '--'}</span>
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>

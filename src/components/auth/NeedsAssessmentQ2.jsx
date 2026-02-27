@@ -9,24 +9,18 @@ const Choice = ({ label, selected, onClick }) => {
     <button
       type="button"
       onClick={onClick}
-      className={`relative w-[240px] h-[69px] rounded-[12px] border-2 px-[20px] py-[22px] text-sm text-secondary flex items-center justify-center ${
-        selected ? 'border-[#41a34a] bg-[#f2faf3] shadow-sm' : 'border-default'
+      className={`relative flex w-full min-h-[72px] max-w-[260px] items-center justify-center rounded-[12px] border-2 px-4 py-4 text-center text-secondary sm:px-5 ${
+        selected ? 'border-[#41a34a] bg-[#f2faf3] shadow-sm' : 'border-default bg-white'
       }`}
     >
       <span
-        className="whitespace-nowrap"
-        style={{
-          fontFamily: 'DM Sans',
-          fontSize: '16px',
-          lineHeight: '24px',
-          fontWeight: selected ? 600 : 400,
-          textAlign: 'center',
-        }}
+        className={`text-sm leading-5 sm:text-base sm:leading-6 ${selected ? 'font-semibold' : 'font-normal'}`}
+        style={{ fontFamily: 'DM Sans' }}
       >
         {label}
       </span>
       {selected && (
-        <span className="absolute right-3 h-4 w-4 rounded-full bg-[#41a34a] text-white text-[10px] flex items-center justify-center">
+        <span className="absolute right-3 flex h-4 w-4 items-center justify-center rounded-full bg-[#41a34a] text-[10px] text-white">
           {'\u2713'}
         </span>
       )}
@@ -59,30 +53,23 @@ const NeedsAssessmentQ2 = () => {
       <TopAuth />
 
       <main className="flex-1">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-20 py-10 sm:py-14">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex items-center justify-between text-xs text-muted">
-              <span style={{ fontFamily: 'DM Sans', fontSize: '12px', lineHeight: '24px', fontWeight: 400, textAlign: 'center' }}>
-                Step 3 of 3: Needs Assessment
-              </span>
-              <span style={{ fontFamily: 'DM Sans', fontSize: '12px', lineHeight: '24px', fontWeight: 400, textAlign: 'center' }}>
-                Question 2 of 5
-              </span>
+        <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 sm:py-10 lg:px-20 lg:py-14">
+          <div className="mx-auto max-w-3xl">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+              <span className="text-xs">Step 3 of 3: Needs Assessment</span>
+              <span className="text-xs">Question 2 of 5</span>
             </div>
             <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
-              <div className="h-1.5 w-2/5 rounded-full bg-accent"></div>
+              <div className="h-1.5 w-2/5 rounded-full bg-accent" />
             </div>
 
-            <div className="text-center mt-10">
-              <h2
-                className="text-center text-[#1f2937]"
-                style={{ fontFamily: 'Manrope', fontSize: '36px', lineHeight: '45.5px', fontWeight: 600 }}
-              >
+            <div className="mt-8 text-center sm:mt-10">
+              <h2 className="text-center text-2xl font-semibold leading-tight text-[#1f2937] sm:text-3xl lg:text-[36px] lg:leading-[45.5px]">
                 What&apos;s been causing this feeling?
               </h2>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center">
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:justify-items-center lg:grid-cols-3">
               {options.map((option) => (
                 <Choice
                   key={option}
@@ -93,24 +80,26 @@ const NeedsAssessmentQ2 = () => {
               ))}
             </div>
 
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
               <Link
                 to="/needs-assessment"
-                className="w-full sm:w-40 rounded-md border border-default py-2.5 text-sm text-center text-muted"
+                className="w-full rounded-md border border-default bg-white py-2.5 text-center text-sm text-muted sm:w-40"
               >
                 Back
               </Link>
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full sm:w-80 rounded-md bg-accent text-on-accent py-2.5 text-sm text-center"
+                className="w-full rounded-md bg-accent py-2.5 text-center text-sm text-on-accent sm:w-80"
               >
-                Next Question →
+                Next Question -&gt;
               </button>
             </div>
 
             <div className="mt-4 text-center">
-              <button className="text-xs text-subtle underline" onClick={handleNext}>Skip this question</button>
+              <button type="button" className="text-xs text-subtle underline" onClick={handleNext}>
+                Skip this question
+              </button>
             </div>
           </div>
         </div>
