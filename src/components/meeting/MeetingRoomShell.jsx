@@ -14,14 +14,35 @@ import {
 import { setSelectedSessionId } from '../../apis/api/storage';
 
 const TURN_URL = String(import.meta.env.VITE_TURN_URL || '').trim();
+const TURN_URLS = String(import.meta.env.VITE_TURN_URLS || '').trim();
 const TURN_USERNAME = String(import.meta.env.VITE_TURN_USERNAME || '').trim();
 const TURN_CREDENTIAL = String(import.meta.env.VITE_TURN_CREDENTIAL || '').trim();
 const STUN_URL = String(import.meta.env.VITE_STUN_URL || 'stun:stun.l.google.com:19302').trim();
+const STUN_URLS = String(import.meta.env.VITE_STUN_URLS || '').trim();
+const FORCE_RELAY = ['1', 'true', 'yes', 'on'].includes(
+  String(import.meta.env.VITE_FORCE_RELAY || '').trim().toLowerCase()
+);
 
-const rtcIceServers = [{ urls: STUN_URL }];
-if (TURN_URL && TURN_USERNAME && TURN_CREDENTIAL) {
+const splitUrls = (value) =>
+  String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const stunUrls = [...splitUrls(STUN_URLS), ...splitUrls(STUN_URL)];
+if (!stunUrls.length && STUN_URL) stunUrls.push(STUN_URL);
+
+const turnUrls = [...splitUrls(TURN_URLS), ...splitUrls(TURN_URL)];
+
+const rtcIceServers = [];
+if (stunUrls.length) {
   rtcIceServers.push({
-    urls: TURN_URL,
+    urls: stunUrls.length === 1 ? stunUrls[0] : stunUrls,
+  });
+}
+if (turnUrls.length && TURN_USERNAME && TURN_CREDENTIAL) {
+  rtcIceServers.push({
+    urls: turnUrls.length === 1 ? turnUrls[0] : turnUrls,
     username: TURN_USERNAME,
     credential: TURN_CREDENTIAL,
   });
@@ -29,6 +50,7 @@ if (TURN_URL && TURN_USERNAME && TURN_CREDENTIAL) {
 
 const rtcConfig = {
   iceServers: rtcIceServers,
+  iceTransportPolicy: FORCE_RELAY ? 'relay' : 'all',
 };
 
 const CLOUDINARY_CLOUD_NAME = String(import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
@@ -690,6 +712,18 @@ const MeetingRoomShell = ({
         await sendSignal('ice', event.candidate);
       } catch (err) {
         appendError(err?.message || 'Unable to share ICE candidate.');
+      }
+    };
+    peer.onicecandidateerror = (event) => {
+      const host = String(event?.hostCandidate || '').trim();
+      const code = event?.errorCode;
+      const text = String(event?.errorText || '').trim();
+      if (text || code) {
+        appendError(
+          `ICE candidate error${code ? ` (${code})` : ''}${host ? ` on ${host}` : ''}${
+            text ? `: ${text}` : ''
+          }`
+        );
       }
     };
     peer.ontrack = (event) => {
