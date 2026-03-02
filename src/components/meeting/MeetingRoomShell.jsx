@@ -134,8 +134,6 @@ const isIgnorableIceCandidateErrorEvent = (event) => {
 
 const getRefreshGuardKey = (sessionId, participantRole) =>
   `bond-room:meeting-refresh:${participantRole || 'unknown'}:${sessionId || '0'}`;
-const getConnectingRefreshGuardKey = (sessionId, participantRole) =>
-  `bond-room:meeting-refresh-connecting:${participantRole || 'unknown'}:${sessionId || '0'}`;
 
 const MeetingRoomShell = ({
   api,
@@ -1514,19 +1512,7 @@ const MeetingRoomShell = ({
     ) {
       return undefined;
     }
-    const guardKey = getConnectingRefreshGuardKey(sessionId, participantRole);
     const timer = window.setTimeout(() => {
-      try {
-        const attempts = Number(window.sessionStorage.getItem(guardKey) || '0');
-        const maxAttempts = 2;
-        if (attempts >= maxAttempts) {
-          console.error('[MeetingRoomShell] Auto-refresh skipped: max connecting refresh attempts reached.');
-          return;
-        }
-        window.sessionStorage.setItem(guardKey, String(attempts + 1));
-      } catch {
-        // no-op
-      }
       window.location.reload();
     }, 10000);
     return () => {
@@ -1537,10 +1523,8 @@ const MeetingRoomShell = ({
   useEffect(() => {
     if (!sessionId || connectionState !== 'connected' || typeof window === 'undefined') return;
     const guardKey = getRefreshGuardKey(sessionId, participantRole);
-    const connectingGuardKey = getConnectingRefreshGuardKey(sessionId, participantRole);
     try {
       window.sessionStorage.removeItem(guardKey);
-      window.sessionStorage.removeItem(connectingGuardKey);
     } catch {
       // no-op
     }
