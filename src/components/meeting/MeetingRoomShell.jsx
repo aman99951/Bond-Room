@@ -17,6 +17,7 @@ const TURN_URL = String(import.meta.env.VITE_TURN_URL || '').trim();
 const TURN_URLS = String(import.meta.env.VITE_TURN_URLS || '').trim();
 const TURN_USERNAME = String(import.meta.env.VITE_TURN_USERNAME || '').trim();
 const TURN_CREDENTIAL = String(import.meta.env.VITE_TURN_CREDENTIAL || '').trim();
+const TURN_CREDENTIALS_URL = String(import.meta.env.VITE_TURN_CREDENTIALS_URL || '').trim();
 const STUN_URL = String(import.meta.env.VITE_STUN_URL || 'stun:stun.l.google.com:19302').trim();
 const STUN_URLS = String(import.meta.env.VITE_STUN_URLS || '').trim();
 const FORCE_RELAY = ['1', 'true', 'yes', 'on'].includes(
@@ -51,10 +52,34 @@ if (HAS_TURN_CONFIG) {
   });
 }
 
-const rtcConfig = {
+const DEFAULT_RTC_CONFIG = {
   iceServers: rtcIceServers,
   iceTransportPolicy: RELAY_ENABLED ? 'relay' : 'all',
 };
+
+const normalizeRtcIceServers = (payload) => {
+  const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.iceServers) ? payload.iceServers : [];
+  return rows
+    .map((row) => {
+      if (!row || typeof row !== 'object') return null;
+      const rawUrls = Array.isArray(row.urls) ? row.urls : [row.urls || row.url];
+      const urls = rawUrls.map((item) => String(item || '').trim()).filter(Boolean);
+      if (!urls.length) return null;
+      const entry = { urls: urls.length === 1 ? urls[0] : urls };
+      const username = String(row.username || '').trim();
+      const credential = String(row.credential || '').trim();
+      if (username) entry.username = username;
+      if (credential) entry.credential = credential;
+      return entry;
+    })
+    .filter(Boolean);
+};
+
+const hasTurnIceServers = (servers) =>
+  servers.some((server) => {
+    const urls = Array.isArray(server?.urls) ? server.urls : [server?.urls];
+    return urls.some((value) => String(value || '').trim().toLowerCase().startsWith('turn'));
+  });
 
 const CLOUDINARY_CLOUD_NAME = String(import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
 const CLOUDINARY_UPLOAD_PRESET = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '').trim();
@@ -121,6 +146,7 @@ const MeetingRoomShell = ({
   const recordingAudioNodesRef = useRef([]);
   const recordingAudioTrackIdsRef = useRef(new Set());
   const sessionClosedSyncRef = useRef(false);
+  const rtcConfigRef = useRef(DEFAULT_RTC_CONFIG);
 
   const [error, setError] = useState('');
   const [connectionState, setConnectionState] = useState('idle');
@@ -156,6 +182,35 @@ const MeetingRoomShell = ({
     if (isSuppressedRtcError(message)) return;
     setError(String(message));
   }, []);
+
+  const prepareRtcConfig = useCallback(async () => {
+    rtcConfigRef.current = DEFAULT_RTC_CONFIG;
+    if (!TURN_CREDENTIALS_URL) return;
+    try {
+      const response = await fetch(TURN_CREDENTIALS_URL, {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        throw new Error(`TURN credentials request failed (${response.status}).`);
+      }
+      const payload = await response.json();
+      const dynamicIceServers = normalizeRtcIceServers(payload);
+      if (!dynamicIceServers.length) {
+        throw new Error('TURN credentials response did not include ICE servers.');
+      }
+      const relayAllowed = RELAY_REQUESTED && hasTurnIceServers(dynamicIceServers);
+      rtcConfigRef.current = {
+        iceServers: dynamicIceServers,
+        iceTransportPolicy: relayAllowed ? 'relay' : 'all',
+      };
+      if (RELAY_REQUESTED && !relayAllowed) {
+        appendError('TURN credentials did not include TURN relay URLs, using non-relay ICE policy.');
+      }
+    } catch (err) {
+      appendError(`Unable to load TURN credentials API, falling back to static ICE config. ${err?.message || ''}`.trim());
+    }
+  }, [appendError]);
 
   useEffect(() => {
     if (!RELAY_REQUESTED || HAS_TURN_CONFIG) return;
@@ -708,7 +763,7 @@ const MeetingRoomShell = ({
       return peerConnectionRef.current;
     }
 
-    const peer = new RTCPeerConnection(rtcConfig);
+    const peer = new RTCPeerConnection(rtcConfigRef.current || DEFAULT_RTC_CONFIG);
     peer.onconnectionstatechange = () => {
       const nextState = peer.connectionState || 'connecting';
       setConnectionState(nextState);
@@ -1312,6 +1367,7 @@ const MeetingRoomShell = ({
       setSelectedSessionId(sessionId);
       setConnectionState('connecting');
       try {
+        await prepareRtcConfig();
         const localStream = await initializeLocalMedia();
         if (cancelled) {
           if (localStream) {
@@ -1358,6 +1414,7 @@ const MeetingRoomShell = ({
     initializeLocalMedia,
     isMentorToolsEnabled,
     loadIncidents,
+    prepareRtcConfig,
     pollSignals,
     sessionId,
     startRecordingStatusPolling,
