@@ -33,6 +33,9 @@ const stunUrls = [...splitUrls(STUN_URLS), ...splitUrls(STUN_URL)];
 if (!stunUrls.length && STUN_URL) stunUrls.push(STUN_URL);
 
 const turnUrls = [...splitUrls(TURN_URLS), ...splitUrls(TURN_URL)];
+const HAS_TURN_CONFIG = Boolean(turnUrls.length && TURN_USERNAME && TURN_CREDENTIAL);
+const RELAY_REQUESTED = FORCE_RELAY;
+const RELAY_ENABLED = RELAY_REQUESTED && HAS_TURN_CONFIG;
 
 const rtcIceServers = [];
 if (stunUrls.length) {
@@ -40,7 +43,7 @@ if (stunUrls.length) {
     urls: stunUrls.length === 1 ? stunUrls[0] : stunUrls,
   });
 }
-if (turnUrls.length && TURN_USERNAME && TURN_CREDENTIAL) {
+if (HAS_TURN_CONFIG) {
   rtcIceServers.push({
     urls: turnUrls.length === 1 ? turnUrls[0] : turnUrls,
     username: TURN_USERNAME,
@@ -50,7 +53,7 @@ if (turnUrls.length && TURN_USERNAME && TURN_CREDENTIAL) {
 
 const rtcConfig = {
   iceServers: rtcIceServers,
-  iceTransportPolicy: FORCE_RELAY ? 'relay' : 'all',
+  iceTransportPolicy: RELAY_ENABLED ? 'relay' : 'all',
 };
 
 const CLOUDINARY_CLOUD_NAME = String(import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
@@ -153,6 +156,13 @@ const MeetingRoomShell = ({
     if (isSuppressedRtcError(message)) return;
     setError(String(message));
   }, []);
+
+  useEffect(() => {
+    if (!RELAY_REQUESTED || HAS_TURN_CONFIG) return;
+    appendError(
+      'VITE_FORCE_RELAY is enabled but TURN config is incomplete. Add VITE_TURN_URL(S), VITE_TURN_USERNAME and VITE_TURN_CREDENTIAL, or disable VITE_FORCE_RELAY.'
+    );
+  }, [appendError]);
 
   const stopRecordingComposition = useCallback(() => {
     if (recordingCanvasRafRef.current) {

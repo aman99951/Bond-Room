@@ -60,6 +60,14 @@ const request = async (path, options = {}) => {
       headers: finalHeaders,
       body: data !== undefined ? (isFormData ? data : JSON.stringify(data)) : undefined,
     });
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    if (response.ok && contentType.includes('text/html')) {
+      const error = new Error(
+        'Unexpected HTML response from API. Verify VITE_API_BASE_URL and Vercel rewrites for /api routes.'
+      );
+      error.status = response.status;
+      throw error;
+    }
 
     const payload = await parseResponseBody(response);
     if (!response.ok) {
