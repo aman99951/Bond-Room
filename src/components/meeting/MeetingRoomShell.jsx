@@ -106,6 +106,31 @@ const isSuppressedRtcError = (message) => {
   );
 };
 
+const isPrivateHostCandidate = (value) => {
+  const host = String(value || '').trim().toLowerCase();
+  const rfc1918OrLinkLocalIpv4 =
+    /\b10\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/.test(host) ||
+    /\b192\.168\.\d{1,3}\.\d{1,3}\b/.test(host) ||
+    /\b172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}\b/.test(host) ||
+    /\b169\.254\.\d{1,3}\.\d{1,3}\b/.test(host);
+  const localIpv6 = host.includes('fe80:') || host.includes('fd') || host.includes('fc');
+  return (
+    rfc1918OrLinkLocalIpv4 ||
+    localIpv6
+  );
+};
+
+const isIgnorableIceCandidateErrorEvent = (event) => {
+  const code = Number(event?.errorCode || 0);
+  const text = String(event?.errorText || '').toLowerCase();
+  const host = String(event?.hostCandidate || '').toLowerCase();
+  if (code !== 701) return false;
+  if (text.includes('address not associated with the desired network interface')) return true;
+  if (text.includes('failed to establish connection')) return true;
+  if (isPrivateHostCandidate(host)) return true;
+  return false;
+};
+
 const MeetingRoomShell = ({
   api,
   participantRole,
@@ -780,6 +805,7 @@ const MeetingRoomShell = ({
       }
     };
     peer.onicecandidateerror = (event) => {
+      if (isIgnorableIceCandidateErrorEvent(event)) return;
       const host = String(event?.hostCandidate || '').trim();
       const code = event?.errorCode;
       const text = String(event?.errorText || '').trim();
