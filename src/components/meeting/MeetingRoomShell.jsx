@@ -124,7 +124,8 @@ const isIgnorableIceCandidateErrorEvent = (event) => {
   const code = Number(event?.errorCode || 0);
   const text = String(event?.errorText || '').toLowerCase();
   const host = String(event?.hostCandidate || '').toLowerCase();
-  if (code !== 701) return false;
+  if (code === 701) return true;
+  if (text.includes('stun binding request timed out')) return true;
   if (text.includes('address not associated with the desired network interface')) return true;
   if (text.includes('failed to establish connection')) return true;
   if (isPrivateHostCandidate(host)) return true;
@@ -173,7 +174,6 @@ const MeetingRoomShell = ({
   const sessionClosedSyncRef = useRef(false);
   const rtcConfigRef = useRef(DEFAULT_RTC_CONFIG);
 
-  const [error, setError] = useState('');
   const [connectionState, setConnectionState] = useState('idle');
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
@@ -205,7 +205,7 @@ const MeetingRoomShell = ({
   const appendError = useCallback((message) => {
     if (!message) return;
     if (isSuppressedRtcError(message)) return;
-    setError(String(message));
+    console.error('[MeetingRoomShell]', String(message));
   }, []);
 
   const prepareRtcConfig = useCallback(async () => {
@@ -1385,7 +1385,8 @@ const MeetingRoomShell = ({
     let cancelled = false;
     sessionClosedSyncRef.current = false;
     if (!sessionId) {
-      setError('Missing session ID. Please join from My Sessions.');
+      appendError('Missing session ID. Please join from My Sessions.');
+      setConnectionState('failed');
       return undefined;
     }
 
@@ -1626,13 +1627,6 @@ const MeetingRoomShell = ({
           </button>
         </div>
       </div>
-
-      {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
-
       {meetingSummary ? (
         <div className="mb-4 rounded-xl border border-[#d1fae5] bg-[#ecfdf5] px-4 py-3 text-sm text-[#065f46]">
           <div className="text-xs font-semibold uppercase tracking-wide text-[#047857]">Meeting Summary</div>
