@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronDown, Calendar, Table, Clock, Video, ArrowRight, Filter, X } from 'lucide-react';
 import { mentorApi } from '../../../apis/api/mentorApi';
@@ -153,6 +153,55 @@ const getJoinUnavailableLabel = (session) => {
   return 'Not Joinable';
 };
 
+const parseDateMs = (value) => {
+  const parsed = new Date(value || '');
+  const millis = parsed.getTime();
+  return Number.isNaN(millis) ? null : millis;
+};
+
+const formatStartedAtLabel = (value) => {
+  const dateLabel = formatDateLabel(value);
+  const timeLabel = getIndiaTimeLabel(value, { hour12: true });
+  if ((!dateLabel || dateLabel === 'Date TBD') && !timeLabel) return '';
+  if (!dateLabel || dateLabel === 'Date TBD') return timeLabel || '';
+  if (!timeLabel) return dateLabel;
+  return `${dateLabel} at ${timeLabel}`;
+};
+
+const isMenteeStartedSession = (session) => {
+  const status = String(session?.status || '').toLowerCase();
+  if (!['approved', 'scheduled'].includes(status)) return false;
+  if (isConnectionClosed(session)) return false;
+  const menteeJoinedAtMs = parseDateMs(session?.mentee_joined_at);
+  if (!menteeJoinedAtMs) return false;
+
+  const nowMs = Date.now();
+  const scheduledStartMs = parseDateMs(session?.scheduled_start);
+  let scheduledEndMs = parseDateMs(session?.scheduled_end);
+
+  if (!scheduledEndMs && scheduledStartMs) {
+    const minutes = Number(session?.duration_minutes || 45);
+    scheduledEndMs = scheduledStartMs + Math.max(15, minutes) * 60 * 1000;
+  }
+
+  if (!scheduledStartMs || !scheduledEndMs) {
+    return !isPastSession(session) && nowMs - menteeJoinedAtMs <= 2 * 60 * 60 * 1000;
+  }
+
+  const earlyJoinWindowMs = 15 * 60 * 1000;
+  const lateJoinWindowMs = 60 * 60 * 1000;
+  const inCurrentWindow =
+    nowMs >= scheduledStartMs - earlyJoinWindowMs && nowMs <= scheduledEndMs + lateJoinWindowMs;
+  if (!inCurrentWindow) return false;
+
+  const inJoinTimestampWindow =
+    menteeJoinedAtMs >= scheduledStartMs - earlyJoinWindowMs &&
+    menteeJoinedAtMs <= scheduledEndMs + lateJoinWindowMs &&
+    menteeJoinedAtMs <= nowMs + 60 * 1000;
+
+  return inJoinTimestampWindow;
+};
+
 const MySessions = () => {
   const [view, setView] = useState('calendar');
   const navigate = useNavigate();
@@ -163,6 +212,10 @@ const MySessions = () => {
   const [error, setError] = useState('');
   const [joinError, setJoinError] = useState('');
   const [joiningId, setJoiningId] = useState(null);
+  const [meetingInvite, setMeetingInvite] = useState(null);
+  const pollingRef = useRef(null);
+  const menteeStartedBySessionRef = useRef({});
+  const joinedMeetingSessionIdsRef = useRef(new Set());
   const [filterOpen, setFilterOpen] = useState(false);
   const [weekFilterOpen, setWeekFilterOpen] = useState(false);
   const [weekFilterValue, setWeekFilterValue] = useState('This Week');
@@ -191,8 +244,39 @@ const MySessions = () => {
     let cancelled = false;
     if (!mentor?.id) {
       setLoading(false);
+      setMeetingInvite(null);
       return undefined;
     }
+
+    const updateMenteeStartSignals = (sessionItems) => {
+      const next = {};
+      let latestInvite = null;
+
+      sessionItems.forEach((session) => {
+        const sessionId = String(session?.id || '');
+        if (!sessionId) return;
+        const startedAt = String(session?.mentee_joined_at || '');
+        next[sessionId] = startedAt;
+
+        const alreadyJoined = joinedMeetingSessionIdsRef.current.has(sessionId);
+        if (!alreadyJoined && startedAt && isMenteeStartedSession(session)) {
+          if (
+            !latestInvite ||
+            new Date(startedAt).getTime() > new Date(latestInvite.mentee_joined_at || 0).getTime()
+          ) {
+            latestInvite = session;
+          }
+        }
+      });
+
+      menteeStartedBySessionRef.current = next;
+      if (latestInvite) {
+        setMeetingInvite(latestInvite);
+      } else {
+        setMeetingInvite(null);
+      }
+    };
+
     const loadSessions = async () => {
       setLoading(true);
       setError('');
@@ -205,6 +289,7 @@ const MySessions = () => {
         const dispositions = normalizeList(dispositionResponse);
         if (!cancelled) {
           setSessions(list);
+          updateMenteeStartSignals(list);
           const nextDispositionSessionIds = new Set(
             dispositions
               .map((item) => Number(item?.session || 0))
@@ -260,9 +345,27 @@ const MySessions = () => {
         if (!cancelled) setLoading(false);
       }
     };
+
+    const pollSessions = async () => {
+      try {
+        const sessionResponse = await mentorApi.listSessions({ mentor_id: mentor.id });
+        if (cancelled) return;
+        const list = normalizeList(sessionResponse);
+        setSessions(list);
+        updateMenteeStartSignals(list);
+      } catch {
+        // no-op for silent polling
+      }
+    };
+
     loadSessions();
+    pollingRef.current = window.setInterval(pollSessions, 5000);
     return () => {
       cancelled = true;
+      if (pollingRef.current) {
+        window.clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
     };
   }, [mentor?.id]);
 
@@ -357,10 +460,13 @@ const MySessions = () => {
     }
     if (isPastSession(session)) return;
     setJoinError('');
+    const sessionKey = String(session.id);
     const existing = getJoinUrl(session);
     const isWrongRolePath =
       typeof existing === 'string' && existing.includes('/mentee-meeting-room');
     if (existing && !isWrongRolePath) {
+      joinedMeetingSessionIdsRef.current.add(sessionKey);
+      setMeetingInvite((prev) => (String(prev?.id || '') === sessionKey ? null : prev));
       openJoinLink(existing, session.id);
       return;
     }
@@ -381,6 +487,8 @@ const MySessions = () => {
               : item
           )
         );
+        joinedMeetingSessionIdsRef.current.add(sessionKey);
+        setMeetingInvite((prev) => (String(prev?.id || '') === sessionKey ? null : prev));
         openJoinLink(url, session.id);
       } else {
         setJoinError('Join link not ready yet.');
@@ -544,6 +652,29 @@ return (
         </div>
       </div>
     </div>
+
+    {meetingInvite && canJoinSession(meetingInvite) ? (
+      <div className="mb-4 rounded-xl border border-[#d8b4fe] bg-[#faf5ff] px-4 py-3 shadow-sm ring-1 ring-[#f3e8ff]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-[#4c1d95]">
+            {`${getMenteeName(meetingInvite)} started this session${
+              formatStartedAtLabel(meetingInvite?.mentee_joined_at)
+                ? ` on ${formatStartedAtLabel(meetingInvite?.mentee_joined_at)}`
+                : ''
+            }. You can join now.`}
+          </div>
+          <button
+            type="button"
+            onClick={() => handleJoin(meetingInvite)}
+            disabled={joiningId === meetingInvite.id}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4a2b7a] disabled:opacity-50"
+          >
+            <Video className="h-3.5 w-3.5" />
+            {joiningId === meetingInvite.id ? 'Joining...' : 'Join Meeting'}
+          </button>
+        </div>
+      </div>
+    ) : null}
 
     {/* Calendar View */}
     {view === 'calendar' ? (

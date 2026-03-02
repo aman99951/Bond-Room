@@ -132,6 +132,9 @@ const isIgnorableIceCandidateErrorEvent = (event) => {
   return false;
 };
 
+const getRefreshGuardKey = (sessionId, participantRole) =>
+  `bond-room:meeting-refresh:${participantRole || 'unknown'}:${sessionId || '0'}`;
+
 const MeetingRoomShell = ({
   api,
   participantRole,
@@ -1477,6 +1480,38 @@ const MeetingRoomShell = ({
     sessionId,
     stopReconnectLoop,
   ]);
+
+  useEffect(() => {
+    if (!sessionId || connectionState !== 'failed' || typeof window === 'undefined') return undefined;
+    const guardKey = getRefreshGuardKey(sessionId, participantRole);
+    try {
+      const attempts = Number(window.sessionStorage.getItem(guardKey) || '0');
+      const maxAttempts = 2;
+      if (attempts >= maxAttempts) {
+        console.error('[MeetingRoomShell] Auto-refresh skipped: max failed refresh attempts reached.');
+        return undefined;
+      }
+      window.sessionStorage.setItem(guardKey, String(attempts + 1));
+    } catch {
+      // no-op
+    }
+    const timer = window.setTimeout(() => {
+      window.location.reload();
+    }, 1200);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [connectionState, participantRole, sessionId]);
+
+  useEffect(() => {
+    if (!sessionId || connectionState !== 'connected' || typeof window === 'undefined') return;
+    const guardKey = getRefreshGuardKey(sessionId, participantRole);
+    try {
+      window.sessionStorage.removeItem(guardKey);
+    } catch {
+      // no-op
+    }
+  }, [connectionState, participantRole, sessionId]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;

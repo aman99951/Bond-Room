@@ -124,6 +124,15 @@ const parseDateMs = (value) => {
   return Number.isNaN(millis) ? null : millis;
 };
 
+const formatStartedAtLabel = (value) => {
+  const dateLabel = formatDate(value);
+  const timeLabel = getIndiaTimeLabel(value, { hour12: true });
+  if ((!dateLabel || dateLabel === '-') && !timeLabel) return '';
+  if (!dateLabel || dateLabel === '-') return timeLabel || '';
+  if (!timeLabel) return dateLabel;
+  return `${dateLabel} at ${timeLabel}`;
+};
+
 const isMentorStartedSession = (session) => {
   const status = String(session?.status || '').toLowerCase();
   if (!['approved', 'scheduled'].includes(status)) return false;
@@ -601,7 +610,11 @@ return (
       <div className="mb-4 rounded-xl border border-[#d8b4fe] bg-[#faf5ff] px-4 py-3 shadow-sm ring-1 ring-[#f3e8ff]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm text-[#4c1d95]">
-            Your mentor has started the meeting. You can join now.
+            {`Your mentor started this session${
+              formatStartedAtLabel(meetingInvite?.mentor_joined_at)
+                ? ` on ${formatStartedAtLabel(meetingInvite?.mentor_joined_at)}`
+                : ''
+            }. You can join now.`}
           </div>
           <div className="flex items-center gap-2">
             <button
