@@ -464,16 +464,14 @@ const MySessions = () => {
     const existing = getJoinUrl(session);
     const isWrongRolePath =
       typeof existing === 'string' && existing.includes('/mentee-meeting-room');
-    if (existing && !isWrongRolePath) {
-      joinedMeetingSessionIdsRef.current.add(sessionKey);
-      setMeetingInvite((prev) => (String(prev?.id || '') === sessionKey ? null : prev));
-      openJoinLink(existing, session.id);
-      return;
-    }
     setJoiningId(session.id);
     try {
       const response = await mentorApi.getSessionJoinLink(session.id);
-      const url = response?.meeting_url || response?.join_url || response?.host_join_url || '';
+      const url =
+        response?.meeting_url ||
+        response?.join_url ||
+        response?.host_join_url ||
+        (!isWrongRolePath ? existing : '');
       if (url) {
         setSessions((prev) =>
           prev.map((item) =>
@@ -494,7 +492,13 @@ const MySessions = () => {
         setJoinError('Join link not ready yet.');
       }
     } catch (err) {
-      setJoinError(err?.message || 'Unable to fetch join link.');
+      if (existing && !isWrongRolePath) {
+        joinedMeetingSessionIdsRef.current.add(sessionKey);
+        setMeetingInvite((prev) => (String(prev?.id || '') === sessionKey ? null : prev));
+        openJoinLink(existing, session.id);
+      } else {
+        setJoinError(err?.message || 'Unable to fetch join link.');
+      }
     } finally {
       setJoiningId(null);
     }

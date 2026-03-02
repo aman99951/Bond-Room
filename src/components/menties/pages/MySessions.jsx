@@ -136,35 +136,14 @@ const formatStartedAtLabel = (value) => {
 const isMentorStartedSession = (session) => {
   const status = String(session?.status || '').toLowerCase();
   if (!['approved', 'scheduled'].includes(status)) return false;
-  if (isConnectionClosed(session)) return false;
   const mentorJoinedAtMs = parseDateMs(session?.mentor_joined_at);
   if (!mentorJoinedAtMs) return false;
 
   const nowMs = Date.now();
-  const scheduledStartMs = parseDateMs(session?.scheduled_start);
-  let scheduledEndMs = parseDateMs(session?.scheduled_end);
-
-  if (!scheduledEndMs && scheduledStartMs) {
-    const minutes = Number(session?.duration_minutes || 45);
-    scheduledEndMs = scheduledStartMs + Math.max(15, minutes) * 60 * 1000;
-  }
-
-  if (!scheduledStartMs || !scheduledEndMs) {
-    return !isPastSession(session) && nowMs - mentorJoinedAtMs <= 2 * 60 * 60 * 1000;
-  }
-
-  const earlyJoinWindowMs = 15 * 60 * 1000;
-  const lateJoinWindowMs = 60 * 60 * 1000;
-  const inCurrentWindow =
-    nowMs >= scheduledStartMs - earlyJoinWindowMs && nowMs <= scheduledEndMs + lateJoinWindowMs;
-  if (!inCurrentWindow) return false;
-
-  const inJoinTimestampWindow =
-    mentorJoinedAtMs >= scheduledStartMs - earlyJoinWindowMs &&
-    mentorJoinedAtMs <= scheduledEndMs + lateJoinWindowMs &&
-    mentorJoinedAtMs <= nowMs + 60 * 1000;
-
-  return inJoinTimestampWindow;
+  const twelveHoursMs = 12 * 60 * 60 * 1000;
+  if (mentorJoinedAtMs > nowMs + 60 * 1000) return false;
+  if (nowMs - mentorJoinedAtMs > twelveHoursMs) return false;
+  return true;
 };
 
 const MySessions = () => {
@@ -606,7 +585,7 @@ return (
       </div>
     )}
 
-    {meetingInvite && canJoinSession(meetingInvite) ? (
+    {meetingInvite ? (
       <div className="mb-4 rounded-xl border border-[#d8b4fe] bg-[#faf5ff] px-4 py-3 shadow-sm ring-1 ring-[#f3e8ff]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm text-[#4c1d95]">
@@ -614,13 +593,15 @@ return (
               formatStartedAtLabel(meetingInvite?.mentor_joined_at)
                 ? ` on ${formatStartedAtLabel(meetingInvite?.mentor_joined_at)}`
                 : ''
-            }. You can join now.`}
+            }.${
+              canJoinSession(meetingInvite) ? ' You can join now.' : ' Join will be available shortly.'
+            }`}
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => handleJoin(meetingInvite)}
-              disabled={joiningId === meetingInvite.id}
+              disabled={joiningId === meetingInvite.id || !canJoinSession(meetingInvite)}
               className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4a2b7a] disabled:opacity-50"
             >
               <Video className="h-3.5 w-3.5" />
