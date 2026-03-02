@@ -14,6 +14,7 @@ import NeedsAssessmentQ5 from './auth/NeedsAssessmentQ5';
 import MainLayout from './MainLayout';
 import Dashboard from './menties/pages/Dashboard';
 import MySessions from './menties/pages/MySessions';
+import SessionRequests from './menties/pages/SessionRequests';
 import Mentors from './menties/pages/Mentors';
 import Profile from './menties/pages/Profile';
 import MentorDetails from './menties/pages/MentorDetails';
@@ -267,6 +268,7 @@ const AppLayout = () => {
         >
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="my-sessions" element={<MySessions />} />
+        <Route path="session-requests" element={<SessionRequests />} />
         <Route path="session-records" element={<SessionRecords />} />
         <Route path="mentors" element={<Mentors />} />
         <Route path="profile" element={<Profile />} />

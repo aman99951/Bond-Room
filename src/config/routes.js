@@ -7,13 +7,14 @@ import MentorProfile from '../components/menties/pages/MentorProfile';
 import BookSession from '../components/menties/pages/BookSession';
 import BookingSuccess from '../components/menties/pages/BookingSuccess';
 import Feedback from '../components/menties/pages/Feedback';
+import SessionRequests from '../components/menties/pages/SessionRequests';
 import MentorImpactDashboard from '../components/mentors/pages/ImpactDashboard';
 import MentorSessions from '../components/mentors/pages/MySessions';
 import MentorSessionRequests from '../components/mentors/pages/SessionRequests';
 import MentorAvailability from '../components/mentors/pages/ManageAvailability';
 import MentorMyprofilePage from '../components/mentors/pages/Myprofile';
 import SessionRecords from '../components/shared/SessionRecords';
-import { Home, Calendar, Users, User, FileText } from 'lucide-react';
+import { Home, Calendar, Users, User, FileText, ClipboardList } from 'lucide-react';
 
 export const navRoutes = [
   {
@@ -29,6 +30,13 @@ export const navRoutes = [
     path: '/my-sessions',
     icon: Calendar,
     component: MySessions,
+    roles: ['menties'],
+  },
+  {
+    label: 'Session Requested',
+    path: '/session-requests',
+    icon: ClipboardList,
+    component: SessionRequests,
     roles: ['menties'],
   },
   {
