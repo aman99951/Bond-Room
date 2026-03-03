@@ -176,6 +176,7 @@ const MeetingRoomShell = ({
   const recordingAudioTrackIdsRef = useRef(new Set());
   const sessionClosedSyncRef = useRef(false);
   const rtcConfigRef = useRef(DEFAULT_RTC_CONFIG);
+  const exitingRef = useRef(false);
 
   const [connectionState, setConnectionState] = useState('idle');
   const [micEnabled, setMicEnabled] = useState(true);
@@ -194,6 +195,7 @@ const MeetingRoomShell = ({
   const [incidents, setIncidents] = useState([]);
   const [meetingSummary, setMeetingSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [remoteEnded, setRemoteEnded] = useState(false);
   const isMentorToolsEnabled = participantRole === 'mentor';
   const showManualMentorTools = false;
 
@@ -925,11 +927,8 @@ const MeetingRoomShell = ({
             if (!peer.currentRemoteDescription && peer.signalingState === 'stable') {
               continue;
             }
-            closePeerConnection();
-            offerSentRef.current = false;
-            if (participantRole === 'mentor') {
-              await createOfferIfNeeded({ force: true, iceRestart: true });
-            }
+            // Remote explicitly left the meeting; end the session for both participants.
+            setRemoteEnded(true);
           }
         } catch (err) {
           appendError(err?.message || 'Unable to process meeting signal.');
@@ -938,11 +937,8 @@ const MeetingRoomShell = ({
     },
     [
       appendError,
-      closePeerConnection,
-      createOfferIfNeeded,
       ensurePeerConnection,
       sendSignal,
-      participantRole,
       sessionId,
     ]
   );
@@ -1346,16 +1342,19 @@ const MeetingRoomShell = ({
     }
   }, [appendError]);
 
-  const leaveMeeting = useCallback(async () => {
+  const leaveMeeting = useCallback(async ({ triggeredByRemote = false } = {}) => {
+    if (exitingRef.current) return;
+    exitingRef.current = true;
     if (sessionId) {
-      try {
-        await sendSignal('bye', {});
-      } catch {
-        // no-op
+      if (!triggeredByRemote) {
+        try {
+          await sendSignal('bye', {});
+        } catch {
+          // no-op
+        }
       }
-      if (participantRole === 'mentor') {
-        await markSessionClosed();
-      }
+      // Requirement: when either participant leaves, stop the meeting and persist artifacts.
+      await markSessionClosed();
       setSelectedSessionId(sessionId);
     }
     await stopSpeechMonitoring();
@@ -1373,7 +1372,6 @@ const MeetingRoomShell = ({
     generateMeetingSummary,
     markSessionClosed,
     navigate,
-    participantRole,
     sendSignal,
     sessionId,
     stopMediaTracks,
@@ -1382,7 +1380,13 @@ const MeetingRoomShell = ({
     stopPolling,
     stopRecording,
     stopSpeechMonitoring,
+    exitingRef,
   ]);
+
+  useEffect(() => {
+    if (!remoteEnded) return;
+    leaveMeeting({ triggeredByRemote: true });
+  }, [leaveMeeting, remoteEnded]);
 
   useEffect(() => {
     let cancelled = false;
