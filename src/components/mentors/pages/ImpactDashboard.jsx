@@ -372,7 +372,7 @@ const ImpactDashboard = () => {
           >
             <p className="text-xs uppercase tracking-[0.08em] text-[#7c3aed]">Optional</p>
             <p className="mt-1 text-base font-semibold text-[#5b2c91]">Training Module Pending</p>
-            <p className="mt-1 text-xs text-[#6b7280]">
+            <p className="mt-1 text-xs text-[#475467]">
               You can continue mentoring now. Click here anytime to complete training modules.
             </p>
           </button>
@@ -398,7 +398,7 @@ const ImpactDashboard = () => {
                 {isInitialLoading ? '--' : summary.total_sessions || 0}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#6b7280]">
+            <p className="mt-1 text-[11px] text-[#475467]">
               {isInitialLoading ? 'Loading metrics...' : sessionChangeLabel}
             </p>
           </button>
@@ -423,7 +423,7 @@ const ImpactDashboard = () => {
                 {isInitialLoading ? '--' : donatedRows.length}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#6b7280]">Total complementary sessions</p>
+            <p className="mt-1 text-[11px] text-[#475467]">Total complementary sessions</p>
           </button>
           <button
             type="button"
@@ -447,7 +447,7 @@ const ImpactDashboard = () => {
                 ₹{summary.total_claimed || 0}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#6b7280]">Pending payout: ₹{summary.pending_payout || 0}</p>
+            <p className="mt-1 text-[11px] text-[#475467]">Pending payout: ₹{summary.pending_payout || 0}</p>
           </button>
           <button
             type="button"
@@ -466,7 +466,7 @@ const ImpactDashboard = () => {
               </span>
               <span className="text-[24px] font-semibold text-[#f59e0b]">{summary.average_rating || 0}</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#6b7280]">Based on {reviewCount} reviews</p>
+            <p className="mt-1 text-[11px] text-[#475467]">Based on {reviewCount} reviews</p>
           </button>
         </div>
 
@@ -481,7 +481,7 @@ const ImpactDashboard = () => {
             <div className="mt-4 space-y-3">
               {topicRows.map((item, index) => (
                 <div key={`${item.label}-${index}`}>
-                  <div className="flex items-center justify-between text-[11px] text-[#6b7280]">
+                  <div className="flex items-center justify-between text-[11px] text-[#475467]">
                     <span>{item.label}</span>
                     <span>{item.value}%</span>
                   </div>
@@ -528,7 +528,7 @@ const ImpactDashboard = () => {
                 <span className="text-[16px] font-semibold text-[#333333]">{donationRatio}%</span>
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-4 text-[11px] text-[#6b7280]">
+            <div className="mt-4 flex items-center gap-4 text-[11px] text-[#475467]">
               <span className="inline-flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-[#3b82f6]" />
                 Claimed
@@ -542,7 +542,7 @@ const ImpactDashboard = () => {
         </div>
 
         <div className="mt-5 rounded-xl border border-white/15 bg-white shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
-          <div className="p-4">
+            <div className="p-4">
             <h3
               className="text-[#333333]"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
@@ -552,7 +552,7 @@ const ImpactDashboard = () => {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[11px]">
-              <thead className="text-[#6b7280] border-t border-[#e6e2f1]">
+              <thead className="text-[#475467] border-t border-[#e6e2f1]">
               <tr>
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Mentee</th>
@@ -572,7 +572,7 @@ const ImpactDashboard = () => {
                       ? 'bg-[#22c55e] text-white'
                       : 'bg-[#f59e0b] text-white';
                 return (
-                  <tr key={row.id} className="border-t border-[#f1f5f9] text-[#4b5563]">
+                    <tr key={row.id} className="border-t border-[#f1f5f9] text-[#1f2937]">
                     <td className="px-4 py-3">
                       {row.date ? new Date(row.date).toLocaleDateString() : '—'}
                     </td>
@@ -594,13 +594,13 @@ const ImpactDashboard = () => {
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[#9ca3af]">{row.notes || '—'}</td>
+                    <td className="px-4 py-3 text-[#475467]">{row.notes || '—'}</td>
                   </tr>
                 );
               })}
               {!tableRows.length && (
-                <tr className="border-t border-[#f1f5f9] text-[#4b5563]">
-                  <td className="px-4 py-3 text-xs text-[#6b7280]" colSpan={6}>
+                <tr className="border-t border-[#f1f5f9] text-[#1f2937]">
+                  <td className="px-4 py-3 text-xs text-[#475467]" colSpan={6}>
                     No ledger entries yet.
                   </td>
                 </tr>
@@ -608,7 +608,7 @@ const ImpactDashboard = () => {
             </tbody>
           </table>
         </div>
-          <div className="flex items-center justify-between p-4 text-[11px] text-[#6b7280] border-t border-[#e6e2f1]">
+          <div className="flex items-center justify-between p-4 text-[11px] text-[#475467] border-t border-[#e6e2f1]">
             <span>
               Showing {ledgerRows.length ? (ledgerPage - 1) * ledgerPageSize + 1 : 0}-
               {Math.min(ledgerPage * ledgerPageSize, ledgerRows.length)} of {ledgerRows.length} sessions
@@ -634,7 +634,7 @@ const ImpactDashboard = () => {
           </div>
         </div>
         {(loading || error) && (
-          <div className={`mt-3 text-xs ${error ? 'text-red-600' : 'text-[#6b7280]'}`}>
+          <div className={`mt-3 text-xs ${error ? 'text-red-600' : 'text-[#475467]'}`}>
             {error || 'Loading impact dashboard...'}
           </div>
         )}
@@ -655,7 +655,7 @@ const ImpactDashboard = () => {
             </div>
             <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8fafc] text-[#6b7280]">
+                <thead className="bg-[#f8fafc] text-[#475467]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Mentee Name</th>
                     <th className="px-3 py-2 font-medium">Session ID</th>
@@ -664,13 +664,13 @@ const ImpactDashboard = () => {
                 <tbody>
                   {donatedRows.length > 0 ? (
                     donatedRows.map((row) => (
-                      <tr key={`donated-${row.id}`} className="border-t border-[#f1f5f9] text-[#374151]">
+                        <tr key={`donated-${row.id}`} className="border-t border-[#f1f5f9] text-[#1f2937]">
                         <td className="px-3 py-2">{row.mentee}</td>
                         <td className="px-3 py-2">#{row.sessionId}</td>
                       </tr>
                     ))
                   ) : (
-                    <tr className="border-t border-[#f1f5f9] text-[#6b7280]">
+                    <tr className="border-t border-[#f1f5f9] text-[#475467]">
                       <td className="px-3 py-3" colSpan={2}>
                         No donated sessions yet.
                       </td>
@@ -698,7 +698,7 @@ const ImpactDashboard = () => {
             </div>
             <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8fafc] text-[#6b7280]">
+                <thead className="bg-[#f8fafc] text-[#475467]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Mentee Name</th>
                     <th className="px-3 py-2 font-medium">Session ID</th>
@@ -708,14 +708,14 @@ const ImpactDashboard = () => {
                 <tbody>
                   {sessionDetailRows.length > 0 ? (
                     sessionDetailRows.map((row) => (
-                      <tr key={`session-${row.id}`} className="border-t border-[#f1f5f9] text-[#374151]">
+                    <tr key={`session-${row.id}`} className="border-t border-[#f1f5f9] text-[#1f2937]">
                         <td className="px-3 py-2">{row.menteeName}</td>
                         <td className="px-3 py-2">#{row.id}</td>
                         <td className="px-3 py-2">{getStatusLabel(row.status)}</td>
                       </tr>
                     ))
                   ) : (
-                    <tr className="border-t border-[#f1f5f9] text-[#6b7280]">
+                    <tr className="border-t border-[#f1f5f9] text-[#475467]">
                       <td className="px-3 py-3" colSpan={3}>
                         No sessions yet.
                       </td>
@@ -751,7 +751,7 @@ const ImpactDashboard = () => {
             )}
             <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8fafc] text-[#6b7280]">
+                <thead className="bg-[#f8fafc] text-[#475467]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Mentee Name</th>
                     <th className="px-3 py-2 font-medium">Session ID</th>
@@ -763,7 +763,7 @@ const ImpactDashboard = () => {
                 <tbody>
                   {claimedPayoutRows.length > 0 ? (
                     claimedPayoutRows.map((row) => (
-                      <tr key={`claimed-${row.id}`} className="border-t border-[#f1f5f9] text-[#374151]">
+                    <tr key={`claimed-${row.id}`} className="border-t border-[#f1f5f9] text-[#1f2937]">
                         <td className="px-3 py-2">{row.menteeName}</td>
                         <td className="px-3 py-2">#{row.sessionId}</td>
                         <td className="px-3 py-2">₹{row.amount}</td>
@@ -779,13 +779,13 @@ const ImpactDashboard = () => {
                               {markPaidLoadingId === row.id ? 'Processing...' : 'Mark Paid'}
                             </button>
                           ) : (
-                            <span className="text-[11px] text-[#6b7280]">-</span>
+                            <span className="text-[11px] text-[#475467]">-</span>
                           )}
                         </td>
                       </tr>
                     ))
                   ) : (
-                    <tr className="border-t border-[#f1f5f9] text-[#6b7280]">
+                    <tr className="border-t border-[#f1f5f9] text-[#475467]">
                       <td className="px-3 py-3" colSpan={5}>
                         No claimed sessions yet.
                       </td>
@@ -813,7 +813,7 @@ const ImpactDashboard = () => {
             </div>
             <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8fafc] text-[#6b7280]">
+                <thead className="bg-[#f8fafc] text-[#475467]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Mentee Name</th>
                     <th className="px-3 py-2 font-medium">Session ID</th>
@@ -823,14 +823,14 @@ const ImpactDashboard = () => {
                 <tbody>
                   {ratingDetailRows.length > 0 ? (
                     ratingDetailRows.map((row) => (
-                      <tr key={`rating-${row.id}`} className="border-t border-[#f1f5f9] text-[#374151]">
+                    <tr key={`rating-${row.id}`} className="border-t border-[#f1f5f9] text-[#1f2937]">
                         <td className="px-3 py-2">{row.menteeName}</td>
                         <td className="px-3 py-2">#{row.sessionId}</td>
                         <td className="px-3 py-2">{row.rating}</td>
                       </tr>
                     ))
                   ) : (
-                    <tr className="border-t border-[#f1f5f9] text-[#6b7280]">
+                    <tr className="border-t border-[#f1f5f9] text-[#475467]">
                       <td className="px-3 py-3" colSpan={3}>
                         No ratings yet.
                       </td>
