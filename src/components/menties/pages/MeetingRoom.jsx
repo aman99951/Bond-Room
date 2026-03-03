@@ -1,17 +1,28 @@
-import React from 'react';
-import MeetingRoomShell from '../../meeting/MeetingRoomShell';
-import { menteeApi } from '../../../apis/api/menteeApi';
+import React, { useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { setActiveMeeting } from '../../../apis/api/storage';
 
 const MeetingRoom = () => {
-  return (
-    <MeetingRoomShell
-      api={menteeApi}
-      participantRole="mentee"
-      exitPath="/feedback"
-      title="Bond Room Meeting"
-      exitLabel="Leave & Feedback"
-    />
-  );
+  const location = useLocation();
+  const navigate = useNavigate();
+  const sessionId = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return Number(params.get('sessionId') || 0);
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    setActiveMeeting({ sessionId, participantRole: 'mentee' });
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!sessionId) {
+      navigate('/my-sessions', { replace: true });
+    }
+  }, [navigate, sessionId]);
+
+  // Meeting UI is hosted globally by <MeetingHost /> so the call persists across navigation.
+  return null;
 };
 
 export default MeetingRoom;

@@ -118,34 +118,6 @@ const getJoinUnavailableLabel = (session) => {
   return 'Not Joinable';
 };
 
-const parseDateMs = (value) => {
-  const parsed = new Date(value || '');
-  const millis = parsed.getTime();
-  return Number.isNaN(millis) ? null : millis;
-};
-
-const formatStartedAtLabel = (value) => {
-  const dateLabel = formatDate(value);
-  const timeLabel = getIndiaTimeLabel(value, { hour12: true });
-  if ((!dateLabel || dateLabel === '-') && !timeLabel) return '';
-  if (!dateLabel || dateLabel === '-') return timeLabel || '';
-  if (!timeLabel) return dateLabel;
-  return `${dateLabel} at ${timeLabel}`;
-};
-
-const isMentorStartedSession = (session) => {
-  const status = String(session?.status || '').toLowerCase();
-  if (!['approved', 'scheduled'].includes(status)) return false;
-  const mentorJoinedAtMs = parseDateMs(session?.mentor_joined_at);
-  if (!mentorJoinedAtMs) return false;
-
-  const nowMs = Date.now();
-  const twelveHoursMs = 12 * 60 * 60 * 1000;
-  if (mentorJoinedAtMs > nowMs + 60 * 1000) return false;
-  if (nowMs - mentorJoinedAtMs > twelveHoursMs) return false;
-  return true;
-};
-
 const MySessions = () => {
   const navigate = useNavigate();
   const [view, setView] = useState('calendar');
@@ -161,8 +133,6 @@ const MySessions = () => {
   const [error, setError] = useState('');
   const [joinError, setJoinError] = useState('');
   const [joiningId, setJoiningId] = useState(null);
-  const [meetingInvite, setMeetingInvite] = useState(null);
-  const mentorStartedBySessionRef = useRef({});
   const joinedMeetingSessionIdsRef = useRef(new Set());
   const pollingRef = useRef(null);
   const filterOptions = ['All Types', 'Upcoming', 'Completed'];
@@ -186,35 +156,6 @@ const MySessions = () => {
 
   useEffect(() => {
     let cancelled = false;
-
-    const updateMentorStartSignals = (sessionItems) => {
-      const next = {};
-      let latestInvite = null;
-
-      sessionItems.forEach((session) => {
-        const sessionId = String(session?.id || '');
-        if (!sessionId) return;
-        const startedAt = String(session?.mentor_joined_at || '');
-        next[sessionId] = startedAt;
-
-        const alreadyJoined = joinedMeetingSessionIdsRef.current.has(sessionId);
-        if (!alreadyJoined && startedAt && isMentorStartedSession(session)) {
-          if (
-            !latestInvite ||
-            new Date(startedAt).getTime() > new Date(latestInvite.mentor_joined_at || 0).getTime()
-          ) {
-            latestInvite = session;
-          }
-        }
-      });
-
-      mentorStartedBySessionRef.current = next;
-      if (latestInvite) {
-        setMeetingInvite(latestInvite);
-      } else {
-        setMeetingInvite(null);
-      }
-    };
 
     const loadSessions = async () => {
       setLoading(true);
@@ -245,7 +186,6 @@ const MySessions = () => {
         setSessions(sessionItems);
         setMentorMap(nextMentorMap);
         setFeedbackSessionIds(nextFeedbackSessionIds);
-        updateMentorStartSignals(sessionItems);
       } catch (err) {
         if (!cancelled) {
           setError(err?.message || 'Unable to load sessions.');
@@ -276,7 +216,6 @@ const MySessions = () => {
             return merged;
           });
         }
-        updateMentorStartSignals(sessionItems);
       } catch {
         // no-op for silent polling
       }
@@ -387,7 +326,6 @@ const MySessions = () => {
       typeof existing === 'string' && existing.includes('/mentor-meeting-room');
     if (existing && !isWrongRolePath) {
       joinedMeetingSessionIdsRef.current.add(sessionKey);
-      setMeetingInvite((prev) => (String(prev?.id || '') === sessionKey ? null : prev));
       openJoinLink(existing, session.id);
       return;
     }
@@ -409,7 +347,6 @@ const MySessions = () => {
           )
         );
         joinedMeetingSessionIdsRef.current.add(sessionKey);
-        setMeetingInvite((prev) => (String(prev?.id || '') === sessionKey ? null : prev));
         openJoinLink(url, session.id);
       } else {
         setJoinError('Join link not ready yet.');
@@ -584,33 +521,6 @@ return (
         <span className="text-sm text-[#6b7280]">Loading sessions...</span>
       </div>
     )}
-
-    {meetingInvite ? (
-      <div className="mb-4 rounded-xl border border-[#d8b4fe] bg-[#faf5ff] px-4 py-3 shadow-sm ring-1 ring-[#f3e8ff]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm text-[#4c1d95]">
-            {`Your mentor started this session${
-              formatStartedAtLabel(meetingInvite?.mentor_joined_at)
-                ? ` on ${formatStartedAtLabel(meetingInvite?.mentor_joined_at)}`
-                : ''
-            }.${
-              canJoinSession(meetingInvite) ? ' You can join now.' : ' Join will be available shortly.'
-            }`}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleJoin(meetingInvite)}
-              disabled={joiningId === meetingInvite.id || !canJoinSession(meetingInvite)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4a2b7a] disabled:opacity-50"
-            >
-              <Video className="h-3.5 w-3.5" />
-              {joiningId === meetingInvite.id ? 'Joining...' : 'Join Meeting'}
-            </button>
-          </div>
-        </div>
-      </div>
-    ) : null}
 
     {/* Calendar View */}
     {view === 'calendar' ? (

@@ -5,6 +5,8 @@ const ASSESSMENT_DRAFT_KEY = 'bondroom_assessment_draft';
 const SELECTED_MENTOR_KEY = 'bondroom_selected_mentor_id';
 const LAST_BOOKING_KEY = 'bondroom_last_booking';
 const SELECTED_SESSION_KEY = 'bondroom_selected_session_id';
+const ACTIVE_MEETING_KEY = 'bondroom_active_meeting';
+const ACTIVE_MEETING_EVENT = 'meeting:change';
 const AUTH_LOGOUT_EVENT = 'auth:logout';
 
 export const mapAppRoleToUiRole = (appRole) => {
@@ -192,3 +194,59 @@ export const getSelectedSessionId = () => localStorage.getItem(SELECTED_SESSION_
 export const clearSelectedSessionId = () => {
   localStorage.removeItem(SELECTED_SESSION_KEY);
 };
+
+const safeSessionGet = (key) => {
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const safeSessionSet = (key, value) => {
+  try {
+    window.sessionStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const safeSessionRemove = (key) => {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+};
+
+const notifyMeetingChange = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(ACTIVE_MEETING_EVENT));
+  }
+};
+
+export const getActiveMeeting = () => safeJsonParse(safeSessionGet(ACTIVE_MEETING_KEY), null);
+
+export const setActiveMeeting = (payload) => {
+  if (!payload || !payload.sessionId) {
+    safeSessionRemove(ACTIVE_MEETING_KEY);
+    notifyMeetingChange();
+    return null;
+  }
+  const normalized = {
+    sessionId: Number(payload.sessionId) || 0,
+    participantRole: payload.participantRole === 'mentor' ? 'mentor' : 'mentee',
+    startedAt: payload.startedAt || new Date().toISOString(),
+  };
+  safeSessionSet(ACTIVE_MEETING_KEY, JSON.stringify(normalized));
+  notifyMeetingChange();
+  return normalized;
+};
+
+export const clearActiveMeeting = () => {
+  safeSessionRemove(ACTIVE_MEETING_KEY);
+  notifyMeetingChange();
+};
+
+export const ACTIVE_MEETING_EVENT_NAME = ACTIVE_MEETING_EVENT;

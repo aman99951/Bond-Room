@@ -141,6 +141,10 @@ const MeetingRoomShell = ({
   exitPath,
   title,
   exitLabel,
+  sessionIdOverride,
+  uiMode = 'full',
+  reopenPath = '',
+  onExit,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -200,7 +204,8 @@ const MeetingRoomShell = ({
   const showManualMentorTools = false;
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const sessionId = Number(searchParams.get('sessionId') || 0);
+  const sessionIdFromQuery = Number(searchParams.get('sessionId') || 0);
+  const sessionId = Number(sessionIdOverride || sessionIdFromQuery || 0);
 
   const hasSpeechRecognition = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -1365,6 +1370,13 @@ const MeetingRoomShell = ({
     stopPolling();
     closePeerConnection();
     stopMediaTracks();
+    if (typeof onExit === 'function') {
+      try {
+        onExit();
+      } catch {
+        // no-op
+      }
+    }
     navigate(exitPath);
   }, [
     closePeerConnection,
@@ -1380,7 +1392,7 @@ const MeetingRoomShell = ({
     stopPolling,
     stopRecording,
     stopSpeechMonitoring,
-    exitingRef,
+    onExit,
   ]);
 
   useEffect(() => {
@@ -1645,8 +1657,45 @@ const MeetingRoomShell = ({
     };
   }, [api, participantRole, sessionId]);
 
+  const showFullUi = uiMode !== 'background';
+
   return (
-    <div className="min-h-[75vh] p-3 sm:p-5 lg:p-6">
+    <>
+      {uiMode === 'background' ? (
+        <div className="fixed inset-x-0 top-0 z-[70] border-b border-[#e5e7eb] bg-white/95 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+            <div className="text-sm text-[#111827]">
+              <span className="font-semibold">Call in progress</span>
+              <span className="text-[#6b7280]">{peerLabel ? ` with ${peerLabel}` : ''}.</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (reopenPath) navigate(reopenPath);
+                }}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#f5f3ff] px-3 py-2 text-xs font-semibold text-[#5D3699] ring-1 ring-[#5D3699]/10 transition-colors hover:bg-[#ede9fe]"
+              >
+                <Video className="h-4 w-4" />
+                Back to call
+              </button>
+              <button
+                type="button"
+                onClick={() => leaveMeeting()}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#ef4444] px-3 py-2 text-xs font-semibold text-white hover:bg-[#dc2626]"
+              >
+                <PhoneOff className="h-4 w-4" />
+                {exitLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Keep the full meeting UI mounted so navigation doesn't disconnect the call. */}
+      <div
+        className={`${showFullUi ? '' : 'absolute left-[-99999px] top-0 h-px w-px overflow-hidden'} min-h-[75vh] p-3 sm:p-5 lg:p-6`}
+      >
       <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -1881,32 +1930,33 @@ const MeetingRoomShell = ({
       </div>
 
       {showManualMentorTools && isMentorToolsEnabled ? (
-      <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white p-3 sm:p-4">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#111827]">
-          <AlertTriangle className="h-4 w-4 text-[#f59e0b]" />
-          Call Analysis
+        <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white p-3 sm:p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#111827]">
+            <AlertTriangle className="h-4 w-4 text-[#f59e0b]" />
+            Call Analysis
+          </div>
+          <textarea
+            value={analysisInput}
+            onChange={(event) => setAnalysisInput(event.target.value)}
+            rows={3}
+            placeholder="Paste or type conversation snippet for abuse detection."
+            className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm text-[#111827] focus:border-[#7c3aed] focus:outline-none"
+          />
+          <div className="mt-2 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => analyzeTranscript(analysisInput)}
+              disabled={analysisLoading || !analysisInput.trim()}
+              className="rounded-lg bg-[#111827] px-3 py-2 text-xs font-semibold text-white hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:bg-[#9ca3af]"
+            >
+              {analysisLoading ? 'Analyzing...' : 'Analyze Snippet'}
+            </button>
+            <span className="text-xs text-[#6b7280]">Incidents Logged: {incidents.length}</span>
+          </div>
         </div>
-        <textarea
-          value={analysisInput}
-          onChange={(event) => setAnalysisInput(event.target.value)}
-          rows={3}
-          placeholder="Paste or type conversation snippet for abuse detection."
-          className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm text-[#111827] focus:border-[#7c3aed] focus:outline-none"
-        />
-        <div className="mt-2 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => analyzeTranscript(analysisInput)}
-            disabled={analysisLoading || !analysisInput.trim()}
-            className="rounded-lg bg-[#111827] px-3 py-2 text-xs font-semibold text-white hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:bg-[#9ca3af]"
-          >
-            {analysisLoading ? 'Analyzing...' : 'Analyze Snippet'}
-          </button>
-          <span className="text-xs text-[#6b7280]">Incidents Logged: {incidents.length}</span>
-        </div>
-      </div>
       ) : null}
-    </div>
+      </div>
+    </>
   );
 };
 

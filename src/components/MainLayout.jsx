@@ -5,6 +5,8 @@ import Sidebar from './side-top/Sidebar';
 import BottomAuth from './auth/BottomAuth';
 import logo from '../assets/logo.png';
 import { subscribeToApiLoading } from '../apis/api/requestLoading';
+import MenteeMeetingInviteBanner from './meeting/MenteeMeetingInviteBanner';
+import MeetingHost from './meeting/MeetingHost';
 // import OrderBot from '../components/OrderBot';
 
 const MainLayout = () => {
@@ -43,6 +45,8 @@ const MainLayout = () => {
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <main className="flex-1 lg:overflow-y-auto flex flex-col" data-scroll-container="true" tabIndex={0} role="main">
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1">
+              <MeetingHost />
+              <MenteeMeetingInviteBanner />
               <Outlet />
             </div>
             <div className="mt-auto">
