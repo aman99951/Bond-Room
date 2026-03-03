@@ -159,7 +159,7 @@ const RecommendationCard = ({ mentor }) => {
               className={`mt-2 text-[#6b7280] text-xs sm:text-sm ${
                 expanded ? '' : 'line-clamp-4 min-h-[80px]'
               }`}
-              style={{ fontFamily: 'DM Sans', lineHeight: '20px', fontWeight: 400 }}
+              style={{ lineHeight: '20px', fontWeight: 400 }}
             >
               {mentor.blurb}
             </p>

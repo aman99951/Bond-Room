@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:ital,wght@0,400;1,400&family=Manrope:wght@600;700;800&display=swap");
 
 @keyframes landingFadeUp {
   from {
@@ -37,7 +36,6 @@
 
 .hero-figma-title {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(2.95rem, 5.1vw, 4.65rem);
   line-height: 0.94;
   letter-spacing: -0.036em;
@@ -52,7 +50,6 @@
 .hero-figma-description {
   margin: 28px 0 0;
   max-width: 565px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(1rem, 1.26vw, 1.1rem);
   line-height: 1.58;
   font-weight: 500;
@@ -75,7 +72,6 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 1.05rem;
   line-height: 1;
   font-weight: 500;
@@ -104,7 +100,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 0.96rem;
   line-height: 1.45;
   font-weight: 500;
@@ -193,7 +188,6 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 0.85rem;
   line-height: 1;
   letter-spacing: 0.05em;
@@ -210,7 +204,6 @@
 
 .hero-figma-live-card p {
   margin: 0;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-style: italic;
   font-size: 1rem;
   line-height: 1.46;
@@ -414,7 +407,6 @@
 
 .flow-figma-heading h2 {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(2.1rem, 3.2vw, 2.7rem);
   line-height: 1.15;
   font-weight: 700;
@@ -424,7 +416,6 @@
 
 .flow-figma-heading p {
   margin: 12px 0 0;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(0.98rem, 1.25vw, 1.1rem);
   line-height: 1.45;
   color: #677184;
@@ -475,7 +466,6 @@
 
 .flow-figma-step h3 {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1.45rem, 2vw, 1.75rem);
   line-height: 1.2;
   font-weight: 600;
@@ -485,7 +475,6 @@
 .flow-figma-step p {
   margin: 14px auto 0;
   max-width: 320px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(1rem, 1.28vw, 1.16rem);
   line-height: 1.46;
   color: #667081;
@@ -569,7 +558,6 @@
 
 .trust-figma-copy h2 {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(2.35rem, 3.5vw, 3.3rem);
   line-height: 1.12;
   letter-spacing: -0.02em;
@@ -580,7 +568,6 @@
 .trust-figma-copy p {
   margin: 36px 0 0;
   max-width: 620px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(1.02rem, 1.36vw, 1.24rem);
   line-height: 1.56;
   font-weight: 500;
@@ -628,7 +615,6 @@
 
 .trust-figma-item h4 {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1.3rem, 1.9vw, 1.75rem);
   line-height: 1.2;
   font-weight: 600;
@@ -637,7 +623,6 @@
 
 .trust-figma-item p {
   margin: 8px 0 0;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(1rem, 1.28vw, 1.18rem);
   line-height: 1.52;
   font-weight: 500;
@@ -720,7 +705,6 @@
 
 .stories-figma-shell h2 {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(2.2rem, 2.9vw, 2.95rem);
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -746,7 +730,6 @@
 
 .stories-figma-quote {
   display: block;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: 3.5rem;
   line-height: 0.7;
   font-weight: 700;
@@ -755,7 +738,6 @@
 
 .stories-figma-card p {
   margin: 12px 0 0;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(1rem, 1.12vw, 1.08rem);
   line-height: 1.56;
   font-weight: 500;
@@ -789,7 +771,6 @@
 
 .stories-figma-person h4 {
   margin: 0;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 1.06rem;
   line-height: 1.1;
   font-weight: 500;
@@ -799,7 +780,6 @@
 .stories-figma-person span {
   display: block;
   margin-top: 5px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 0.86rem;
   line-height: 1.2;
   color: #7a8291;
@@ -864,7 +844,6 @@
 
 .wisdom-figma-copy h2 {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(2.2rem, 3vw, 3rem);
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -875,7 +854,6 @@
 .wisdom-figma-copy p {
   margin: 12px 0 0;
   max-width: 760px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(1rem, 1.18vw, 1.1rem);
   line-height: 1.45;
   color: #677183;
@@ -885,7 +863,6 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 1.05rem;
   line-height: 1;
   text-decoration: none;
@@ -967,7 +944,6 @@
 
 .wisdom-figma-row h3 {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1.05rem, 1.45vw, 1.35rem);
   line-height: 1.2;
   font-weight: 600;
@@ -979,7 +955,6 @@
   color: #6f50b2;
   border-radius: 6px;
   padding: 5px 10px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 0.77rem;
   line-height: 1;
   font-weight: 500;
@@ -998,7 +973,6 @@
   background: #f4f5f7;
   border-radius: 6px;
   padding: 4px 10px;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 0.77rem;
   line-height: 1;
   color: #626b7b;
@@ -1006,7 +980,6 @@
 
 .wisdom-figma-body p {
   margin: 16px 0 0;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(0.95rem, 1.08vw, 1.03rem);
   line-height: 1.46;
   color: #677181;
@@ -1089,7 +1062,6 @@
 
 .wellbeing-figma-copy h3 {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1.5rem, 2vw, 1.9rem);
   line-height: 1.18;
   font-weight: 600;
@@ -1098,7 +1070,6 @@
 
 .wellbeing-figma-copy p {
   margin: 9px 0 0;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(0.93rem, 1.06vw, 1rem);
   line-height: 1.35;
   color: #6b7484;
@@ -1114,7 +1085,6 @@
 
 .wellbeing-figma-links a {
   text-decoration: none;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 0.97rem;
   line-height: 1;
   font-weight: 500;
@@ -1191,7 +1161,6 @@
 
 .cta-figma-shell h2 {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(2.3rem, 3.2vw, 3.25rem);
   line-height: 1.18;
   letter-spacing: -0.02em;
@@ -1201,7 +1170,6 @@
 
 .cta-figma-shell p {
   margin: 18px 0 0;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(1rem, 1.22vw, 1.15rem);
   line-height: 1.4;
   color: #687182;
@@ -1224,7 +1192,6 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(1rem, 1.28vw, 1.16rem);
   line-height: 1;
   font-weight: 500;
@@ -1334,7 +1301,6 @@
 
 .footer-figma-nav a {
   text-decoration: none;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 1rem;
   line-height: 1;
   font-weight: 500;
@@ -1383,7 +1349,6 @@
   background: #ffffff;
   color: #000000;
   text-align: center;
-  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 0.74rem;
   line-height: 1.2;
   font-weight: 500;
@@ -1650,7 +1615,6 @@
   }
 
   .landing-figma-root .hero-figma-title {
-    font-family: "Manrope", "Segoe UI", sans-serif;
     font-weight: 600;
     font-size: 30px;
     line-height: 34px;
@@ -1659,7 +1623,6 @@
 
   .landing-figma-root .hero-figma-description {
     margin-top: 12px;
-    font-family: "DM Sans", "Segoe UI", sans-serif;
     font-weight: 400;
     font-size: 12px;
     line-height: 16px;
@@ -1677,7 +1640,6 @@
     height: 50px;
     padding: 0 16px;
     border-radius: 8px;
-    font-family: "DM Sans", "Segoe UI", sans-serif;
     font-weight: 400;
     font-size: 16px;
     line-height: 24px;
@@ -1691,7 +1653,6 @@
 
   .landing-figma-root .hero-figma-note {
     margin-top: 16px;
-    font-family: "DM Sans", "Segoe UI", sans-serif;
     font-weight: 400;
     font-size: 10px;
     line-height: 20px;
@@ -1772,7 +1733,6 @@
   }
 
   .landing-figma-root .hero-figma-live-card p {
-    font-family: "Inter", "DM Sans", "Segoe UI", sans-serif;
     font-style: italic;
     font-weight: 400;
     font-size: 10px;

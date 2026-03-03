@@ -15,7 +15,6 @@ const Choice = ({ label, selected, onClick }) => {
     >
       <span
         className={`text-sm leading-5 sm:text-base sm:leading-6 ${selected ? 'font-semibold' : 'font-normal'}`}
-        style={{ fontFamily: 'DM Sans' }}
       >
         {label}
       </span>

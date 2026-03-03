@@ -216,7 +216,7 @@ const VerifyIdentity = () => {
                   </div>
                   <div className="relative bg-[#5b2c91] p-6 text-white flex flex-col justify-between">
                     <div>
-                      <h3 className="font-['Manrope'] font-bold text-[37px] leading-[36.5px]">
+                      <h3 className="font-sans font-bold text-[37px] leading-[36.5px]">
                         Join a
                         <br />
                         community
@@ -225,7 +225,7 @@ const VerifyIdentity = () => {
                         <br />
                         and care.
                       </h3>
-                      <p className="mt-3 font-['Manrope'] text-[16px] leading-[22.5px] font-normal text-white/90">
+                      <p className="mt-3 font-sans text-[16px] leading-[22.5px] font-normal text-white/90">
                         Your guidance can help a student feel seen -- beyond marks, ranks, and expectations.
                       </p>
                     </div>

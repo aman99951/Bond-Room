@@ -425,9 +425,9 @@ return (
   <div className="bg-transparent p-3 sm:p-5 lg:p-8">
     {/* Header Section */}
     <div className="mb-6 sm:mb-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         {/* Title with Icon */}
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
             <Calendar className="h-6 w-6 text-white" />
           </div>
@@ -442,7 +442,7 @@ return (
         </div>
 
         {/* Controls */}
-        <div className="flex w-full flex-wrap items-center gap-3 lg:w-auto lg:justify-end">
+        <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
           {/* Search */}
           <div className="relative w-full sm:min-w-[260px] sm:flex-1 lg:w-72 lg:flex-none">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />

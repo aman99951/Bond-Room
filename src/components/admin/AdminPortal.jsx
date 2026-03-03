@@ -414,7 +414,7 @@ const AdminPortal = () => {
         <div className="rounded-2xl border border-[#e6e2f1] bg-white p-5 sm:p-6 shadow-[0_10px_30px_rgba(91,44,145,0.10)]">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h1 className="text-[#111827]" style={{ fontFamily: 'DM Sans', fontSize: '30px', lineHeight: '36px', fontWeight: 700 }}>
+              <h1 className="text-[#111827]" style={{ fontSize: '30px', lineHeight: '36px', fontWeight: 700 }}>
                 Admin Onboarding Dashboard
               </h1>
               <p className="mt-1 text-sm text-[#6b7280]">

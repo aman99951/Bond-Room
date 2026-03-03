@@ -352,7 +352,7 @@ const ImpactDashboard = () => {
       <div className="max-w-full mx-auto">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-['DM_Sans'] font-bold text-[30px] leading-[36px] tracking-[0px] align-middle text-[#333333]">Impact Dashboard</h2>
+            <h2 className="font-sans font-bold text-[30px] leading-[36px] tracking-[0px] align-middle text-[#333333]">Impact Dashboard</h2>
           </div>
           <button
             type="button"
@@ -386,7 +386,7 @@ const ImpactDashboard = () => {
           >
             <p
               className="text-[#333333]"
-              style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
+              style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Total Sessions
             </p>
@@ -410,7 +410,7 @@ const ImpactDashboard = () => {
             <div className="flex items-center justify-between">
               <p
                 className="text-[#333333]"
-                style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
+                style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
               >
                 Total Complementary Service
               </p>
@@ -435,7 +435,7 @@ const ImpactDashboard = () => {
           >
             <p
               className="text-[#333333]"
-              style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
+              style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Total Claimed
             </p>
@@ -456,7 +456,7 @@ const ImpactDashboard = () => {
           >
             <p
               className="text-[#333333]"
-              style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
+              style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Avg. Rating
             </p>
@@ -474,7 +474,7 @@ const ImpactDashboard = () => {
           <div className="rounded-xl border border-white/15 bg-white p-4 shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
             <h3
               className="text-[#333333]"
-              style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
+              style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Topics Addressed
             </h3>
@@ -496,7 +496,7 @@ const ImpactDashboard = () => {
           <div className="rounded-xl bg-[#4b2a86] p-4 shadow-[0_8px_20px_rgba(0,0,0,0.3)] text-white">
             <h3
               className="text-white"
-              style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
+              style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Monthly Contribution
             </h3>
@@ -516,7 +516,7 @@ const ImpactDashboard = () => {
           <div className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm flex flex-col items-center">
             <h3
               className="text-[#333333] self-start"
-              style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
+              style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Donation vs Claim Ratio
             </h3>
@@ -545,7 +545,7 @@ const ImpactDashboard = () => {
           <div className="p-4">
             <h3
               className="text-[#333333]"
-              style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
+              style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Session Ledger
             </h3>

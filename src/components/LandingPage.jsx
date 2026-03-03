@@ -37,7 +37,7 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="landing-figma-root min-h-screen font-['DM_Sans'] text-gray-900">
+    <div className="landing-figma-root min-h-screen font-sans text-gray-900">
       {/* Header */}
       <header className="max-w-7xl mx-auto px-6 py-4 lg:py-5 lg:px-8">
         <div className="flex items-center justify-between lg:grid lg:grid-cols-[auto_1fr_auto] gap-4 lg:gap-6">

@@ -104,7 +104,7 @@ const VerifyParent = () => {
                   </div>
                   <h2
                     className="mt-3 text-[#1f2937] text-center"
-                    style={{ fontFamily: 'Manrope', fontSize: '24px', lineHeight: '25.5px', fontWeight: 600 }}
+                    style={{ fontSize: '24px', lineHeight: '25.5px', fontWeight: 600 }}
                   >
                     Verify phone number
                   </h2>
@@ -117,8 +117,8 @@ const VerifyParent = () => {
                       <span className=" inline-flex h-7 w-7 items-center justify-center rounded-full">
                         <img src={errorIcon} alt="" className="h-3 w-3" />
                       </span>
-                      <p style={{ fontFamily: 'Inter', fontSize: '12px', lineHeight: '20px', fontWeight: 400 }}>
-                        <span style={{ fontFamily: 'Inter', fontSize: '12px', lineHeight: '20px', fontWeight: 700, color: '#2f273a' }}>
+                      <p style={{ fontSize: '12px', lineHeight: '20px', fontWeight: 400 }}>
+                        <span style={{ fontSize: '12px', lineHeight: '20px', fontWeight: 700, color: '#2f273a' }}>
                           Explicit Consent:
                         </span>{' '}
                         Entering this OTP confirms that a parent or guardian consents to the student&apos;s
@@ -165,7 +165,7 @@ const VerifyParent = () => {
                   <Link
                     to="/register"
                     className="mt-3 block w-full rounded-md border border-[#d7d0e2] bg-white py-2.5 text-[#6b7280] text-center"
-                    style={{ fontFamily: 'DM Sans', fontSize: '16px', lineHeight: '100%', fontWeight: 400 }}
+                    style={{ fontSize: '16px', lineHeight: '100%', fontWeight: 400 }}
                   >
                     Back to Registration
                   </Link>

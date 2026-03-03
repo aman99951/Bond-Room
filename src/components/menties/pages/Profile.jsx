@@ -11,6 +11,7 @@ import {
   Sparkles,
   Clock,
   Users,
+  ChevronDown,
   ChevronRight,
   Save,
   X,
@@ -20,6 +21,73 @@ import {
   Heart,
   RefreshCw
 } from 'lucide-react';
+
+const DropdownSelect = ({ value, options, placeholder, disabled = false, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const selectedLabel = useMemo(() => {
+    const found = (options || []).find((opt) => opt.value === value);
+    return found?.label || '';
+  }, [options, value]);
+
+  return (
+    <div
+      className="relative w-full"
+      tabIndex={0}
+      onBlur={(event) => {
+        // Close when focus moves outside the dropdown container.
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] focus:outline-none focus:ring-2 focus:ring-[#5D3699] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <span className={selectedLabel ? 'text-[#111827]' : 'text-[#9ca3af]'}>
+          {selectedLabel || placeholder}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]"
+        >
+          {options.map((opt) => (
+            <li key={opt.value}>
+              <button
+                type="button"
+                className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
+                  value === opt.value
+                    ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
+                    : 'text-[#6b7280] hover:bg-[#f5f3ff]'
+                }`}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+              >
+                {opt.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const mentorTypeOptions = [
   { label: 'Listener', value: 'listener' },
@@ -485,18 +553,12 @@ return (
                   </p>
 
                   <div className="mt-3">
-                    <select
+                    <DropdownSelect
                       value={preferences.comfort_level}
-                      onChange={(event) => handleComfortChange(event.target.value)}
-                      className="h-10 w-full rounded-xl border-0 bg-white px-3 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:ring-2 focus:ring-[#5D3699]"
-                    >
-                      <option value="">Select comfort level</option>
-                      {comfortOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Select comfort level"
+                      options={comfortOptions.map((option) => ({ label: option, value: option }))}
+                      onChange={handleComfortChange}
+                    />
                   </div>
                   
                   {comfortPosition != null ? (
@@ -535,22 +597,19 @@ return (
                   </p>
 
                   <div className="mt-3">
-                    <select
+                    <DropdownSelect
                       value={
                         preferences.preferred_session_minutes === ''
                           ? ''
                           : String(preferences.preferred_session_minutes)
                       }
-                      onChange={(event) => handleSessionLengthChange(event.target.value)}
-                      className="h-10 w-full rounded-xl border-0 bg-white px-3 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:ring-2 focus:ring-[#5D3699]"
-                    >
-                      <option value="">Select session length</option>
-                      {sessionLengthOptions.map((minutes) => (
-                        <option key={minutes} value={String(minutes)}>
-                          {minutes} minutes
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Select session length"
+                      options={sessionLengthOptions.map((minutes) => ({
+                        label: `${minutes} minutes`,
+                        value: String(minutes),
+                      }))}
+                      onChange={handleSessionLengthChange}
+                    />
                   </div>
                   
                   <div className="mt-4 flex h-12 items-center justify-center rounded-xl bg-white text-lg font-semibold text-[#5D3699] ring-1 ring-[#e5e7eb]">

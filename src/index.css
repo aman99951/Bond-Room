@@ -69,6 +69,14 @@ select[multiple] option:checked {
   color: var(--color-accent-contrast);
 }
 
+/* Try to keep native <select> dropdown highlights on-brand (browser support varies). */
+select option:checked,
+select option:focus,
+select option:hover {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
 @layer utilities {
   .bg-page { background-color: var(--color-bg); }
   .bg-surface { background-color: var(--color-surface); }

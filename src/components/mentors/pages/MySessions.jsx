@@ -514,33 +514,33 @@ const MySessions = () => {
   };
 
 return (
-  <div className="min-h-screenp-4 sm:p-6 lg:p-8">
+  <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
     {/* Header Section */}
     <div className="mb-8">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         {/* Title with decorative element */}
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
             <Calendar className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-[#111827] sm:text-3xl">
               My Sessions
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[#6b7280]">
               Manage and track all your mentoring sessions
             </p>
           </div>
         </div>
 
         {/* Controls Section */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:w-auto md:justify-end">
           {/* Search Input */}
           <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
             <input
               type="text"
-              className="h-11 w-full rounded-xl border-0 bg-white pl-11 pr-4 text-sm text-gray-900 shadow-sm ring-1 ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-[#5D3699] sm:w-64 transition-all duration-200"
+              className="h-11 w-full rounded-xl border-0 bg-white pl-11 pr-4 text-sm text-[#111827] shadow-sm ring-1 ring-[#e5e7eb] placeholder:text-[#9ca3af] transition-all duration-200 focus:ring-2 focus:ring-[#5D3699] sm:w-64"
               placeholder="Search mentee..."
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
@@ -548,9 +548,9 @@ return (
             {searchValue && (
               <button
                 onClick={() => setSearchValue('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-gray-100 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors hover:bg-[#f5f3ff]"
               >
-                <X className="h-3 w-3 text-gray-400" />
+                <X className="h-4 w-4 text-[#9ca3af]" />
               </button>
             )}
           </div>
@@ -559,25 +559,25 @@ return (
           <div className="relative" tabIndex={0} onBlur={() => setFilterOpen(false)}>
             <button
               type="button"
-              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 sm:w-40 transition-all duration-200"
+              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] sm:w-40"
               onClick={() => setFilterOpen((o) => !o)}
             >
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-400" />
+                <Filter className="h-4 w-4 text-[#9ca3af]" />
                 <span>{filterValue}</span>
               </div>
-              <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
             </button>
             {filterOpen && (
-              <ul className="absolute z-20 mt-2 w-full origin-top-right rounded-xl border-0 bg-white py-2 shadow-xl ring-1 ring-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
+              <ul className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
                 {filterOptions.map((opt) => (
                   <li key={opt}>
                     <button
                       type="button"
                       className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
                         filterValue === opt
-                          ? 'bg-[#5D3699]/10 text-[#5D3699] font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
+                          : 'text-[#6b7280] hover:bg-[#f5f3ff]'
                       }`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
@@ -597,22 +597,22 @@ return (
           <div className="relative" tabIndex={0} onBlur={() => setWeekFilterOpen(false)}>
             <button
               type="button"
-              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 sm:w-36 transition-all duration-200"
+              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] sm:w-36"
               onClick={() => setWeekFilterOpen((o) => !o)}
             >
               <span>{weekFilterValue}</span>
-              <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${weekFilterOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${weekFilterOpen ? 'rotate-180' : ''}`} />
             </button>
             {weekFilterOpen && (
-              <ul className="absolute z-20 mt-2 w-full origin-top-right rounded-xl border-0 bg-white py-2 shadow-xl ring-1 ring-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
+              <ul className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
                 {weekFilterOptions.map((opt) => (
                   <li key={opt}>
                     <button
                       type="button"
                       className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
                         weekFilterValue === opt
-                          ? 'bg-[#5D3699]/10 text-[#5D3699] font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
+                          : 'text-[#6b7280] hover:bg-[#f5f3ff]'
                       }`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
@@ -629,12 +629,12 @@ return (
           </div>
 
           {/* View Toggle */}
-          <div className="flex h-11 items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-gray-200">
+          <div className="flex h-11 w-full min-w-[220px] items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] sm:w-auto">
             <button
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 sm:flex-none ${
                 view === 'calendar'
                   ? 'bg-[#5D3699] text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-[#6b7280] hover:text-[#111827]'
               }`}
               onClick={() => setView('calendar')}
             >
@@ -642,10 +642,10 @@ return (
               <span className="hidden sm:inline">Calendar</span>
             </button>
             <button
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 sm:flex-none ${
                 view === 'table'
                   ? 'bg-[#5D3699] text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-[#6b7280] hover:text-[#111827]'
               }`}
               onClick={() => setView('table')}
             >
@@ -682,29 +682,29 @@ return (
 
     {/* Calendar View */}
     {view === 'calendar' ? (
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
+      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[1250px]">
+          <div className="min-w-[1120px] lg:min-w-[1310px]">
             {/* Calendar Header */}
-            <div className="grid grid-cols-[100px_repeat(7,minmax(150px,1fr))] bg-gray-50">
-              <div className="p-4" />
+            <div className="grid grid-cols-[74px_repeat(7,minmax(140px,1fr))] bg-[#f8fafc] lg:grid-cols-[100px_repeat(7,minmax(170px,1fr))]">
+              <div className="p-2.5 lg:p-4" />
               {days.map((d) => (
                 <div
                   key={`${d.label}-${d.dateKey}`}
-                  className={`p-4 text-center border-l border-gray-100 transition-colors ${
-                    d.active ? 'bg-[#5D3699]/5' : ''
+                  className={`border-l border-[#e5e7eb] p-2.5 text-center transition-colors lg:p-4 ${
+                    d.active ? 'bg-[#f5f3ff]' : ''
                   }`}
                 >
-                  <div className={`text-xs font-medium uppercase tracking-wider ${
-                    d.active ? 'text-[#5D3699]' : 'text-gray-400'
+                  <div className={`text-[10px] font-medium uppercase tracking-wider sm:text-xs ${
+                    d.active ? 'text-[#5D3699]' : 'text-[#9ca3af]'
                   }`}>
                     {d.label}
                   </div>
                   <div
-                    className={`mt-2 inline-flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold transition-all ${
+                    className={`mt-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-base font-bold transition-all lg:h-10 lg:w-10 lg:rounded-xl lg:text-lg ${
                       d.active
                         ? 'bg-[#5D3699] text-white shadow-lg shadow-[#5D3699]/30'
-                        : 'text-gray-800'
+                        : 'text-[#111827]'
                     }`}
                   >
                     {d.dayNumber}
@@ -714,14 +714,14 @@ return (
             </div>
 
             {/* Calendar Body */}
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-[#e5e7eb]">
               {hours.map((h, idx) => {
                 const rowHasAction = calendarEntries.some(
                   (s) => s.hourIndex === idx && (canJoinSession(s) || s.needsSelection)
                 );
                 return (
-                  <div key={h} className="grid grid-cols-[100px_repeat(7,minmax(150px,1fr))]">
-                    <div className="flex items-start justify-end p-3 pr-4 text-xs font-medium text-gray-400">
+                  <div key={h} className="grid grid-cols-[74px_repeat(7,minmax(140px,1fr))] lg:grid-cols-[100px_repeat(7,minmax(170px,1fr))]">
+                    <div className="flex items-start justify-end p-2.5 pr-3 text-[10px] font-medium text-[#9ca3af] sm:text-xs lg:p-3 lg:pr-4">
                       {h}
                     </div>
                     {days.map((d, c) => {
@@ -729,9 +729,9 @@ return (
                       return (
                         <div
                           key={`${h}-${d.label}`}
-                          className={`relative border-l border-gray-100 p-2 transition-colors ${
-                            rowHasAction ? 'min-h-[110px]' : 'min-h-[70px]'
-                          } ${d.active ? 'bg-[#5D3699]/[0.02]' : 'hover:bg-gray-50/50'}`}
+                          className={`relative border-l border-[#e5e7eb] p-1.5 transition-colors lg:p-2 ${
+                            rowHasAction ? 'min-h-[88px] lg:min-h-[110px]' : 'min-h-[64px] lg:min-h-[70px]'
+                          } ${d.active ? 'bg-[#f5f3ff]/30' : 'hover:bg-[#f8fafc]'}`}
                         >
                           {session && (
                             <div
@@ -749,11 +749,11 @@ return (
                                   if (session?.needsSelection) {
                                     navigate('/mentor-session-completed');
                                   }
-                                }
+                                  }
                               }}
-                              className={`group absolute inset-2 flex flex-col rounded-xl p-3 transition-all duration-200 cursor-pointer ${
+                              className={`group absolute inset-1 flex cursor-pointer flex-col rounded-xl p-2 transition-all duration-200 md:inset-1.5 md:p-2.5 lg:inset-2 lg:p-3 ${
                                 session.tone === 'light'
-                                  ? 'bg-gray-100 hover:bg-gray-200 ring-1 ring-gray-200'
+                                  ? 'bg-[#f5f3ff] hover:bg-[#ede9fe] ring-1 ring-[#e5e7eb]'
                                   : 'bg-[#5D3699] hover:bg-[#4a2b7a] shadow-lg shadow-[#5D3699]/20'
                               } ${session.isPast ? 'opacity-60' : ''}`}
                             >
@@ -780,7 +780,7 @@ return (
                                   type="button"
                                   className={`min-w-0 flex-1 text-left text-sm font-semibold truncate transition-colors ${
                                     session.tone === 'light'
-                                      ? 'text-gray-800 hover:text-[#5D3699]'
+                                      ? 'text-[#111827] hover:text-[#5D3699]'
                                       : 'text-white'
                                   }`}
                                   onClick={(event) => {
@@ -792,7 +792,7 @@ return (
                                 </button>
                               </div>
                               <div className={`mt-1 flex min-w-0 items-center gap-1 text-xs ${
-                                session.tone === 'light' ? 'text-gray-500' : 'text-white/80'
+                                session.tone === 'light' ? 'text-[#6b7280]' : 'text-white/80'
                               }`}>
                                 <Clock className="h-3 w-3" />
                                 <span className={`block min-w-0 whitespace-nowrap ${session.tone === 'light' ? 'line-through' : ''}`}>
@@ -840,33 +840,33 @@ return (
       </div>
     ) : (
       /* Table View */
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
+      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px]">
             <thead>
-              <tr className="bg-gray-50/80">
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <tr className="bg-[#f8fafc]">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
                   Mentee
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
                   Date
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
                   Time
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
                   Action
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#e5e7eb]">
               {filteredSessions.map((session) => (
                 <tr
                   key={session.id}
-                  className="group transition-colors hover:bg-gray-50/50"
+                  className="group transition-colors hover:bg-[#f5f3ff]/30"
                 >
                   <td className="px-6 py-4">
                     <button
@@ -882,21 +882,21 @@ return (
                         )}
                       </div>
                       <div>
-                        <span className="font-medium text-gray-900 group-hover:text-[#5D3699] transition-colors">
+                        <span className="font-medium text-[#111827] group-hover:text-[#5D3699] transition-colors">
                           {getMenteeName(session)}
                         </span>
                       </div>
                     </button>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-[#6b7280]">
+                      <Calendar className="h-4 w-4 text-[#9ca3af]" />
                       {formatDateLabel(session.scheduled_start)}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock className="h-4 w-4 text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-[#6b7280]">
+                      <Clock className="h-4 w-4 text-[#9ca3af]" />
                       {formatTimeRange(session.scheduled_start, session.scheduled_end)}
                     </div>
                   </td>
@@ -904,8 +904,8 @@ return (
                     <span
                       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
                         isPastSession(session)
-                          ? 'bg-gray-100 text-gray-600'
-                          : 'bg-green-50 text-green-700 ring-1 ring-green-600/20'
+                          ? 'bg-[#f5f3ff] text-[#6b7280]'
+                          : 'bg-green-50 text-green-700 ring-1 ring-green-600/10'
                       }`}
                     >
                       {isPastSession(session) ? 'Completed' : session.status || 'Scheduled'}
@@ -933,8 +933,8 @@ return (
                         <ArrowRight className="h-4 w-4" />
                       </button>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-sm text-gray-400">
-                        <span className="h-2 w-2 rounded-full bg-gray-300" />
+                      <span className="inline-flex items-center gap-1.5 text-sm text-[#9ca3af]">
+                        <span className="h-2 w-2 rounded-full bg-[#e5e7eb]" />
                         {getJoinUnavailableLabel(session)}
                       </span>
                     )}
@@ -945,12 +945,12 @@ return (
                 <tr>
                   <td colSpan={5} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                        <Calendar className="h-8 w-8 text-gray-400" />
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f5f3ff]">
+                        <Calendar className="h-8 w-8 text-[#9ca3af]" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">No sessions found</p>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <p className="text-sm font-medium text-[#111827]">No sessions found</p>
+                        <p className="mt-1 text-sm text-[#6b7280]">
                           Try adjusting your filters or search criteria
                         </p>
                       </div>
@@ -967,10 +967,10 @@ return (
     {/* Loading & Error States */}
     {(loading || error) && (
       <div className={`mt-6 flex items-center justify-center gap-2 rounded-xl p-4 ${
-        error ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'
+        error ? 'bg-red-50 text-red-600' : 'bg-white text-[#6b7280] ring-1 ring-[#e5e7eb]'
       }`}>
         {loading && (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-[#5D3699]" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#e5e7eb] border-t-[#5D3699]" />
         )}
         <span className="text-sm font-medium">{error || 'Loading sessions...'}</span>
       </div>

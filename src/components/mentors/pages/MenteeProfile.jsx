@@ -144,7 +144,7 @@ const MenteeProfile = () => {
             </button>
             <h1
               className="mt-2 text-[#111827]"
-              style={{ fontFamily: 'DM Sans', fontSize: '30px', lineHeight: '36px', fontWeight: 700 }}
+              style={{ fontSize: '30px', lineHeight: '36px', fontWeight: 700 }}
             >
               Mentee Profile
             </h1>
