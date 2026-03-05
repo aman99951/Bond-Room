@@ -9,6 +9,28 @@ import {
   setAssessmentDraft,
 } from '../../apis/api/storage';
 
+const STUDENT_MIN_AGE = 13;
+const STUDENT_MAX_AGE = 18;
+
+const yearsAgo = (years) => {
+  const today = new Date();
+  const cloned = new Date(today);
+  cloned.setFullYear(today.getFullYear() - years);
+  return cloned;
+};
+
+const toDateInputValue = (value) => {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getStudentDobBounds = () => ({
+  min: toDateInputValue(yearsAgo(STUDENT_MAX_AGE)),
+  max: toDateInputValue(yearsAgo(STUDENT_MIN_AGE)),
+});
+
 const initialForm = {
   firstName: '',
   lastName: '',
@@ -31,6 +53,7 @@ const Register = () => {
   const { loading, registerMentee, sendParentOtp } = useMenteeAuth();
   const gradeOptions = ['10th Grade', '11th Grade', '12th Grade'];
   const genderOptions = ['Female', 'Male'];
+  const dobBounds = getStudentDobBounds();
 
   const updateField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -60,6 +83,11 @@ const Register = () => {
 
     if (!form.parentMobile.trim()) {
       setErrorMessage('Parent mobile number is required for OTP verification.');
+      return;
+    }
+
+    if (form.dob < dobBounds.min || form.dob > dobBounds.max) {
+      setErrorMessage(`Student age must be between ${STUDENT_MIN_AGE} and ${STUDENT_MAX_AGE} years.`);
       return;
     }
 
@@ -105,10 +133,10 @@ const Register = () => {
       <TopAuth />
 
       <main className="flex-1">
-        <div className="w-full flex justify-center px-4 sm:px-6 py-6 sm:py-10">
-          <div className="border border-[#e6e2f1] rounded-b-[12px] overflow-hidden bg-white shadow-sm w-full max-w-[1266px] xl:min-h-[790px]">
-            <div className="grid grid-cols-1 xl:grid-cols-[591px_675px] xl:min-h-[788px]">
-              <div className="hidden xl:block bg-[#f8f6fb] w-[591px] min-h-[788px]">
+        <div className="flex w-full justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-10">
+          <div className="w-full max-w-[1266px] overflow-hidden rounded-xl border border-[#e6e2f1] bg-white shadow-sm">
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+              <div className="hidden xl:block bg-[#f8f6fb]">
                 <img
                   src={leftside}
                   alt="Find your safe space"
@@ -116,7 +144,7 @@ const Register = () => {
                 />
               </div>
 
-              <div className="p-6 sm:p-8 lg:p-10 bg-[#f7f5fa] w-full xl:w-[675px] xl:min-h-[788px]">
+              <div className="w-full bg-[#f7f5fa] p-5 sm:p-8 lg:p-10">
                 <div className="inline-flex items-center rounded-full bg-[#ede7f6] text-xs text-[#6b4eff] px-3 py-1 font-medium">
                   Step 1 of 3
                 </div>
@@ -210,7 +238,12 @@ const Register = () => {
                         className="mt-1 w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm"
                         value={form.dob}
                         onChange={(event) => updateField('dob', event.target.value)}
+                        min={dobBounds.min}
+                        max={dobBounds.max}
                       />
+                      <p className="mt-1 text-[11px] text-[#6b7280]">
+                        Allowed age: {STUDENT_MIN_AGE} to {STUDENT_MAX_AGE} years
+                      </p>
                     </div>
                     <div>
                       <label id="registerGenderLabel" className="text-xs text-muted">Gender</label>

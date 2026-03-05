@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
 
-const NeedOption = ({ label, selected, icon, iconClassName, onClick }) => {
+const MAX_SELECTIONS = 3;
+
+const toArray = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+  if (typeof value === 'string' && value.trim()) {
+    return [value.trim()];
+  }
+  return [];
+};
+
+const NeedOption = ({ label, selected, icon, onClick }) => {
   return (
     <button
       type="button"
@@ -13,10 +25,8 @@ const NeedOption = ({ label, selected, icon, iconClassName, onClick }) => {
       }`}
       onClick={onClick}
     >
-      <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E5E7EB] bg-[#F5F5F5] sm:h-16 sm:w-16">
-        {typeof icon === 'string' ? (
-          <span className={`leading-none ${iconClassName || 'text-[28px]'}`}>{icon}</span>
-        ) : null}
+      <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E5E7EB] bg-[#F5F5F5] text-[28px] leading-none sm:h-16 sm:w-16">
+        {icon}
       </span>
       <span className={`text-sm sm:text-base ${selected ? 'font-semibold text-[#1f2937]' : 'text-[#6b7280]'}`}>
         {label}
@@ -34,22 +44,66 @@ const NeedsAssessment = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { draft, saveAnswer } = useMenteeAssessment();
-  const [selectedFeeling, setSelectedFeeling] = useState(draft.feeling || 'Anxious');
+  const [selectedFeelings, setSelectedFeelings] = useState(() => {
+    const savedSelections = toArray(draft.feelings);
+    if (savedSelections.length) {
+      return savedSelections.slice(0, MAX_SELECTIONS);
+    }
+    return toArray(draft.feeling).slice(0, MAX_SELECTIONS);
+  });
+  const [otherFeelingText, setOtherFeelingText] = useState(draft.feeling_other_text || '');
+  const [localError, setLocalError] = useState('');
   const hideBackButton = new URLSearchParams(location.search).get('from') === 'dashboard';
 
   const options = ['Burnt Out', 'Anxious', 'Confused', 'Lonely', 'Hopeful', 'Other'];
 
   const icons = {
-    'Burnt Out': '🤯',
-    Anxious: '😟',
-    Confused: '😕',
-    Lonely: '😞',
-    Hopeful: '😌',
-    Other: '⋯',
+    'Burnt Out': '\uD83E\uDD2F',
+    Anxious: '\uD83D\uDE1F',
+    Confused: '\uD83D\uDE15',
+    Lonely: '\uD83D\uDE1E',
+    Hopeful: '\uD83D\uDE0C',
+    Other: '\u22EF',
+  };
+
+  const toggleFeeling = (option) => {
+    setLocalError('');
+    setSelectedFeelings((prev) => {
+      if (prev.includes(option)) {
+        if (option === 'Other') {
+          setOtherFeelingText('');
+        }
+        return prev.filter((item) => item !== option);
+      }
+      if (prev.length >= MAX_SELECTIONS) {
+        setLocalError(`You can select up to ${MAX_SELECTIONS} options.`);
+        return prev;
+      }
+      return [...prev, option];
+    });
+  };
+
+  const saveFeelingAnswers = (nextFeelings, nextOtherText) => {
+    saveAnswer('feelings', nextFeelings);
+    saveAnswer('feeling', nextFeelings[0] || '');
+    saveAnswer('feeling_other_text', nextOtherText.trim());
   };
 
   const handleNext = () => {
-    saveAnswer('feeling', selectedFeeling);
+    if (!selectedFeelings.length) {
+      setLocalError('Please choose at least one feeling or skip this question.');
+      return;
+    }
+    if (selectedFeelings.includes('Other') && !otherFeelingText.trim()) {
+      setLocalError('Please add a short note when selecting Other.');
+      return;
+    }
+    saveFeelingAnswers(selectedFeelings, otherFeelingText);
+    navigate('/needs-assessment/q2');
+  };
+
+  const handleSkip = () => {
+    saveFeelingAnswers([], '');
     navigate('/needs-assessment/q2');
   };
 
@@ -73,7 +127,7 @@ const NeedsAssessment = () => {
                 How have you been feeling lately?
               </h2>
               <p className="mt-2 text-sm text-[#6b7280]">
-                Select the option that best describes your current state of mind.
+                Select up to {MAX_SELECTIONS} options that best describe your current state of mind.
               </p>
             </div>
 
@@ -83,12 +137,35 @@ const NeedsAssessment = () => {
                   key={option}
                   label={option}
                   icon={icons[option]}
-                  iconClassName="text-[28px]"
-                  selected={selectedFeeling === option}
-                  onClick={() => setSelectedFeeling(option)}
+                  selected={selectedFeelings.includes(option)}
+                  onClick={() => toggleFeeling(option)}
                 />
               ))}
             </div>
+
+            <p className="mt-4 text-center text-xs text-[#6b7280]">
+              Selected: {selectedFeelings.length}/{MAX_SELECTIONS}
+            </p>
+
+            {selectedFeelings.includes('Other') && (
+              <div className="mx-auto mt-4 max-w-xl">
+                <label htmlFor="feelingOtherText" className="block text-xs text-[#6b7280]">
+                  Tell us how you are feeling
+                </label>
+                <textarea
+                  id="feelingOtherText"
+                  rows={3}
+                  className="mt-1 w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent"
+                  placeholder="Share in your own words..."
+                  value={otherFeelingText}
+                  onChange={(event) => setOtherFeelingText(event.target.value)}
+                />
+              </div>
+            )}
+
+            {localError && (
+              <p className="mt-4 text-center text-sm text-red-600">{localError}</p>
+            )}
 
             <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
               {!hideBackButton && (
@@ -104,12 +181,12 @@ const NeedsAssessment = () => {
                 onClick={handleNext}
                 className="w-full rounded-md bg-[#5b2c91] py-2.5 text-center text-sm text-white sm:w-80"
               >
-                Next Question -&gt;
+                Next Question {'\u2192'}
               </button>
             </div>
 
             <div className="mt-4 text-center">
-              <button type="button" className="text-xs text-[#6b7280] underline" onClick={handleNext}>
+              <button type="button" className="text-xs text-[#6b7280] underline" onClick={handleSkip}>
                 Skip this question
               </button>
             </div>

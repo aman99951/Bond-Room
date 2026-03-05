@@ -93,7 +93,7 @@ const NeedsAssessmentQ5 = () => {
                 className="w-full rounded-md bg-accent py-2.5 text-center text-sm text-on-accent disabled:opacity-70 sm:w-80"
                 disabled={loading}
               >
-                {loading ? 'Submitting...' : 'Finish -&gt;'}
+                {loading ? 'Submitting...' : `Finish \u2192`}
               </button>
             </div>
 

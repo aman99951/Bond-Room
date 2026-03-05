@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
+
+const MAX_SELECTIONS = 3;
+
+const toArray = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+  if (typeof value === 'string' && value.trim()) {
+    return [value.trim()];
+  }
+  return [];
+};
 
 const Choice = ({ label, selected, onClick }) => {
   return (
@@ -30,7 +42,15 @@ const Choice = ({ label, selected, onClick }) => {
 const NeedsAssessmentQ2 = () => {
   const navigate = useNavigate();
   const { draft, saveAnswer } = useMenteeAssessment();
-  const [selectedCause, setSelectedCause] = useState(draft.feeling_cause || 'Parent Expectations');
+  const [selectedCauses, setSelectedCauses] = useState(() => {
+    const savedSelections = toArray(draft.feeling_causes);
+    if (savedSelections.length) {
+      return savedSelections.slice(0, MAX_SELECTIONS);
+    }
+    return toArray(draft.feeling_cause).slice(0, MAX_SELECTIONS);
+  });
+  const [otherCauseText, setOtherCauseText] = useState(draft.feeling_cause_other_text || '');
+  const [localError, setLocalError] = useState('');
 
   const options = [
     'Exam Pressure',
@@ -42,8 +62,44 @@ const NeedsAssessmentQ2 = () => {
     'Others',
   ];
 
+  const toggleCause = (option) => {
+    setLocalError('');
+    setSelectedCauses((prev) => {
+      if (prev.includes(option)) {
+        if (option === 'Others') {
+          setOtherCauseText('');
+        }
+        return prev.filter((item) => item !== option);
+      }
+      if (prev.length >= MAX_SELECTIONS) {
+        setLocalError(`You can select up to ${MAX_SELECTIONS} options.`);
+        return prev;
+      }
+      return [...prev, option];
+    });
+  };
+
+  const saveCauseAnswers = (nextCauses, nextOtherText) => {
+    saveAnswer('feeling_causes', nextCauses);
+    saveAnswer('feeling_cause', nextCauses[0] || '');
+    saveAnswer('feeling_cause_other_text', nextOtherText.trim());
+  };
+
   const handleNext = () => {
-    saveAnswer('feeling_cause', selectedCause);
+    if (!selectedCauses.length) {
+      setLocalError('Please choose at least one cause or skip this question.');
+      return;
+    }
+    if (selectedCauses.includes('Others') && !otherCauseText.trim()) {
+      setLocalError('Please add a short note when selecting Others.');
+      return;
+    }
+    saveCauseAnswers(selectedCauses, otherCauseText);
+    navigate('/needs-assessment/q3');
+  };
+
+  const handleSkip = () => {
+    saveCauseAnswers([], '');
     navigate('/needs-assessment/q3');
   };
 
@@ -64,8 +120,11 @@ const NeedsAssessmentQ2 = () => {
 
             <div className="mt-8 text-center sm:mt-10">
               <h2 className="text-center text-2xl font-semibold leading-tight text-[#1f2937] sm:text-3xl lg:text-[36px] lg:leading-[45.5px]">
-                What&apos;s been causing this feeling?
+                What's been causing this feeling?
               </h2>
+              <p className="mt-2 text-sm text-[#6b7280]">
+                Select up to {MAX_SELECTIONS} options.
+              </p>
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:justify-items-center lg:grid-cols-3">
@@ -73,11 +132,35 @@ const NeedsAssessmentQ2 = () => {
                 <Choice
                   key={option}
                   label={option}
-                  selected={selectedCause === option}
-                  onClick={() => setSelectedCause(option)}
+                  selected={selectedCauses.includes(option)}
+                  onClick={() => toggleCause(option)}
                 />
               ))}
             </div>
+
+            <p className="mt-4 text-center text-xs text-[#6b7280]">
+              Selected: {selectedCauses.length}/{MAX_SELECTIONS}
+            </p>
+
+            {selectedCauses.includes('Others') && (
+              <div className="mx-auto mt-4 max-w-xl">
+                <label htmlFor="causeOtherText" className="block text-xs text-[#6b7280]">
+                  Tell us more about the cause
+                </label>
+                <textarea
+                  id="causeOtherText"
+                  rows={3}
+                  className="mt-1 w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent"
+                  placeholder="Share in your own words..."
+                  value={otherCauseText}
+                  onChange={(event) => setOtherCauseText(event.target.value)}
+                />
+              </div>
+            )}
+
+            {localError && (
+              <p className="mt-4 text-center text-sm text-red-600">{localError}</p>
+            )}
 
             <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
               <Link
@@ -91,12 +174,12 @@ const NeedsAssessmentQ2 = () => {
                 onClick={handleNext}
                 className="w-full rounded-md bg-accent py-2.5 text-center text-sm text-on-accent sm:w-80"
               >
-                Next Question -&gt;
+                Next Question {'\u2192'}
               </button>
             </div>
 
             <div className="mt-4 text-center">
-              <button type="button" className="text-xs text-subtle underline" onClick={handleNext}>
+              <button type="button" className="text-xs text-subtle underline" onClick={handleSkip}>
                 Skip this question
               </button>
             </div>

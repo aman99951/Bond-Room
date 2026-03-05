@@ -73,13 +73,6 @@ const computeCurrentStatus = ({
   return 'in_review';
 };
 
-const onboardingStatusOptions = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_review', label: 'In Review' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'rejected', label: 'Rejected' },
-];
-
 const identityStatusOptions = [
   { value: 'pending', label: 'Pending' },
   { value: 'in_review', label: 'In Review' },
@@ -681,30 +674,16 @@ const AdminPortal = () => {
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="trainingStatus" className="text-xs text-[#6b7280]">Training Status</label>
-                      <select
-                        id="trainingStatus"
-                        className={inputClass}
-                        value={decisionForm.trainingStatus}
-                        onChange={(event) => setDecisionForm((prev) => ({ ...prev, trainingStatus: event.target.value }))}
-                      >
-                        {onboardingStatusOptions.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
+                      <label className="text-xs text-[#6b7280]">Training Status</label>
+                      <div className={`${inputClass} flex items-center bg-[#f8fafc] capitalize`} aria-readonly="true">
+                        {formatStatusLabel(decisionForm.trainingStatus)}
+                      </div>
                     </div>
                     <div>
-                      <label htmlFor="finalApprovalStatus" className="text-xs text-[#6b7280]">Final Approval</label>
-                      <select
-                        id="finalApprovalStatus"
-                        className={inputClass}
-                        value={decisionForm.finalApprovalStatus}
-                        onChange={(event) => setDecisionForm((prev) => ({ ...prev, finalApprovalStatus: event.target.value }))}
-                      >
-                        {onboardingStatusOptions.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
+                      <label className="text-xs text-[#6b7280]">Final Approval</label>
+                      <div className={`${inputClass} flex items-center bg-[#f8fafc] capitalize`} aria-readonly="true">
+                        {formatStatusLabel(decisionForm.finalApprovalStatus)}
+                      </div>
                     </div>
                   </div>
 

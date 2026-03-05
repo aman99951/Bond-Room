@@ -12,10 +12,34 @@ import {
   setPendingMentorRegistration,
 } from '../../apis/api/storage';
 
+const MENTOR_MIN_AGE = 45;
+const MENTOR_MAX_AGE = 60;
+
+const yearsAgo = (years) => {
+  const today = new Date();
+  const cloned = new Date(today);
+  cloned.setFullYear(today.getFullYear() - years);
+  return cloned;
+};
+
+const toDateInputValue = (value) => {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getMentorDobBounds = () => ({
+  min: toDateInputValue(yearsAgo(MENTOR_MAX_AGE)),
+  max: toDateInputValue(yearsAgo(MENTOR_MIN_AGE)),
+});
+
+const REQUIRED_FIELDS_MESSAGE = 'Please fill all required fields to continue.';
+
 const MentorRegister = () => {
   const [selectedLanguages, setSelectedLanguages] = useState([]);
   const [selectedCareAreas, setSelectedCareAreas] = useState([]);
-  const languagesOptions = ['Tamil', 'English', 'Telugu', 'Kannada'];
+  const languagesOptions = ['Tamil', 'English', 'Telugu', 'Kannada', 'Malayalam', 'Hindi'];
   const careAreaOptions = ['Anxiety', 'Relationships', 'Academic Stress'];
   const pendingMentor = useMemo(() => getPendingMentorRegistration(), []);
   const navigate = useNavigate();
@@ -67,6 +91,7 @@ const MentorRegister = () => {
     phone: 0,
   });
   const isDev = Boolean(import.meta?.env?.DEV);
+  const dobBounds = getMentorDobBounds();
 
   const toggleMultiCheckbox = (value, setter) => {
     setter((prev) => {
@@ -172,7 +197,7 @@ const MentorRegister = () => {
     return () => window.clearInterval(intervalId);
   }, [resendCooldown.email, resendCooldown.phone]);
 
-  const validateRegistrationForm = () => {
+  const validateSectionOneForm = () => {
     if (
       !form.firstName.trim() ||
       !form.lastName.trim() ||
@@ -181,10 +206,23 @@ const MentorRegister = () => {
       !form.dob ||
       !form.gender ||
       !form.stateName ||
-      !form.cityName ||
-      !form.mobile.trim()
+      !form.cityName
     ) {
       return 'Please fill all required fields to continue.';
+    }
+    if (!selectedLanguages.length) {
+      return 'Please select at least one language.';
+    }
+    if (form.dob < dobBounds.min || form.dob > dobBounds.max) {
+      return `Mentor age must be between ${MENTOR_MIN_AGE} and ${MENTOR_MAX_AGE} years.`;
+    }
+    return '';
+  };
+
+  const validateRegistrationForm = () => {
+    const sectionOneError = validateSectionOneForm();
+    if (sectionOneError) {
+      return sectionOneError;
     }
     if (!form.consent) {
       return 'Please confirm your consent to proceed.';
@@ -213,8 +251,11 @@ const MentorRegister = () => {
     };
   };
 
-  const ensureMentorRegistered = async () => {
-    const validationError = validateRegistrationForm();
+  const ensureMentorRegistered = async (options = {}) => {
+    const { forVerification = false } = options;
+    const validationError = forVerification
+      ? validateSectionOneForm()
+      : validateRegistrationForm();
     if (validationError) {
       throw new Error(validationError);
     }
@@ -246,7 +287,7 @@ const MentorRegister = () => {
     try {
       let currentMentorId = mentorId || pendingMentor?.mentorId || null;
       if (registerIfNeeded || !currentMentorId) {
-        const mentor = await ensureMentorRegistered();
+        const mentor = await ensureMentorRegistered({ forVerification: true });
         currentMentorId = mentor?.id || currentMentorId;
       }
       if (!currentMentorId) {
@@ -268,7 +309,7 @@ const MentorRegister = () => {
     } catch (err) {
       const message = err?.message || 'Unable to send OTP.';
       setErrorMessage(message);
-      setOtpErrorMessage(message);
+      setOtpErrorMessage(message === REQUIRED_FIELDS_MESSAGE ? '' : message);
     } finally {
       setActionBusy((prev) => ({ ...prev, [sendKey]: false }));
     }
@@ -325,6 +366,22 @@ const MentorRegister = () => {
     setOtpModal((prev) => ({ ...prev, open: false, otp: '' }));
   };
 
+  const handleContinueToProfile = () => {
+    setErrorMessage('');
+    setInfoMessage('');
+
+    const validationError = validateSectionOneForm();
+    if (validationError) {
+      setErrorMessage(validationError);
+      return;
+    }
+    if (!emailVerified || !phoneVerified) {
+      setErrorMessage('Please verify both email and mobile to continue.');
+      return;
+    }
+    setFormSection(2);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setErrorMessage('');
@@ -363,11 +420,11 @@ const MentorRegister = () => {
     <div className="min-h-screen text-[#1f2937] flex flex-col">
       <TopAuth />
 
-      <main className="flex-1 bg-transparent">
-        <div className="w-full flex justify-center px-4 sm:px-6 lg:px-4 py-4 sm:py-6 lg:py-10 bg-transparent">
-          <div className="rounded-[12px] overflow-hidden w-full max-w-[1266px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] xl:min-h-[820px]">
-            <div className="grid grid-cols-1 xl:grid-cols-[591px_675px] h-full">
-              <div className="hidden xl:grid grid-rows-2 h-full bg-transparent relative">
+      <main className="bg-transparent flex-1">
+        <div className="flex w-full justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-10">
+          <div className="w-full max-w-[1266px] overflow-hidden rounded-xl bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+              <div className="relative hidden h-full grid-rows-2 bg-transparent xl:grid">
                 <img
                   src={imageContainer}
                   alt=""
@@ -417,7 +474,7 @@ const MentorRegister = () => {
                 </div>
               </div>
 
-              <div className="p-4 sm:p-6 lg:p-10 bg-white text-[#1f2937] h-full overflow-y-auto">
+              <div className="bg-white p-4 text-[#1f2937] sm:p-6 lg:p-10">
                 <div className="max-w-2xl mx-auto md:max-w-none md:mx-0">
                   <div className="inline-flex items-center rounded-full bg-[#e9ddff] text-xs text-[#5b2c91] px-3 py-1 font-medium">
                     Step 1 of 3
@@ -554,7 +611,12 @@ const MentorRegister = () => {
                                 className="w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all"
                                 value={form.dob}
                                 onChange={(event) => updateField('dob', event.target.value)}
+                                min={dobBounds.min}
+                                max={dobBounds.max}
                               />
+                              <p className="mt-1 text-[11px] text-[#6b7280]">
+                                Allowed age: {MENTOR_MIN_AGE} to {MENTOR_MAX_AGE} years
+                              </p>
                             </div>
                             <div>
                               <label htmlFor="gender" className="block text-xs font-medium text-[#6b7280] mb-1">
@@ -751,7 +813,7 @@ const MentorRegister = () => {
                         <button
                           type="button"
                           className="rounded-md bg-[#5b2c91] hover:bg-[#4a2374] text-white px-4 py-2 text-sm font-semibold transition-all duration-200"
-                          onClick={() => setFormSection(2)}
+                          onClick={handleContinueToProfile}
                         >
                           Next
                         </button>

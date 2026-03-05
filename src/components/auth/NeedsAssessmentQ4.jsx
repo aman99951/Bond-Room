@@ -89,7 +89,7 @@ const NeedsAssessmentQ4 = () => {
                 onClick={handleNext}
                 className="w-full rounded-md bg-accent py-2.5 text-center text-sm text-on-accent sm:w-80"
               >
-                Next Question -&gt;
+                Next Question {'\u2192'}
               </button>
             </div>
 
