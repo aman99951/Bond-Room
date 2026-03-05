@@ -120,7 +120,8 @@ const getJoinUnavailableLabel = (session) => {
 
 const MySessions = () => {
   const navigate = useNavigate();
-  const [view, setView] = useState('calendar');
+  const isMobileInit = typeof window !== 'undefined' && window.innerWidth < 640;
+  const [view, setView] = useState(isMobileInit ? 'table' : 'calendar');
   const [filterOpen, setFilterOpen] = useState(false);
   const [weekFilterOpen, setWeekFilterOpen] = useState(false);
   const [weekFilterValue, setWeekFilterValue] = useState('This Week');
@@ -379,9 +380,9 @@ return (
         </div>
 
         {/* Controls */}
-        <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
-          {/* Search */}
-          <div className="relative w-full sm:min-w-[260px] sm:flex-1 lg:w-72 lg:flex-none">
+        <div className="grid w-full grid-cols-1 gap-3 md:flex md:w-auto md:items-center md:justify-end">
+          {/* Search — full width row */}
+          <div className="relative w-full md:min-w-[260px] md:flex-1 lg:w-72 lg:flex-none">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
             <input
               type="text"
@@ -400,83 +401,86 @@ return (
             )}
           </div>
 
-          {/* Filter Dropdown */}
-          <div className="relative w-full sm:w-[180px] lg:w-40" tabIndex={0} onBlur={() => setFilterOpen(false)}>
-            <button
-              type="button"
-              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd]"
-              onClick={() => setFilterOpen((o) => !o)}
-            >
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-[#9ca3af]" />
-                <span>{filterValue}</span>
-              </div>
-              <ChevronDown className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {filterOpen && (
-              <ul className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
-                {filterOptions.map((opt) => (
-                  <li key={opt}>
-                    <button
-                      type="button"
-                      className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
-                        filterValue === opt
-                          ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
-                          : 'text-[#6b7280] hover:bg-[#f5f3ff]'
-                      }`}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        setFilterValue(opt);
-                        setFilterOpen(false);
-                      }}
-                    >
-                      {opt}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+          {/* Filters row — two filters side by side on mobile */}
+          <div className="grid grid-cols-2 gap-3 md:contents">
+            {/* Filter Dropdown */}
+            <div className="relative" tabIndex={0} onBlur={() => setFilterOpen(false)}>
+              <button
+                type="button"
+                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 md:w-[180px] lg:w-40"
+                onClick={() => setFilterOpen((o) => !o)}
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Filter className="h-4 w-4 flex-shrink-0 text-[#9ca3af]" />
+                  <span className="truncate">{filterValue}</span>
+                </div>
+                <ChevronDown className={`h-4 w-4 flex-shrink-0 text-[#9ca3af] transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {filterOpen && (
+                <ul className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
+                  {filterOptions.map((opt) => (
+                    <li key={opt}>
+                      <button
+                        type="button"
+                        className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
+                          filterValue === opt
+                            ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
+                            : 'text-[#6b7280] hover:bg-[#f5f3ff]'
+                        }`}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setFilterValue(opt);
+                          setFilterOpen(false);
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Week Filter Dropdown */}
+            <div className="relative" tabIndex={0} onBlur={() => setWeekFilterOpen(false)}>
+              <button
+                type="button"
+                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 md:w-[170px] lg:w-36"
+                onClick={() => setWeekFilterOpen((o) => !o)}
+              >
+                <span className="truncate">{weekFilterValue}</span>
+                <ChevronDown className={`h-4 w-4 flex-shrink-0 text-[#9ca3af] transition-transform duration-200 ${weekFilterOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {weekFilterOpen && (
+                <ul className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
+                  {weekFilterOptions.map((opt) => (
+                    <li key={opt}>
+                      <button
+                        type="button"
+                        className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
+                          weekFilterValue === opt
+                            ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
+                            : 'text-[#6b7280] hover:bg-[#f5f3ff]'
+                        }`}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setWeekFilterValue(opt);
+                          setWeekFilterOpen(false);
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
-          {/* Week Filter Dropdown */}
-          <div className="relative w-full sm:w-[170px] lg:w-36" tabIndex={0} onBlur={() => setWeekFilterOpen(false)}>
+          {/* View Toggle — own row on mobile */}
+          <div className="flex h-11 w-full items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] md:w-auto md:min-w-[220px]">
             <button
-              type="button"
-              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd]"
-              onClick={() => setWeekFilterOpen((o) => !o)}
-            >
-              <span>{weekFilterValue}</span>
-              <ChevronDown className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${weekFilterOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {weekFilterOpen && (
-              <ul className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
-                {weekFilterOptions.map((opt) => (
-                  <li key={opt}>
-                    <button
-                      type="button"
-                      className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
-                        weekFilterValue === opt
-                          ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
-                          : 'text-[#6b7280] hover:bg-[#f5f3ff]'
-                      }`}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        setWeekFilterValue(opt);
-                        setWeekFilterOpen(false);
-                      }}
-                    >
-                      {opt}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* View Toggle */}
-          <div className="flex h-11 w-full min-w-[220px] items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] sm:w-auto">
-            <button
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 sm:flex-none ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 md:flex-none ${
                 view === 'calendar'
                   ? 'bg-[#5D3699] text-white shadow-md'
                   : 'text-[#6b7280] hover:text-[#111827]'
@@ -484,10 +488,10 @@ return (
               onClick={() => setView('calendar')}
             >
               <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Calendar</span>
+              Calendar
             </button>
             <button
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 sm:flex-none ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 md:flex-none ${
                 view === 'table'
                   ? 'bg-[#5D3699] text-white shadow-md'
                   : 'text-[#6b7280] hover:text-[#111827]'
@@ -495,7 +499,7 @@ return (
               onClick={() => setView('table')}
             >
               <LayoutGrid className="h-4 w-4" />
-              <span className="hidden sm:inline">Table</span>
+              List
             </button>
           </div>
         </div>
@@ -667,10 +671,99 @@ return (
         </div>
       </div>
     ) : (
-      /* Table View */
+      /* Table / List View */
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] xl:min-w-0">
+        {/* Mobile card layout */}
+        <div className="block md:hidden">
+          {filteredSessions.length > 0 ? (
+            <div className="divide-y divide-[#e5e7eb]">
+              {filteredSessions.map((session) => (
+                <div key={session.id} className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#f5f3ff]">
+                      {session.mentorAvatar ? (
+                        <img src={session.mentorAvatar} alt={session.mentorName} className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-5 w-5 text-[#5D3699]" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[#111827] truncate">{session.mentorName}</p>
+                      <div className="mt-0.5 flex items-center gap-2 text-xs text-[#6b7280]">
+                        <span>{formatDate(session.scheduled_start)}</span>
+                        <span className="text-[#e5e7eb]">·</span>
+                        <span>{session.timeRange}</span>
+                      </div>
+                    </div>
+                    <span
+                      className={`flex-shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                        isPastSession(session)
+                          ? 'bg-[#f5f3ff] text-[#6b7280]'
+                          : 'bg-green-50 text-green-700'
+                      }`}
+                    >
+                      {isPastSession(session) ? (
+                        <><CheckCircle2 className="h-3 w-3" />Done</>
+                      ) : (
+                        session.status || 'Scheduled'
+                      )}
+                    </span>
+                  </div>
+                  {/* Action row */}
+                  <div className="mt-3">
+                    {isFeedbackEligible(session) ? (
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedSessionId(session.id); navigate('/feedback'); }}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20 transition-all hover:bg-[#f5f3ff]"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Leave Feedback
+                      </button>
+                    ) : canJoinSession(session) ? (
+                      <button
+                        type="button"
+                        onClick={() => handleJoin(session)}
+                        disabled={joiningId === session.id}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] disabled:opacity-50"
+                      >
+                        {joiningId === session.id ? (
+                          <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Joining...</>
+                        ) : (
+                          <><Video className="h-4 w-4" />Join Call</>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="flex items-center justify-center gap-1.5 py-2 text-xs text-[#9ca3af]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#e5e7eb]" />
+                        {getJoinUnavailableLabel(session)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : !loading && (
+            <div className="flex flex-col items-center py-12 text-center px-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f5f3ff]">
+                <Calendar className="h-7 w-7 text-[#9ca3af]" />
+              </div>
+              <h3 className="mt-4 text-sm font-semibold text-[#111827]">No sessions found</h3>
+              <p className="mt-1 text-xs text-[#6b7280]">Try adjusting your filters</p>
+              <button
+                type="button"
+                onClick={() => { setSearchValue(''); setFilterValue('All Types'); }}
+                className="mt-3 rounded-lg bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699]"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop table layout */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full">
             <thead>
               <tr className="bg-[#f8fafc]">
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280] lg:px-6 lg:py-4">
@@ -696,45 +789,30 @@ return (
                   key={session.id}
                   className="group transition-colors hover:bg-[#f5f3ff]/30"
                 >
-                  {/* Mentor */}
                   <td className="px-4 py-3 lg:px-6 lg:py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-[#f5f3ff]">
                         {session.mentorAvatar ? (
-                          <img
-                            src={session.mentorAvatar}
-                            alt={session.mentorName}
-                            className="h-full w-full object-cover"
-                          />
+                          <img src={session.mentorAvatar} alt={session.mentorName} className="h-full w-full object-cover" />
                         ) : (
                           <User className="h-5 w-5 text-[#5D3699]" />
                         )}
                       </div>
-                      <div>
-                        <span className="font-medium text-[#111827] group-hover:text-[#5D3699] transition-colors">
-                          {session.mentorName}
-                        </span>
-                      </div>
+                      <span className="font-medium text-[#111827] group-hover:text-[#5D3699] transition-colors">{session.mentorName}</span>
                     </div>
                   </td>
-
-                  {/* Date */}
                   <td className="px-4 py-3 lg:px-6 lg:py-4">
                     <div className="flex items-center gap-2 text-sm text-[#6b7280]">
                       <Calendar className="h-4 w-4 text-[#9ca3af]" />
                       {formatDate(session.scheduled_start)}
                     </div>
                   </td>
-
-                  {/* Time */}
                   <td className="px-4 py-3 lg:px-6 lg:py-4">
                     <div className="flex items-center gap-2 text-sm text-[#6b7280]">
                       <Clock className="h-4 w-4 text-[#9ca3af]" />
                       {session.timeRange}
                     </div>
                   </td>
-
-                  {/* Status */}
                   <td className="px-4 py-3 lg:px-6 lg:py-4">
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
@@ -744,48 +822,32 @@ return (
                       }`}
                     >
                       {isPastSession(session) ? (
-                        <>
-                          <CheckCircle2 className="h-3 w-3" />
-                          Completed
-                        </>
+                        <><CheckCircle2 className="h-3 w-3" />Completed</>
                       ) : (
                         session.status || 'Scheduled'
                       )}
                     </span>
                   </td>
-
-                  {/* Action */}
                   <td className="px-4 py-3 lg:px-6 lg:py-4">
                     {isFeedbackEligible(session) ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          setSelectedSessionId(session.id);
-                          navigate('/feedback');
-                        }}
-                        className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20 transition-all hover:bg-[#f5f3ff] hover:ring-[#5D3699]/40"
+                        onClick={() => { setSelectedSessionId(session.id); navigate('/feedback'); }}
+                        className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20 transition-all hover:bg-[#f5f3ff]"
                       >
-                        <MessageSquare className="h-4 w-4" />
-                        Leave Feedback
+                        <MessageSquare className="h-4 w-4" />Leave Feedback
                       </button>
                     ) : canJoinSession(session) ? (
                       <button
                         type="button"
                         onClick={() => handleJoin(session)}
                         disabled={joiningId === session.id}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#5D3699] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#5D3699] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#4a2b7a] disabled:opacity-50"
                       >
                         {joiningId === session.id ? (
-                          <>
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                            Joining...
-                          </>
+                          <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Joining...</>
                         ) : (
-                          <>
-                            <Video className="h-4 w-4" />
-                            Join Call
-                            <ArrowRight className="h-4 w-4" />
-                          </>
+                          <><Video className="h-4 w-4" />Join Call<ArrowRight className="h-4 w-4" /></>
                         )}
                       </button>
                     ) : (
@@ -797,8 +859,6 @@ return (
                   </td>
                 </tr>
               ))}
-
-              {/* Empty State */}
               {!filteredSessions.length && !loading && (
                 <tr>
                   <td colSpan={5} className="px-4 py-16 text-center lg:px-6">
@@ -806,22 +866,13 @@ return (
                       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f5f3ff]">
                         <Calendar className="h-8 w-8 text-[#9ca3af]" />
                       </div>
-                      <h3 className="mt-4 text-base font-semibold text-[#111827]">
-                        No sessions found
-                      </h3>
-                      <p className="mt-1 text-sm text-[#6b7280]">
-                        Try adjusting your filters or search criteria
-                      </p>
+                      <h3 className="mt-4 text-base font-semibold text-[#111827]">No sessions found</h3>
+                      <p className="mt-1 text-sm text-[#6b7280]">Try adjusting your filters or search criteria</p>
                       <button
                         type="button"
-                        onClick={() => {
-                          setSearchValue('');
-                          setFilterValue('All');
-                        }}
+                        onClick={() => { setSearchValue(''); setFilterValue('All Types'); }}
                         className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#f5f3ff] px-4 py-2 text-sm font-medium text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
-                      >
-                        Clear Filters
-                      </button>
+                      >Clear Filters</button>
                     </div>
                   </td>
                 </tr>
@@ -834,7 +885,7 @@ return (
 
     {/* Quick Stats Bar (Optional Enhancement) */}
     {!loading && filteredSessions.length > 0 && (
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb]">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#6b7280]">Total Sessions</span>

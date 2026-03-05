@@ -7,7 +7,6 @@ import logo from '../assets/logo.png';
 import { subscribeToApiLoading } from '../apis/api/requestLoading';
 import MenteeMeetingInviteBanner from './meeting/MenteeMeetingInviteBanner';
 import MeetingHost from './meeting/MeetingHost';
-// import OrderBot from '../components/OrderBot';
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,9 +19,28 @@ const MainLayout = () => {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const setAppHeight = () => {
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    };
+    setAppHeight();
+    window.addEventListener('resize', setAppHeight);
+    window.addEventListener('orientationchange', setAppHeight);
+    return () => {
+      window.removeEventListener('resize', setAppHeight);
+      window.removeEventListener('orientationchange', setAppHeight);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen lg:h-screen flex flex-col bg-page">
-      <div className="lg:hidden bg-surface border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+    // ✅ Changed: min-h-[100dvh] → h-[100dvh], added overflow-hidden for all sizes
+    <div
+      className="flex h-[100dvh] flex-col overflow-hidden bg-page"
+      style={{ height: 'var(--app-height, 100dvh)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+
+      {/* ── Mobile top bar ── */}
+      <div className="shrink-0 lg:hidden bg-surface border-b border-gray-100 px-4 py-3 flex items-center justify-between">
         <button
           className="h-9 w-9 rounded-md border border-default flex items-center justify-center"
           onClick={() => setSidebarOpen(true)}
@@ -33,28 +51,47 @@ const MainLayout = () => {
           </svg>
         </button>
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md ">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md">
             <img src={logo} alt="Bond Room" className="h-4 w-4" />
           </span>
           <span className="text-sm font-semibold text-primary">Bond Room</span>
         </div>
         <div className="h-9 w-9" />
       </div>
-      <div className="flex-1 flex flex-col lg:overflow-hidden">
-        <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
+
+      {/* ── Body: sidebar + main ── */}
+      {/* ✅ Changed: added overflow-hidden for all sizes (was lg-only) */}
+      <div className="flex flex-1 flex-col overflow-hidden min-h-0">
+        <div className="flex flex-1 flex-col lg:flex-row overflow-hidden min-h-0">
+
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 lg:overflow-y-auto flex flex-col" data-scroll-container="true" tabIndex={0} role="main">
-            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1">
-              <MeetingHost />
-              <MenteeMeetingInviteBanner />
-              <Outlet />
+
+          {/* ✅ Changed: split main into scrollable content + pinned BottomAuth */}
+          <main className="flex flex-1 flex-col overflow-hidden min-h-0" role="main">
+
+            {/* Scrollable content area */}
+            <div
+              className="flex-1 overflow-y-auto min-h-0 sm:px-2 sm:py-4 lg:px-4 lg:py-6"
+              data-scroll-container="true"
+              tabIndex={0}
+            >
+              <div className="w-full mx-auto">
+                <MeetingHost />
+                <MenteeMeetingInviteBanner />
+                <Outlet />
+              </div>
             </div>
-            <div className="mt-auto">
+
+            {/* ✅ BottomAuth: always pinned at the bottom, never scrolled away */}
+            <div className="shrink-0">
               <BottomAuth />
             </div>
+
           </main>
         </div>
       </div>
+
+      {/* ── Global loading spinner ── */}
       {apiLoading ? (
         <div className="fixed inset-0 z-[60] pointer-events-none flex items-center justify-center">
           <div className="rounded-full bg-white/85 p-4 shadow-md border border-default">
@@ -62,7 +99,6 @@ const MainLayout = () => {
           </div>
         </div>
       ) : null}
-      {/* <OrderBot /> */}
     </div>
   );
 };

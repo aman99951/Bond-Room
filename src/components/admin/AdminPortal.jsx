@@ -237,15 +237,31 @@ const AdminPortal = () => {
     setDocumentViewer({ open: false, title: '', url: '', kind: 'unknown' });
   };
 
-  const openDocumentViewer = (title, url) => {
+  const openDocumentViewer = async (title, url) => {
     const resolvedUrl = resolveMediaUrl(url);
     if (!resolvedUrl) return;
+    const initialKind = resolveDocumentKind(resolvedUrl);
     setDocumentViewer({
       open: true,
       title,
       url: resolvedUrl,
-      kind: resolveDocumentKind(resolvedUrl),
+      kind: initialKind,
     });
+    if (initialKind !== 'unknown') return;
+    try {
+      const response = await fetch(resolvedUrl, { method: 'HEAD', credentials: 'include' });
+      const contentType = response.headers.get('content-type') || '';
+      let inferredKind = 'unknown';
+      if (contentType.startsWith('image/')) inferredKind = 'image';
+      if (contentType === 'application/pdf') inferredKind = 'pdf';
+      if (inferredKind !== 'unknown') {
+        setDocumentViewer((prev) =>
+          prev.open && prev.url === resolvedUrl ? { ...prev, kind: inferredKind } : prev
+        );
+      }
+    } catch {
+      // Keep the viewer open with the fallback message.
+    }
   };
 
   const closeDocumentViewer = () => {

@@ -116,7 +116,7 @@ const SessionRequests = () => {
             This list shows every session request you’ve sent to mentors, newest first.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
           <button
             type="button"
             onClick={handleRefresh}
@@ -147,7 +147,7 @@ const SessionRequests = () => {
             key={stat.label}
             className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm"
           >
-            <p className="text-[10px] uppercase tracking-[0.3em] text-[#9ca3af]">{stat.label}</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-[#9ca3af]">{stat.label}</p>
             <p className="mt-2 text-2xl font-bold text-[#111827]">{stat.value}</p>
           </div>
         ))}
@@ -182,7 +182,7 @@ const SessionRequests = () => {
                   key={session.id}
                   className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm flex flex-col gap-4"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-[#f5f3ff] text-xs font-semibold text-[#5D3699]">
                         {mentorInfo.avatar ? (

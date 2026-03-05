@@ -156,9 +156,8 @@ const RecommendationCard = ({ mentor }) => {
             </div>
             <p
               ref={blurbRef}
-              className={`mt-2 text-[#6b7280] text-xs sm:text-sm ${
-                expanded ? '' : 'line-clamp-4 min-h-[80px]'
-              }`}
+              className={`mt-2 text-[#6b7280] text-xs sm:text-sm ${expanded ? '' : 'line-clamp-4 min-h-[80px]'
+                }`}
               style={{ lineHeight: '20px', fontWeight: 400 }}
             >
               {mentor.blurb}
@@ -230,11 +229,11 @@ const Dashboard = () => {
         setUpcomingSession((prev) =>
           prev
             ? {
-                ...prev,
-                meeting_url: response?.meeting_url || prev.meeting_url,
-                join_url: response?.join_url || prev.join_url,
-                host_join_url: response?.host_join_url || prev.host_join_url,
-              }
+              ...prev,
+              meeting_url: response?.meeting_url || prev.meeting_url,
+              join_url: response?.join_url || prev.join_url,
+              host_join_url: response?.host_join_url || prev.host_join_url,
+            }
             : prev
         );
         setSelectedSessionId(upcomingSession.id);
@@ -319,10 +318,10 @@ const Dashboard = () => {
         const upcomingMentor = upcoming ? mentorMap[String(upcoming.mentor)] : null;
         const upcomingCard = upcoming
           ? {
-              ...upcoming,
-              mentorName: getMentorName(upcomingMentor || {}),
-              mentorAvatar: upcomingMentor?.avatar || '',
-            }
+            ...upcoming,
+            mentorName: getMentorName(upcomingMentor || {}),
+            mentorAvatar: upcomingMentor?.avatar || '',
+          }
           : null;
 
         const recentCards = recentList.map((session) => {
@@ -372,320 +371,318 @@ const Dashboard = () => {
     return Math.max(0, Math.min(100, Math.round((completed / total) * 100)));
   }, [stats]);
 
-return (
-  <div className="p-4 sm:p-6 lg:p-8 bg-transparent">
-    {/* Welcome Header Card */}
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 sm:p-8 shadow-sm ring-1 ring-[#e5e7eb]/50">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-3 py-1 text-xs font-medium text-[#5D3699]">
-              <Sparkles className="h-3 w-3" />
-              Welcome Back
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight">
-            Hi {displayName}! 👋
-          </h1>
-          <p className="mt-3 text-sm sm:text-base text-[#6b7280] max-w-lg">
-            Here's what we've prepared for you today to help you grow and achieve your goals.
-          </p>
-          
-          {/* Progress Bar */}
-          <div className="mt-5 max-w-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-[#6b7280]">Your Progress</span>
-              <span className="text-xs font-semibold text-[#5D3699]">{progressPercent}%</span>
+  return (
+    <div className="p-4 sm:p-6 lg:p-8 bg-transparent">
+      {/* Welcome Header Card */}
+      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 sm:p-8 shadow-sm ring-1 ring-[#e5e7eb]/50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-3 py-1 text-xs font-medium text-[#5D3699]">
+                <Sparkles className="h-3 w-3" />
+                Welcome Back
+              </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-[#f5f3ff]">
-              <div
-                className="h-full rounded-full bg-[#5D3699] transition-all duration-500"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-        </div>
-        
-        {/* Decorative Icon */}
-        <div className="hidden sm:flex h-24 w-24 lg:h-28 lg:w-28 rounded-2xl bg-[#f5f3ff] items-center justify-center flex-shrink-0 ring-4 ring-[#ede9fe]">
-          <img src={topRightIcon} alt="" className="h-12 w-12 lg:h-14 lg:w-14 opacity-80" />
-        </div>
-      </div>
-    </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight">
+              Hi {displayName}! 👋
+            </h1>
+            <p className="mt-3 text-sm sm:text-base text-[#6b7280] max-w-lg">
+              Here's what we've prepared for you today to help you grow and achieve your goals.
+            </p>
 
-    {/* Quick Actions Grid */}
-    <div className="mt-6 sm:mt-8">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="h-1 w-1 rounded-full bg-[#5D3699]" />
-        <h2 className="text-sm font-semibold text-[#111827]">Quick Actions</h2>
-      </div>
-      
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {quickActions.map((item) => {
-          const Icon = item.icon;
-          const isClickable = Boolean(item.to);
-
-          const cardContent = (
-            <div className="group h-full rounded-xl border border-[#e5e7eb] bg-white p-4 sm:p-5 shadow-sm transition-all duration-200 hover:border-[#c4b5fd] hover:shadow-md">
-              <div className="flex flex-col h-full">
-                <div className="flex items-start justify-between">
-                  <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#5D3699] transition-colors group-hover:bg-[#ede9fe]">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  {isClickable && (
-                    <ChevronRight className="h-4 w-4 text-[#9ca3af] transition-transform group-hover:translate-x-0.5 group-hover:text-[#5D3699]" />
-                  )}
-                </div>
-                <div className="mt-4 flex-1">
-                  <h3 className="text-sm font-semibold text-[#111827] group-hover:text-[#5D3699] transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-[#9ca3af] line-clamp-2">
-                    {item.subtitle}
-                  </p>
-                </div>
+            {/* Progress Bar */}
+            <div className="mt-5 max-w-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-[#6b7280]">Your Progress</span>
+                <span className="text-xs font-semibold text-[#5D3699]">{progressPercent}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-[#f5f3ff]">
+                <div
+                  className="h-full rounded-full bg-[#5D3699] transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
               </div>
             </div>
-          );
+          </div>
 
-          if (isClickable) {
-            return (
-              <button
-                type="button"
-                key={item.title}
-                className="text-left h-full"
-                onClick={() => navigate(item.to)}
-              >
-                {cardContent}
-              </button>
+          {/* Decorative Icon */}
+          <div className="hidden sm:flex h-24 w-24 lg:h-28 lg:w-28 rounded-2xl bg-[#f5f3ff] items-center justify-center flex-shrink-0 ring-4 ring-[#ede9fe]">
+            <img src={topRightIcon} alt="" className="h-12 w-12 lg:h-14 lg:w-14 opacity-80" />
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions Grid */}
+      <div className="mt-6 sm:mt-8">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-1 w-1 rounded-full bg-[#5D3699]" />
+          <h2 className="text-sm font-semibold text-[#111827]">Quick Actions</h2>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {quickActions.map((item) => {
+            const Icon = item.icon;
+            const isClickable = Boolean(item.to);
+
+            const cardContent = (
+              <div className="group h-full rounded-xl border border-[#e5e7eb] bg-white p-4 sm:p-5 shadow-sm transition-all duration-200 hover:border-[#c4b5fd] hover:shadow-md">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-start justify-between">
+                    <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#5D3699] transition-colors group-hover:bg-[#ede9fe]">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    {isClickable && (
+                      <ChevronRight className="h-4 w-4 text-[#9ca3af] transition-transform group-hover:translate-x-0.5 group-hover:text-[#5D3699]" />
+                    )}
+                  </div>
+                  <div className="mt-4 flex-1">
+                    <h3 className="text-sm font-semibold text-[#111827] group-hover:text-[#5D3699] transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-[#9ca3af] line-clamp-2">
+                      {item.subtitle}
+                    </p>
+                  </div>
+                </div>
+              </div>
             );
-          }
 
-          return (
-            <div key={item.title} className="h-full">
-              {cardContent}
-            </div>
-          );
-        })}
-      </div>
-    </div>
+            if (isClickable) {
+              return (
+                <button
+                  type="button"
+                  key={item.title}
+                  className="text-left h-full"
+                  onClick={() => navigate(item.to)}
+                >
+                  {cardContent}
+                </button>
+              );
+            }
 
-    {/* Recommended Mentors Section */}
-    <div className="mt-8 sm:mt-10">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-            <Star className="h-5 w-5 text-[#5D3699]" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-[#111827]">Recommended Mentors</h2>
-            <p className="text-xs text-[#6b7280]">Based on your mood and assessment responses</p>
-          </div>
+            return (
+              <div key={item.title} className="h-full">
+                {cardContent}
+              </div>
+            );
+          })}
         </div>
-        <Link
-          to="/mentors"
-          className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
-        >
-          See All
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
       </div>
 
-      {recommended.length > 0 ? (
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:gap-5 xl:grid-cols-3">
-          {recommended.map((m) => (
-            <RecommendationCard key={m.id || m.name} mentor={m} />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-xl border border-[#e5e7eb] border-dashed bg-white p-8 text-center">
-          <div className="flex justify-center mb-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f5f3ff]">
-              <User className="h-6 w-6 text-[#9ca3af]" />
+      {/* Recommended Mentors Section */}
+      <div className="mt-8 sm:mt-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+              <Star className="h-5 w-5 text-[#5D3699]" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[#111827]">Recommended Mentors</h2>
+              <p className="text-xs text-[#6b7280]">Based on your mood and assessment responses</p>
             </div>
           </div>
-          <p className="text-sm text-[#6b7280]">No recommendations available yet.</p>
-          <p className="mt-1 text-xs text-[#9ca3af]">Complete your assessment to get personalized matches</p>
+          <Link
+            to="/mentors"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
+          >
+            See All
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        {recommended.length > 0 ? (
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:gap-5 xl:grid-cols-3">
+            {recommended.map((m) => (
+              <RecommendationCard key={m.id || m.name} mentor={m} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-[#e5e7eb] border-dashed bg-white p-8 text-center">
+            <div className="flex justify-center mb-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f5f3ff]">
+                <User className="h-6 w-6 text-[#9ca3af]" />
+              </div>
+            </div>
+            <p className="text-sm text-[#6b7280]">No recommendations available yet.</p>
+            <p className="mt-1 text-xs text-[#9ca3af]">Complete your assessment to get personalized matches</p>
+          </div>
+        )}
+      </div>
+
+      {/* Sessions Section */}
+      <div className="mt-8 sm:mt-10 grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
+        {/* Upcoming Session - Takes more space */}
+        <div className="lg:col-span-3">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+              <Calendar className="h-5 w-5 text-[#5D3699]" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[#111827]">Upcoming Session</h2>
+              <p className="text-xs text-[#6b7280]">Your next scheduled mentoring session</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-[#e5e7eb] bg-white p-5 sm:p-6 shadow-sm">
+            {upcomingSession ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  {/* Avatar with online indicator */}
+                  <div className="relative flex-shrink-0">
+                    <div className="h-14 w-14 overflow-hidden rounded-xl bg-[#f5f3ff] ring-2 ring-white">
+                      {upcomingSession.mentorAvatar ? (
+                        <img src={upcomingSession.mentorAvatar} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <User className="h-6 w-6 text-[#5D3699]" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-[#16a34a]" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="text-base font-semibold text-[#111827]">
+                      Session with {upcomingSession.mentorName}
+                    </h3>
+                    <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[#6b7280]">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {formatDateTime(upcomingSession.scheduled_start)}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-2 py-0.5 font-medium text-[#f59e0b]">
+                        <Clock className="h-3 w-3" />
+                        {getRelativeStart(upcomingSession.scheduled_start)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleJoinUpcomingSession}
+                  disabled={joinLoading}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:opacity-60 sm:w-auto sm:flex-shrink-0"
+                >
+                  {joinLoading ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Joining...
+                    </>
+                  ) : (
+                    <>
+                      <Video className="h-4 w-4" />
+                      Join Call
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f5f3ff]">
+                  <Calendar className="h-7 w-7 text-[#9ca3af]" />
+                </div>
+                <p className="mt-4 text-sm font-medium text-[#111827]">No upcoming sessions</p>
+                <p className="mt-1 text-xs text-[#6b7280]">Book a session with a mentor to get started</p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/mentors')}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                >
+                  Find a Mentor
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+            {joinError && (
+              <div className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-xs text-red-600">
+                {joinError}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Sessions */}
+        <div className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+                <Clock className="h-5 w-5 text-[#5D3699]" />
+              </div>
+              <h2 className="text-base font-semibold text-[#111827]">Recent Sessions</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/my-sessions')}
+              className="text-xs font-medium text-[#5D3699] hover:underline"
+            >
+              View All
+            </button>
+          </div>
+
+          <div className="rounded-xl border border-[#e5e7eb] bg-white shadow-sm overflow-hidden">
+            {recentSessions.length > 0 ? (
+              <div className="divide-y divide-[#e5e7eb]">
+                {recentSessions.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between p-4 transition-colors hover:bg-[#f5f3ff]/30"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative flex-shrink-0">
+                        <div className="h-10 w-10 overflow-hidden rounded-lg bg-[#f5f3ff]">
+                          {s.avatar ? (
+                            <img src={s.avatar} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center">
+                              <User className="h-4 w-4 text-[#5D3699]" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-[#111827] truncate">{s.name}</p>
+                        <p className="text-xs text-[#9ca3af]">{s.date}</p>
+                      </div>
+                    </div>
+                    <span
+                      className={`flex-shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium ${s.status === 'Done'
+                          ? 'bg-green-50 text-[#16a34a]'
+                          : 'bg-[#f5f3ff] text-[#5D3699]'
+                        }`}
+                    >
+                      {s.status === 'Done' && <CheckCircle2 className="h-3 w-3" />}
+                      {s.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Clock className="h-8 w-8 text-[#9ca3af]" />
+                <p className="mt-3 text-sm text-[#6b7280]">No recent sessions</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+
+
+      {/* Loading/Error States */}
+      {(dashboardLoading || dashboardError || menteeError) && (
+        <div className={`mt-6 flex items-center justify-center gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 ${dashboardError || menteeError ? 'border-red-200' : ''
+          }`}>
+          {dashboardLoading && (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#e5e7eb] border-t-[#5D3699]" />
+          )}
+          <span className={`text-sm ${dashboardError || menteeError ? 'text-red-600' : 'text-[#6b7280]'}`}>
+            {dashboardError || menteeError || 'Loading dashboard...'}
+          </span>
         </div>
       )}
     </div>
-
-    {/* Sessions Section */}
-    <div className="mt-8 sm:mt-10 grid grid-cols-1 lg:grid-cols-5 gap-6">
-      {/* Upcoming Session - Takes more space */}
-      <div className="lg:col-span-3">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-            <Calendar className="h-5 w-5 text-[#5D3699]" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-[#111827]">Upcoming Session</h2>
-            <p className="text-xs text-[#6b7280]">Your next scheduled mentoring session</p>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-[#e5e7eb] bg-white p-5 sm:p-6 shadow-sm">
-          {upcomingSession ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                {/* Avatar with online indicator */}
-                <div className="relative flex-shrink-0">
-                  <div className="h-14 w-14 overflow-hidden rounded-xl bg-[#f5f3ff] ring-2 ring-white">
-                    {upcomingSession.mentorAvatar ? (
-                      <img src={upcomingSession.mentorAvatar} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <User className="h-6 w-6 text-[#5D3699]" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-[#16a34a]" />
-                </div>
-
-                <div className="min-w-0">
-                  <h3 className="text-base font-semibold text-[#111827]">
-                    Session with {upcomingSession.mentorName}
-                  </h3>
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[#6b7280]">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {formatDateTime(upcomingSession.scheduled_start)}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-2 py-0.5 font-medium text-[#f59e0b]">
-                      <Clock className="h-3 w-3" />
-                      {getRelativeStart(upcomingSession.scheduled_start)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleJoinUpcomingSession}
-                disabled={joinLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:opacity-60 sm:flex-shrink-0"
-              >
-                {joinLoading ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    Joining...
-                  </>
-                ) : (
-                  <>
-                    <Video className="h-4 w-4" />
-                    Join Call
-                  </>
-                )}
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f5f3ff]">
-                <Calendar className="h-7 w-7 text-[#9ca3af]" />
-              </div>
-              <p className="mt-4 text-sm font-medium text-[#111827]">No upcoming sessions</p>
-              <p className="mt-1 text-xs text-[#6b7280]">Book a session with a mentor to get started</p>
-              <button
-                type="button"
-                onClick={() => navigate('/mentors')}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
-              >
-                Find a Mentor
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
-          {joinError && (
-            <div className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-xs text-red-600">
-              {joinError}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Recent Sessions */}
-      <div className="lg:col-span-2">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-              <Clock className="h-5 w-5 text-[#5D3699]" />
-            </div>
-            <h2 className="text-base font-semibold text-[#111827]">Recent Sessions</h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/my-sessions')}
-            className="text-xs font-medium text-[#5D3699] hover:underline"
-          >
-            View All
-          </button>
-        </div>
-
-        <div className="rounded-xl border border-[#e5e7eb] bg-white shadow-sm overflow-hidden">
-          {recentSessions.length > 0 ? (
-            <div className="divide-y divide-[#e5e7eb]">
-              {recentSessions.map((s) => (
-                <div
-                  key={s.id}
-                  className="flex items-center justify-between p-4 transition-colors hover:bg-[#f5f3ff]/30"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="relative flex-shrink-0">
-                      <div className="h-10 w-10 overflow-hidden rounded-lg bg-[#f5f3ff]">
-                        {s.avatar ? (
-                          <img src={s.avatar} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <User className="h-4 w-4 text-[#5D3699]" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-[#111827] truncate">{s.name}</p>
-                      <p className="text-xs text-[#9ca3af]">{s.date}</p>
-                    </div>
-                  </div>
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                      s.status === 'Done'
-                        ? 'bg-green-50 text-[#16a34a]'
-                        : 'bg-[#f5f3ff] text-[#5D3699]'
-                    }`}
-                  >
-                    {s.status === 'Done' && <CheckCircle2 className="h-3 w-3" />}
-                    {s.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Clock className="h-8 w-8 text-[#9ca3af]" />
-              <p className="mt-3 text-sm text-[#6b7280]">No recent sessions</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-
-   
-
-    {/* Loading/Error States */}
-    {(dashboardLoading || dashboardError || menteeError) && (
-      <div className={`mt-6 flex items-center justify-center gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 ${
-        dashboardError || menteeError ? 'border-red-200' : ''
-      }`}>
-        {dashboardLoading && (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#e5e7eb] border-t-[#5D3699]" />
-        )}
-        <span className={`text-sm ${dashboardError || menteeError ? 'text-red-600' : 'text-[#6b7280]'}`}>
-          {dashboardError || menteeError || 'Loading dashboard...'}
-        </span>
-      </div>
-    )}
-  </div>
-);
+  );
 };
 
 export default Dashboard;
