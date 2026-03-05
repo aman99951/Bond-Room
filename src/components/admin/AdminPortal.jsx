@@ -35,8 +35,13 @@ const resolveMediaUrl = (value) => {
 
 const resolveDocumentKind = (url) => {
   if (!url) return 'unknown';
-  if (/\.pdf($|\?)/i.test(url)) return 'pdf';
-  if (/\.(png|jpe?g|gif|webp|bmp|svg)($|\?)/i.test(url)) return 'image';
+  const lowered = String(url).toLowerCase();
+  if (/\.pdf($|\?)/i.test(lowered)) return 'pdf';
+  if (/\.(png|jpe?g|gif|webp|bmp|svg)($|\?)/i.test(lowered)) return 'image';
+  if (lowered.includes('res.cloudinary.com')) {
+    if (lowered.includes('/image/upload/')) return 'image';
+    if (lowered.includes('/raw/upload/')) return 'pdf';
+  }
   return 'unknown';
 };
 
@@ -249,7 +254,15 @@ const AdminPortal = () => {
     });
     if (initialKind !== 'unknown') return;
     try {
-      const response = await fetch(resolvedUrl, { method: 'HEAD', credentials: 'include' });
+      let credentials = 'include';
+      try {
+        const targetOrigin = new URL(resolvedUrl, window.location.href).origin;
+        credentials = targetOrigin === window.location.origin ? 'include' : 'omit';
+      } catch {
+        credentials = 'omit';
+      }
+      const response = await fetch(resolvedUrl, { method: 'HEAD', credentials });
+      if (response.type === 'opaque') return;
       const contentType = response.headers.get('content-type') || '';
       let inferredKind = 'unknown';
       if (contentType.startsWith('image/')) inferredKind = 'image';
