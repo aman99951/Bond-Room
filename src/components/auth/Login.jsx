@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Phone, Lock, ArrowRight, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
@@ -110,7 +110,7 @@ const Login = () => {
       <TopAuth />
 
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative z-10">
-        <motion.div 
+        <Motion.div 
           initial="hidden"
           animate="visible"
           variants={containerVariants}
@@ -122,7 +122,7 @@ const Login = () => {
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-400/20 rounded-full blur-3xl -ml-24 -mb-24" />
               
-              <motion.div variants={itemVariants} className="relative z-10">
+              <Motion.div variants={itemVariants} className="relative z-10">
                 <div className="inline-flex items-center rounded-2xl bg-white/10 backdrop-blur-md px-4 py-3 border border-white/20">
                   <img src={logo} alt="Bond Room" className="h-8 w-auto brightness-0 invert" />
                 </div>
@@ -133,9 +133,9 @@ const Login = () => {
                 <p className="mt-6 text-lg text-white/80 max-w-sm leading-relaxed">
                   Join hundreds of mentors and mentees in building meaningful connections and driving real impact.
                 </p>
-              </motion.div>
+              </Motion.div>
 
-              <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 relative z-10">
+              <Motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 relative z-10">
                 <div className="rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur-sm group hover:bg-white/10 transition-colors duration-300">
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mb-3">
                     <Sparkles className="w-5 h-5 text-purple-200" />
@@ -150,12 +150,12 @@ const Login = () => {
                   <p className="text-2xl font-bold">24/7</p>
                   <p className="mt-1 text-xs text-white/60 font-medium uppercase tracking-wider">Active Support</p>
                 </div>
-              </motion.div>
+              </Motion.div>
             </div>
 
             {/* Right Panel: Login Form */}
             <div className="w-full bg-white p-8 sm:p-12 lg:p-16">
-              <motion.div variants={itemVariants}>
+              <Motion.div variants={itemVariants}>
                 <div className="inline-flex items-center gap-2 rounded-full bg-purple-50 text-xs text-[#5b2c91] px-4 py-1.5 font-bold uppercase tracking-wider mb-4">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#5b2c91] animate-pulse" />
                   Welcome back
@@ -166,9 +166,9 @@ const Login = () => {
                 <p className="mt-3 text-[#6b7280]">
                   Enter your registered mobile number to continue.
                 </p>
-              </motion.div>
+              </Motion.div>
 
-              <motion.form 
+              <Motion.form 
                 variants={itemVariants} 
                 className="mt-10 space-y-6" 
                 onSubmit={handleLogin}
@@ -219,7 +219,7 @@ const Login = () => {
 
                 <AnimatePresence mode="wait">
                   {errorMessage && (
-                    <motion.div 
+                    <Motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
@@ -227,10 +227,10 @@ const Login = () => {
                     >
                       <AlertCircle className="w-5 h-5 shrink-0" />
                       {errorMessage}
-                    </motion.div>
+                    </Motion.div>
                   )}
                   {!errorMessage && infoMessage && (
-                    <motion.div 
+                    <Motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
@@ -241,11 +241,11 @@ const Login = () => {
                         {infoMessage}
                         {otpHint && <div className="mt-1 font-bold text-xs uppercase tracking-wider">{otpHint}</div>}
                       </div>
-                    </motion.div>
+                    </Motion.div>
                   )}
                 </AnimatePresence>
 
-                <motion.button
+                <Motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
@@ -263,7 +263,7 @@ const Login = () => {
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
-                </motion.button>
+                </Motion.button>
 
                 <div className="text-center pt-2">
                   <p className="text-sm text-[#6b7280]">
@@ -273,10 +273,10 @@ const Login = () => {
                     </Link>
                   </p>
                 </div>
-              </motion.form>
+              </Motion.form>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
       </main>
 
       <BottomAuth />
@@ -285,3 +285,4 @@ const Login = () => {
 };
 
 export default Login;
+

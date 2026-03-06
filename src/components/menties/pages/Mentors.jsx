@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { setSelectedMentorId } from '../../../apis/api/storage';
 import { useMenteeData } from '../../../apis/apihook/useMenteeData';
@@ -199,7 +199,7 @@ const Mentors = () => {
         )}
 
         {/* Mentors Grid / Empty State */}
-        <motion.div 
+        <Motion.div 
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -207,7 +207,7 @@ const Mentors = () => {
         >
           <AnimatePresence mode="popLayout">
             {paginatedMentorCards.map((m) => (
-              <motion.div
+              <Motion.div
                 layout
                 key={m.id || m.name}
                 variants={cardVariants}
@@ -307,10 +307,10 @@ const Mentors = () => {
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
-              </motion.div>
+              </Motion.div>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </Motion.div>
 
         {/* Empty State (Only if not loading) */}
         {!loading && filteredMentors.length === 0 && (
@@ -396,3 +396,4 @@ const Mentors = () => {
 };
 
 export default Mentors;
+
