@@ -18,8 +18,8 @@ import {
   Users,
   MessageCircle,
   Search,
-  Filter,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 const PAGE_SIZE = 4;
@@ -152,47 +152,43 @@ const Mentors = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8faff] p-4 sm:p-6 lg:p-8 relative overflow-hidden">
-      {/* Background Decorative Blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-100/50 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-100/50 rounded-full blur-[120px] pointer-events-none" />
-
-      <div className="mx-auto max-w-7xl relative z-10">
+    <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-7xl">
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-10"
+          className="mb-8"
         >
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#5D3699] to-[#7c4dff] shadow-xl shadow-purple-500/20">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
                 <Users className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
-                  Curated Mentors
+                <h1 className="text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
+                  Recommended Mentors
                 </h1>
-                <p className="mt-1.5 text-gray-500 font-medium max-w-md">
-                  We've hand-picked these mentors based on your profile and recent assessments.
+                <p className="mt-1.5 text-[#6b7280] font-medium">
+                  Expert guidance tailored to your unique journey and goals.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative group">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#5D3699] transition-colors" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af] group-focus-within:text-[#5D3699] transition-colors" />
                 <input 
                   type="text"
-                  placeholder="Search by name or expertise..."
+                  placeholder="Search mentors..."
                   value={searchTerm}
                   onChange={(e) => setSearchArea(e.target.value)}
-                  className="w-full sm:w-72 pl-10 pr-4 py-3 rounded-2xl bg-white border border-gray-200 focus:border-[#5D3699] focus:ring-4 focus:ring-purple-50 outline-none transition-all shadow-sm"
+                  className="w-full sm:w-64 pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#e5e7eb] focus:border-[#5D3699] focus:ring-4 focus:ring-[#f5f3ff] outline-none transition-all text-sm shadow-sm"
                 />
               </div>
-              <div className="hidden sm:flex items-center gap-2 self-start rounded-2xl bg-emerald-50 px-5 py-3 border border-emerald-100">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">AI Matching Active</span>
+              <div className="flex items-center gap-2 self-start rounded-xl bg-[#f5f3ff] px-4 py-2.5 border border-[#5D3699]/10">
+                <CheckCircle2 className="h-4 w-4 text-[#5D3699]" />
+                <span className="text-xs font-bold text-[#5D3699] uppercase tracking-wider">AI Analysis Complete</span>
               </div>
             </div>
           </div>
@@ -203,18 +199,16 @@ const Mentors = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mb-8 flex items-center gap-4 rounded-2xl bg-red-50 p-5 border border-red-100 shadow-sm"
+            className="mb-8 flex items-center gap-4 rounded-xl bg-red-50 p-4 border border-red-100 shadow-sm"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100">
-              <AlertCircle className="h-5 w-5 text-red-600" />
-            </div>
-            <p className="font-semibold text-red-700">{error || menteeError}</p>
+            <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
+            <p className="text-sm font-semibold text-red-700">{error || menteeError}</p>
           </motion.div>
         )}
 
         {/* Loading State */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white/50 backdrop-blur-sm rounded-[2.5rem] border border-gray-100 shadow-sm">
+          <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-[#e5e7eb] shadow-sm">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
@@ -222,8 +216,7 @@ const Mentors = () => {
             >
               <Loader2 className="h-10 w-10 text-[#5D3699]" />
             </motion.div>
-            <p className="text-lg font-bold text-gray-900 tracking-tight">Finding your perfect match...</p>
-            <p className="text-sm text-gray-500 mt-1">Our AI is analyzing {mentors.length} mentors</p>
+            <p className="text-lg font-semibold text-[#111827]">Finding your perfect mentors...</p>
           </div>
         ) : (
           <>
@@ -239,99 +232,97 @@ const Mentors = () => {
                     layout
                     key={m.id || m.name}
                     variants={cardVariants}
-                    whileHover={{ y: -8 }}
-                    className={`group relative flex flex-col h-full overflow-hidden rounded-[2rem] bg-white p-6 shadow-sm border-2 transition-all duration-300 ${m.topMatch
-                        ? 'border-emerald-100 shadow-emerald-500/10'
-                        : 'border-transparent hover:border-purple-100 hover:shadow-purple-500/10'
+                    whileHover={{ y: -4 }}
+                    className={`group relative flex flex-col h-full overflow-hidden rounded-3xl bg-white p-6 shadow-sm border transition-all duration-300 ${m.topMatch
+                        ? 'border-[#5D3699]/30 ring-1 ring-[#5D3699]/10'
+                        : 'border-[#e5e7eb] hover:border-[#5D3699]/30 hover:shadow-md'
                       }`}
                   >
-                    {/* Header: Avatar & Basic Info */}
+                    {/* Top Match Badge */}
+                    {m.topMatch && (
+                      <div className="absolute right-6 top-6">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider shadow-md">
+                          <Award className="h-3 w-3" />
+                          Top Match
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex gap-5 mb-6">
-                      <div className="relative">
-                        <div className="h-20 w-20 overflow-hidden rounded-2xl bg-gray-50 ring-4 ring-white shadow-lg transition-transform group-hover:scale-105 duration-300">
+                      <div className="relative shrink-0">
+                        <div className="h-20 w-20 overflow-hidden rounded-2xl bg-[#f5f3ff] ring-4 ring-white shadow-md">
                           {m.avatar ? (
                             <img src={m.avatar} alt={m.name} className="h-full w-full object-cover" />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-purple-50">
+                            <div className="flex h-full w-full items-center justify-center">
                               <User className="h-8 w-8 text-[#5D3699]" />
                             </div>
                           )}
                         </div>
-                        {m.topMatch && (
-                          <div className="absolute -top-3 -right-3 h-8 w-8 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg">
-                            <Sparkles className="h-4 w-4 text-white" />
-                          </div>
-                        )}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-xl font-bold text-gray-900 truncate group-hover:text-[#5D3699] transition-colors">
-                            {m.name}
-                          </h3>
-                        </div>
+                        <h3 className="text-xl font-bold text-[#111827] truncate group-hover:text-[#5D3699] transition-colors">
+                          {m.name}
+                        </h3>
                         
-                        <div className="flex flex-col gap-1.5">
+                        <div className="mt-1.5 flex flex-col gap-2">
                           {m.location && (
-                            <div className="flex items-center gap-1.5 text-sm text-gray-500 font-medium">
-                              <MapPin className="h-3.5 w-3.5 text-purple-400" />
+                            <div className="flex items-center gap-1.5 text-sm text-[#6b7280]">
+                              <MapPin className="h-3.5 w-3.5 text-[#9ca3af]" />
                               <span className="truncate">{m.location}</span>
                             </div>
                           )}
                           {m.rating != null && (
-                            <div className="flex items-center gap-2 bg-amber-50 self-start px-2 py-0.5 rounded-lg border border-amber-100">
-                              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                              <span className="text-sm font-bold text-amber-700">{Number(m.rating).toFixed(1)}</span>
-                              {m.reviews != null && (
-                                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">({m.reviews} reviews)</span>
-                              )}
+                            <div className="flex items-center gap-2 self-start">
+                              <div className="flex items-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3 w-3 ${i < Math.floor(m.rating) ? 'fill-[#f59e0b] text-[#f59e0b]' : 'text-[#e5e7eb]'}`} />
+                                ))}
+                              </div>
+                              <span className="text-xs font-bold text-[#111827]">{Number(m.rating).toFixed(1)}</span>
+                              {m.reviews != null && <span className="text-[10px] font-medium text-[#9ca3af]">({m.reviews})</span>}
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Tags Area */}
-                    <div className="mb-6">
-                      <div className="flex flex-wrap gap-2">
-                        {m.tags.slice(0, 3).map((t) => (
-                          <span key={t} className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-lg bg-gray-50 text-gray-600 group-hover:bg-purple-50 group-hover:text-[#5D3699] transition-colors border border-gray-100 group-hover:border-purple-100">
-                            {t}
-                          </span>
-                        ))}
-                        {m.tags.length > 3 && (
-                          <span className="px-2 py-1 text-[11px] font-bold text-gray-400">+{m.tags.length - 3}</span>
-                        )}
-                      </div>
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {m.tags.slice(0, 3).map((t) => (
+                        <span key={t} className="px-3 py-1 text-[11px] font-semibold rounded-lg bg-[#f5f3ff] text-[#5D3699] border border-[#5D3699]/5">
+                          {t}
+                        </span>
+                      ))}
+                      {m.tags.length > 3 && (
+                        <span className="text-[10px] font-medium text-[#9ca3af] self-center">+{m.tags.length - 3} more</span>
+                      )}
                     </div>
 
-                    {/* Bio */}
-                    <p className="text-sm leading-relaxed text-gray-600 mb-8 line-clamp-3 font-medium">
-                      {m.blurb || "This mentor is eager to share their experience and help you navigate your journey."}
+                    <p className="text-sm leading-relaxed text-[#6b7280] mb-8 line-clamp-2 font-medium">
+                      {m.blurb || "Experienced mentor ready to support your growth and personal development goals."}
                     </p>
 
-                    {/* Footer: Action Buttons */}
-                    <div className="mt-auto pt-6 border-t border-gray-50 flex items-center gap-3">
+                    <div className="mt-auto pt-6 border-t border-[#f3f4f6] flex items-center gap-3">
                       <motion.button
-                        whileTap={{ scale: 0.95 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setSelectedMentorId(m.id);
                           navigate(m.id ? `/mentor-profile?mentorId=${m.id}` : '/mentor-profile');
                         }}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-50 text-gray-700 text-sm font-bold hover:bg-gray-100 transition-colors border border-gray-100"
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-[#e5e7eb] text-[#6b7280] text-sm font-semibold hover:bg-[#f9fafb] hover:text-[#111827] transition-all"
                       >
-                        <User className="h-4 w-4" />
                         Profile
                       </motion.button>
                       <motion.button
-                        whileTap={{ scale: 0.95 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setSelectedMentorId(m.id);
                           navigate(m.id ? `/mentor-details?mentorId=${m.id}` : '/mentor-details');
                         }}
-                        className={`flex-[1.5] flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold shadow-lg transition-all ${m.topMatch
-                            ? 'bg-[#5D3699] text-white shadow-purple-500/20 hover:bg-[#4a2b7a]'
-                            : 'bg-white text-[#5D3699] border-2 border-purple-100 hover:border-purple-200'
+                        className={`flex-[1.5] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${m.topMatch
+                            ? 'bg-[#5D3699] text-white hover:bg-[#4a2b7a] shadow-[#5D3699]/20'
+                            : 'bg-white text-[#5D3699] border border-[#5D3699]/20 hover:bg-[#f5f3ff]'
                           }`}
                       >
                         <Calendar className="h-4 w-4" />
@@ -349,44 +340,44 @@ const Mentors = () => {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="py-20 text-center bg-white rounded-[2.5rem] border-2 border-dashed border-gray-200"
+                className="py-20 text-center bg-white rounded-3xl border border-[#e5e7eb] shadow-sm"
               >
-                <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-purple-50 mb-6">
-                  <Search className="h-10 w-10 text-purple-300" />
+                <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-[#f5f3ff] mb-6">
+                  <Search className="h-10 w-10 text-[#5D3699]/40" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No matching mentors</h3>
-                <p className="text-gray-500 mb-8 max-w-sm mx-auto">We couldn't find any mentors matching "{searchTerm}". Try another search or reset filters.</p>
+                <h3 className="text-xl font-bold text-[#111827] mb-2">No matching mentors</h3>
+                <p className="text-[#6b7280] mb-8 max-w-sm mx-auto">We couldn't find any mentors matching your search. Try different keywords or browse all recommendations.</p>
                 <button
                   onClick={() => setSearchArea('')}
-                  className="px-8 py-3 rounded-2xl bg-[#5D3699] text-white font-bold shadow-xl shadow-purple-500/20 hover:scale-105 transition-transform"
+                  className="px-8 py-3 rounded-xl bg-[#5D3699] text-white font-bold shadow-lg shadow-[#5D3699]/20 hover:bg-[#4a2b7a] transition-all"
                 >
-                  Clear Search
+                  View All Mentors
                 </button>
               </motion.div>
             )}
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-12 flex flex-col items-center gap-6">
-                <div className="flex items-center gap-3">
+              <div className="mt-12 flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2">
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="h-12 w-12 flex items-center justify-center rounded-2xl bg-white border border-gray-200 text-gray-600 disabled:opacity-30 shadow-sm hover:border-purple-200 hover:text-[#5D3699] transition-all"
+                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-[#e5e7eb] text-[#6b7280] disabled:opacity-40 shadow-sm hover:border-[#5D3699]/30 transition-all"
                   >
-                    <ChevronLeft className="h-6 w-6" />
+                    <ChevronLeft className="h-5 w-5" />
                   </motion.button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
                       <motion.button
                         key={page}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => handlePageChange(page)}
-                        className={`h-12 w-12 rounded-2xl font-bold transition-all shadow-sm ${currentPage === page
-                            ? 'bg-[#5D3699] text-white shadow-purple-500/20'
-                            : 'bg-white text-gray-500 border border-gray-200 hover:border-purple-200'
+                        className={`h-10 w-10 rounded-xl text-sm font-bold transition-all shadow-sm ${currentPage === page
+                            ? 'bg-[#5D3699] text-white shadow-[#5D3699]/20'
+                            : 'bg-white text-[#6b7280] border border-[#e5e7eb] hover:bg-[#f5f3ff] hover:text-[#5D3699]'
                           }`}
                       >
                         {page}
@@ -398,44 +389,41 @@ const Mentors = () => {
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="h-12 w-12 flex items-center justify-center rounded-2xl bg-white border border-gray-200 text-gray-600 disabled:opacity-30 shadow-sm hover:border-purple-200 hover:text-[#5D3699] transition-all"
+                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-[#e5e7eb] text-[#6b7280] disabled:opacity-40 shadow-sm hover:border-[#5D3699]/30 transition-all"
                   >
-                    <ChevronRight className="h-6 w-6" />
+                    <ChevronRight className="h-5 w-5" />
                   </motion.button>
                 </div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">
-                  Page {currentPage} of {totalPages} • {filteredMentors.length} total mentors
+                <p className="text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
+                  Page {currentPage} of {totalPages}
                 </p>
               </div>
             )}
 
-            {/* Recommendation CTA */}
+            {/* Assessment CTA */}
             <motion.div 
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mt-16 bg-gradient-to-r from-[#5D3699] to-[#7c4dff] rounded-[2.5rem] p-8 lg:p-12 text-white relative overflow-hidden"
+              className="mt-16 rounded-3xl bg-[#f5f3ff] border border-[#5D3699]/10 p-8 text-center sm:text-left"
             >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -mr-32 -mt-32" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-400/20 rounded-full blur-[60px] -ml-24 -mb-24" />
-              
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-8 relative z-10">
-                <div className="flex flex-col lg:flex-row items-center gap-6 text-center lg:text-left">
-                  <div className="h-20 w-20 flex items-center justify-center rounded-3xl bg-white/20 backdrop-blur-md border border-white/20">
-                    <Sparkles className="h-10 w-10 text-white" />
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <div className="h-16 w-16 flex items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
+                    <Sparkles className="h-8 w-8 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl lg:text-3xl font-black mb-2">Need even better matches?</h2>
-                    <p className="text-purple-100 font-medium max-w-md">Retake our comprehensive assessment to update your preferences and find the perfect mentor.</p>
+                    <h2 className="text-2xl font-bold text-[#111827]">Need better matches?</h2>
+                    <p className="text-[#6b7280] font-medium mt-1">Update your preferences to find the perfect mentor for your goals.</p>
                   </div>
                 </div>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => navigate('/needs-assessment')}
-                  className="px-10 py-4 rounded-2xl bg-white text-[#5D3699] font-black text-lg shadow-xl hover:shadow-2xl transition-all"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white text-[#5D3699] font-bold border border-[#5D3699]/20 shadow-sm hover:bg-[#5D3699] hover:text-white transition-all"
                 >
-                  Start Assessment
+                  Retake Assessment
                 </motion.button>
               </div>
             </motion.div>
