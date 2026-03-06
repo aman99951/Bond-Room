@@ -1,512 +1,496 @@
-import React, { Suspense, useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, Sphere, MeshDistortMaterial, PerspectiveCamera, OrbitControls } from '@react-three/drei';
-import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
-import { 
-  ShieldCheck, 
-  Users, 
-  Bot, 
-  Smile, 
-  ArrowRight, 
-  Sparkles, 
-  ChevronRight, 
-  Twitter, 
+import { useEffect, useState } from 'react';
+import logo from './assets/logo.png';
+import heroLeft from './assets/left.png';
+import heroRight from './assets/right.png';
+import mentorLeft from './assets/mentor-left.png';
+import plantPot from './assets/plant-pot-cropped.png';
+import avatarOne from './assets/avatar-1.jpg';
+import students from './assets/teach2.png';
+import {
+  ShieldCheck,
+  Users,
+  Bot,
+  Smile,
+  ChevronRight,
+  Twitter,
   Linkedin,
   LockKeyhole,
   Ear,
   Brain,
   Handshake,
-  Menu,
-  X
 } from 'lucide-react';
-import logo from './assets/logo.png';
-import heroLeft from './assets/left.png';
-import heroRight from './assets/right.png';
-import mentorLeft from './assets/mentor-left.png';
-import students from './assets/teach2.png';
-import avatarOne from './assets/avatar-1.jpg';
 import './LandingPage.css';
 
-// --- 3D Components ---
-
-const Background3D = () => {
-  return (
-    <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
-      <Canvas>
-        <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        <Suspense fallback={null}>
-          <Float speed={2} rotationIntensity={1} floatIntensity={1}>
-            <Sphere args={[1, 64, 64]} position={[-2, 1, -2]}>
-              <MeshDistortMaterial
-                color="#5D3699"
-                attach="material"
-                distort={0.4}
-                speed={2}
-              />
-            </Sphere>
-          </Float>
-          <Float speed={1.5} rotationIntensity={2} floatIntensity={2}>
-            <Sphere args={[0.6, 64, 64]} position={[3, -1, -3]}>
-              <MeshDistortMaterial
-                color="#7c4dff"
-                attach="material"
-                distort={0.5}
-                speed={1.5}
-              />
-            </Sphere>
-          </Float>
-        </Suspense>
-      </Canvas>
-    </div>
-  );
-};
-
-const FloatingHeroScene = () => {
-  return (
-    <div className="h-[400px] lg:h-[600px] w-full relative">
-      <Canvas className="cursor-grab active:cursor-grabbing">
-        <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-        <OrbitControls enableZoom={false} autoRotate speed={0.5} />
-        <ambientLight intensity={0.8} />
-        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
-        <Suspense fallback={null}>
-          <Float speed={3} rotationIntensity={0.5} floatIntensity={1}>
-            <mesh rotation={[0.5, 0.5, 0]}>
-              <boxGeometry args={[2, 2, 2]} />
-              <meshStandardMaterial color="#5D3699" metalness={0.5} roughness={0.2} />
-            </mesh>
-          </Float>
-          <mesh position={[2, 1, -1]}>
-            <torusGeometry args={[0.5, 0.2, 16, 100]} />
-            <meshStandardMaterial color="#7c4dff" />
-          </mesh>
-          <mesh position={[-2, -1, 1]}>
-            <octahedronGeometry args={[0.7]} />
-            <meshStandardMaterial color="#ecfdf3" />
-          </mesh>
-        </Suspense>
-      </Canvas>
-    </div>
-  );
-};
-
-// --- Framer Motion Variants ---
-
-const fadeInUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } 
-  }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15
-    }
-  }
-};
-
 const LandingPage = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    document.body.style.overflowX = 'hidden';
+    const previousBodyBackground = document.body.style.background;
+    const previousHtmlBackground = document.documentElement.style.background;
+    document.body.style.background = 'transparent';
+    document.documentElement.style.background = 'transparent';
+
     return () => {
-      document.body.style.overflowX = 'auto';
+      document.body.style.background = previousBodyBackground;
+      document.documentElement.style.background = previousHtmlBackground;
     };
   }, []);
 
   return (
-    <div className="landing-new min-h-screen bg-[#fcfaff] text-[#111827] selection:bg-[#5D3699]/20">
-      {/* Scroll Progress */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#5D3699] to-[#7c4dff] origin-left z-[100]"
-        style={{ scaleX }}
-      />
-
-      <Background3D />
-
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-[#5D3699]/5">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2"
-          >
-            <img src={logo} alt="Bond Room" className="h-10 w-auto" />
-            <span className="text-xl font-black tracking-tighter text-[#5D3699]">BOND ROOM</span>
-          </motion.div>
-
-          <div className="hidden lg:flex items-center gap-10">
-            {['About', 'Safety', 'Stories'].map((item) => (
-              <a 
-                key={item} 
-                href={`#${item.toLowerCase()}`}
-                className="text-sm font-bold text-gray-600 hover:text-[#5D3699] transition-colors relative group"
-              >
-                {item}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#5D3699] transition-all group-hover:w-full" />
-              </a>
-            ))}
+    <div className="landing-figma-root min-h-screen font-sans text-gray-900">
+      {/* Header */}
+      <header className="max-w-7xl mx-auto px-6 py-4 lg:py-5 lg:px-8">
+        <div className="flex items-center justify-between lg:grid lg:grid-cols-[auto_1fr_auto] gap-4 lg:gap-6">
+          {/* Logo */}
+          <div className="flex items-center">
+            <img src={logo} alt="Bond Room" className="h-12 w-auto" />
           </div>
 
-          <div className="hidden lg:flex items-center gap-4">
-            <a href="/login" className="text-sm font-bold text-gray-600 hover:text-gray-900 px-4">Log in</a>
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              href="/register"
-              className="px-6 py-3 rounded-2xl bg-[#5D3699] text-white text-sm font-bold shadow-xl shadow-purple-500/20 hover:bg-[#4a2b7a] transition-all"
+          {/* Navigation - Desktop */}
+          <nav className="hidden lg:flex justify-center gap-7">
+            <a href="#about" className="text-gray-600 hover:text-gray-900 font-medium text-sm transition-colors">
+              About
+            </a>
+            <a href="#safety" className="text-gray-600 hover:text-gray-900 font-medium text-sm transition-colors">
+              Safety
+            </a>
+            <a href="#stories" className="text-gray-600 hover:text-gray-900 font-medium text-sm transition-colors">
+              Stories
+            </a>
+          </nav>
+
+          {/* Actions - Desktop */}
+          <div className="hidden lg:flex gap-3 w-full lg:w-auto">
+            <a
+              className="text-gray-600 hover:text-gray-900 font-semibold text-sm px-5 py-2.5 rounded-lg transition-all hover:-translate-y-0.5"
+              href="/login"
             >
-              Join the Room
-            </motion.a>
+              Log in
+            </a>
+            <a
+              className="bg-[#5d3699] text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow-lg shadow-purple-500/20 hover:-translate-y-0.5 transition-all"
+              href="/register"
+            >
+              Get Started
+            </a>
           </div>
 
-          <button 
-            className="lg:hidden p-2 text-[#5D3699]"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          {/* Mobile / Tablet Menu Trigger (visual) */}
+          <button
+            type="button"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="landing-mobile-menu-btn inline-flex lg:hidden items-center justify-center"
           >
-            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            {mobileMenuOpen ? (
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 7h14M5 12h14M5 17h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            )}
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-white border-b border-gray-100 overflow-hidden"
-            >
-              <div className="px-6 py-8 flex flex-col gap-6">
-                <a href="#about" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>About</a>
-                <a href="#safety" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Safety</a>
-                <a href="#stories" className="text-lg font-bold" onClick={() => setIsMenuOpen(false)}>Stories</a>
-                <hr className="border-gray-100" />
-                <a href="/login" className="text-lg font-bold">Log in</a>
-                <a href="/register" className="px-6 py-4 rounded-2xl bg-[#5D3699] text-white text-center font-bold">Get Started</a>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 lg:pt-48 lg:pb-32 relative">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="relative z-10"
-            >
-              <motion.div 
-                variants={fadeInUp}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#f5f3ff] text-[#5D3699] text-xs font-black uppercase tracking-widest mb-8 border border-[#5D3699]/10"
-              >
-                <Sparkles size={14} className="animate-pulse" />
-                Experience Wisdom in 3D
-              </motion.div>
-              
-              <motion.h1 
-                variants={fadeInUp}
-                className="text-5xl lg:text-8xl font-black leading-[0.9] tracking-tighter mb-8"
-              >
-                GROWTH <br />
-                <span className="text-[#5D3699] underline decoration-purple-200">THROUGH</span> <br />
-                CONNECTION
-              </motion.h1>
-
-              <motion.p 
-                variants={fadeInUp}
-                className="text-xl text-gray-500 font-medium max-w-lg mb-10 leading-relaxed"
-              >
-                A multidimensional platform bridging students with vetted mentors through safe, thoughtful conversations.
-              </motion.p>
-
-              <motion.div 
-                variants={fadeInUp}
-                className="flex flex-col sm:flex-row gap-4"
-              >
-                <motion.a
-                  whileHover={{ scale: 1.05, x: 5 }}
-                  whileTap={{ scale: 0.95 }}
-                  href="/register"
-                  className="flex items-center justify-center gap-3 px-10 py-5 rounded-[2rem] bg-[#5D3699] text-white font-black text-lg shadow-2xl shadow-purple-500/30 group"
-                >
-                  Start Journey
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </motion.a>
-                <motion.a
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  href="/mentor-register"
-                  className="flex items-center justify-center px-10 py-5 rounded-[2rem] bg-white border-2 border-gray-100 text-[#111827] font-black text-lg hover:border-[#5D3699]/20 transition-all"
-                >
-                  Become Mentor
-                </motion.a>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, rotateY: 20 }}
-              whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
-              transition={{ duration: 1.2, type: "spring" }}
-              viewport={{ once: true }}
-              className="relative perspective-1000"
-            >
-              <FloatingHeroScene />
-              
-              {/* Floating Cards */}
-              <motion.div 
-                animate={{ y: [0, -20, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-10 right-0 bg-white p-6 rounded-3xl shadow-2xl border border-purple-50 max-w-[200px]"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                    <CheckCircle2 size={20} />
-                  </div>
-                  <span className="text-xs font-black uppercase">Verified</span>
-                </div>
-                <p className="text-xs text-gray-500 font-bold leading-tight">50+ Wise mentors joined today</p>
-              </motion.div>
-
-              <motion.div 
-                animate={{ y: [0, 20, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute bottom-10 left-0 bg-[#5D3699] p-6 rounded-3xl shadow-2xl text-white max-w-[220px]"
-              >
-                <div className="flex items-center gap-3 mb-3 text-purple-200">
-                  <Sparkles size={20} />
-                  <span className="text-xs font-black uppercase">Active Now</span>
-                </div>
-                <p className="text-sm font-bold italic">&quot;The guidance I needed, when I needed it.&quot;</p>
-              </motion.div>
-            </motion.div>
+        {/* Mobile / Tablet Navigation */}
+        {mobileMenuOpen && (
+          <div className="landing-mobile-panel lg:hidden">
+            <nav className="landing-mobile-nav flex gap-6 border-t border-gray-100 pt-3">
+              <a href="#about" className="text-gray-600 hover:text-gray-900 font-medium text-sm" onClick={() => setMobileMenuOpen(false)}>
+                About
+              </a>
+              <a href="#safety" className="text-gray-600 hover:text-gray-900 font-medium text-sm" onClick={() => setMobileMenuOpen(false)}>
+                Safety
+              </a>
+              <a href="#stories" className="text-gray-600 hover:text-gray-900 font-medium text-sm" onClick={() => setMobileMenuOpen(false)}>
+                Stories
+              </a>
+            </nav>
+            <div className="landing-mobile-panel-actions">
+              <a href="/login" onClick={() => setMobileMenuOpen(false)}>
+                Log in
+              </a>
+              <a href="/register" onClick={() => setMobileMenuOpen(false)}>
+                Get Started
+              </a>
+            </div>
           </div>
-        </div>
-      </section>
+        )}
+      </header>
 
-      {/* Flow Section */}
-      <section className="py-24 bg-white relative overflow-hidden" id="about">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-24"
-          >
-            <h2 className="text-4xl lg:text-6xl font-black tracking-tighter mb-6">THE GUIDANCE FLOW</h2>
-            <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium">A frictionless path from uncertainty to clarity.</p>
-          </motion.div>
+      <main>
+        {/* Hero Section */}
+        <section className="max-w-7xl mx-auto px-6 py-6 sm:py-8 lg:py-12 lg:px-8">
+          <div className="hero-figma-grid">
+            <div className="hero-figma-copy">
+              <h1 className="hero-figma-title">
+                Guided Support for
+                <br />
+                Students from
+                <br />
+                <span>Experienced</span>
+                <br />
+                <span>Mentors</span>
+              </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative">
-            <div className="hidden md:block absolute top-1/2 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-purple-100 to-transparent -translate-y-1/2" />
-            
-            {[
-              { icon: Ear, title: 'LISTEN', color: '#5D3699', desc: 'Secure space to share your concerns without judgment.' },
-              { icon: Brain, title: 'UNDERSTAND', color: '#7c4dff', desc: 'AI matching with a mentor who truly understands your path.' },
-              { icon: Handshake, title: 'GUIDE', color: '#10b981', desc: 'Interactive sessions driving real personal growth.' }
-            ].map((step, idx) => (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.2 }}
-                viewport={{ once: true }}
-                className="relative z-10 flex flex-col items-center group"
-              >
-                <motion.div 
-                  whileHover={{ scale: 1.1, rotateY: 180 }}
-                  transition={{ type: "spring", stiffness: 200 }}
-                  className="w-24 h-24 rounded-[2.5rem] bg-[#fcfaff] shadow-xl flex items-center justify-center mb-8 border-2 border-white group-hover:border-purple-100"
-                >
-                  <step.icon size={40} style={{ color: step.color }} strokeWidth={2.5} />
-                </motion.div>
-                <h3 className="text-2xl font-black mb-4 tracking-tight">{step.title}</h3>
-                <p className="text-gray-500 text-center font-medium leading-relaxed max-w-[240px]">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Safety Section */}
-      <section className="py-24 bg-[#fcfaff]" id="safety">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-4xl lg:text-7xl font-black tracking-tighter mb-8 leading-[0.95]">
-                BUILT ON <span className="text-[#5D3699]">TRUST</span> AND CARE
-              </h2>
-              <p className="text-xl text-gray-500 font-medium mb-12 leading-relaxed">
-                Safety isn't a feature, it's our foundation. Every interaction is monitored and refined for your peace of mind.
+              <p className="hero-figma-description">
+                A safe, thoughtful platform where students grow through conversations with trusted mentors
+                who&apos;ve walked the path before.
               </p>
-              <div className="flex gap-4">
-                <div className="w-12 h-1.5 bg-[#5D3699] rounded-full" />
-                <div className="w-4 h-1.5 bg-purple-200 rounded-full" />
-              </div>
-            </motion.div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[
-                { icon: ShieldCheck, title: 'Safe Sessions', desc: 'Real-time AI monitoring and encrypted recording.' },
-                { icon: Users, title: 'Elite Mentors', desc: 'Strict vetting for professionals aged 50+.' },
-                { icon: Bot, title: 'AI Match', desc: 'Hyper-personalized mentor recommendations.' },
-                { icon: Smile, title: 'Pure Focus', desc: 'Designed for minimal distraction, maximum impact.' }
-              ].map((item, idx) => (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -10, rotateZ: idx % 2 === 0 ? 1 : -1 }}
-                  className="p-8 rounded-[2rem] bg-white shadow-sm border border-purple-50 hover:shadow-xl transition-all group"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-[#5D3699] mb-6 group-hover:bg-[#5D3699] group-hover:text-white transition-colors">
-                    <item.icon size={24} />
-                  </div>
-                  <h4 className="text-lg font-black mb-2 tracking-tight">{item.title}</h4>
-                  <p className="text-gray-500 text-sm font-bold leading-relaxed">{item.desc}</p>
-                </motion.div>
-              ))}
+              <div className="hero-figma-actions">
+                <a className="hero-figma-btn hero-figma-btn--primary" href="/register">
+                  Get Started
+                </a>
+                <a className="hero-figma-btn hero-figma-btn--secondary" href="/mentor-register">
+                  Become a Mentor
+                </a>
+              </div>
+
+              <p className="hero-figma-note">
+                <LockKeyhole size={14} strokeWidth={2.4} />
+                Sessions are monitored and recorded for student safety.
+              </p>
+            </div>
+
+            <div className="hero-figma-visual" aria-hidden="true">
+              <div className="hero-figma-images">
+                <figure className="hero-figma-image hero-figma-image--left">
+                  <img src={heroLeft} alt="" />
+                </figure>
+                <div className="hero-figma-right-wrap">
+                  <img src={plantPot} alt="" className="hero-figma-pot" />
+                  <figure className="hero-figma-image hero-figma-image--right">
+                    <img src={heroRight} alt="" />
+                  </figure>
+                </div>
+              </div>
+
+              <article className="hero-figma-live-card">
+                <div className="hero-figma-live-label">
+                  <span className="hero-figma-live-dot" />
+                  LIVE SESSION
+                </div>
+                <p>
+                  &quot;It&apos;s normal to feel overwhelmed at this stage. Let&apos;s break it down into
+                  smaller steps together.&quot;
+                </p>
+              </article>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Stories */}
-      <section className="py-24 bg-[#5D3699] text-white rounded-[4rem] mx-4 lg:mx-10 my-10 relative overflow-hidden" id="stories">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-        <div className="max-w-7xl mx-auto px-10 relative z-10">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            className="text-center mb-20"
-          >
-            <h2 className="text-4xl lg:text-6xl font-black tracking-tighter mb-4">IMPACT STORIES</h2>
-            <div className="w-20 h-1 bg-white/30 mx-auto rounded-full" />
-          </motion.div>
+        {/* Flow Section */}
+        <section className="flow-figma-section" id="about">
+          <div className="flow-figma-heading">
+            <h2>How Guidance Flows</h2>
+            <p>A simple, transparent journey from confusion to clarity.</p>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { name: 'Arav', text: "Talking to Mr. Sharma helped me calm down about my board exams. He didn't just give advice, he listened.", age: 17, img: avatarOne },
-              { name: 'Priya', text: "I felt lost choosing a career. My mentor shared her own journey which gave me so much hope.", age: 19, img: students },
-              { name: 'Rohan', text: "It's different than talking to parents. My mentor feels like a wise friend who doesn't judge.", age: 16, img: students }
-            ].map((story, idx) => (
-              <motion.div
-                key={story.name}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.2 }}
-                viewport={{ once: true }}
-                className="bg-white/10 backdrop-blur-xl border border-white/20 p-10 rounded-[3rem] group hover:bg-white/20 transition-all cursor-default"
-              >
-                <div className="text-5xl font-serif text-white/30 mb-6 group-hover:text-white/50 transition-colors">❝</div>
-                <p className="text-lg font-bold italic leading-relaxed mb-10">&quot;{story.text}&quot;</p>
-                <div className="flex items-center gap-4">
-                  <img src={story.img} alt={story.name} className="w-14 h-14 rounded-full object-cover border-2 border-white/30" />
+          <div className="flow-figma-steps">
+            <article className="flow-figma-step">
+              <div className="flow-figma-node">
+                <Ear />
+              </div>
+              <h3>Listen</h3>
+              <p>Students share their concerns in a private, judgment-free space.</p>
+            </article>
+
+            <article className="flow-figma-step">
+              <div className="flow-figma-node">
+                <Brain />
+              </div>
+              <h3>Understand</h3>
+              <p>Our intelligent system matches them with a mentor who truly relates.</p>
+            </article>
+
+            <article className="flow-figma-step">
+              <div className="flow-figma-node">
+                <Handshake />
+              </div>
+              <h3>Guide</h3>
+              <p>Meaningful 1-on-1 sessions that provide perspective and direction.</p>
+            </article>
+          </div>
+        </section>
+
+        {/* Trust Section */}
+        <section className="trust-figma-section" id="safety">
+          <div className="trust-figma-shell">
+            <div className="trust-figma-copy">
+              <h2>
+                Built on Trust,
+                <br />
+                Experience, and Care
+              </h2>
+              <p>
+                Bond Room isn&apos;t about generic advice - it&apos;s about guidance. Every interaction is
+                designed to be safe, respectful, and deeply human. We bridge the gap between generations to
+                foster real growth.
+              </p>
+              <span className="trust-figma-accent" />
+            </div>
+
+            <div className="trust-figma-list">
+              <article className="trust-figma-item">
+                <div className="trust-figma-icon">
+                  <ShieldCheck />
+                </div>
+                <div>
+                  <h4>Safe &amp; Monitored Sessions</h4>
+                  <p>
+                    Strict safety protocols including keyword monitoring and session recording ensure a secure
+                    environment for every student.
+                  </p>
+                </div>
+              </article>
+
+              <article className="trust-figma-item">
+                <div className="trust-figma-icon">
+                  <Users />
+                </div>
+                <div>
+                  <h4>Mentors from Trusted 50+ Age Group</h4>
+                  <p>
+                    Wisdom comes from lived experience. Our mentors are vetted professionals, retirees, and
+                    parents who genuinely care.
+                  </p>
+                </div>
+              </article>
+
+              <article className="trust-figma-item">
+                <div className="trust-figma-icon">
+                  <Bot />
+                </div>
+                <div>
+                  <h4>AI-Powered Matching</h4>
+                  <p>
+                    Our algorithm considers academic interests, emotional needs, and language preferences to
+                    find the perfect mentor match.
+                  </p>
+                </div>
+              </article>
+
+              <article className="trust-figma-item">
+                <div className="trust-figma-icon">
+                  <Smile />
+                </div>
+                <div>
+                  <h4>Simple, Student-Friendly Experience</h4>
+                  <p>
+                    No complex onboarding. Just sign up, match, and start talking. Designed to be as easy as
+                    messaging a friend.
+                  </p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* Stories Section */}
+        <section className="stories-figma-section" id="stories">
+          <div className="stories-figma-shell">
+            <h2>Stories That Matter</h2>
+
+            <div className="stories-figma-grid">
+              <article className="stories-figma-card">
+                <span className="stories-figma-quote">❝</span>
+                <p>
+                  &quot;I was so stressed about my board exams. Talking to Mr. Sharma helped me calm down. He
+                  didn&apos;t just give advice, he listened.&quot;
+                </p>
+                <div className="stories-figma-person">
+                  <img src={avatarOne} alt="Arav" />
                   <div>
-                    <h4 className="font-black tracking-tight">{story.name}</h4>
-                    <span className="text-white/60 text-xs font-bold uppercase">Student, {story.age}</span>
+                    <h4>Arav</h4>
+                    <span>Student, 17</span>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+              </article>
 
-      {/* CTA */}
-      <section className="py-24 bg-white">
-        <div className="max-w-5xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="bg-[#111827] rounded-[4rem] p-12 lg:p-24 text-center relative overflow-hidden group shadow-2xl shadow-[#5D3699]/40"
-          >
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[#5D3699]/30 rounded-full blur-[120px] -mr-48 -mt-48 transition-all group-hover:scale-110" />
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-[120px] -ml-48 -mb-48 transition-all group-hover:scale-110" />
-            
-            <h2 className="text-4xl lg:text-7xl font-black text-white tracking-tighter mb-8 relative z-10 leading-tight">
-              READY TO ENTER <br />
-              <span className="text-[#5D3699]">THE ROOM?</span>
-            </h2>
-            <p className="text-xl text-gray-400 font-medium mb-12 max-w-xl mx-auto relative z-10 leading-relaxed">
-              Join a multi-generational community built on wisdom, trust, and shared growth.
-            </p>
+              <article className="stories-figma-card">
+                <span className="stories-figma-quote">❝</span>
+                <p>
+                  &quot;I felt lost choosing a career path. My mentor shared her own journey of confusion and
+                  success, which gave me so much hope.&quot;
+                </p>
+                <div className="stories-figma-person">
+                  <img
+                    src={students}
+                    alt="Priya"
+                    className="stories-figma-avatar stories-figma-avatar--left"
+                  />
+                  <div>
+                    <h4>Priya</h4>
+                    <span>Student, 19</span>
+                  </div>
+                </div>
+              </article>
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                href="/register"
-                className="px-12 py-5 rounded-[2rem] bg-[#5D3699] text-white font-black text-xl shadow-2xl shadow-purple-500/40"
-              >
-                Begin as Student
-              </motion.a>
-              <motion.a
-                whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.1)' }}
-                whileTap={{ scale: 0.95 }}
-                href="/mentor-register"
-                className="px-12 py-5 rounded-[2rem] bg-white/5 backdrop-blur-md border-2 border-white/10 text-white font-black text-xl"
-              >
-                Join as Mentor
-              </motion.a>
+              <article className="stories-figma-card">
+                <span className="stories-figma-quote">❝</span>
+                <p>
+                  &quot;It&apos;s different than talking to parents. My mentor feels like a wise friend who
+                  doesn&apos;t judge my mistakes.&quot;
+                </p>
+                <div className="stories-figma-person">
+                  <img
+                    src={students}
+                    alt="Rohan"
+                    className="stories-figma-avatar stories-figma-avatar--right"
+                  />
+                  <div>
+                    <h4>Rohan</h4>
+                    <span>Student, 16</span>
+                  </div>
+                </div>
+              </article>
             </div>
-          </motion.div>
-        </div>
-      </section>
+          </div>
+        </section>
+
+        {/* Gallery Section */}
+        <section className="wisdom-figma-section">
+          <div className="wisdom-figma-shell">
+            <div className="wisdom-figma-head">
+              <div className="wisdom-figma-copy">
+                <h2>Wisdom You Can See</h2>
+                <p>
+                  Connect with mentors who bring decades of life experience, professional success, and
+                  emotional intelligence.
+                </p>
+              </div>
+
+              <a className="wisdom-figma-link" href="/mentors">
+                Meet Our Mentors
+                <ChevronRight size={17} />
+              </a>
+            </div>
+
+            <div className="wisdom-figma-grid">
+              <article className="wisdom-figma-card">
+                <figure className="wisdom-figma-media wisdom-figma-media--one">
+                  <img src={heroRight} alt="Dr. Anand K." />
+                </figure>
+                <div className="wisdom-figma-body">
+                  <div className="wisdom-figma-row">
+                    <h3>Dr. Anand K.</h3>
+                    <span>Retired Prof.</span>
+                  </div>
+                  <div className="wisdom-figma-tags">
+                    <span>Academic Stress</span>
+                    <span>Physics</span>
+                  </div>
+                  <p>&quot;I help students find joy in learning rather than fearing exams.&quot;</p>
+                </div>
+              </article>
+
+              <article className="wisdom-figma-card">
+                <figure className="wisdom-figma-media wisdom-figma-media--two">
+                  <img src={mentorLeft} alt="Mrs. Radha" />
+                </figure>
+                <div className="wisdom-figma-body">
+                  <div className="wisdom-figma-row">
+                    <h3>Mrs. Radha</h3>
+                    <span>Ex-HR Director</span>
+                  </div>
+                  <div className="wisdom-figma-tags">
+                    <span>Career Guidance</span>
+                    <span>Confidence</span>
+                  </div>
+                  <p>&quot;Guiding young minds to discover their true potential is my passion.&quot;</p>
+                </div>
+              </article>
+
+              <article className="wisdom-figma-card">
+                <figure className="wisdom-figma-media wisdom-figma-media--three">
+                  <img src={heroRight} alt="Col. Singh (Retd)" />
+                </figure>
+                <div className="wisdom-figma-body">
+                  <div className="wisdom-figma-row">
+                    <h3>Col. Singh (Retd)</h3>
+                    <span>Army Veteran</span>
+                  </div>
+                  <div className="wisdom-figma-tags">
+                    <span>Discipline</span>
+                    <span>Leadership</span>
+                  </div>
+                  <p>&quot;Building character and resilience for the challenges of tomorrow.&quot;</p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section className="wellbeing-figma-section">
+          <div className="wellbeing-figma-shell">
+            <div className="wellbeing-figma-left">
+              <div className="wellbeing-figma-icon">
+                <ShieldCheck />
+              </div>
+              <div className="wellbeing-figma-copy">
+                <h3>Your wellbeing comes first</h3>
+                <p>
+                  All sessions are private yet monitored by AI for safety keywords. We maintain a zero-tolerance
+                  policy for inappropriate behavior.
+                </p>
+              </div>
+            </div>
+
+            <div className="wellbeing-figma-links">
+              <a href="/privacy">Privacy Policy</a>
+              <a href="/safety">Safety Guidelines</a>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="cta-figma-section">
+          <div className="cta-figma-shell">
+            <h2>Ready to Start Your Journey?</h2>
+            <p>Join a community built on wisdom, trust, and shared growth.</p>
+
+            <div className="cta-figma-actions">
+              <a className="cta-figma-btn cta-figma-btn--primary" href="/register">
+                Begin as Student
+              </a>
+              <a className="cta-figma-btn cta-figma-btn--secondary" href="/mentor-register">
+                Sign Up as Mentor
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
 
       {/* Footer */}
-      <footer className="bg-white py-20 border-t border-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-12 mb-16">
-            <div className="flex items-center gap-3">
-              <img src={logo} alt="Bond Room" className="h-12 w-auto" />
-              <span className="text-2xl font-black tracking-tighter text-[#5D3699]">BOND ROOM</span>
-            </div>
+      <footer className="footer-figma-section">
+        <div className="footer-figma-shell">
+          <a href="/" className="footer-figma-brand" aria-label="Bond Room Home">
+            <img src={logo} alt="Bond Room" />
+          </a>
 
-            <div className="flex gap-10">
-              {['About', 'Privacy', 'Terms', 'Help'].map(l => (
-                <a key={l} href="#" className="text-sm font-black text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest">{l}</a>
-              ))}
-            </div>
+          <nav className="footer-figma-nav">
+            <a href="#about">About</a>
+            <a href="/terms">Terms</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/support">Help</a>
+          </nav>
 
-            <div className="flex gap-6">
-              <motion.a whileHover={{ scale: 1.2, rotate: 10 }} href="#" className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-[#5D3699] shadow-sm"><Twitter size={20} /></motion.a>
-              <motion.a whileHover={{ scale: 1.2, rotate: -10 }} href="#" className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-[#5D3699] shadow-sm"><Linkedin size={20} /></motion.a>
-            </div>
-          </div>
-          <div className="text-center text-gray-400 text-xs font-black uppercase tracking-[0.3em] pt-10 border-t border-gray-50">
-            © 2025 Bond Room Platform. All rights reserved.
+          <div className="footer-figma-social">
+            <a href="#" aria-label="Twitter">
+              <Twitter />
+            </a>
+            <a href="#" aria-label="LinkedIn">
+              <Linkedin />
+            </a>
           </div>
         </div>
       </footer>
+
+      <div className="copyright-figma-strip">© 2025 Bond Room Platform. All rights reserved.</div>
     </div>
   );
 };
