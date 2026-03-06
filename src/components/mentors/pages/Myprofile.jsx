@@ -245,7 +245,7 @@ return (
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
         {/* Left Column - Profile Card */}
         <div className="space-y-6">
           {/* Profile Overview Card */}

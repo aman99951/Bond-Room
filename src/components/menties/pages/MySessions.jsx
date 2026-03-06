@@ -382,7 +382,7 @@ return (
         {/* Controls */}
         <div className="grid w-full grid-cols-1 gap-3 md:flex md:w-auto md:items-center md:justify-end">
           {/* Search — full width row */}
-          <div className="relative w-full md:min-w-[260px] md:flex-1 lg:w-72 lg:flex-none">
+          <div className="relative w-full md:min-w-[220px] md:flex-1 lg:w-72 lg:flex-none">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
             <input
               type="text"
@@ -407,7 +407,7 @@ return (
             <div className="relative" tabIndex={0} onBlur={() => setFilterOpen(false)}>
               <button
                 type="button"
-                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 md:w-[180px] lg:w-40"
+                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 md:w-[160px] lg:w-40"
                 onClick={() => setFilterOpen((o) => !o)}
               >
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -445,7 +445,7 @@ return (
             <div className="relative" tabIndex={0} onBlur={() => setWeekFilterOpen(false)}>
               <button
                 type="button"
-                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 md:w-[170px] lg:w-36"
+                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 md:w-[152px] lg:w-36"
                 onClick={() => setWeekFilterOpen((o) => !o)}
               >
                 <span className="truncate">{weekFilterValue}</span>
@@ -478,7 +478,7 @@ return (
           </div>
 
           {/* View Toggle — own row on mobile */}
-          <div className="flex h-11 w-full items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] md:w-auto md:min-w-[220px]">
+          <div className="flex h-11 w-full items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] md:w-auto md:min-w-[190px]">
             <button
               className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 md:flex-none ${
                 view === 'calendar'
@@ -530,9 +530,9 @@ return (
     {view === 'calendar' ? (
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[1120px] lg:min-w-[1310px]">
+          <div className="min-w-[900px] lg:min-w-[1240px]">
             {/* Calendar Header */}
-            <div className="grid grid-cols-[74px_repeat(7,minmax(140px,1fr))] bg-[#f8fafc] lg:grid-cols-[100px_repeat(7,minmax(170px,1fr))]">
+            <div className="grid grid-cols-[62px_repeat(7,minmax(118px,1fr))] bg-[#f8fafc] lg:grid-cols-[90px_repeat(7,minmax(160px,1fr))]">
               <div className="p-2.5 lg:p-4" />
               {days.map((d) => (
                 <div
@@ -569,7 +569,7 @@ return (
                   (s) => s.hourIndex === idx && isFeedbackEligible(s)
                 );
                 return (
-                  <div key={h} className="grid grid-cols-[74px_repeat(7,minmax(140px,1fr))] lg:grid-cols-[100px_repeat(7,minmax(170px,1fr))]">
+                  <div key={h} className="grid grid-cols-[62px_repeat(7,minmax(118px,1fr))] lg:grid-cols-[90px_repeat(7,minmax(160px,1fr))]">
                     <div className="flex items-start justify-end p-2.5 pr-3 text-[10px] font-medium text-[#9ca3af] sm:text-xs lg:p-3 lg:pr-4">
                       {h}
                     </div>

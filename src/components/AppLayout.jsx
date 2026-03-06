@@ -235,6 +235,19 @@ const MentorDashboardGuard = ({ children }) => {
 };
 
 const AppLayout = () => {
+  useEffect(() => {
+    const setAppHeight = () => {
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    };
+    setAppHeight();
+    window.addEventListener('resize', setAppHeight);
+    window.addEventListener('orientationchange', setAppHeight);
+    return () => {
+      window.removeEventListener('resize', setAppHeight);
+      window.removeEventListener('orientationchange', setAppHeight);
+    };
+  }, []);
+
   return (
     <Router>
       <ScrollToTop />

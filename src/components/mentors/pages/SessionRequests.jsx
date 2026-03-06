@@ -201,7 +201,7 @@ return (
     {/* Table Section */}
     <div className="hidden overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 lg:block">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px]">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="bg-gray-50/80">
               <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">

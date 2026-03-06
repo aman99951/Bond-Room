@@ -19,19 +19,6 @@ const MainLayout = () => {
     return unsubscribe;
   }, []);
 
-  useEffect(() => {
-    const setAppHeight = () => {
-      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
-    };
-    setAppHeight();
-    window.addEventListener('resize', setAppHeight);
-    window.addEventListener('orientationchange', setAppHeight);
-    return () => {
-      window.removeEventListener('resize', setAppHeight);
-      window.removeEventListener('orientationchange', setAppHeight);
-    };
-  }, []);
-
   return (
     // ✅ Changed: min-h-[100dvh] → h-[100dvh], added overflow-hidden for all sizes
     <div

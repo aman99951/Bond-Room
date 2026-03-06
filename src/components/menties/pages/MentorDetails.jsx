@@ -219,7 +219,7 @@ const MentorDetails = () => {
         </Link>
 
         {/* Main Grid */}
-        <div className="grid gap-5 lg:gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="grid gap-5 lg:gap-6 xl:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
           {/* Left Sidebar - Mentor Card */}
           <div className="space-y-5 xl:sticky xl:top-6 xl:self-start">
             <aside className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
@@ -547,8 +547,8 @@ const MentorDetails = () => {
                   })}
                 </div>
 
-                <div className="hidden overflow-x-auto md:block">
-                  <div className="min-w-[700px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
+                <div className="hidden overflow-x-auto lg:block">
+                  <div className="min-w-[620px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
                     <div className="grid grid-cols-7 gap-2 border-b border-[#e5e7eb] pb-3">
                       {weekColumns.map((column) => {
                         const isTodayColumn = column.dateKey === todayDateKey;

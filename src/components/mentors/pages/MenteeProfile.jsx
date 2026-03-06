@@ -167,7 +167,7 @@ const MenteeProfile = () => {
         )}
 
         {!loading && !error && mentee && (
-          <div className="mt-6 grid gap-4 lg:grid-cols-[320px_1fr]">
+          <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
             <div className="rounded-2xl border border-[#e6e2f1] bg-white p-6 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]">
               <div className="flex items-center gap-4">
                 {menteeAvatarUrl ? (

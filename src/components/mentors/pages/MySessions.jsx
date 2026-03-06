@@ -203,7 +203,8 @@ const isMenteeStartedSession = (session) => {
 };
 
 const MySessions = () => {
-  const [view, setView] = useState('calendar');
+  const isMobileInit = typeof window !== 'undefined' && window.innerWidth < 640;
+  const [view, setView] = useState(isMobileInit ? 'table' : 'calendar');
   const navigate = useNavigate();
   const { mentor } = useMentorData();
   const [sessions, setSessions] = useState([]);
@@ -629,7 +630,7 @@ return (
           </div>
 
           {/* View Toggle */}
-          <div className="flex h-11 w-full min-w-[220px] items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] sm:w-auto">
+          <div className="flex h-11 w-full min-w-[190px] items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] sm:w-auto">
             <button
               className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 sm:flex-none ${
                 view === 'calendar'
@@ -684,9 +685,9 @@ return (
     {view === 'calendar' ? (
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[1120px] lg:min-w-[1310px]">
+          <div className="min-w-[900px] lg:min-w-[1240px]">
             {/* Calendar Header */}
-            <div className="grid grid-cols-[74px_repeat(7,minmax(140px,1fr))] bg-[#f8fafc] lg:grid-cols-[100px_repeat(7,minmax(170px,1fr))]">
+            <div className="grid grid-cols-[62px_repeat(7,minmax(118px,1fr))] bg-[#f8fafc] lg:grid-cols-[90px_repeat(7,minmax(160px,1fr))]">
               <div className="p-2.5 lg:p-4" />
               {days.map((d) => (
                 <div
@@ -720,7 +721,7 @@ return (
                   (s) => s.hourIndex === idx && (canJoinSession(s) || s.needsSelection)
                 );
                 return (
-                  <div key={h} className="grid grid-cols-[74px_repeat(7,minmax(140px,1fr))] lg:grid-cols-[100px_repeat(7,minmax(170px,1fr))]">
+                  <div key={h} className="grid grid-cols-[62px_repeat(7,minmax(118px,1fr))] lg:grid-cols-[90px_repeat(7,minmax(160px,1fr))]">
                     <div className="flex items-start justify-end p-2.5 pr-3 text-[10px] font-medium text-[#9ca3af] sm:text-xs lg:p-3 lg:pr-4">
                       {h}
                     </div>
@@ -842,7 +843,7 @@ return (
       /* Table View */
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
+          <table className="w-full min-w-[560px]">
             <thead>
               <tr className="bg-[#f8fafc]">
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">

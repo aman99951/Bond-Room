@@ -219,7 +219,7 @@ return (
 
     {/* Sidebar */}
     <aside
-      className={`fixed lg:static inset-y-0 left-0 z-50 w-[280px] sm:w-[300px] lg:w-[260px] bg-white border-r border-[#e5e7eb] flex flex-col h-screen transform transition-transform duration-300 ease-in-out ${
+      className={`fixed lg:static inset-y-0 left-0 z-50 w-[82vw] max-w-[300px] lg:w-[260px] bg-white border-r border-[#e5e7eb] flex flex-col h-[100dvh] lg:h-screen transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}
     >

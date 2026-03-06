@@ -196,10 +196,10 @@ const VerifyIdentity = () => {
       <TopAuth />
 
       <main className="flex-1">
-        <div className="w-full flex justify-center px-4 sm:px-6 lg:px-4 py-4 sm:py-6 lg:py-10 bg-transparent">
-          <div className="rounded-[12px] overflow-hidden w-full max-w-[1266px] border border-[#e6e2f1] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] xl:min-h-[820px]">
-            <div className="grid grid-cols-1 xl:grid-cols-[591px_675px] h-full">
-              <div className="hidden xl:grid grid-rows-2 h-full bg-transparent relative">
+        <div className="flex w-full justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-10">
+          <div className="w-full max-w-[1266px] overflow-hidden rounded-xl border border-[#e6e2f1] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+              <div className="relative hidden h-full grid-rows-2 bg-transparent xl:grid">
                 <img
                   src={imageContainer}
                   alt=""
@@ -249,7 +249,7 @@ const VerifyIdentity = () => {
                 </div>
               </div>
 
-              <div className="p-4 sm:p-6 lg:p-10 bg-[#f7f5fa] text-[#1f2937] h-full">
+              <div className="bg-[#f7f5fa] p-4 text-[#1f2937] sm:p-6 lg:p-10">
                 <div className="max-w-2xl mx-auto md:max-w-none md:mx-0">
                   <div className="inline-flex items-center rounded-full bg-[#e9ddff] text-xs text-[#5b2c91] px-3 py-1 font-medium">
                     Step 3 of 3

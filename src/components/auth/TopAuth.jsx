@@ -16,16 +16,16 @@ const TopAuth = () => {
 
   return (
     <header className="border-b border-gray-100 bg-white">
-      <div className="max-w-full mx-auto px-6 lg:px-[88px] h-[78px] flex items-center justify-between">
+      <div className="mx-auto flex h-[70px] w-full max-w-[1400px] items-center justify-between px-4 sm:h-[74px] sm:px-6 lg:h-[78px] lg:px-10 xl:px-14">
         <Link to="/" className="flex items-center" aria-label="Go to landing page">
           <img
             src={logo}
             alt="Bond Room"
-            className="h-[49.7903px] w-[56.9998px] object-contain"
+            className="h-9 w-auto object-contain sm:h-11"
           />
         </Link>
-        <div className="flex items-center gap-[47px] text-[13px] text-[#36323D]">
-          <nav className="hidden md:flex items-center gap-[47px]">
+        <div className="flex items-center gap-3 text-[13px] text-[#36323D] sm:gap-4">
+          <nav className="hidden items-center gap-6 lg:flex">
             <a href="#" className="hover:text-primary">About</a>
             <a href="#" className="hover:text-primary">Contact</a>
             <a href="#" className="hover:text-primary">Help</a>
@@ -34,16 +34,16 @@ const TopAuth = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="px-4 py-1.5 rounded-md bg-accent text-on-accent text-[13px]"
+              className="inline-flex min-w-[88px] justify-center rounded-md bg-accent px-3 py-2 text-[13px] text-on-accent sm:min-w-[96px]"
             >
               Logout
             </button>
           ) : isLogin ? (
-            <Link to="/register" className="px-4 py-1.5 rounded-md bg-accent text-on-accent text-[13px]">
+            <Link to="/register" className="inline-flex min-w-[88px] justify-center rounded-md bg-accent px-3 py-2 text-[13px] text-on-accent sm:min-w-[96px]">
               Register
             </Link>
           ) : (
-            <Link to="/login" className="px-4 py-1.5 rounded-md bg-accent text-on-accent text-[13px]">
+            <Link to="/login" className="inline-flex min-w-[88px] justify-center rounded-md bg-accent px-3 py-2 text-[13px] text-on-accent sm:min-w-[96px]">
               Login
             </Link>
           )}

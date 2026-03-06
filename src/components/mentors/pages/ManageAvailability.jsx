@@ -752,8 +752,8 @@ const ManageAvailability = () => {
         </div>
 
         {/* Desktop Week Grid */}
-        <div className="hidden overflow-x-auto md:block">
-          <div className="min-w-[980px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
+        <div className="hidden overflow-x-auto lg:block">
+          <div className="min-w-[860px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
             <div className="grid grid-cols-7 gap-2 border-b border-[#e5e7eb] pb-3">
               {days.map((day) => {
                 const isToday = day.dateKey === todayDateKey;

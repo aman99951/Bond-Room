@@ -351,7 +351,7 @@ const BookSession = () => {
 
         {/* Main Card */}
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
-          <div className="flex flex-col lg:grid lg:grid-cols-[360px_1fr]">
+          <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
             {/* Left Sidebar - Mentor Info */}
             <aside className="border-b border-[#e5e7eb] bg-[#f8fafc] lg:border-b-0 lg:border-r">
               {/* ——— Mobile: Compact Mentor Card ——— */}
@@ -541,7 +541,7 @@ const BookSession = () => {
 
             {/* Right Section - Calendar & Time Slots */}
             <div className="p-6 lg:p-8">
-              <div className="grid gap-6 lg:grid-cols-[1fr_240px] lg:gap-8">
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-8">
                 {/* Calendar */}
                 <section>
                   {/* Month Navigation */}

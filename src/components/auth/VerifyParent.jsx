@@ -77,10 +77,10 @@ const VerifyParent = () => {
       <TopAuth />
 
       <main className="flex-1">
-        <div className="w-full flex justify-center px-4 sm:px-6 py-6 sm:py-10">
-          <div className="border border-[#e6e2f1] rounded-b-[12px] overflow-hidden bg-white shadow-sm w-full max-w-[1266px] md:h-[790px]">
-            <div className="grid md:grid-cols-[591px_675px] md:h-[788px]">
-              <div className="hidden md:block w-[591px] h-[788px]">
+        <div className="flex w-full justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-10">
+          <div className="w-full max-w-[1266px] overflow-hidden rounded-xl border border-[#e6e2f1] bg-white shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+              <div className="hidden md:block">
                 <img
                   src={leftside}
                   alt="Find your safe space"
@@ -88,7 +88,7 @@ const VerifyParent = () => {
                 />
               </div>
 
-              <div className="p-6 sm:p-8 lg:p-12 bg-[#f7f5fa] w-full md:w-[675px] md:h-[788px] flex items-center justify-center">
+              <div className="flex w-full items-center justify-center bg-[#f7f5fa] p-5 sm:p-8 lg:p-12">
                 <div className="w-full max-w-md text-center">
                   <div className="mx-auto h-11 w-11 rounded-full bg-[#5b2c91] flex items-center justify-center">
                     <svg className="h-5 w-5 text-[#f2c94c]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
