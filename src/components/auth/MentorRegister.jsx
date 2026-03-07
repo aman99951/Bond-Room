@@ -7,10 +7,7 @@ import mentorBottom from '../assets/teach2.png';
 import imageContainer from '../assets/Image Container.png';
 import { useMentorAuth } from '../../apis/apihook/useMentorAuth';
 import { authApi } from '../../apis/api/authApi';
-import {
-  getPendingMentorRegistration,
-  setPendingMentorRegistration,
-} from '../../apis/api/storage';
+import { setPendingMentorRegistration } from '../../apis/api/storage';
 
 const MENTOR_MIN_AGE = 45;
 const MENTOR_MAX_AGE = 60;
@@ -35,13 +32,13 @@ const getMentorDobBounds = () => ({
 });
 
 const REQUIRED_FIELDS_MESSAGE = 'Please fill all required fields to continue.';
+const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
 
 const MentorRegister = () => {
   const [selectedLanguages, setSelectedLanguages] = useState([]);
   const [selectedCareAreas, setSelectedCareAreas] = useState([]);
   const languagesOptions = ['Tamil', 'English', 'Telugu', 'Kannada', 'Malayalam', 'Hindi'];
   const careAreaOptions = ['Anxiety', 'Relationships', 'Academic Stress'];
-  const pendingMentor = useMemo(() => getPendingMentorRegistration(), []);
   const navigate = useNavigate();
   const { registerMentor, sendMentorOtp, verifyMentorOtp } = useMentorAuth();
   const [errorMessage, setErrorMessage] = useState('');
@@ -50,7 +47,7 @@ const MentorRegister = () => {
   const [otpInfoMessage, setOtpInfoMessage] = useState('');
   const [emailHint, setEmailHint] = useState('');
   const [phoneHint, setPhoneHint] = useState('');
-  const [mentorId, setMentorId] = useState(pendingMentor?.mentorId || null);
+  const [mentorId, setMentorId] = useState(null);
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [otpModal, setOtpModal] = useState({
@@ -113,6 +110,7 @@ const MentorRegister = () => {
     if (key === 'mobile') {
       setPhoneVerified(false);
       setPhoneHint('');
+      setMentorId(null);
     }
     if (key === 'stateName') {
       setForm((prev) => ({ ...prev, stateName: value, cityName: '' }));
@@ -224,15 +222,17 @@ const MentorRegister = () => {
     if (sectionOneError) {
       return sectionOneError;
     }
-    if (!form.consent) {
-      return 'Please confirm your consent to proceed.';
-    }
     return '';
+  };
+
+  const getExistingMentorId = () => {
+    return mentorId;
   };
 
   const buildMentorPayload = () => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-    return {
+    const currentMentorId = getExistingMentorId();
+    const payload = {
       first_name: form.firstName.trim(),
       last_name: form.lastName.trim(),
       email: form.email.trim().toLowerCase(),
@@ -248,7 +248,31 @@ const MentorRegister = () => {
       qualification: form.qualification.trim(),
       bio: form.bio.trim(),
       consent: form.consent,
+      email_verified: emailVerified,
+      phone_verified: phoneVerified,
     };
+    if (currentMentorId) {
+      payload.mentor_id = currentMentorId;
+    }
+    return payload;
+  };
+
+  const buildOtpPayload = (channel, otp = '') => {
+    const currentMentorId = getExistingMentorId();
+    const payload = { channel };
+    if (otp) {
+      payload.otp = otp;
+    }
+    if (currentMentorId) {
+      payload.mentor_id = currentMentorId;
+      return payload;
+    }
+    if (channel === 'email') {
+      payload.email = form.email.trim().toLowerCase();
+    } else {
+      payload.mobile = form.mobile.trim();
+    }
+    return payload;
   };
 
   const ensureMentorRegistered = async (options = {}) => {
@@ -275,8 +299,7 @@ const MentorRegister = () => {
     return mentor;
   };
 
-  const handleSendOtp = async (channel, options = {}) => {
-    const { registerIfNeeded = true } = options;
+  const handleSendOtp = async (channel) => {
     const sendKey = channel === 'email' ? 'sendEmail' : 'sendPhone';
     setErrorMessage('');
     setInfoMessage('');
@@ -285,16 +308,11 @@ const MentorRegister = () => {
     setActionBusy((prev) => ({ ...prev, [sendKey]: true }));
 
     try {
-      let currentMentorId = mentorId || pendingMentor?.mentorId || null;
-      if (registerIfNeeded || !currentMentorId) {
-        const mentor = await ensureMentorRegistered({ forVerification: true });
-        currentMentorId = mentor?.id || currentMentorId;
+      const fieldValue = channel === 'email' ? form.email.trim() : form.mobile.trim();
+      if (!fieldValue) {
+        throw new Error(channel === 'email' ? 'Please enter your email first.' : 'Please enter your mobile number first.');
       }
-      if (!currentMentorId) {
-        throw new Error('Please complete registration details first, then request OTP.');
-      }
-
-      const response = await sendMentorOtp(currentMentorId, channel);
+      const response = await sendMentorOtp(buildOtpPayload(channel));
 
       if (channel === 'email' && response?.otp) {
         setEmailHint(`Test OTP: ${response.otp}`);
@@ -317,9 +335,9 @@ const MentorRegister = () => {
 
   const handleVerifyOtp = async (channel, otp) => {
     const verifyKey = channel === 'email' ? 'verifyEmail' : 'verifyPhone';
-    const currentMentorId = mentorId || pendingMentor?.mentorId;
-    if (!currentMentorId) {
-      const message = 'Please complete registration details first, then request OTP.';
+    const fieldValue = channel === 'email' ? form.email.trim() : form.mobile.trim();
+    if (!fieldValue) {
+      const message = channel === 'email' ? 'Please enter your email first.' : 'Please enter your mobile number first.';
       setErrorMessage(message);
       setOtpErrorMessage(message);
       return;
@@ -336,7 +354,7 @@ const MentorRegister = () => {
     setOtpInfoMessage('');
     setActionBusy((prev) => ({ ...prev, [verifyKey]: true }));
     try {
-      await verifyMentorOtp(currentMentorId, channel, otp);
+      await verifyMentorOtp(buildOtpPayload(channel, otp));
       if (channel === 'email') {
         setEmailVerified(true);
       } else {
@@ -357,7 +375,7 @@ const MentorRegister = () => {
     setOtpErrorMessage('');
     setOtpInfoMessage('');
     setOtpModal({ open: true, channel, otp: '' });
-    await handleSendOtp(channel, { registerIfNeeded: true });
+    await handleSendOtp(channel);
   };
 
   const closeOtpModal = () => {
@@ -382,8 +400,7 @@ const MentorRegister = () => {
     setFormSection(2);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async () => {
     setErrorMessage('');
     setInfoMessage('');
 
@@ -490,7 +507,7 @@ const MentorRegister = () => {
                     Tell us about yourself so we can match you thoughtfully.
                   </p>
 
-                  <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+                  <form className="mt-6 space-y-4" onSubmit={(event) => event.preventDefault()}>
                     <section className="rounded-xl border border-[#e6e2f1] p-4 sm:p-5 space-y-4">
                       <div className="flex items-center justify-between gap-3">
                         <h3 className="text-sm font-semibold text-[#1f2937]">
@@ -819,9 +836,10 @@ const MentorRegister = () => {
                         </button>
                       ) : (
                         <button
-                          type="submit"
+                          type="button"
                           className="rounded-md bg-[#5b2c91] hover:bg-[#4a2374] text-white px-4 py-2 text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]"
                           disabled={actionBusy.submit}
+                          onClick={handleSubmit}
                         >
                           {actionBusy.submit ? 'Submitting...' : 'Submit Application'}
                         </button>

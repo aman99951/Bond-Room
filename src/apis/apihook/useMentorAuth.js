@@ -34,24 +34,17 @@ export const useMentorAuth = () => {
   );
 
   const sendMentorOtp = useCallback(
-    (mentorId, channel) =>
+    (payload) =>
       run(async () =>
-        authApi.sendMentorOtp({
-          mentor_id: mentorId,
-          channel,
-        })
+        authApi.sendMentorOtp(payload)
       ),
     [run]
   );
 
   const verifyMentorOtp = useCallback(
-    (mentorId, channel, otp) =>
+    (payload) =>
       run(async () =>
-        authApi.verifyMentorOtp({
-          mentor_id: mentorId,
-          channel,
-          otp,
-        })
+        authApi.verifyMentorOtp(payload)
       ),
     [run]
   );

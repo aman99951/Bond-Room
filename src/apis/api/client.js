@@ -23,11 +23,47 @@ const parseResponseBody = async (response) => {
   }
 };
 
+const flattenFieldErrors = (payload) => {
+  if (!payload || Array.isArray(payload) || typeof payload !== 'object') {
+    return null;
+  }
+
+  const messages = Object.entries(payload)
+    .filter(([key]) => key !== 'detail' && key !== 'message')
+    .map(([key, value]) => {
+      const values = Array.isArray(value) ? value : [value];
+      const text = values
+        .flatMap((item) => {
+          if (typeof item === 'string' || typeof item === 'number') {
+            return [String(item)];
+          }
+          if (Array.isArray(item)) {
+            return item.map((entry) => String(entry));
+          }
+          if (item && typeof item === 'object') {
+            return Object.values(item).map((entry) => String(entry));
+          }
+          return [];
+        })
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .join(', ');
+
+      if (!text) return null;
+      if (key === 'non_field_errors') return text;
+      return `${key}: ${text}`;
+    })
+    .filter(Boolean);
+
+  return messages.length ? messages.join(' ') : null;
+};
+
 const toError = (response, payload) => {
   const message =
     payload?.detail ||
     payload?.message ||
     (Array.isArray(payload) ? payload.join(', ') : null) ||
+    flattenFieldErrors(payload) ||
     'Request failed';
   const error = new Error(message);
   error.status = response.status;

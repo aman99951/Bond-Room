@@ -115,3 +115,19 @@ test("apiClient uses auth=false requests without Authorization header", async ()
   await apiClient.post("/login/", { email: "a@example.com", password: "x" }, { auth: false });
   assert.equal("Authorization" in requestHeaders, false);
 });
+
+test("apiClient surfaces serializer field errors in error messages", async () => {
+  globalThis.fetch = async () =>
+    mockJsonResponse(400, {
+      email: ["This email is already registered."],
+      mobile: ["This mobile number is already registered."],
+    });
+
+  await assert.rejects(
+    () => apiClient.post("/auth/register/mentor/", { email: "test@example.com" }, { auth: false }),
+    {
+      message:
+        "email: This email is already registered. mobile: This mobile number is already registered.",
+    }
+  );
+});
