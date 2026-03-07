@@ -1,9 +1,9 @@
-
 @keyframes landingFadeUp {
   from {
     opacity: 0;
     transform: translateY(18px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -15,9 +15,128 @@
     opacity: 0;
     transform: scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes landingSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes landingSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes landingFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes landingStaggerUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landingPulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(91, 44, 199, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(91, 44, 199, 0);
+  }
+}
+
+@keyframes landingFloat {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes landingAccentGrow {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+
+  to {
+    width: 66px;
+    opacity: 1;
+  }
+}
+
+@keyframes landingCardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes landingLivePulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes landingShimmer {
+  from {
+    background-position: -200% center;
+  }
+
+  to {
+    background-position: 200% center;
   }
 }
 
@@ -31,7 +150,7 @@
 
 .hero-figma-copy {
   max-width: 620px;
-  animation: landingFadeUp 0.7s ease both;
+
 }
 
 .hero-figma-title {
@@ -54,6 +173,7 @@
   line-height: 1.58;
   font-weight: 500;
   color: #666f80;
+
 }
 
 .hero-figma-actions {
@@ -61,6 +181,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
+
 }
 
 .hero-figma-btn {
@@ -75,11 +196,16 @@
   font-size: 1.05rem;
   line-height: 1;
   font-weight: 500;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .hero-figma-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(91, 44, 199, 0.2);
+}
+
+.hero-figma-btn:active {
+  transform: translateY(0);
 }
 
 .hero-figma-btn--primary {
@@ -88,11 +214,19 @@
   color: #ffffff;
 }
 
+.hero-figma-btn--primary:hover {
+  box-shadow: 0 8px 24px rgba(91, 44, 199, 0.35);
+}
+
 .hero-figma-btn--secondary {
   min-width: 182px;
   background: #ffffff;
   border-color: #dfe3eb;
   color: #707784;
+}
+
+.hero-figma-btn--secondary:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
 
 .hero-figma-note {
@@ -104,6 +238,7 @@
   line-height: 1.45;
   font-weight: 500;
   color: #646d7c;
+
 }
 
 .hero-figma-note svg {
@@ -115,7 +250,7 @@
   position: relative;
   min-height: 548px;
   width: 100%;
-  animation: landingSoftScale 0.75s ease 0.08s both;
+
 }
 
 .hero-figma-images {
@@ -130,6 +265,12 @@
   margin: 0;
   overflow: hidden;
   box-shadow: 0 14px 34px rgba(14, 23, 43, 0.2);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.hero-figma-image:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 44px rgba(14, 23, 43, 0.28);
 }
 
 .hero-figma-image img {
@@ -137,12 +278,18 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.6s ease;
+}
+
+.hero-figma-image:hover img {
+  transform: scale(1.03);
 }
 
 .hero-figma-image--left {
   width: 272px;
   height: 470px;
   border-radius: 34px;
+
 }
 
 .hero-figma-image--right {
@@ -155,6 +302,7 @@
   position: relative;
   width: 268px;
   flex: 0 0 268px;
+
 }
 
 .hero-figma-pot {
@@ -166,11 +314,12 @@
   height: auto;
   z-index: 5;
   pointer-events: none;
+
 }
 
 .hero-figma-live-card {
   position: absolute;
-  left: 50%;
+  left: 15%;
   transform: translateX(-50%);
   right: auto;
   bottom: 37px;
@@ -182,6 +331,7 @@
   padding: 17px 20px 16px;
   box-sizing: border-box;
   z-index: 8;
+
 }
 
 .hero-figma-live-label {
@@ -200,6 +350,7 @@
   height: 8px;
   border-radius: 999px;
   background: #22c55e;
+
 }
 
 .hero-figma-live-card p {
@@ -389,11 +540,34 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .hero-figma-copy,
-  .hero-figma-visual {
-    animation: none !important;
-  }
+  .hero-figma-visual,
+  .hero-figma-description,
+  .hero-figma-actions,
+  .hero-figma-note,
+  .hero-figma-image--left,
+  .hero-figma-right-wrap,
+  .hero-figma-live-card,
+  .hero-figma-pot,
+  .hero-figma-live-dot,
+  .flow-figma-section,
+  .flow-figma-heading,
+  .flow-figma-step,
+  .flow-figma-node,
+  .trust-figma-section,
+  .trust-figma-copy,
+  .trust-figma-accent,
+  .trust-figma-item,
+  .stories-figma-section,
+  .stories-figma-card,
+  .wisdom-figma-section,
+  .wisdom-figma-card,
+  .wellbeing-figma-section,
+  .cta-figma-section {}
 }
+
+/* ── Flow / Steps Section ── */
 
 .flow-figma-section {
   width: min(1120px, calc(100% - 48px));
@@ -403,6 +577,7 @@
 
 .flow-figma-heading {
   text-align: center;
+
 }
 
 .flow-figma-heading h2 {
@@ -445,6 +620,19 @@
   text-align: center;
   position: relative;
   z-index: 1;
+
+}
+
+.flow-figma-step:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.flow-figma-step:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.flow-figma-step:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 .flow-figma-node {
@@ -455,6 +643,12 @@
   background: #ebe8f2;
   display: grid;
   place-items: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.flow-figma-node:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(95, 57, 168, 0.18);
 }
 
 .flow-figma-node svg {
@@ -541,6 +735,9 @@
     font-size: 1.35rem;
   }
 }
+
+/* ── Trust Section ── */
+
 .trust-figma-section {
   margin-top: 48px;
   background: #f2f4f7;
@@ -555,6 +752,8 @@
   gap: 96px;
   align-items: start;
 }
+
+.trust-figma-copy {}
 
 .trust-figma-copy h2 {
   margin: 0;
@@ -581,6 +780,7 @@
   margin-top: 56px;
   border-radius: 999px;
   background: #d9c4f2;
+
 }
 
 .trust-figma-list {
@@ -593,6 +793,23 @@
   grid-template-columns: 56px minmax(0, 1fr);
   align-items: start;
   column-gap: 18px;
+
+}
+
+.trust-figma-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.trust-figma-item:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.trust-figma-item:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.trust-figma-item:nth-child(4) {
+  animation-delay: 0.55s;
 }
 
 .trust-figma-icon {
@@ -604,6 +821,13 @@
   box-shadow: 0 1px 3px rgba(17, 24, 39, 0.04);
   display: grid;
   place-items: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.trust-figma-icon:hover {
+  transform: scale(1.1) rotate(3deg);
+  box-shadow: 0 6px 18px rgba(96, 55, 187, 0.15);
+  background: #ebe8f2;
 }
 
 .trust-figma-icon svg {
@@ -693,6 +917,8 @@
   }
 }
 
+/* ── Stories / Testimonials Section ── */
+
 .stories-figma-section {
   background: #ffffff;
   padding: 62px 0 78px;
@@ -710,6 +936,14 @@
   letter-spacing: -0.02em;
   font-weight: 600;
   color: #1d2332;
+
+}
+
+.stories-figma-subcopy {
+  margin: 18px auto 0;
+  font-size: clamp(1rem, 1.12vw, 1.08rem);
+  line-height: 1.65;
+  color: #667085;
 }
 
 .stories-figma-grid {
@@ -719,6 +953,14 @@
   gap: 22px;
 }
 
+.stories-figma-grid--desktop {
+  display: grid;
+}
+
+.stories-figma-mobile {
+  display: none;
+}
+
 .stories-figma-card {
   background: #f6f7f9;
   border-radius: 14px;
@@ -726,6 +968,25 @@
   min-height: 244px;
   display: flex;
   flex-direction: column;
+
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stories-figma-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(14, 23, 43, 0.1);
+}
+
+.stories-figma-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.stories-figma-card:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.stories-figma-card:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 .stories-figma-quote {
@@ -759,6 +1020,11 @@
   border-radius: 999px;
   object-fit: cover;
   display: block;
+  transition: transform 0.3s ease;
+}
+
+.stories-figma-person img:hover {
+  transform: scale(1.12);
 }
 
 .stories-figma-avatar--left {
@@ -783,6 +1049,49 @@
   font-size: 0.86rem;
   line-height: 1.2;
   color: #7a8291;
+}
+
+.stories-figma-mobile-viewport {
+  overflow: hidden;
+}
+
+.stories-figma-mobile-track {
+  display: flex;
+}
+
+.stories-figma-mobile-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 6px 4px 10px;
+}
+
+.stories-figma-card--mobile {
+  min-height: 252px;
+  padding: 28px 22px 22px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f4ff 100%);
+  box-shadow: 0 16px 36px rgba(93, 54, 153, 0.12);
+}
+
+.stories-figma-mobile-dots {
+  margin-top: 18px;
+}
+
+.stories-figma-mobile-dot {
+  width: 10px;
+  height: 10px;
+}
+
+@media (max-width: 1023px) {
+  .stories-figma-grid--desktop {
+    display: none;
+  }
+
+  .stories-figma-mobile {
+    display: block;
+    margin-top: 22px;
+  }
 }
 
 @media (max-width: 1180px) {
@@ -825,6 +1134,8 @@
   }
 }
 
+/* ── Wisdom / Blog Section ── */
+
 .wisdom-figma-section {
   background: #ffffff;
   padding: 26px 0 62px;
@@ -840,6 +1151,7 @@
   justify-content: space-between;
   align-items: flex-end;
   gap: 16px;
+
 }
 
 .wisdom-figma-copy h2 {
@@ -869,6 +1181,12 @@
   color: #5f37c0;
   font-weight: 500;
   white-space: nowrap;
+  transition: gap 0.3s ease, color 0.3s ease;
+}
+
+.wisdom-figma-link:hover {
+  gap: 8px;
+  color: #4a2a9a;
 }
 
 .wisdom-figma-grid {
@@ -884,6 +1202,25 @@
   border: 1px solid #e6e8ec;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
+
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.wisdom-figma-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 36px rgba(17, 24, 39, 0.12);
+}
+
+.wisdom-figma-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.wisdom-figma-card:nth-child(2) {
+  animation-delay: 0.22s;
+}
+
+.wisdom-figma-card:nth-child(3) {
+  animation-delay: 0.34s;
 }
 
 .wisdom-figma-media {
@@ -905,6 +1242,11 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.5s ease;
+}
+
+.wisdom-figma-card:hover .wisdom-figma-media img {
+  transform: scale(1.06);
 }
 
 .wisdom-figma-media--one img {
@@ -976,6 +1318,12 @@
   font-size: 0.77rem;
   line-height: 1;
   color: #626b7b;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.wisdom-figma-tags span:hover {
+  background: #ebe8f2;
+  color: #5f39a8;
 }
 
 .wisdom-figma-body p {
@@ -1022,9 +1370,12 @@
   }
 }
 
+/* ── Wellbeing Banner Section ── */
+
 .wellbeing-figma-section {
   background: #f3f2f8;
   padding: 24px 0;
+
 }
 
 .wellbeing-figma-shell {
@@ -1051,6 +1402,12 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.wellbeing-figma-icon:hover {
+  transform: rotate(8deg) scale(1.08);
+  background: #ebe8f2;
 }
 
 .wellbeing-figma-icon svg {
@@ -1089,6 +1446,11 @@
   line-height: 1;
   font-weight: 500;
   color: #6b7282;
+  transition: color 0.2s ease;
+}
+
+.wellbeing-figma-links a:hover {
+  color: #5f37c0;
 }
 
 @media (max-width: 980px) {
@@ -1148,6 +1510,8 @@
   }
 }
 
+/* ── CTA Section ── */
+
 .cta-figma-section {
   background: #ffffff;
   padding: 72px 0 96px;
@@ -1157,6 +1521,7 @@
   width: min(1240px, calc(100% - 64px));
   margin: 0 auto;
   text-align: center;
+
 }
 
 .cta-figma-shell h2 {
@@ -1166,6 +1531,19 @@
   letter-spacing: -0.02em;
   font-weight: 600;
   color: #1d2433;
+}
+
+.cta-figma-title {
+  padding-right: 56px;
+}
+
+.cta-figma-rocket {
+  top: -20px;
+  right: 0;
+  font-size: clamp(2rem, 3vw, 2.5rem);
+  line-height: 1;
+  transform-origin: center;
+  pointer-events: none;
 }
 
 .cta-figma-shell p {
@@ -1195,11 +1573,15 @@
   font-size: clamp(1rem, 1.28vw, 1.16rem);
   line-height: 1;
   font-weight: 500;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cta-figma-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+}
+
+.cta-figma-btn:active {
+  transform: translateY(0);
 }
 
 .cta-figma-btn--primary {
@@ -1207,10 +1589,18 @@
   color: #ffffff;
 }
 
+.cta-figma-btn--primary:hover {
+  box-shadow: 0 10px 28px rgba(95, 52, 191, 0.35);
+}
+
 .cta-figma-btn--secondary {
   background: #ffffff;
   border-color: #d6dbe3;
   color: #222a39;
+}
+
+.cta-figma-btn--secondary:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
 
 @media (max-width: 980px) {
@@ -1246,6 +1636,16 @@
     font-size: 2rem;
   }
 
+  .cta-figma-title {
+    padding-right: 42px;
+  }
+
+  .cta-figma-rocket {
+    top: -10px;
+    right: -2px;
+    font-size: 1.5rem;
+  }
+
   .cta-figma-shell p {
     margin-top: 12px;
     font-size: 0.94rem;
@@ -1266,6 +1666,8 @@
   }
 }
 
+/* ── Footer Section ── */
+
 .footer-figma-section {
   background: transparent;
   padding: 14px 0 18px;
@@ -1284,6 +1686,11 @@
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.footer-figma-brand:hover {
+  transform: scale(1.04);
 }
 
 .footer-figma-brand img {
@@ -1305,6 +1712,11 @@
   line-height: 1;
   font-weight: 500;
   color: #6f7481;
+  transition: color 0.2s ease;
+}
+
+.footer-figma-nav a:hover {
+  color: #5f37c0;
 }
 
 .footer-figma-social {
@@ -1319,6 +1731,12 @@
   justify-content: center;
   text-decoration: none;
   color: #6f7481;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.footer-figma-social a:hover {
+  color: #5f37c0;
+  transform: translateY(-2px);
 }
 
 .footer-figma-social svg {
@@ -1494,8 +1912,9 @@
 
 /* Ultra-wide layout tuning: reduce excessive side gutters on very large screens */
 @media (min-width: 1800px) {
+
   .landing-figma-root header.max-w-7xl,
-  .landing-figma-root main > section.max-w-7xl {
+  .landing-figma-root main>section.max-w-7xl {
     max-width: 1760px;
   }
 
@@ -1511,8 +1930,9 @@
 }
 
 @media (min-width: 2300px) {
+
   .landing-figma-root header.max-w-7xl,
-  .landing-figma-root main > section.max-w-7xl {
+  .landing-figma-root main>section.max-w-7xl {
     max-width: 2040px;
   }
 
@@ -1535,6 +1955,12 @@
   border: 1px solid #d9dbe3;
   color: #4b5565;
   background: #ffffff;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.landing-mobile-menu-btn:hover {
+  transform: scale(1.06);
+  background: #f4f5f7;
 }
 
 .landing-mobile-menu-btn svg {
@@ -1542,9 +1968,7 @@
   height: 18px;
 }
 
-.landing-mobile-panel {
-  animation: landingFadeUp 0.18s ease both;
-}
+.landing-mobile-panel {}
 
 @media (max-width: 768px) {
   .landing-figma-root header.max-w-7xl {
@@ -1585,6 +2009,11 @@
     padding: 7px 8px;
     font-size: 0.7rem;
     font-weight: 600;
+    transition: transform 0.2s ease;
+  }
+
+  .landing-mobile-panel-actions a:hover {
+    transform: scale(1.03);
   }
 
   .landing-mobile-panel-actions a:first-child {
@@ -1599,7 +2028,7 @@
     background: #5d3699;
   }
 
-  .landing-figma-root main > section.max-w-7xl {
+  .landing-figma-root main>section.max-w-7xl {
     padding: 10px 12px 8px;
     background: transparent;
   }
@@ -1702,7 +2131,7 @@
 
   .landing-figma-root .hero-figma-live-card {
     display: block;
-    left: 50%;
+    left: 4%;
     right: auto;
     top: 191px;
     bottom: auto;
@@ -1810,7 +2239,7 @@
   }
 
   .landing-figma-root .stories-figma-section {
-    padding: 14px 0 16px;
+    padding: 28px 0 34px;
   }
 
   .landing-figma-root .stories-figma-shell {
@@ -1818,13 +2247,29 @@
   }
 
   .landing-figma-root .stories-figma-shell h2 {
-    font-size: 1.22rem;
+    font-size: 1.65rem;
+    line-height: 1.14;
+  }
+
+  .landing-figma-root .stories-figma-subcopy {
+    margin: 12px auto 0;
+    font-size: 0.92rem;
+    line-height: 1.55;
   }
 
   .landing-figma-root .stories-figma-grid {
-    margin-top: 10px;
+    margin-top: 22px;
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .landing-figma-root .stories-figma-grid--desktop {
+    display: none;
+  }
+
+  .landing-figma-root .stories-figma-mobile {
+    display: block;
+    margin-top: 18px;
   }
 
   .landing-figma-root .stories-figma-card {
@@ -1833,8 +2278,10 @@
     padding: 10px 10px 8px;
   }
 
-  .landing-figma-root .stories-figma-card:nth-child(n + 2) {
-    display: none;
+  .landing-figma-root .stories-figma-card--mobile {
+    min-height: 220px;
+    padding: 22px 18px 18px;
+    border-radius: 18px;
   }
 
   .landing-figma-root .stories-figma-quote {
@@ -1864,6 +2311,51 @@
   .landing-figma-root .stories-figma-person span {
     margin-top: 2px;
     font-size: 0.48rem;
+  }
+
+  .landing-figma-root .stories-figma-mobile-viewport {
+    padding: 0;
+  }
+
+  .landing-figma-root .stories-figma-mobile-slide {
+    padding: 6px 2px 10px;
+  }
+
+  .landing-figma-root .stories-figma-card--mobile .stories-figma-quote {
+    font-size: 2.5rem;
+    line-height: 0.8;
+  }
+
+  .landing-figma-root .stories-figma-card--mobile p {
+    margin-top: 10px;
+    font-size: 0.96rem;
+    line-height: 1.65;
+    color: #374151;
+  }
+
+  .landing-figma-root .stories-figma-card--mobile .stories-figma-person {
+    padding-top: 16px;
+    gap: 12px;
+  }
+
+  .landing-figma-root .stories-figma-card--mobile .stories-figma-person img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .landing-figma-root .stories-figma-card--mobile .stories-figma-person h4 {
+    font-size: 0.95rem;
+    line-height: 1.2;
+  }
+
+  .landing-figma-root .stories-figma-card--mobile .stories-figma-person span {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    line-height: 1.3;
+  }
+
+  .landing-figma-root .stories-figma-mobile-dots {
+    margin-top: 14px;
   }
 
   .landing-figma-root .wellbeing-figma-section {
@@ -1931,6 +2423,16 @@
     line-height: 1.24;
   }
 
+  .landing-figma-root .cta-figma-title {
+    padding-right: 22px;
+  }
+
+  .landing-figma-root .cta-figma-rocket {
+    top: -3px;
+    right: 0;
+    font-size: 0.95rem;
+  }
+
   .landing-figma-root .cta-figma-shell p {
     margin-top: 4px;
     font-size: 0.5rem;
@@ -1991,4 +2493,182 @@
   .landing-figma-root .copyright-figma-strip {
     display: none;
   }
+}
+
+/* Additional Modern Animations */
+
+@keyframes landingSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landingSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes blob {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(20px, -20px) scale(1.1);
+  }
+
+  50% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  75% {
+    transform: translate(20px, 20px) scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Custom Cursor */
+.custom-cursor {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #7042b8;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, border-color 0.3s;
+  mix-blend-mode: difference;
+}
+
+/* Gradient Orbs */
+.gradient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+
+}
+
+.gradient-orb-1 {
+  top: 10%;
+  left: 10%;
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-orb-2 {
+  top: 50%;
+  right: 10%;
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  animation-delay: 5s;
+}
+
+.gradient-orb-3 {
+  bottom: 10%;
+  left: 50%;
+  width: 450px;
+  height: 450px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  animation-delay: 10s;
+}
+
+/* Animation Utilities */
+.animate-blob {}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animate-spin-slow {}
+
+.animate-shimmer {
+  background-size: 200% auto;
+
+}
+
+/* Gradient Background Utilities */
+.bg-size-200 {
+  background-size: 200% auto;
+}
+
+.bg-pos-0 {
+  background-position: 0% center;
+}
+
+.bg-pos-100 {
+  background-position: 100% center;
+}
+
+/* Visibility States */
+[data-animate] {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+[data-animate].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection Color */
+::selection {
+  background-color: rgba(112, 66, 184, 0.3);
+  color: inherit;
+}
+
+::-moz-selection {
+  background-color: rgba(112, 66, 184, 0.3);
+  color: inherit;
 }
