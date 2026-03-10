@@ -143,6 +143,11 @@ const MentorRegister = () => {
   const [infoMessage, setInfoMessage] = useState('');
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
   const [otpInfoMessage, setOtpInfoMessage] = useState('');
+  const [toastState, setToastState] = useState({
+    open: false,
+    message: '',
+    type: 'success',
+  });
   const [emailHint, setEmailHint] = useState('');
   const [phoneHint, setPhoneHint] = useState('');
   const [mentorId, setMentorId] = useState(null);
@@ -192,6 +197,17 @@ const MentorRegister = () => {
   });
   const isDev = Boolean(import.meta?.env?.DEV);
   const dobBounds = getMentorDobBounds();
+  const sectionOneFieldKeys = new Set([
+    'firstName',
+    'lastName',
+    'email',
+    'mobile',
+    'dob',
+    'gender',
+    'stateName',
+    'cityName',
+    'languages',
+  ]);
 
   const toggleMultiCheckbox = (value, setter) => {
     setter((prev) => {
@@ -320,6 +336,30 @@ const MentorRegister = () => {
     return () => window.clearInterval(intervalId);
   }, [resendCooldown.email, resendCooldown.phone]);
 
+  useEffect(() => {
+    if (!toastState.open) {
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      setToastState((prev) => ({ ...prev, open: false }));
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [toastState.open, toastState.message]);
+
+  useEffect(() => {
+    if (!errorMessage) {
+      return;
+    }
+    setToastState({ open: true, message: errorMessage, type: 'error' });
+  }, [errorMessage]);
+
+  useEffect(() => {
+    if (!infoMessage) {
+      return;
+    }
+    setToastState({ open: true, message: infoMessage, type: 'success' });
+  }, [infoMessage]);
+
   const getSectionOneErrors = () => {
     const errors = {};
     const mobileDigits = normalizePhone(form.mobile);
@@ -358,6 +398,9 @@ const MentorRegister = () => {
   };
 
   const getFirstErrorMessage = (errors) => Object.values(errors)[0] || '';
+  const showToast = (message, type = 'success') => {
+    setToastState({ open: true, message, type });
+  };
 
   const validateSectionOneForm = () => getFirstErrorMessage(getSectionOneErrors());
 
@@ -508,7 +551,7 @@ const MentorRegister = () => {
         setPhoneVerified(true);
       }
       setOtpModal({ open: false, channel, otp: '' });
-      setInfoMessage(`${channel === 'email' ? 'Email' : 'Phone'} verified successfully.`);
+      showToast(`${channel === 'email' ? 'Email' : 'Phone'} verified successfully.`);
     } catch (err) {
       const message = err?.message || 'OTP verification failed.';
       setErrorMessage(message);
@@ -605,17 +648,37 @@ const MentorRegister = () => {
     { value: 'Male', label: 'Male' }
   ];
 
+  const qualificationOptions = [
+    { value: '', label: 'Select Qualification' },
+    { value: 'High School', label: 'High School' },
+    { value: "Bachelor's Degree", label: "Bachelor's Degree" },
+    { value: "Master's Degree", label: "Master's Degree" },
+    { value: 'Doctorate (PhD)', label: 'Doctorate (PhD)' },
+    { value: 'Professional Certification', label: 'Professional Certification' },
+    
+  ];
+
   const sectionOneErrors = getSectionOneErrors();
   const registrationErrors = getRegistrationErrors();
   const shouldShowError = (fieldKey) => {
-    const attempted = fieldKey === 'consent'
-      ? validationState.submit
-      : validationState.sectionOne || validationState.submit;
+    const isSectionOneField = sectionOneFieldKeys.has(fieldKey);
+    const attempted = isSectionOneField
+      ? validationState.sectionOne || validationState.submit
+      : validationState.submit;
     return Boolean(registrationErrors[fieldKey] && (touchedFields[fieldKey] || attempted));
   };
 
   return (
     <div className="min-h-screen text-[#1f2937] flex flex-col">
+      {toastState.open && (
+        <div className={`fixed right-4 top-4 z-[70] max-w-xs rounded-lg border px-4 py-3 shadow-lg animate-fadeIn ${
+          toastState.type === 'error'
+            ? 'border-red-200 bg-red-50 text-red-700'
+            : 'border-green-200 bg-green-50 text-green-700'
+        }`}>
+          <p className="text-sm font-medium">{toastState.message}</p>
+        </div>
+      )}
       <style>{`
         @keyframes fadeIn {
           from {
@@ -1090,13 +1153,14 @@ const MentorRegister = () => {
                             <label htmlFor="qualification" className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
                               Educational Qualification
                             </label>
-                            <input
+                            <CustomSelect
                               id="qualification"
-                              className={getInputClasses(shouldShowError('qualification'))}
-                              placeholder="e.g. PhD in Psychology"
                               value={form.qualification}
-                              onChange={(event) => updateField('qualification', event.target.value)}
-                              onBlur={() => markFieldTouched('qualification')}
+                              onChange={(value) => updateField('qualification', value)}
+                              options={qualificationOptions}
+                              placeholder="Select Qualification"
+                              error={shouldShowError('qualification')}
+                              className={shouldShowError('qualification') ? 'border-red-300 bg-red-50 hover:border-red-400 focus:ring-red-200' : ''}
                             />
                             {shouldShowError('qualification') && (
                               <p className="mt-1 text-xs text-red-600">{registrationErrors.qualification}</p>
@@ -1145,25 +1209,6 @@ const MentorRegister = () => {
                         </div>
                       )}
                     </section>
-
-                    {(errorMessage || infoMessage) && (
-                      <div className={`rounded-lg p-3 flex items-center gap-2 animate-fadeIn ${
-                        errorMessage 
-                          ? 'bg-red-50 border border-red-200 text-red-700' 
-                          : 'bg-green-50 border border-green-200 text-green-700'
-                      }`}>
-                        {errorMessage ? (
-                          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                        <p className="text-sm">{errorMessage || infoMessage}</p>
-                      </div>
-                    )}
 
                     <div className="flex items-center justify-end gap-3">
                       {formSection === 2 && (

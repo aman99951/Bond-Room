@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Upload } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Camera, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TopAuth from '../../auth/TopAuth';
 import BottomAuth from '../../auth/BottomAuth';
@@ -95,6 +95,11 @@ const getFriendlyErrorMessage = (error, fallbackMessage) => {
   return message;
 };
 
+const normalizeReviewMap = (value) =>
+  value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+
+const isRejectedStatus = (value) => String(value || '').toLowerCase() === 'rejected';
+
 const UploadCard = ({
   title,
   file,
@@ -103,40 +108,294 @@ const UploadCard = ({
   kind,
   onFileChange,
   error,
-}) => (
-  <div>
-    <label
-      className={`group h-[210px] border border-dashed rounded-xl p-4 flex flex-col items-center justify-between text-center gap-2 cursor-pointer hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
-        uploaded
-          ? 'border-[#22c55e] bg-[#f0fdf4]'
-          : error
-            ? 'border-red-500 bg-[#fff7f7]'
-            : 'border-[#d7d0e2] bg-white'
-      }`}
-    >
-      <input type="file" className="sr-only" accept=".jpg,.jpeg,.png,.pdf" onChange={onFileChange} />
-      <div className="h-[94px] w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f8fafc] flex items-center justify-center">
-        {viewUrl && kind === 'image' ? (
-          <img src={viewUrl} alt={title} className="h-full w-full object-contain bg-white" />
-        ) : (
-          <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
-            <Upload
-              className={`h-5 w-5 ${uploaded ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
-              aria-hidden="true"
-            />
-          </div>
+  reviewStatus,
+  reviewComment,
+}) => {
+  const computerInputRef = useRef(null);
+  const pickerRef = useRef(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const [showSourcePicker, setShowSourcePicker] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameraBusy, setCameraBusy] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const [cameraNotice, setCameraNotice] = useState('');
+  const [cameraDeviceCount, setCameraDeviceCount] = useState(0);
+  const [cameraFacingMode, setCameraFacingMode] = useState('environment');
+
+  const stopCameraStream = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  };
+
+  useEffect(() => {
+    if (!showSourcePicker) return undefined;
+
+    const handleClickOutside = (event) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target)) {
+        setShowSourcePicker(false);
+      }
+    };
+
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, [showSourcePicker]);
+
+  useEffect(() => {
+    if (!showCameraModal) return undefined;
+    let cancelled = false;
+
+    const startCamera = async () => {
+      setCameraBusy(true);
+      setCameraError('');
+      setCameraNotice('');
+      try {
+        if (!navigator?.mediaDevices?.getUserMedia) {
+          throw new Error('Camera access is not supported in this browser.');
+        }
+        stopCameraStream();
+        const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+        const videoInputs = devices.filter((device) => device.kind === 'videoinput');
+        if (!cancelled) {
+          setCameraDeviceCount(videoInputs.length);
+        }
+
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { exact: cameraFacingMode } },
+            audio: false,
+          });
+        } catch {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+          if (!cancelled && cameraFacingMode === 'environment') {
+            setCameraNotice('Back camera is not available on this device. Using available camera.');
+          }
+        }
+
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => {});
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setCameraError(err?.message || 'Unable to access camera. Please allow permission and try again.');
+        }
+      } finally {
+        if (!cancelled) {
+          setCameraBusy(false);
+        }
+      }
+    };
+
+    startCamera();
+    return () => {
+      cancelled = true;
+      stopCameraStream();
+    };
+  }, [showCameraModal, cameraFacingMode]);
+
+  const openComputerPicker = () => {
+    if (computerInputRef.current) {
+      computerInputRef.current.value = '';
+      computerInputRef.current.click();
+    }
+    setShowSourcePicker(false);
+  };
+
+  const openCameraPicker = () => {
+    setShowSourcePicker(false);
+    setCameraFacingMode('environment');
+    setCameraNotice('');
+    setShowCameraModal(true);
+  };
+
+  const closeCameraModal = () => {
+    setShowCameraModal(false);
+    setCameraError('');
+    setCameraNotice('');
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) {
+      setCameraError('Camera is not ready yet.');
+      return;
+    }
+    const { videoWidth, videoHeight } = videoRef.current;
+    if (!videoWidth || !videoHeight) {
+      setCameraError('Camera is not ready yet. Please wait a moment.');
+      return;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      setCameraError('Unable to capture image right now.');
+      return;
+    }
+    context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setCameraError('Unable to capture image right now.');
+          return;
+        }
+        const safeTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+        const capturedFile = new File([blob], `${safeTitle}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        onFileChange({ target: { files: [capturedFile] } });
+        closeCameraModal();
+      },
+      'image/jpeg',
+      0.92
+    );
+  };
+
+  const toggleCamera = () => {
+    setCameraError('');
+    setCameraNotice('');
+    setCameraFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
+  };
+
+  const isRejected = isRejectedStatus(reviewStatus);
+
+  return (
+    <div>
+      <div
+        className={`group min-h-[250px] border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
+          isRejected
+            ? 'border-red-500 bg-[#fff1f2]'
+            : uploaded
+            ? 'border-[#22c55e] bg-[#f0fdf4]'
+            : error
+              ? 'border-red-500 bg-[#fff7f7]'
+              : 'border-[#d7d0e2] bg-white'
+        }`}
+      >
+        {isRejected && (
+          <span className="self-end rounded-full bg-[#fee2e2] px-2 py-0.5 text-[10px] font-semibold text-[#b91c1c]">
+            Rejected
+          </span>
         )}
+        <input
+          ref={computerInputRef}
+          type="file"
+          className="sr-only"
+          accept=".jpg,.jpeg,.png,.pdf"
+          onChange={onFileChange}
+        />
+        <div className="h-[94px] w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f8fafc] flex items-center justify-center">
+          {viewUrl && kind === 'image' ? (
+            <img src={viewUrl} alt={title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
+              <Upload
+                className={`h-5 w-5 ${uploaded ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
+                aria-hidden="true"
+              />
+            </div>
+          )}
+        </div>
+        <span className="text-sm text-[#1f2937] min-h-[20px] flex items-center justify-center leading-5">{title}</span>
+        <span className="text-xs text-[#6b7280]">Click the upload icon to choose source</span>
+        <span className={`text-xs max-w-full truncate ${uploaded ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
+          {getUploadStatus(file, uploaded)}
+        </span>
+        {viewUrl && kind === 'pdf' && <span className="text-[11px] text-[#5b2c91]">PDF uploaded</span>}
+        {isRejected && reviewComment && (
+          <p className="w-full rounded-md border border-[#fecaca] bg-[#fff7f7] px-2 py-1 text-[11px] leading-4 text-[#991b1b]">
+            {reviewComment}
+          </p>
+        )}
+
+        <div ref={pickerRef} className="relative mt-1">
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#5b2c91] text-[#5b2c91] hover:bg-[#f3ecff] transition-colors"
+            onClick={() => setShowSourcePicker((prev) => !prev)}
+            aria-label={`Upload ${title}`}
+            aria-haspopup="menu"
+            aria-expanded={showSourcePicker}
+          >
+            <Upload className="h-4 w-4" aria-hidden="true" />
+          </button>
+
+          {showSourcePicker && (
+            <div className="absolute left-1/2 top-full z-20 mt-2 w-44 -translate-x-1/2 overflow-hidden rounded-lg border border-[#d7d0e2] bg-white shadow-lg">
+              <button
+                type="button"
+                className="w-full px-3 py-2 text-left text-xs font-medium text-[#1f2937] hover:bg-[#f3ecff] transition-colors"
+                onClick={openComputerPicker}
+              >
+                Upload from Computer
+              </button>
+              <button
+                type="button"
+                className="w-full px-3 py-2 text-left text-xs font-medium text-[#1f2937] hover:bg-[#f3ecff] transition-colors inline-flex items-center gap-2"
+                onClick={openCameraPicker}
+              >
+                <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                Use Camera
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-      <span className="text-sm text-[#1f2937] min-h-[20px] flex items-center justify-center leading-5">{title}</span>
-      <span className="text-xs text-[#6b7280]">JPG, PNG or PDF</span>
-      <span className={`text-xs max-w-full truncate ${uploaded ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
-        {getUploadStatus(file, uploaded)}
-      </span>
-      {viewUrl && kind === 'pdf' && <span className="text-[11px] text-[#5b2c91]">PDF uploaded</span>}
-    </label>
-    {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-  </div>
-);
+      {showCameraModal && (
+        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-xl bg-white border border-[#e6e2f1] shadow-xl p-4">
+            <h4 className="text-sm font-semibold text-[#1f2937]">Capture {title}</h4>
+            <div className="mt-3 overflow-hidden rounded-lg border border-[#e5e7eb] bg-black">
+              <video ref={videoRef} autoPlay playsInline muted className="h-64 w-full object-cover" />
+            </div>
+            {cameraBusy && <p className="mt-2 text-xs text-[#6b7280]">Opening camera...</p>}
+            {!cameraBusy && cameraNotice && <p className="mt-2 text-xs text-amber-700">{cameraNotice}</p>}
+            {cameraError && <p className="mt-2 text-xs text-red-600">{cameraError}</p>}
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-md border border-[#d7d0e2] px-3 py-2 text-xs font-medium text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={toggleCamera}
+                disabled={cameraBusy || cameraDeviceCount <= 1}
+              >
+                Switch Camera ({cameraFacingMode === 'environment' ? 'Back' : 'Front'})
+              </button>
+              <button
+                type="button"
+                className="rounded-md border border-[#d7d0e2] px-3 py-2 text-xs font-medium text-[#374151] hover:bg-[#f9fafb]"
+                onClick={closeCameraModal}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-md bg-[#5b2c91] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a2374] disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={capturePhoto}
+                disabled={cameraBusy || Boolean(cameraError)}
+              >
+                Capture Photo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
+  );
+};
 
 const VerifyIdentity = () => {
   const navigate = useNavigate();
@@ -165,6 +424,8 @@ const VerifyIdentity = () => {
   const [notes, setNotes] = useState('');
   const [verificationId, setVerificationId] = useState(null);
   const [verificationStatus, setVerificationStatus] = useState('');
+  const [documentReviewStatus, setDocumentReviewStatus] = useState({});
+  const [documentReviewComments, setDocumentReviewComments] = useState({});
   const [loading, setLoading] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -212,6 +473,21 @@ const VerifyIdentity = () => {
   const showIdProofBackError = (hasTriedSubmit || touched.idProofBackFile) && !idProofBackUploaded;
   const showAddressProofFrontError = (hasTriedSubmit || touched.addressProofFrontFile) && !addressProofFrontUploaded;
   const showAddressProofBackError = (hasTriedSubmit || touched.addressProofBackFile) && !addressProofBackUploaded;
+
+  const clearDocumentReviewFor = (key) => {
+    setDocumentReviewStatus((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setDocumentReviewComments((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (addressProofType && (addressProofType === idProofType || addressProofType === 'pan_card')) {
@@ -314,6 +590,8 @@ const VerifyIdentity = () => {
           setAddressProofFrontUrl(resolveMediaUrl(existing.address_proof_document || existing.aadhaar_front));
           setAddressProofBackUrl(resolveMediaUrl(existing.aadhaar_back));
           setNotes(existing.additional_notes || '');
+          setDocumentReviewStatus(normalizeReviewMap(existing.document_review_status));
+          setDocumentReviewComments(normalizeReviewMap(existing.document_review_comments));
         }
       } catch (err) {
         if (!cancelled) {
@@ -544,9 +822,12 @@ const VerifyIdentity = () => {
                             onFileChange={(event) => {
                               const file = event.target.files?.[0] || null;
                               setIdProofFrontFile(file);
+                              if (file) clearDocumentReviewFor('id_front');
                               setTouched((prev) => ({ ...prev, idProofFrontFile: true }));
                             }}
                             error={showIdProofFrontError ? 'ID Proof Front is required.' : ''}
+                            reviewStatus={documentReviewStatus.id_front}
+                            reviewComment={documentReviewComments.id_front}
                           />
                           <UploadCard
                             title="ID Proof Back"
@@ -557,9 +838,12 @@ const VerifyIdentity = () => {
                             onFileChange={(event) => {
                               const file = event.target.files?.[0] || null;
                               setIdProofBackFile(file);
+                              if (file) clearDocumentReviewFor('id_back');
                               setTouched((prev) => ({ ...prev, idProofBackFile: true }));
                             }}
                             error={showIdProofBackError ? 'ID Proof Back is required.' : ''}
+                            reviewStatus={documentReviewStatus.id_back}
+                            reviewComment={documentReviewComments.id_back}
                           />
                         </div>
                       </div>
@@ -589,7 +873,6 @@ const VerifyIdentity = () => {
                               <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
                           </select>
-                          <p className="mt-1 text-[11px] text-[#6b7280]">PAN Card is not available for Address Proof.</p>
                           {showAddressProofTypeError && <p className="mt-1 text-xs text-red-600">Address Proof type is required.</p>}
                         </div>
 
@@ -629,9 +912,12 @@ const VerifyIdentity = () => {
                             onFileChange={(event) => {
                               const file = event.target.files?.[0] || null;
                               setAddressProofFrontFile(file);
+                              if (file) clearDocumentReviewFor('address_front');
                               setTouched((prev) => ({ ...prev, addressProofFrontFile: true }));
                             }}
                             error={showAddressProofFrontError ? 'Address Proof Front is required.' : ''}
+                            reviewStatus={documentReviewStatus.address_front}
+                            reviewComment={documentReviewComments.address_front}
                           />
                           <UploadCard
                             title="Address Proof Back"
@@ -642,9 +928,12 @@ const VerifyIdentity = () => {
                             onFileChange={(event) => {
                               const file = event.target.files?.[0] || null;
                               setAddressProofBackFile(file);
+                              if (file) clearDocumentReviewFor('address_back');
                               setTouched((prev) => ({ ...prev, addressProofBackFile: true }));
                             }}
                             error={showAddressProofBackError ? 'Address Proof Back is required.' : ''}
+                            reviewStatus={documentReviewStatus.address_back}
+                            reviewComment={documentReviewComments.address_back}
                           />
                         </div>
                       </div>

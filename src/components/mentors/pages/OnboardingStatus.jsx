@@ -59,6 +59,19 @@ const OnboardingStatus = () => {
   const currentStatusLabel = status?.current_status || 'pending';
   const currentStatusText = String(currentStatusLabel).replace(/_/g, ' ');
   const identityVerification = onboarding?.identity_verification;
+  const hasIdentitySubmission = Boolean(
+    identityVerification &&
+      (
+        identityVerification.id ||
+        identityVerification.id_proof_document ||
+        identityVerification.passport_or_license ||
+        identityVerification.address_proof_document ||
+        identityVerification.aadhaar_front ||
+        identityVerification.aadhaar_back ||
+        identityVerification.id_proof_type ||
+        identityVerification.address_proof_type
+      )
+  );
 
   const rejectedDocumentReasons = useMemo(
     () => {
@@ -180,6 +193,15 @@ const OnboardingStatus = () => {
                             <span className={`mt-1 inline-flex rounded-md text-xs px-2 py-0.5 ${getBadgeClasses(value)}`}>
                               {label}
                             </span>
+                            {step.key === 'identity_status' && value === 'pending' && !hasIdentitySubmission && (
+                              <Link
+                                to="/mentor-verify-identity"
+                                className="mt-3 inline-flex items-center gap-1 rounded-full border border-[#d9c7f7] bg-[#f7f1ff] px-3 py-1 text-[11px] font-semibold text-[#5b2c91] transition-colors hover:bg-[#efe5ff] hover:text-[#4a2374]"
+                              >
+                                <span className="h-1.5 w-1.5 rounded-full bg-[#5b2c91]" aria-hidden="true" />
+                                Upload Documents
+                              </Link>
+                            )}
                           </>
                         );
                         if (step.link) {

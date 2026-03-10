@@ -123,7 +123,7 @@ const LandingPage = () => {
               </nav>
               <div className="landing-mobile-panel-actions">
                 <a href="/login" onClick={() => setMobileMenuOpen(false)}>Log in</a>
-                <a href="/register" onClick={() => setMobileMenuOpen(false)}>Get Started</a>
+                <a href="/register" onClick={() => setMobileMenuOpen(false)}>Student Sign Up</a>
               </div>
             </motion.div>
           )}
@@ -142,7 +142,7 @@ const LandingPage = () => {
                 A safe, thoughtful platform where students grow through conversations with trusted mentors who&apos;ve walked the path before.
               </motion.p>
               <motion.div variants={fadeInUp} className="hero-figma-actions">
-                <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="hero-figma-btn hero-figma-btn--primary" href="/register">Get Started</motion.a>
+                <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="hero-figma-btn hero-figma-btn--primary" href="/register">Student Sign Up</motion.a>
                 <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="hero-figma-btn hero-figma-btn--secondary" href="/mentor-register">Become a Mentor</motion.a>
               </motion.div>
               <motion.p variants={fadeInUp} className="hero-figma-note">
