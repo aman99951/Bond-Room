@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Calendar, Clock, FileText, Search, Video, X } from 'lucide-react';
+import { Calendar, Clock, FileText, Search, Video } from 'lucide-react';
 import { menteeApi } from '../../apis/api/menteeApi';
 import { mentorApi } from '../../apis/api/mentorApi';
 import { getAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
@@ -110,7 +110,6 @@ const SessionRecords = () => {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchValue, setSearchValue] = useState('');
-  const [previewRecording, setPreviewRecording] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -287,7 +286,6 @@ const SessionRecords = () => {
         {rows.map((item) => {
           const { session, recording, participant, summary, highlights, actionItems } = item;
           const recordingStatus = String(recording?.status || 'not_started').toLowerCase();
-          const recordingUrl = resolveMediaUrl(recording?.recording_url || recording?.recording_file || '');
           return (
             <div key={session.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -338,17 +336,7 @@ const SessionRecords = () => {
                   <div className="text-sm font-semibold text-[#111827]">
                     Recording: {formatStatus(recordingStatus)}
                   </div>
-                  {recordingUrl ? (
-                    <button
-                      type="button"
-                      onClick={() => setPreviewRecording({ url: recordingUrl, sessionId: session.id })}
-                      className="text-xs font-semibold text-[#5D3699] hover:underline"
-                    >
-                      Open Recording
-                    </button>
-                  ) : (
-                    <span className="text-xs text-[#6b7280]">Recording not available</span>
-                  )}
+                  <span className="text-xs text-[#6b7280]">Recording playback disabled</span>
                 </div>
                 <div className="mt-2 grid gap-2 text-xs text-[#6b7280] sm:grid-cols-3">
                   <div>
@@ -398,33 +386,6 @@ const SessionRecords = () => {
           );
         })}
       </div>
-
-      {previewRecording ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-3 py-4">
-          <div className="w-full max-w-4xl rounded-2xl bg-white shadow-2xl ring-1 ring-[#e5e7eb]">
-            <div className="flex items-center justify-between border-b border-[#e5e7eb] px-4 py-3">
-              <div className="text-sm font-semibold text-[#111827]">
-                Session #{previewRecording.sessionId} Recording
-              </div>
-              <button
-                type="button"
-                onClick={() => setPreviewRecording(null)}
-                className="rounded-lg p-1 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827]"
-                aria-label="Close recording preview"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="p-3 sm:p-4">
-              <video
-                src={previewRecording.url}
-                controls
-                className="h-auto max-h-[75vh] w-full rounded-xl bg-black"
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 };

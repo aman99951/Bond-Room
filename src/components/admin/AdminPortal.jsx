@@ -389,6 +389,14 @@ const AdminPortal = () => {
                 <p className="text-sm text-[#6b7280] mt-1">
                   Manage and review mentor applications
                 </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/admin/activity')}
+                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d8cbef] bg-[#f7f2ff] px-3 py-1.5 text-xs font-semibold text-[#5b2c91] transition-colors hover:bg-[#efe6ff]"
+                >
+                  Open Activity Analytics
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
               </div>
             </div>
             <div className="flex items-center gap-2">

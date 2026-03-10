@@ -99,6 +99,14 @@ const normalizeReviewMap = (value) =>
   value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 
 const isRejectedStatus = (value) => String(value || '').toLowerCase() === 'rejected';
+const CAMERA_TARGET_BYTES = 900 * 1024;
+const CAMERA_SOFT_MAX_BYTES = 1200 * 1024;
+const CAMERA_MAX_LONG_EDGE = 1920;
+
+const canvasToJpegBlob = (canvas, quality) =>
+  new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
+  });
 
 const UploadCard = ({
   title,
@@ -239,29 +247,66 @@ const UploadCard = ({
       setCameraError('Camera is not ready yet. Please wait a moment.');
       return;
     }
-    const canvas = document.createElement('canvas');
-    canvas.width = videoWidth;
-    canvas.height = videoHeight;
-    const context = canvas.getContext('2d');
-    if (!context) {
-      setCameraError('Unable to capture image right now.');
-      return;
-    }
-    context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          setCameraError('Unable to capture image right now.');
-          return;
+    const compressAndCapture = async () => {
+      let width = videoWidth;
+      let height = videoHeight;
+      const longEdge = Math.max(width, height);
+      if (longEdge > CAMERA_MAX_LONG_EDGE) {
+        const ratio = CAMERA_MAX_LONG_EDGE / longEdge;
+        width = Math.max(1, Math.round(width * ratio));
+        height = Math.max(1, Math.round(height * ratio));
+      }
+
+      let bestBlob = null;
+      let attemptWidth = width;
+      let attemptHeight = height;
+      const qualitySteps = [0.94, 0.9, 0.86, 0.82, 0.78];
+
+      for (let resizePass = 0; resizePass < 3; resizePass += 1) {
+        const canvas = document.createElement('canvas');
+        canvas.width = attemptWidth;
+        canvas.height = attemptHeight;
+        const context = canvas.getContext('2d');
+        if (!context) {
+          throw new Error('Unable to capture image right now.');
         }
+        context.drawImage(videoRef.current, 0, 0, attemptWidth, attemptHeight);
+
+        for (const quality of qualitySteps) {
+          const blob = await canvasToJpegBlob(canvas, quality);
+          if (!blob) continue;
+          if (!bestBlob || blob.size < bestBlob.size) {
+            bestBlob = blob;
+          }
+          if (blob.size <= CAMERA_TARGET_BYTES) {
+            return blob;
+          }
+        }
+
+        if (bestBlob && bestBlob.size <= CAMERA_SOFT_MAX_BYTES) {
+          return bestBlob;
+        }
+
+        attemptWidth = Math.max(1, Math.round(attemptWidth * 0.85));
+        attemptHeight = Math.max(1, Math.round(attemptHeight * 0.85));
+      }
+
+      if (bestBlob) {
+        return bestBlob;
+      }
+      throw new Error('Unable to capture image right now.');
+    };
+
+    compressAndCapture()
+      .then((blob) => {
         const safeTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
         const capturedFile = new File([blob], `${safeTitle}_${Date.now()}.jpg`, { type: 'image/jpeg' });
         onFileChange({ target: { files: [capturedFile] } });
         closeCameraModal();
-      },
-      'image/jpeg',
-      0.92
-    );
+      })
+      .catch((err) => {
+        setCameraError(err?.message || 'Unable to capture image right now.');
+      });
   };
 
   const toggleCamera = () => {

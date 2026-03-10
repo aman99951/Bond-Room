@@ -40,6 +40,7 @@ import MentorMenteeProfile from './mentors/pages/MenteeProfile';
 import SessionRecords from './shared/SessionRecords';
 import AdminPortal from './admin/AdminPortal';
 import AdminMentorReview from './admin/AdminMentorReview';
+import AdminActivityPage from './admin/AdminActivityPage';
 import LandingPage from './LandingPage';
 import {
   AUTH_LOGOUT_EVENT_NAME,
@@ -266,6 +267,7 @@ const AppLayout = () => {
         <Route path="/mentor-training-modules-quiz" element={<MentorTrainingQuiz />} />
         <Route path="/mentor-training-quiz" element={<Navigate to="/mentor-training-modules-quiz" replace />} />
         <Route path="/admin" element={<AdminPortal />} />
+        <Route path="/admin/activity" element={<AdminActivityPage />} />
         <Route path="/admin/review/:mentorId" element={<AdminMentorReview />} />
         <Route path="/verify-parent" element={<VerifyParent />} />
         <Route path="/needs-assessment" element={<NeedsAssessment />} />
