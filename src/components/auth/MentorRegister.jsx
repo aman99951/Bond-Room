@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
 import { useNavigate } from 'react-router-dom';
@@ -32,10 +32,11 @@ const getMentorDobBounds = () => ({
 });
 
 const REQUIRED_FIELDS_MESSAGE = 'Please fill all required fields to continue.';
+const MOBILE_DIGITS_LENGTH = 10;
 const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
 
 // Custom Select Component
-const CustomSelect = ({ id, value, onChange, options, placeholder, disabled, className = '' }) => {
+const CustomSelect = ({ id, value, onChange, options, placeholder, disabled, error = false, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find(opt => opt.value === value);
 
@@ -52,7 +53,7 @@ const CustomSelect = ({ id, value, onChange, options, placeholder, disabled, cla
           disabled:text-[#9ca3af] disabled:cursor-not-allowed flex items-center justify-between
           ${isOpen ? 'ring-2 ring-[#5b2c91] border-transparent' : ''} ${className}`}
       >
-        <span className={selectedOption ? 'text-[#111827]' : 'text-[#9ca3af]'}>
+        <span className={selectedOption ? 'text-[#111827]' : error ? 'text-red-500' : 'text-[#9ca3af]'}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <svg
@@ -175,6 +176,11 @@ const MentorRegister = () => {
   });
   const [stateOptions, setStateOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
+  const [touchedFields, setTouchedFields] = useState({});
+  const [validationState, setValidationState] = useState({
+    sectionOne: false,
+    submit: false,
+  });
   const [locationBusy, setLocationBusy] = useState({
     states: false,
     cities: false,
@@ -196,7 +202,26 @@ const MentorRegister = () => {
     });
   };
 
+  const markFieldTouched = (key) => {
+    setTouchedFields((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+  };
+
+  const getInputClasses = (hasError) =>
+    `w-full rounded-lg border px-4 py-2.5 text-sm transition-all duration-200 ${
+      hasError
+        ? 'border-red-300 bg-red-50 text-red-900 placeholder:text-red-400 hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400'
+        : 'border-[#d7d0e2] bg-white text-[#111827] hover:border-[#5b2c91] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent placeholder:text-[#9ca3af]'
+    }`;
+
+  const getPanelClasses = (hasError) =>
+    `w-full rounded-lg border px-4 py-3 transition-colors duration-200 ${
+      hasError
+        ? 'border-red-300 bg-red-50 hover:border-red-400'
+        : 'border-[#d7d0e2] bg-white hover:border-[#5b2c91]'
+    }`;
+
   const updateField = (key, value) => {
+    markFieldTouched(key);
     if (key === 'email') {
       setEmailVerified(false);
       setPhoneVerified(false);
@@ -208,6 +233,9 @@ const MentorRegister = () => {
       setPhoneVerified(false);
       setPhoneHint('');
       setMentorId(null);
+      const digitsOnly = normalizePhone(value).slice(0, MOBILE_DIGITS_LENGTH);
+      setForm((prev) => ({ ...prev, mobile: digitsOnly }));
+      return;
     }
     if (key === 'stateName') {
       setForm((prev) => ({ ...prev, stateName: value, cityName: '' }));
@@ -292,35 +320,48 @@ const MentorRegister = () => {
     return () => window.clearInterval(intervalId);
   }, [resendCooldown.email, resendCooldown.phone]);
 
-  const validateSectionOneForm = () => {
-    if (
-      !form.firstName.trim() ||
-      !form.lastName.trim() ||
-      !form.email.trim() ||
-      !form.mobile.trim() ||
-      !form.dob ||
-      !form.gender ||
-      !form.stateName ||
-      !form.cityName
-    ) {
-      return 'Please fill all required fields to continue.';
+  const getSectionOneErrors = () => {
+    const errors = {};
+    const mobileDigits = normalizePhone(form.mobile);
+
+    if (!form.firstName.trim()) errors.firstName = 'First name is required.';
+    if (!form.lastName.trim()) errors.lastName = 'Last name is required.';
+    if (!form.email.trim()) errors.email = 'Email is required.';
+    if (!mobileDigits) errors.mobile = 'Mobile number is required.';
+    else if (mobileDigits.length !== MOBILE_DIGITS_LENGTH) {
+      errors.mobile = 'Mobile number must be exactly 10 digits.';
     }
-    if (!selectedLanguages.length) {
-      return 'Please select at least one language.';
+    if (!form.dob) errors.dob = 'Date of birth is required.';
+    if (!form.gender) errors.gender = 'Gender is required.';
+    if (!form.stateName) errors.stateName = 'State is required.';
+    if (!form.cityName) errors.cityName = 'City is required.';
+    if (!selectedLanguages.length) errors.languages = 'Select at least one language.';
+    if (form.dob && (form.dob < dobBounds.min || form.dob > dobBounds.max)) {
+      errors.dob = `Mentor age must be between ${MENTOR_MIN_AGE} and ${MENTOR_MAX_AGE} years.`;
     }
-    if (form.dob < dobBounds.min || form.dob > dobBounds.max) {
-      return `Mentor age must be between ${MENTOR_MIN_AGE} and ${MENTOR_MAX_AGE} years.`;
-    }
-    return '';
+
+    return errors;
   };
 
-  const validateRegistrationForm = () => {
-    const sectionOneError = validateSectionOneForm();
-    if (sectionOneError) {
-      return sectionOneError;
+  const getRegistrationErrors = () => {
+    const errors = getSectionOneErrors();
+    if (!form.qualification.trim()) {
+      errors.qualification = 'Educational qualification is required.';
     }
-    return '';
+    if (!form.bio.trim()) {
+      errors.bio = 'Brief bio is required.';
+    }
+    if (!form.consent) {
+      errors.consent = 'Please agree to background verification before submitting.';
+    }
+    return errors;
   };
+
+  const getFirstErrorMessage = (errors) => Object.values(errors)[0] || '';
+
+  const validateSectionOneForm = () => getFirstErrorMessage(getSectionOneErrors());
+
+  const validateRegistrationForm = () => getFirstErrorMessage(getRegistrationErrors());
 
   const getExistingMentorId = () => {
     return mentorId;
@@ -333,7 +374,7 @@ const MentorRegister = () => {
       first_name: form.firstName.trim(),
       last_name: form.lastName.trim(),
       email: form.email.trim().toLowerCase(),
-      mobile: form.mobile.trim(),
+      mobile: normalizePhone(form.mobile),
       dob: form.dob,
       gender: form.gender,
       city_state: `${form.cityName}, ${form.stateName}`,
@@ -367,7 +408,7 @@ const MentorRegister = () => {
     if (channel === 'email') {
       payload.email = form.email.trim().toLowerCase();
     } else {
-      payload.mobile = form.mobile.trim();
+      payload.mobile = normalizePhone(form.mobile);
     }
     return payload;
   };
@@ -385,7 +426,7 @@ const MentorRegister = () => {
     setPendingMentorRegistration({
       mentorId: mentor?.id,
       email: form.email.trim().toLowerCase(),
-      mobile: form.mobile.trim(),
+      mobile: normalizePhone(form.mobile),
     });
 
     if (mentor?.id && mentor?.id !== mentorId) {
@@ -405,9 +446,12 @@ const MentorRegister = () => {
     setActionBusy((prev) => ({ ...prev, [sendKey]: true }));
 
     try {
-      const fieldValue = channel === 'email' ? form.email.trim() : form.mobile.trim();
+      const fieldValue = channel === 'email' ? form.email.trim() : normalizePhone(form.mobile);
       if (!fieldValue) {
         throw new Error(channel === 'email' ? 'Please enter your email first.' : 'Please enter your mobile number first.');
+      }
+      if (channel === 'phone' && fieldValue.length !== MOBILE_DIGITS_LENGTH) {
+        throw new Error('Mobile number must be exactly 10 digits.');
       }
       const response = await sendMentorOtp(buildOtpPayload(channel));
 
@@ -432,9 +476,15 @@ const MentorRegister = () => {
 
   const handleVerifyOtp = async (channel, otp) => {
     const verifyKey = channel === 'email' ? 'verifyEmail' : 'verifyPhone';
-    const fieldValue = channel === 'email' ? form.email.trim() : form.mobile.trim();
+    const fieldValue = channel === 'email' ? form.email.trim() : normalizePhone(form.mobile);
     if (!fieldValue) {
       const message = channel === 'email' ? 'Please enter your email first.' : 'Please enter your mobile number first.';
+      setErrorMessage(message);
+      setOtpErrorMessage(message);
+      return;
+    }
+    if (channel === 'phone' && fieldValue.length !== MOBILE_DIGITS_LENGTH) {
+      const message = 'Mobile number must be exactly 10 digits.';
       setErrorMessage(message);
       setOtpErrorMessage(message);
       return;
@@ -484,6 +534,7 @@ const MentorRegister = () => {
   const handleContinueToProfile = () => {
     setErrorMessage('');
     setInfoMessage('');
+    setValidationState((prev) => ({ ...prev, sectionOne: true }));
 
     const validationError = validateSectionOneForm();
     if (validationError) {
@@ -500,6 +551,7 @@ const MentorRegister = () => {
   const handleSubmit = async () => {
     setErrorMessage('');
     setInfoMessage('');
+    setValidationState((prev) => ({ ...prev, submit: true, sectionOne: true }));
 
     const validationError = validateRegistrationForm();
     if (validationError) {
@@ -552,6 +604,15 @@ const MentorRegister = () => {
     { value: 'Female', label: 'Female' },
     { value: 'Male', label: 'Male' }
   ];
+
+  const sectionOneErrors = getSectionOneErrors();
+  const registrationErrors = getRegistrationErrors();
+  const shouldShowError = (fieldKey) => {
+    const attempted = fieldKey === 'consent'
+      ? validationState.submit
+      : validationState.sectionOne || validationState.submit;
+    return Boolean(registrationErrors[fieldKey] && (touchedFields[fieldKey] || attempted));
+  };
 
   return (
     <div className="min-h-screen text-[#1f2937] flex flex-col">
@@ -750,13 +811,13 @@ const MentorRegister = () => {
                               </label>
                               <input
                                 id="firstName"
-                                className="w-full rounded-lg border border-[#d7d0e2] bg-white px-4 py-2.5 text-sm text-[#111827] 
-                                  focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent 
-                                  transition-all duration-200 hover:border-[#5b2c91] placeholder:text-[#9ca3af]"
+                                className={getInputClasses(shouldShowError('firstName'))}
                                 placeholder="e.g. Priya"
                                 value={form.firstName}
                                 onChange={(event) => updateField('firstName', event.target.value)}
+                                onBlur={() => markFieldTouched('firstName')}
                               />
+                              {shouldShowError('firstName') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.firstName}</p>}
                             </div>
                             <div className="group">
                               <label htmlFor="lastName" className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
@@ -764,13 +825,13 @@ const MentorRegister = () => {
                               </label>
                               <input
                                 id="lastName"
-                                className="w-full rounded-lg border border-[#d7d0e2] bg-white px-4 py-2.5 text-sm text-[#111827] 
-                                  focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent 
-                                  transition-all duration-200 hover:border-[#5b2c91] placeholder:text-[#9ca3af]"
+                                className={getInputClasses(shouldShowError('lastName'))}
                                 placeholder="e.g. Sharma"
                                 value={form.lastName}
                                 onChange={(event) => updateField('lastName', event.target.value)}
+                                onBlur={() => markFieldTouched('lastName')}
                               />
+                              {shouldShowError('lastName') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.lastName}</p>}
                             </div>
                           </div>
 
@@ -783,12 +844,11 @@ const MentorRegister = () => {
                                 <input
                                   id="email"
                                   type="email"
-                                  className="w-full min-w-0 flex-1 rounded-lg border border-[#d7d0e2] bg-white px-4 py-2.5 text-sm text-[#111827] 
-                                    focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent 
-                                    transition-all duration-200 hover:border-[#5b2c91] placeholder:text-[#9ca3af]"
+                                  className={`${getInputClasses(shouldShowError('email'))} min-w-0 flex-1`}
                                   placeholder="name@example.com"
                                   value={form.email}
                                   onChange={(event) => updateField('email', event.target.value)}
+                                  onBlur={() => markFieldTouched('email')}
                                 />
                                 <button
                                   type="button"
@@ -816,6 +876,7 @@ const MentorRegister = () => {
                                   ) : 'Verify'}
                                 </button>
                               </div>
+                              {shouldShowError('email') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.email}</p>}
                             </div>
 
                             <div className="group">
@@ -826,12 +887,15 @@ const MentorRegister = () => {
                                 <input
                                   id="mobile"
                                   type="tel"
-                                  className="w-full min-w-0 flex-1 rounded-lg border border-[#d7d0e2] bg-white px-4 py-2.5 text-sm text-[#111827] 
-                                    focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent 
-                                    transition-all duration-200 hover:border-[#5b2c91] placeholder:text-[#9ca3af]"
-                                  placeholder="+91 98765 43210"
+                                  className={`${getInputClasses(shouldShowError('mobile'))} min-w-0 flex-1`}
+                                  placeholder="9876543210"
                                   value={form.mobile}
                                   onChange={(event) => updateField('mobile', event.target.value)}
+                                  onBlur={() => markFieldTouched('mobile')}
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  maxLength={MOBILE_DIGITS_LENGTH}
+                                  autoComplete="tel-national"
                                 />
                                 <button
                                   type="button"
@@ -845,7 +909,7 @@ const MentorRegister = () => {
                                     actionBusy.sendPhone
                                     || actionBusy.verifyPhone
                                     || actionBusy.submit
-                                    || !form.mobile.trim()
+                                    || normalizePhone(form.mobile).length !== MOBILE_DIGITS_LENGTH
                                     || phoneVerified
                                   }
                                 >
@@ -859,6 +923,7 @@ const MentorRegister = () => {
                                   ) : 'Verify'}
                                 </button>
                               </div>
+                              {shouldShowError('mobile') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.mobile}</p>}
                             </div>
                           </div>
 
@@ -870,14 +935,14 @@ const MentorRegister = () => {
                               <input
                                 id="dob"
                                 type="date"
-                                className="w-full rounded-lg border border-[#d7d0e2] bg-white px-4 py-2.5 text-sm text-[#111827] 
-                                  focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent 
-                                  transition-all duration-200 hover:border-[#5b2c91]"
+                                className={getInputClasses(shouldShowError('dob'))}
                                 value={form.dob}
                                 onChange={(event) => updateField('dob', event.target.value)}
+                                onBlur={() => markFieldTouched('dob')}
                                 min={dobBounds.min}
                                 max={dobBounds.max}
                               />
+                              {shouldShowError('dob') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.dob}</p>}
                               <p className="mt-1 text-[11px] text-[#6b7280]">
                                 Allowed age: {MENTOR_MIN_AGE} to {MENTOR_MAX_AGE} years
                               </p>
@@ -892,7 +957,10 @@ const MentorRegister = () => {
                                 onChange={(value) => updateField('gender', value)}
                                 options={genderOptions}
                                 placeholder="Select Gender"
+                                error={shouldShowError('gender')}
+                                className={shouldShowError('gender') ? 'border-red-300 bg-red-50 hover:border-red-400 focus:ring-red-200' : ''}
                               />
+                              {shouldShowError('gender') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.gender}</p>}
                             </div>
                           </div>
 
@@ -919,7 +987,10 @@ const MentorRegister = () => {
                                   options={stateDropdownOptions}
                                   placeholder="Select State"
                                   disabled={locationBusy.states}
+                                  error={shouldShowError('stateName')}
+                                  className={shouldShowError('stateName') ? 'border-red-300 bg-red-50 hover:border-red-400 focus:ring-red-200' : ''}
                                 />
+                                {shouldShowError('stateName') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.stateName}</p>}
                               </div>
 
                               <div className="group">
@@ -933,7 +1004,10 @@ const MentorRegister = () => {
                                   options={cityDropdownOptions}
                                   placeholder="Select City"
                                   disabled={!form.stateName || locationBusy.cities}
+                                  error={shouldShowError('cityName')}
+                                  className={shouldShowError('cityName') ? 'border-red-300 bg-red-50 hover:border-red-400 focus:ring-red-200' : ''}
                                 />
+                                {shouldShowError('cityName') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.cityName}</p>}
                               </div>
                             </div>
 
@@ -960,7 +1034,7 @@ const MentorRegister = () => {
                             <label className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
                               Languages Spoken
                             </label>
-                            <div className="w-full rounded-lg border border-[#d7d0e2] bg-white px-4 py-3 hover:border-[#5b2c91] transition-colors duration-200">
+                            <div className={getPanelClasses(shouldShowError('languages'))}>
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 {languagesOptions.map((lang) => (
                                   <label key={lang} className="inline-flex items-center gap-2 text-sm text-[#111827] cursor-pointer group/checkbox hover:text-[#5b2c91] transition-colors">
@@ -968,13 +1042,17 @@ const MentorRegister = () => {
                                       type="checkbox"
                                       className="accent-[#5b2c91] w-4 h-4 cursor-pointer rounded focus:ring-2 focus:ring-[#5b2c91] focus:ring-offset-1"
                                       checked={selectedLanguages.includes(lang)}
-                                      onChange={() => toggleMultiCheckbox(lang, setSelectedLanguages)}
+                                      onChange={() => {
+                                        markFieldTouched('languages');
+                                        toggleMultiCheckbox(lang, setSelectedLanguages);
+                                      }}
                                     />
                                     <span className="select-none">{lang}</span>
                                   </label>
                                 ))}
                               </div>
                             </div>
+                            {shouldShowError('languages') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.languages}</p>}
                             <p className="text-xs text-[#6b7280] mt-1">
                               Select one or more languages.
                             </p>
@@ -1014,13 +1092,15 @@ const MentorRegister = () => {
                             </label>
                             <input
                               id="qualification"
-                              className="w-full rounded-lg border border-[#d7d0e2] bg-white px-4 py-2.5 text-sm text-[#111827] 
-                                focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent 
-                                transition-all duration-200 hover:border-[#5b2c91] placeholder:text-[#9ca3af]"
+                              className={getInputClasses(shouldShowError('qualification'))}
                               placeholder="e.g. PhD in Psychology"
                               value={form.qualification}
                               onChange={(event) => updateField('qualification', event.target.value)}
+                              onBlur={() => markFieldTouched('qualification')}
                             />
+                            {shouldShowError('qualification') && (
+                              <p className="mt-1 text-xs text-red-600">{registrationErrors.qualification}</p>
+                            )}
                           </div>
 
                           <div className="group">
@@ -1030,16 +1110,22 @@ const MentorRegister = () => {
                             <textarea
                               id="bio"
                               rows={3}
-                              className="w-full rounded-lg border border-[#d7d0e2] bg-white px-4 py-2.5 text-sm text-[#111827] 
-                                focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent 
-                                transition-all duration-200 hover:border-[#5b2c91] resize-none placeholder:text-[#9ca3af]"
+                              className={`${getInputClasses(shouldShowError('bio'))} resize-none`}
                               placeholder="Tell us a bit about your professional background..."
                               value={form.bio}
                               onChange={(event) => updateField('bio', event.target.value)}
+                              onBlur={() => markFieldTouched('bio')}
                             />
+                            {shouldShowError('bio') && (
+                              <p className="mt-1 text-xs text-red-600">{registrationErrors.bio}</p>
+                            )}
                           </div>
 
-                          <label className="flex items-start gap-2 text-xs sm:text-sm text-[#6b7280] cursor-pointer group hover:text-[#5b2c91] transition-colors p-3 rounded-lg hover:bg-[#f9f7ff]">
+                          <label className={`flex items-start gap-2 text-xs sm:text-sm cursor-pointer group transition-colors p-3 rounded-lg ${
+                            shouldShowError('consent')
+                              ? 'border border-red-300 bg-red-50 text-red-700'
+                              : 'text-[#6b7280] hover:text-[#5b2c91] hover:bg-[#f9f7ff]'
+                          }`}>
                             <input
                               id="consent"
                               type="checkbox"
@@ -1047,7 +1133,14 @@ const MentorRegister = () => {
                               checked={form.consent}
                               onChange={(event) => updateField('consent', event.target.checked)}
                             />
-                            <span className="select-none">I agree to share my information for background verification purposes.</span>
+                            <span className="select-none">
+                              I agree to share my information for background verification purposes.
+                              {shouldShowError('consent') && (
+                                <span className="mt-1 block text-xs text-red-600">
+                                  {registrationErrors.consent}
+                                </span>
+                              )}
+                            </span>
                           </label>
                         </div>
                       )}

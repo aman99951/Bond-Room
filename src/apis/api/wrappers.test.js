@@ -162,6 +162,7 @@ test("mentorApi maps every wrapper to correct endpoint", async () => {
     { fnName: "listIdentityVerifications", args: [{ mentor_id: 22 }], expectedMethod: "get", expectedPath: "/mentor-identity-verifications/?mentor_id=22" },
     { fnName: "createIdentityVerification", args: [{}], expectedMethod: "post", expectedPath: "/mentor-identity-verifications/" },
     { fnName: "updateIdentityVerification", args: [7, {}], expectedMethod: "patch", expectedPath: "/mentor-identity-verifications/7/" },
+    { fnName: "setIdentityDocumentDecision", args: [7, {}], expectedMethod: "post", expectedPath: "/mentor-identity-verifications/7/document-decision/" },
     { fnName: "listContactVerifications", args: [{ mentor_id: 22 }], expectedMethod: "get", expectedPath: "/mentor-contact-verifications/?mentor_id=22" },
     { fnName: "listOnboardingStatuses", args: [{ mentor_id: 22 }], expectedMethod: "get", expectedPath: "/mentor-onboarding-statuses/?mentor_id=22" },
   ];

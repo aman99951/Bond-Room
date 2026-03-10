@@ -72,8 +72,11 @@ const LandingPage = () => {
         className="max-w-7xl mx-auto px-6 py-4 lg:py-5 lg:px-8"
       >
         <div className="flex items-center justify-between lg:grid lg:grid-cols-[auto_1fr_auto] gap-4 lg:gap-6">
-          <div className="flex items-center">
-            <img src={logo} alt="Bond Room" className="h-12 w-auto" />
+          <div className="flex flex-col items-start">
+            <img src={logo} alt="Bond Room" className="h-14 w-auto sm:h-16" />
+            <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.22em] text-gray-500 sm:text-xs">
+              Bridging Old and New Destinies
+            </p>
           </div>
 
           <nav className="hidden lg:flex justify-center gap-7">
@@ -92,9 +95,7 @@ const LandingPage = () => {
             <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="text-gray-600 hover:text-gray-900 font-semibold text-sm px-5 py-2.5 rounded-lg transition-all" href="/login">
               Log in
             </motion.a>
-            <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="bg-[#5d3699] text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow-lg shadow-purple-500/20 transition-all" href="/register">
-              Get Started
-            </motion.a>
+
           </div>
 
           <button
@@ -352,23 +353,13 @@ const LandingPage = () => {
           </div>
         </motion.section>
 
-        {/* CTA Section */}
-        <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.5 }} variants={fadeInUp} className="cta-figma-section">
-          <div className="cta-figma-shell">
-            <h2>Ready to Start Your Journey?</h2>
-            <p>Join a community built on wisdom, trust, and shared growth.</p>
-            <div className="cta-figma-actions">
-              <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="cta-figma-btn cta-figma-btn--primary" href="/register">Begin as Student</motion.a>
-              <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="cta-figma-btn cta-figma-btn--secondary" href="/mentor-register">Sign Up as Mentor</motion.a>
-            </div>
-          </div>
-        </motion.section>
+
       </main>
 
       {/* Footer */}
       <footer className="footer-figma-section">
         <div className="footer-figma-shell">
-          <a href="/" className="footer-figma-brand" aria-label="Bond Room Home"><img src={logo} alt="Bond Room" /></a>
+          <a href="/" className="footer-figma-brand" aria-label="Bond Room Home"><img src={logo} alt="Bond Room" className="h-12 w-auto sm:h-14" /></a>
           <nav className="footer-figma-nav">
             <a href="#about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/support">Help</a>
           </nav>

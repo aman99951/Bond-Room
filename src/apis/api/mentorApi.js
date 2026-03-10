@@ -88,6 +88,8 @@ export const mentorApi = {
     apiClient.post('/mentor-identity-verifications/', payload),
   updateIdentityVerification: (verificationId, payload) =>
     apiClient.patch(`/mentor-identity-verifications/${verificationId}/`, payload),
+  setIdentityDocumentDecision: (verificationId, payload) =>
+    apiClient.post(`/mentor-identity-verifications/${verificationId}/document-decision/`, payload),
 
   listContactVerifications: (params = {}) =>
     apiClient.get(`/mentor-contact-verifications/${buildQuery(params)}`),

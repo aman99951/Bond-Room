@@ -36,6 +36,28 @@ const formatTime = (value) => {
   return getIndiaTimeLabel(value, { hour12: false });
 };
 
+const getDisplayTimeParts = (value) => {
+  const label = String(getIndiaTimeLabel(value, { hour12: true }) || '').trim();
+  const match = label.match(/^(.+?)\s*([AP]M)$/i);
+  if (match) {
+    return {
+      time: String(match[1] || '').trim(),
+      period: String(match[2] || '').toUpperCase(),
+      label: `${String(match[1] || '').trim()} ${String(match[2] || '').toUpperCase()}`.trim(),
+    };
+  }
+  return { time: label, period: '', label };
+};
+
+const getSlotPeriodLabel = (startValue, endValue) => {
+  const startPeriod = getDisplayTimeParts(startValue).period;
+  const endPeriod = getDisplayTimeParts(endValue).period;
+  if (startPeriod && endPeriod && startPeriod !== endPeriod) {
+    return `${startPeriod}/${endPeriod}`;
+  }
+  return startPeriod || endPeriod || '';
+};
+
 const parseTime = (value) => {
   const [hour, minute] = value.split(':').map((item) => Number(item));
   return { hour: Number.isNaN(hour) ? 0 : hour, minute: Number.isNaN(minute) ? 0 : minute };
@@ -668,6 +690,11 @@ const ManageAvailability = () => {
                     )}
 
                     {day.slots.map((slot) => (
+                      (() => {
+                        const startParts = getDisplayTimeParts(slot.start_time);
+                        const endParts = getDisplayTimeParts(slot.end_time);
+                        const slotPeriodLabel = getSlotPeriodLabel(slot.start_time, slot.end_time);
+                        return (
                       <div
                         key={slot.id}
                         draggable={slot.tone !== 'scheduled'}
@@ -705,11 +732,16 @@ const ManageAvailability = () => {
                         }`}
                       >
                         <div className="min-w-0">
-                          <div className="text-xs font-bold">{slot.time}</div>
+                          <div className="text-xs font-bold">{startParts.time}</div>
                           <div className="text-[10px] font-medium text-[#6b7280]">to</div>
-                          <div className="text-xs font-bold">{slot.end}</div>
+                          <div className="text-xs font-bold">{endParts.time}</div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
+                          {slotPeriodLabel && (
+                            <span className="inline-flex min-w-[44px] items-center justify-center rounded-full bg-[#ede9fe] px-2 py-1 text-[10px] font-bold tracking-wide text-[#5D3699]">
+                              {slotPeriodLabel}
+                            </span>
+                          )}
                           <button
                             type="button"
                             onClick={(event) => {
@@ -733,6 +765,8 @@ const ManageAvailability = () => {
                           </button>
                         </div>
                       </div>
+                        );
+                      })()
                     ))}
 
                     <button
@@ -854,6 +888,11 @@ const ManageAvailability = () => {
                     )}
 
                     {day.slots.map((slot) => (
+                      (() => {
+                        const startParts = getDisplayTimeParts(slot.start_time);
+                        const endParts = getDisplayTimeParts(slot.end_time);
+                        const slotPeriodLabel = getSlotPeriodLabel(slot.start_time, slot.end_time);
+                        return (
                       <div
                         key={slot.id}
                         draggable={slot.tone !== 'scheduled'}
@@ -891,35 +930,44 @@ const ManageAvailability = () => {
                         }`}
                       >
                         <div className="flex min-w-0 flex-col items-center justify-center leading-none">
-                          <span className="text-[12px] font-bold tracking-wide">{slot.time}</span>
+                          <span className="text-[12px] font-bold tracking-wide">{startParts.time}</span>
                           <span className="my-1 h-px w-10 bg-[#d5c3f1]" />
-                          <span className="text-[12px] font-bold tracking-wide">{slot.end}</span>
+                          <span className="text-[12px] font-bold tracking-wide">{endParts.time}</span>
                         </div>
 
-                        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleOpenCopy(day.label, slot);
-                            }}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40"
-                            aria-label="Copy slot"
-                            disabled={loading}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSlot(slot.id)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40"
-                            aria-label="Delete slot"
-                            disabled={loading || slot.tone === 'scheduled'}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                        <div className="relative flex h-8 w-[74px] items-center justify-end">
+                          {slotPeriodLabel && (
+                            <span className="inline-flex min-w-[44px] items-center justify-center rounded-full bg-[#ede9fe] px-2 py-1 text-[10px] font-bold tracking-wide text-[#5D3699] transition-opacity duration-150 group-hover:opacity-0">
+                              {slotPeriodLabel}
+                            </span>
+                          )}
+                          <div className="pointer-events-none absolute inset-0 flex items-center justify-end gap-1 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleOpenCopy(day.label, slot);
+                              }}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40"
+                              aria-label="Copy slot"
+                              disabled={loading}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSlot(slot.id)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40"
+                              aria-label="Delete slot"
+                              disabled={loading || slot.tone === 'scheduled'}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
+                        );
+                      })()
                     ))}
 
                     {day.slots.some((slot) => slot.tone === 'scheduled') && (
@@ -958,7 +1006,7 @@ const ManageAvailability = () => {
               <p className="text-sm leading-relaxed text-[#374151]">
                 Move slot{' '}
                 <span className="font-bold text-[#5D3699]">
-                  {formatTime(pendingMove.slot.start_time)} - {formatTime(pendingMove.slot.end_time)}
+                  {getDisplayTimeParts(pendingMove.slot.start_time).label} - {getDisplayTimeParts(pendingMove.slot.end_time).label}
                 </span>{' '}
                 from <span className="font-bold text-[#111827]">{pendingMove.fromLabel}</span> to{' '}
                 <span className="font-bold text-[#111827]">{pendingMove.toLabel}</span>?

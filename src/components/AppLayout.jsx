@@ -39,6 +39,7 @@ import MentorMyprofilePage from './mentors/pages/Myprofile';
 import MentorMenteeProfile from './mentors/pages/MenteeProfile';
 import SessionRecords from './shared/SessionRecords';
 import AdminPortal from './admin/AdminPortal';
+import AdminMentorReview from './admin/AdminMentorReview';
 import LandingPage from './LandingPage';
 import {
   AUTH_LOGOUT_EVENT_NAME,
@@ -68,7 +69,7 @@ const ScrollToTop = () => {
 };
 
 const isPublicPath = (pathname) => {
-  if (pathname === '/admin') return true;
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) return true;
   const exactPublicPaths = new Set([
     '/',
     '/login',
@@ -265,6 +266,7 @@ const AppLayout = () => {
         <Route path="/mentor-training-modules-quiz" element={<MentorTrainingQuiz />} />
         <Route path="/mentor-training-quiz" element={<Navigate to="/mentor-training-modules-quiz" replace />} />
         <Route path="/admin" element={<AdminPortal />} />
+        <Route path="/admin/review/:mentorId" element={<AdminMentorReview />} />
         <Route path="/verify-parent" element={<VerifyParent />} />
         <Route path="/needs-assessment" element={<NeedsAssessment />} />
         <Route path="/needs-assessment/q2" element={<NeedsAssessmentQ2 />} />

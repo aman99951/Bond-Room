@@ -1,10 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Hourglass, Info, X } from 'lucide-react';
+import { Check, Hourglass } from 'lucide-react';
 import TopAuth from '../../auth/TopAuth';
 import BottomAuth from '../../auth/BottomAuth';
 import { mentorApi } from '../../../apis/api/mentorApi';
 import { useMentorData } from '../../../apis/apihook/useMentorData';
+
+const DOCUMENT_LABELS = {
+  id_front: 'ID Proof Front',
+  id_back: 'ID Proof Back',
+  address_front: 'Address Proof Front',
+  address_back: 'Address Proof Back',
+};
 
 const OnboardingStatus = () => {
   const navigate = useNavigate();
@@ -12,7 +19,6 @@ const OnboardingStatus = () => {
   const [onboarding, setOnboarding] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [statusPopup, setStatusPopup] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +58,30 @@ const OnboardingStatus = () => {
   const accessReady = applicationDone && identityDone;
   const currentStatusLabel = status?.current_status || 'pending';
   const currentStatusText = String(currentStatusLabel).replace(/_/g, ' ');
+  const identityVerification = onboarding?.identity_verification;
+
+  const rejectedDocumentReasons = useMemo(
+    () => {
+      const documentReviewStatus =
+        identityVerification && typeof identityVerification.document_review_status === 'object'
+          ? identityVerification.document_review_status
+          : {};
+      const documentReviewComments =
+        identityVerification && typeof identityVerification.document_review_comments === 'object'
+          ? identityVerification.document_review_comments
+          : {};
+      return Object.entries(documentReviewStatus)
+        .filter(([, value]) => String(value || '').toLowerCase() === 'rejected')
+        .map(([key]) => ({
+          key,
+          label: DOCUMENT_LABELS[key] || key,
+          reason:
+            String(documentReviewComments[key] || '').trim() ||
+            'Rejected by admin. Please re-upload a clearer/valid document.',
+        }));
+    },
+    [identityVerification]
+  );
 
   const steps = useMemo(
     () => [
@@ -74,24 +104,6 @@ const OnboardingStatus = () => {
     if (value === 'in_review') return 'bg-[#ffe0a3] text-[#a25b00]';
     if (value === 'rejected') return 'bg-[#fee2e2] text-[#b91c1c]';
     return 'bg-[#f3f4f6] text-[#9ca3af]';
-  };
-
-  const getStepComment = (stepKey, stepValue) => {
-    const identityComment = onboarding?.identity_verification?.reviewer_notes || '';
-    const finalRejectionReason = status?.final_rejection_reason || '';
-    if (stepKey === 'identity_status') {
-      if (identityComment) return identityComment;
-      if (stepValue === 'rejected') return 'Identity verification was rejected by admin. No additional comment was provided.';
-      return 'No reviewer comment available yet.';
-    }
-    if (stepKey === 'final_approval_status' && stepValue === 'rejected') {
-      if (finalRejectionReason) return finalRejectionReason;
-      return 'Final approval was rejected by admin. No reason was provided.';
-    }
-    if (stepValue === 'rejected') {
-      return 'This step is marked as rejected. Please contact support/admin for more details.';
-    }
-    return 'No comment available for this step.';
   };
 
   const renderStepIcon = (value, index) => {
@@ -152,34 +164,10 @@ const OnboardingStatus = () => {
                       {steps.map((step, index) => {
                         const value = status?.[step.key] || 'pending';
                         const label = getStatusLabel(value);
-                        const isRejected = value === 'rejected';
                         const content = (
                           <>
                             <div className="relative bg-white px-2">
                               {renderStepIcon(value, index)}
-                              {isRejected && (
-                                <button
-                                  type="button"
-                                  className="absolute -top-1 -right-1 rounded-full border border-[#ef4444] bg-white p-1 text-[#ef4444] shadow"
-                                  onClick={(event) => {
-                                    event.preventDefault();
-                                    event.stopPropagation();
-                                    setStatusPopup({
-                                      title: step.label,
-                                      status: label,
-                                      comment: getStepComment(step.key, value),
-                                      showComment: step.key !== 'training_status',
-                                      uploadLink:
-                                        step.key === 'identity_status' && value === 'rejected'
-                                          ? '/mentor-verify-identity'
-                                          : '',
-                                    });
-                                  }}
-                                  aria-label={`View ${step.label} status details`}
-                                >
-                                  <Info className="h-3 w-3" />
-                                </button>
-                              )}
                             </div>
                             <p className={`mt-3 text-sm font-medium ${value === 'pending' ? 'text-[#6b7280]' : 'text-[#1f2937]'}`}>
                               {step.label}
@@ -216,6 +204,45 @@ const OnboardingStatus = () => {
                     </div>
                   </div>
                 </div>
+
+                {(rejectedDocumentReasons.length > 0 || status?.identity_status === 'rejected') && (
+                  <div className="rounded-xl border border-[#fecaca] bg-gradient-to-br from-[#fff7f7] to-[#fff1f2] p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-[#b91c1c]">
+                          Document Verification Feedback
+                        </h3>
+                        <p className="mt-1 text-xs text-[#991b1b]">
+                          Please correct and re-upload only the rejected document(s).
+                        </p>
+                      </div>
+                      <Link
+                        to="/mentor-verify-identity"
+                        className="inline-flex rounded-md border border-[#fca5a5] bg-white px-3 py-1.5 text-xs font-semibold text-[#b91c1c] hover:bg-[#fff5f5]"
+                      >
+                        Re-upload Documents
+                      </Link>
+                    </div>
+
+                    {rejectedDocumentReasons.length > 0 ? (
+                      <div className="mt-4 grid gap-2">
+                        {rejectedDocumentReasons.map((item) => (
+                          <div
+                            key={item.key}
+                            className="rounded-lg border border-[#fecaca] bg-white px-3 py-2"
+                          >
+                            <p className="text-xs font-semibold text-[#7f1d1d]">{item.label}</p>
+                            <p className="mt-1 text-xs text-[#991b1b]">{item.reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-4 rounded-lg border border-[#fecaca] bg-white px-3 py-2 text-xs text-[#991b1b]">
+                        Document verification is rejected. Reason was not provided by admin yet.
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="rounded-xl bg-[#f3ebff] p-5 text-sm text-[#5b2c91]">
                   {accessReady ? (
@@ -256,45 +283,6 @@ const OnboardingStatus = () => {
                 {(loading || error) && (
                   <div className={`text-xs ${error ? 'text-red-600' : 'text-[#6b7280]'}`}>
                     {error || 'Loading onboarding status...'}
-                  </div>
-                )}
-
-                {statusPopup && (
-                  <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
-                    <div className="w-full max-w-md rounded-2xl border border-[#e6e2f1] bg-white p-5 shadow-2xl">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-base font-semibold text-[#111827]">{statusPopup.title}</h3>
-                          <p className="mt-1 text-xs text-[#6b7280]">Status details</p>
-                        </div>
-                        <button
-                          type="button"
-                          className="rounded-md border border-[#e5e7eb] p-1.5 text-[#6b7280]"
-                          onClick={() => setStatusPopup(null)}
-                          aria-label="Close status popup"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="mt-4 space-y-3 text-sm">
-                        <div className="rounded-lg bg-[#f5f0ff] px-3 py-2 text-[#5b2c91]">
-                          <span className="font-semibold">Current Status:</span> {statusPopup.status}
-                        </div>
-                        {statusPopup.showComment && (
-                          <div className="rounded-lg border border-[#e5e7eb] px-3 py-2 text-[#374151]">
-                            <span className="font-semibold">Comment:</span> {statusPopup.comment}
-                          </div>
-                        )}
-                        {statusPopup.uploadLink && (
-                          <div className="rounded-lg border border-[#e9d5ff] bg-[#faf5ff] px-3 py-2 text-sm">
-                            <span className="font-semibold text-[#5b2c91]">Upload page:</span>{' '}
-                            <Link to={statusPopup.uploadLink} className="text-[#5b2c91] underline font-medium">
-                              Re-upload documents
-                            </Link>
-                          </div>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>

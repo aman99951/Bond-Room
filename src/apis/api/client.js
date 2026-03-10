@@ -59,12 +59,15 @@ const flattenFieldErrors = (payload) => {
 };
 
 const toError = (response, payload) => {
-  const message =
+  let message =
     payload?.detail ||
     payload?.message ||
     (Array.isArray(payload) ? payload.join(', ') : null) ||
     flattenFieldErrors(payload) ||
-    'Request failed';
+    'Something went wrong. Please try again.';
+  if (String(message || '').toLowerCase().includes('request failed')) {
+    message = 'Something went wrong. Please try again.';
+  }
   const error = new Error(message);
   error.status = response.status;
   error.data = payload;
@@ -120,6 +123,15 @@ const request = async (path, options = {}) => {
     }
 
     return payload;
+  } catch (error) {
+    const message = String(error?.message || '').trim();
+    if (message.toLowerCase().includes('request failed')) {
+      const nextError = new Error('Something went wrong. Please try again.');
+      nextError.status = error?.status;
+      nextError.data = error?.data;
+      throw nextError;
+    }
+    throw error;
   } finally {
     if (trackLoading) {
       endApiRequest();
