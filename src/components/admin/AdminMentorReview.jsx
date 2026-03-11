@@ -54,6 +54,12 @@ const resolveDocumentKind = (url) => {
   const lowered = String(url).toLowerCase();
   if (/\.pdf($|\?)/i.test(lowered)) return 'pdf';
   if (/\.(png|jpe?g|gif|webp|bmp|svg)($|\?)/i.test(lowered)) return 'image';
+  // Cloudinary secure URLs often omit file extensions (public_id only).
+  // Infer the kind from resource type in the delivery path.
+  if (lowered.includes('res.cloudinary.com')) {
+    if (lowered.includes('/image/upload/')) return 'image';
+    if (lowered.includes('/raw/upload/')) return 'pdf';
+  }
   return 'unknown';
 };
 
