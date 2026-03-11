@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  FileText, 
-  X, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  ArrowLeft,
+  Calendar,
+  FileText,
+  X,
+  CheckCircle2,
+  XCircle,
   Clock,
   Award,
   User,
@@ -14,22 +14,29 @@ import {
   FileCheck,
   AlertCircle,
   ZoomIn,
-  Eye
+  Eye,
+  LogOut,
+  RefreshCw,
+  ShieldCheck,
+  GraduationCap,
+  Gavel,
 } from 'lucide-react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { mentorApi } from '../../apis/api/mentorApi';
 import { clearAuthSession, getAuthSession } from '../../apis/api/storage';
 
+/* ───────── helpers ───────── */
+
 const formatDateTime = (value) => {
   if (!value) return 'Not available';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Not available';
-  return date.toLocaleString([], { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit' 
+  return date.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 };
 
@@ -71,19 +78,21 @@ const formatProofTypeLabel = (value) => {
 const formatStatusLabel = (value) => String(value || 'pending').replace(/_/g, ' ');
 
 const getDocDecisionChipClass = (value) => {
-  if (value === 'approved') return 'bg-[#dcfce7] text-[#166534] ring-1 ring-[#166534]/20';
-  if (value === 'rejected') return 'bg-[#fee2e2] text-[#b91c1c] ring-1 ring-[#b91c1c]/20';
-  return 'bg-[#ede9fe] text-[#5b2c91] ring-1 ring-[#5b2c91]/20';
+  if (value === 'approved')
+    return 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30';
+  if (value === 'rejected')
+    return 'bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30';
+  return 'bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/30';
 };
 
 const getStatusChipClass = (status) => {
-  if (status === 'completed' || status === 'verified') 
-    return 'bg-[#dcfce7] text-[#166534] ring-1 ring-[#166534]/20';
-  if (status === 'rejected') 
-    return 'bg-[#fee2e2] text-[#b91c1c] ring-1 ring-[#b91c1c]/20';
-  if (status === 'in_review') 
-    return 'bg-[#fef3c7] text-[#92400e] ring-1 ring-[#92400e]/20';
-  return 'bg-[#ede9fe] text-[#5b2c91] ring-1 ring-[#5b2c91]/20';
+  if (status === 'completed' || status === 'verified')
+    return 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30';
+  if (status === 'rejected')
+    return 'bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30';
+  if (status === 'in_review')
+    return 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/30';
+  return 'bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/30';
 };
 
 const DOCUMENT_LABELS = {
@@ -114,31 +123,26 @@ const INITIAL_REJECT_DIALOG = {
 
 const getIdentityStatusFromDocDecisions = (decisions) => {
   const values = Object.values(decisions || {});
-  if (values.some((item) => item === 'rejected')) return 'rejected';
-  if (values.length > 0 && values.every((item) => item === 'approved')) return 'verified';
-  if (values.some((item) => item === 'approved')) return 'in_review';
+  if (values.some((i) => i === 'rejected')) return 'rejected';
+  if (values.length > 0 && values.every((i) => i === 'approved')) return 'verified';
+  if (values.some((i) => i === 'approved')) return 'in_review';
   return 'pending';
 };
 
 const normalizeDocumentDecisions = (rawValue, identityStatus = '') => {
   const normalized = { ...INITIAL_DOCUMENT_DECISIONS };
-  let hasExplicitValue = false;
+  let hasExplicit = false;
   if (rawValue && typeof rawValue === 'object') {
     Object.keys(normalized).forEach((key) => {
-      const nextValue = String(rawValue[key] || '').toLowerCase();
-      if (['pending', 'approved', 'rejected'].includes(nextValue)) {
-        normalized[key] = nextValue;
-        hasExplicitValue = true;
+      const v = String(rawValue[key] || '').toLowerCase();
+      if (['pending', 'approved', 'rejected'].includes(v)) {
+        normalized[key] = v;
+        hasExplicit = true;
       }
     });
   }
-  if (!hasExplicitValue && String(identityStatus).toLowerCase() === 'verified') {
-    return {
-      id_front: 'approved',
-      id_back: 'approved',
-      address_front: 'approved',
-      address_back: 'approved',
-    };
+  if (!hasExplicit && String(identityStatus).toLowerCase() === 'verified') {
+    return { id_front: 'approved', id_back: 'approved', address_front: 'approved', address_back: 'approved' };
   }
   return normalized;
 };
@@ -151,6 +155,8 @@ const normalizeDocumentComments = (rawValue) => {
   });
   return normalized;
 };
+
+/* ───────── component ───────── */
 
 const AdminMentorReview = () => {
   const navigate = useNavigate();
@@ -168,12 +174,7 @@ const AdminMentorReview = () => {
   const [documentDecisions, setDocumentDecisions] = useState(INITIAL_DOCUMENT_DECISIONS);
   const [documentComments, setDocumentComments] = useState(INITIAL_DOCUMENT_COMMENTS);
   const [rejectDialog, setRejectDialog] = useState(INITIAL_REJECT_DIALOG);
-  const [lightbox, setLightbox] = useState({
-    open: false,
-    title: '',
-    url: '',
-    kind: 'unknown',
-  });
+  const [lightbox, setLightbox] = useState({ open: false, title: '', url: '', kind: 'unknown' });
 
   const loadMentorDetails = useCallback(async () => {
     if (!Number.isFinite(reviewMentorId) || reviewMentorId <= 0) {
@@ -186,27 +187,20 @@ const AdminMentorReview = () => {
     setDecisionError('');
     setDecisionSuccess('');
     try {
-      const [mentorResponse, onboardingResponse] = await Promise.all([
+      const [mentorRes, onboardingRes] = await Promise.all([
         mentorApi.getMentorById(reviewMentorId),
         mentorApi.getMentorOnboarding(reviewMentorId),
       ]);
-      const identityVerification = onboardingResponse?.identity_verification || null;
-      setSelectedMentor(mentorResponse || null);
-      setSelectedOnboarding(onboardingResponse || null);
-      setDocumentDecisions(
-        normalizeDocumentDecisions(
-          identityVerification?.document_review_status,
-          identityVerification?.status
-        )
-      );
-      setDocumentComments(
-        normalizeDocumentComments(identityVerification?.document_review_comments)
-      );
+      const iv = onboardingRes?.identity_verification || null;
+      setSelectedMentor(mentorRes || null);
+      setSelectedOnboarding(onboardingRes || null);
+      setDocumentDecisions(normalizeDocumentDecisions(iv?.document_review_status, iv?.status));
+      setDocumentComments(normalizeDocumentComments(iv?.document_review_comments));
       setRejectDialog(INITIAL_REJECT_DIALOG);
     } catch (err) {
-      const fallback = 'Unable to load mentor onboarding details.';
-      const message = String(err?.message || '').trim();
-      setError(message && message !== 'Request failed' ? message : fallback);
+      const fb = 'Unable to load mentor onboarding details.';
+      const msg = String(err?.message || '').trim();
+      setError(msg && msg !== 'Request failed' ? msg : fb);
       setSelectedMentor(null);
       setSelectedOnboarding(null);
     } finally {
@@ -218,9 +212,7 @@ const AdminMentorReview = () => {
     loadMentorDetails();
   }, [loadMentorDetails]);
 
-  if (session?.role !== 'admin') {
-    return <Navigate to="/admin" replace />;
-  }
+  if (session?.role !== 'admin') return <Navigate to="/admin" replace />;
 
   const handleLogout = () => {
     clearAuthSession();
@@ -254,21 +246,17 @@ const AdminMentorReview = () => {
         decision,
         comment: decision === 'rejected' ? comment : '',
       });
-      setDocumentDecisions(
-        normalizeDocumentDecisions(updated?.document_review_status, updated?.status)
-      );
-      setDocumentComments(
-        normalizeDocumentComments(updated?.document_review_comments)
-      );
+      setDocumentDecisions(normalizeDocumentDecisions(updated?.document_review_status, updated?.status));
+      setDocumentComments(normalizeDocumentComments(updated?.document_review_comments));
       await loadMentorDetails();
       setDecisionSuccess(
-        `${DOCUMENT_LABELS[documentKey] || 'Document'} ${decision === 'approved' ? 'approved' : 'rejected'} successfully.`
+        `${DOCUMENT_LABELS[documentKey] || 'Document'} ${decision === 'approved' ? 'approved' : 'rejected'} successfully.`,
       );
       return true;
     } catch (err) {
-      const fallback = 'Unable to update this document right now. Please try again.';
-      const message = String(err?.message || '').trim();
-      setDecisionError(message && message !== 'Request failed' ? message : fallback);
+      const fb = 'Unable to update this document right now. Please try again.';
+      const msg = String(err?.message || '').trim();
+      setDecisionError(msg && msg !== 'Request failed' ? msg : fb);
       return false;
     } finally {
       setDecisionLoading('');
@@ -294,24 +282,15 @@ const AdminMentorReview = () => {
     if (!rejectDialog.documentKey) return;
     const comment = String(rejectDialog.comment || '').trim();
     if (!comment) {
-      setRejectDialog((prev) => ({
-        ...prev,
-        error: `Rejection comment for ${prev.documentLabel || 'this document'} is required.`,
+      setRejectDialog((p) => ({
+        ...p,
+        error: `Rejection comment for ${p.documentLabel || 'this document'} is required.`,
       }));
       return;
     }
-    setDocumentComments((prev) => ({
-      ...prev,
-      [rejectDialog.documentKey]: comment,
-    }));
-    const success = await handleDocumentDecision(
-      rejectDialog.documentKey,
-      'rejected',
-      comment
-    );
-    if (success) {
-      setRejectDialog(INITIAL_REJECT_DIALOG);
-    }
+    setDocumentComments((p) => ({ ...p, [rejectDialog.documentKey]: comment }));
+    const success = await handleDocumentDecision(rejectDialog.documentKey, 'rejected', comment);
+    if (success) setRejectDialog(INITIAL_REJECT_DIALOG);
   };
 
   const identityDocs = [
@@ -345,106 +324,118 @@ const AdminMentorReview = () => {
     },
   ];
 
+  /* ───────── render ───────── */
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f4f2f7] via-[#faf8ff] to-[#f0edf7] p-4 sm:p-6">
-      <div className="mx-auto max-w-[1400px]">
-        {/* Header */}
-        <div className="rounded-2xl border border-[#e6e2f1] bg-white/80 backdrop-blur-sm p-6 shadow-lg mb-6 animate-fade-in-down">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="min-h-screen bg-[#0b0f1a] bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,_#1e1b4b33,_transparent)] p-3 sm:p-6">
+      <div className="mx-auto max-w-[1440px]">
+
+        {/* ── header ── */}
+        <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl backdrop-blur-sm animate-fade-in-down">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#5b2c91] to-[#4a2374] flex items-center justify-center shadow-lg shadow-[#5b2c91]/25">
-                <FileCheck className="w-6 h-6 text-white" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/25">
+                <FileCheck className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#5b2c91] to-[#4a2374] bg-clip-text text-transparent">
-                  Mentor Review
-                </h1>
-                <p className="text-sm text-[#6b7280] mt-1">
+                <h1 className="text-3xl font-black tracking-tight text-white">Mentor Review</h1>
+                <p className="mt-1 text-sm text-slate-400">
                   Review identity documents and onboarding status
                 </p>
               </div>
             </div>
+
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-all duration-200 shadow-sm"
                 onClick={() => navigate('/admin')}
+                className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm font-semibold text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to List
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-all duration-200 shadow-sm"
-                onClick={handleLogout}
+                onClick={loadMentorDetails}
+                disabled={loading}
+                className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm font-semibold text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
               >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm font-semibold text-slate-300 transition-all hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-400"
+              >
+                <LogOut className="h-4 w-4" />
                 Logout
               </button>
             </div>
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* ── loading ── */}
         {loading && (
-          <div className="rounded-2xl border border-[#e6e2f1] bg-white p-12 text-center shadow-sm animate-pulse">
-            <div className="w-12 h-12 border-4 border-[#5b2c91] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-sm text-[#6b7280]">Loading mentor details...</p>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-16 text-center">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
+            <p className="text-sm text-slate-400">Loading mentor details…</p>
           </div>
         )}
 
-        {/* Error State */}
+        {/* ── error ── */}
         {!loading && error && (
-          <div className="rounded-2xl border border-[#fecaca] bg-[#fee2e2] p-6 shadow-sm animate-fade-in">
+          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6 animate-fade-in">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-[#b91c1c] flex-shrink-0 mt-0.5" />
+              <AlertCircle className="mt-0.5 h-6 w-6 flex-shrink-0 text-rose-400" />
               <div>
-                <h3 className="font-semibold text-[#b91c1c]">Error Loading Data</h3>
-                <p className="text-sm text-[#b91c1c] mt-1">{error}</p>
+                <h3 className="font-bold text-rose-400">Error Loading Data</h3>
+                <p className="mt-1 text-sm text-rose-300/80">{error}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Main Content */}
+        {/* ── main content ── */}
         {!loading && !error && selectedMentor && selectedOnboarding && (
           <div className="space-y-6">
-            {/* Mentor Info Card */}
-            <div className="rounded-2xl border border-[#e6e2f1] bg-white p-6 shadow-sm animate-fade-in">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+
+            {/* ── mentor info card ── */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl animate-fade-in">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#5b2c91] to-[#4a2374] flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-[#5b2c91]/25">
-                  {(selectedMentor.first_name?.[0] || 'M').toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-[#111827]">
-                    {[selectedMentor.first_name, selectedMentor.last_name]
-                      .filter(Boolean)
-                      .join(' ') || `Mentor #${selectedMentor.id}`}
-                  </h2>
-                  <div className="flex flex-wrap items-center gap-3 mt-2">
-                    <div className="flex items-center gap-1.5 text-sm text-[#6b7280]">
-                      <Mail className="w-4 h-4" />
-                      {selectedMentor.email || 'No email'}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-sm text-[#6b7280]">
-                      <Hash className="w-4 h-4" />
-                      ID: {selectedMentor.id}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-sm text-[#6b7280]">
-                      <Calendar className="w-4 h-4" />
-                      {formatDateTime(identity.submitted_at)}
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 text-2xl font-black text-white shadow-lg shadow-violet-500/25">
+                    {(selectedMentor.first_name?.[0] || 'M').toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-2xl font-black text-white">
+                      {[selectedMentor.first_name, selectedMentor.last_name].filter(Boolean).join(' ') ||
+                        `Mentor #${selectedMentor.id}`}
+                    </h2>
+                    <div className="mt-3 flex flex-wrap items-center gap-4">
+                      {[
+                        { icon: Mail, text: selectedMentor.email || 'No email' },
+                        { icon: Hash, text: `ID: ${selectedMentor.id}` },
+                        { icon: Calendar, text: formatDateTime(identity.submitted_at) },
+                      ].map(({ icon: Icon, text }) => (
+                        <div key={text} className="flex items-center gap-1.5 text-sm text-slate-400">
+                          <Icon className="h-4 w-4 text-slate-500" />
+                          {text}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-                </div>
-                <div className="lg:ml-4">
-                  <div className="rounded-xl border border-[#e6e2f1] bg-gradient-to-br from-[#faf8ff] to-white px-4 py-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[#6b7280]">
+
+                {/* onboarding status badge */}
+                <div className="flex-shrink-0">
+                  <div className="rounded-xl border border-slate-700 bg-slate-800/60 px-5 py-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                       Onboarding Status
                     </p>
                     <div
-                      className={`mt-2 rounded-lg px-3 py-2 text-sm font-semibold capitalize text-center ${getStatusChipClass(
-                        headerStatus
+                      className={`mt-2 rounded-lg px-4 py-2.5 text-center text-sm font-bold capitalize ${getStatusChipClass(
+                        headerStatus,
                       )}`}
                     >
                       {formatStatusLabel(headerStatus)}
@@ -454,57 +445,52 @@ const AdminMentorReview = () => {
               </div>
             </div>
 
-            {/* Identity Documents Section */}
-            <div className="rounded-2xl border border-[#e6e2f1] bg-white p-6 shadow-sm animate-fade-in">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-[#ede9fe] flex items-center justify-center">
-                  <FileCheck className="w-5 h-5 text-[#5b2c91]" />
+            {/* ── identity documents ── */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl animate-fade-in">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-500/30 bg-violet-500/15">
+                  <ShieldCheck className="h-5 w-5 text-violet-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-[#111827]">
-                    Identity Documents
-                  </h3>
-                  <p className="text-xs text-[#6b7280]">
-                    Click on any image to view in full size
-                  </p>
+                  <h3 className="text-lg font-bold text-white">Identity Documents</h3>
+                  <p className="text-xs text-slate-500">Click any image to view full size</p>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid gap-6 md:grid-cols-2">
                 {identityDocs.map((doc) => {
                   const available = Boolean(doc.url);
                   const kind = resolveDocumentKind(doc.url);
                   const docDecision = documentDecisions[doc.key] || 'pending';
+                  const isLoadingThis = decisionLoading === doc.key;
 
                   return (
                     <div
                       key={doc.key}
-                      className={`rounded-xl border transition-all duration-300 ${
+                      className={`group rounded-2xl border transition-all duration-300 ${
                         available
-                          ? 'border-[#e2d7f5] bg-gradient-to-br from-white to-[#faf8ff] hover:shadow-lg'
-                          : 'border-[#e5e7eb] bg-[#f9fafb]'
+                          ? 'border-slate-700 bg-slate-800/40 hover:border-slate-600 hover:shadow-xl hover:shadow-black/30'
+                          : 'border-slate-800 bg-slate-800/20'
                       }`}
                     >
-                      {/* Document Header */}
-                      <div className="p-4 border-b border-[#e6e2f1]">
+                      {/* doc header */}
+                      <div className="border-b border-slate-700/60 p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-[#111827] text-sm">
-                              {doc.label}
-                            </h4>
-                            <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                              <span className="text-xs text-[#6b7280]">
+                            <h4 className="text-sm font-bold text-white">{doc.label}</h4>
+                            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                              <span className="text-xs text-slate-500">
                                 Type: {formatProofTypeLabel(doc.proofType)}
                               </span>
-                              <span className="text-xs text-[#9ca3af]">•</span>
-                              <span className="text-xs text-[#6b7280]">
+                              <span className="text-xs text-slate-600">•</span>
+                              <span className="text-xs text-slate-500">
                                 No: {doc.proofNumber || '-'}
                               </span>
                             </div>
                           </div>
                           <span
-                            className={`rounded-full px-3 py-1 text-xs font-semibold capitalize whitespace-nowrap ${getDocDecisionChipClass(
-                              docDecision
+                            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold capitalize ${getDocDecisionChipClass(
+                              docDecision,
                             )}`}
                           >
                             {docDecision}
@@ -512,98 +498,80 @@ const AdminMentorReview = () => {
                         </div>
                       </div>
 
-                      {/* Document Preview */}
+                      {/* doc preview */}
                       <div className="p-4">
                         {available ? (
                           <div className="space-y-3">
-                            {/* Image/PDF Preview */}
                             {kind === 'image' ? (
                               <div
-                                className="relative group rounded-lg overflow-hidden border-2 border-[#e2d7f5] bg-white cursor-pointer transition-all duration-300 hover:border-[#5b2c91] hover:shadow-xl"
+                                className="relative cursor-pointer overflow-hidden rounded-xl border-2 border-slate-700 bg-slate-900 transition-all duration-300 hover:border-violet-500/60 hover:shadow-xl hover:shadow-violet-500/10"
                                 onClick={() =>
-                                  setLightbox({
-                                    open: true,
-                                    title: doc.label,
-                                    url: doc.url,
-                                    kind,
-                                  })
+                                  setLightbox({ open: true, title: doc.label, url: doc.url, kind })
                                 }
                               >
                                 <img
                                   src={doc.url}
                                   alt={doc.label}
-                                  className="w-full h-48 object-cover"
+                                  className="h-52 w-full object-cover"
                                 />
-                                {/* Hover Overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                {/* hover overlay */}
+                                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                                   <div className="flex items-center gap-2 text-white">
-                                    <ZoomIn className="w-5 h-5" />
-                                    <span className="text-sm font-medium">
-                                      Click to enlarge
-                                    </span>
+                                    <ZoomIn className="h-5 w-5" />
+                                    <span className="text-sm font-semibold">Click to enlarge</span>
                                   </div>
                                 </div>
                               </div>
                             ) : kind === 'pdf' ? (
                               <div
-                                className="relative group rounded-lg overflow-hidden border-2 border-[#e2d7f5] bg-gradient-to-br from-[#fef3c7] to-[#fde68a] cursor-pointer transition-all duration-300 hover:border-[#5b2c91] hover:shadow-xl h-48 flex items-center justify-center"
+                                className="relative flex h-52 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-600/5 transition-all duration-300 hover:border-amber-400/50 hover:shadow-xl"
                                 onClick={() =>
-                                  setLightbox({
-                                    open: true,
-                                    title: doc.label,
-                                    url: doc.url,
-                                    kind,
-                                  })
+                                  setLightbox({ open: true, title: doc.label, url: doc.url, kind })
                                 }
                               >
                                 <div className="text-center">
-                                  <FileText className="w-16 h-16 text-[#92400e] mx-auto mb-2" />
-                                  <p className="text-sm font-semibold text-[#92400e]">
-                                    PDF Document
-                                  </p>
-                                  <p className="text-xs text-[#92400e]/70 mt-1">
-                                    Click to view
-                                  </p>
+                                  <FileText className="mx-auto mb-2 h-16 w-16 text-amber-400" />
+                                  <p className="text-sm font-bold text-amber-400">PDF Document</p>
+                                  <p className="mt-1 text-xs text-amber-500/70">Click to view</p>
                                 </div>
-                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                               </div>
                             ) : (
-                              <div className="rounded-lg border-2 border-dashed border-[#e5e7eb] bg-[#f9fafb] h-48 flex items-center justify-center">
-                                <div className="text-center text-[#9ca3af]">
-                                  <Eye className="w-12 h-12 mx-auto mb-2" />
+                              <div className="flex h-52 items-center justify-center rounded-xl border-2 border-dashed border-slate-700 bg-slate-800/30">
+                                <div className="text-center text-slate-600">
+                                  <Eye className="mx-auto mb-2 h-12 w-12" />
                                   <p className="text-sm">Preview unavailable</p>
                                 </div>
                               </div>
                             )}
 
-                            {/* Action Buttons */}
+                            {/* action buttons */}
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
-                                className="flex-1 rounded-lg border-2 border-[#bbf7d0] bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] px-4 py-2.5 text-sm font-semibold text-[#166534] hover:from-[#dcfce7] hover:to-[#bbf7d0] transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 onClick={() => handleDocumentDecision(doc.key, 'approved')}
-                                disabled={decisionLoading === doc.key}
+                                disabled={isLoadingThis}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-bold text-emerald-400 transition-all hover:border-emerald-400/50 hover:bg-emerald-500/20 hover:text-emerald-300 hover:shadow-lg hover:shadow-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-40"
                               >
-                                <CheckCircle2 className="w-4 h-4" />
-                                {decisionLoading === doc.key ? 'Saving...' : 'Approve'}
+                                <CheckCircle2 className="h-4 w-4" />
+                                {isLoadingThis ? 'Saving…' : 'Approve'}
                               </button>
                               <button
                                 type="button"
-                                className="flex-1 rounded-lg border-2 border-[#fecaca] bg-gradient-to-r from-[#fef2f2] to-[#fee2e2] px-4 py-2.5 text-sm font-semibold text-[#b91c1c] hover:from-[#fee2e2] hover:to-[#fecaca] transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 onClick={() => openRejectDialog(doc)}
-                                disabled={decisionLoading === doc.key}
+                                disabled={isLoadingThis}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-sm font-bold text-rose-400 transition-all hover:border-rose-400/50 hover:bg-rose-500/20 hover:text-rose-300 hover:shadow-lg hover:shadow-rose-500/10 disabled:cursor-not-allowed disabled:opacity-40"
                               >
-                                <XCircle className="w-4 h-4" />
-                                {decisionLoading === doc.key ? 'Saving...' : 'Reject'}
+                                <XCircle className="h-4 w-4" />
+                                {isLoadingThis ? 'Saving…' : 'Reject'}
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <div className="rounded-lg border-2 border-dashed border-[#e5e7eb] bg-[#fafafa] h-48 flex items-center justify-center">
-                            <div className="text-center text-[#9ca3af]">
-                              <AlertCircle className="w-12 h-12 mx-auto mb-2" />
-                              <p className="text-sm font-medium">Not uploaded</p>
-                              <p className="text-xs mt-1">
+                          <div className="flex h-52 items-center justify-center rounded-xl border-2 border-dashed border-slate-700/50 bg-slate-800/20">
+                            <div className="text-center text-slate-600">
+                              <AlertCircle className="mx-auto mb-2 h-12 w-12 text-slate-700" />
+                              <p className="text-sm font-medium text-slate-500">Not uploaded</p>
+                              <p className="mt-1 text-xs text-slate-600">
                                 Document not provided by mentor
                               </p>
                             </div>
@@ -616,19 +584,15 @@ const AdminMentorReview = () => {
               </div>
             </div>
 
-            {/* Training Modules Section */}
-            <div className="rounded-2xl border border-[#e6e2f1] bg-white p-6 shadow-sm animate-fade-in">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-[#ede9fe] flex items-center justify-center">
-                  <Award className="w-5 h-5 text-[#5b2c91]" />
+            {/* ── training modules ── */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl animate-fade-in">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-500/30 bg-violet-500/15">
+                  <GraduationCap className="h-5 w-5 text-violet-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-[#111827]">
-                    Training Modules
-                  </h3>
-                  <p className="text-xs text-[#6b7280]">
-                    Track mentor's training progress
-                  </p>
+                  <h3 className="text-lg font-bold text-white">Training Modules</h3>
+                  <p className="text-xs text-slate-500">Track mentor's training progress</p>
                 </div>
               </div>
 
@@ -636,112 +600,100 @@ const AdminMentorReview = () => {
                 {(selectedOnboarding?.training_modules || []).map((module) => (
                   <div
                     key={module.id}
-                    className="rounded-xl border border-[#e6e2f1] bg-gradient-to-r from-white to-[#faf8ff] p-4 hover:shadow-md transition-all duration-300"
+                    className="rounded-xl border border-slate-700/50 bg-slate-800/40 p-4 transition-all hover:border-slate-700 hover:bg-slate-800/60"
                   >
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                      <h4 className="font-semibold text-[#111827] text-sm flex-1">
-                        {module.title}
-                      </h4>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <h4 className="flex-1 text-sm font-bold text-white">{module.title}</h4>
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold capitalize whitespace-nowrap ${getStatusChipClass(
-                          module.status
+                        className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold capitalize ${getStatusChipClass(
+                          module.status,
                         )}`}
                       >
                         {formatStatusLabel(module.status)}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 h-2.5 rounded-full bg-[#ede9fe] overflow-hidden">
+                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-700/50">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#5b2c91] to-[#7c3aed] transition-all duration-500"
+                          className="h-full rounded-full bg-gradient-to-r from-violet-600 to-purple-500 transition-all duration-500"
                           style={{
-                            width: `${Math.max(
-                              0,
-                              Math.min(100, Number(module.progress_percent || 0))
-                            )}%`,
+                            width: `${Math.max(0, Math.min(100, Number(module.progress_percent || 0)))}%`,
                           }}
                         />
                       </div>
-                      <span className="text-xs font-semibold text-[#5b2c91] whitespace-nowrap">
+                      <span className="whitespace-nowrap text-xs font-bold text-violet-400">
                         {Math.round(module.progress_percent || 0)}%
                       </span>
                     </div>
                   </div>
                 ))}
+
                 {!selectedOnboarding?.training_modules?.length && (
-                  <div className="text-center py-8 text-[#6b7280]">
-                    <Clock className="w-12 h-12 mx-auto mb-2 text-[#9ca3af]" />
-                    <p className="text-sm">No training modules found</p>
+                  <div className="py-10 text-center">
+                    <Clock className="mx-auto mb-3 h-12 w-12 text-slate-700" />
+                    <p className="text-sm text-slate-500">No training modules found</p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Admin Decision Section */}
-            <div className="rounded-2xl border border-[#e6e2f1] bg-white p-6 shadow-sm animate-fade-in">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-[#ede9fe] flex items-center justify-center">
-                  <User className="w-5 h-5 text-[#5b2c91]" />
+            {/* ── admin decision ── */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl animate-fade-in">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-500/30 bg-violet-500/15">
+                  <Gavel className="h-5 w-5 text-violet-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-[#111827]">
-                    Admin Decision
-                  </h3>
-                  <p className="text-xs text-[#6b7280]">
-                    Review and approve mentor onboarding
-                  </p>
+                  <h3 className="text-lg font-bold text-white">Admin Decision</h3>
+                  <p className="text-xs text-slate-500">Review and approve mentor onboarding</p>
                 </div>
               </div>
 
               <div className="space-y-6">
-                {/* Status Overview */}
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="rounded-lg border border-[#e6e2f1] bg-gradient-to-br from-[#faf8ff] to-white p-4">
-                    <label className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">
-                      Identity Decision
-                    </label>
-                    <div className="mt-2 flex items-center gap-2">
+                {/* status overview */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[
+                    {
+                      label: 'Identity Decision',
+                      value: identityDecision,
+                      note: 'Auto-calculated from document decisions',
+                    },
+                    {
+                      label: 'Training Status',
+                      value: trainingStatus,
+                      note: null,
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-xl border border-slate-700/50 bg-slate-800/40 p-5"
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        {item.label}
+                      </p>
                       <div
-                        className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold capitalize ${getStatusChipClass(
-                          identityDecision
+                        className={`mt-3 rounded-lg px-4 py-2.5 text-sm font-bold capitalize ${getStatusChipClass(
+                          item.value,
                         )}`}
                       >
-                        {formatStatusLabel(identityDecision)}
+                        {formatStatusLabel(item.value)}
                       </div>
+                      {item.note && <p className="mt-2 text-xs text-slate-600">{item.note}</p>}
                     </div>
-                    <p className="mt-2 text-xs text-[#9ca3af]">
-                      Auto-calculated from document decisions
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border border-[#e6e2f1] bg-gradient-to-br from-[#faf8ff] to-white p-4">
-                    <label className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">
-                      Training Status
-                    </label>
-                    <div className="mt-2">
-                      <div
-                        className={`rounded-lg px-3 py-2.5 text-sm font-semibold capitalize ${getStatusChipClass(
-                          trainingStatus
-                        )}`}
-                      >
-                        {formatStatusLabel(trainingStatus)}
-                      </div>
-                    </div>
-                  </div>
-
+                  ))}
                 </div>
 
-                {/* Feedback Messages */}
+                {/* feedback messages */}
                 {decisionError && (
-                  <div className="rounded-lg bg-[#fee2e2] border border-[#fecaca] px-4 py-3 flex items-start gap-3 animate-shake">
-                    <XCircle className="w-5 h-5 text-[#b91c1c] flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-[#b91c1c]">{decisionError}</p>
+                  <div className="flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 animate-shake">
+                    <XCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-400" />
+                    <p className="text-sm font-medium text-rose-400">{decisionError}</p>
                   </div>
                 )}
                 {decisionSuccess && !decisionError && (
-                  <div className="rounded-lg bg-[#dcfce7] border border-[#bbf7d0] px-4 py-3 flex items-start gap-3 animate-fade-in">
-                    <CheckCircle2 className="w-5 h-5 text-[#166534] flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-[#166534]">{decisionSuccess}</p>
+                  <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 animate-fade-in">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-400" />
+                    <p className="text-sm font-medium text-emerald-400">{decisionSuccess}</p>
                   </div>
                 )}
               </div>
@@ -750,76 +702,70 @@ const AdminMentorReview = () => {
         )}
       </div>
 
-      {/* Reject Comment Modal */}
+      {/* ───────── REJECT DIALOG ───────── */}
       {rejectDialog.open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 py-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           onClick={closeRejectDialog}
         >
           <div
-            className="w-full max-w-lg rounded-2xl border border-[#e6e2f1] bg-white shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
+            className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-[#e6e2f1] px-5 py-4 bg-gradient-to-r from-[#fff5f5] to-white">
+            {/* header */}
+            <div className="flex items-center justify-between border-b border-slate-800 bg-gradient-to-r from-rose-500/10 to-slate-900 p-5">
               <div>
-                <h3 className="text-base font-semibold text-[#111827]">
+                <h3 className="text-base font-bold text-white">
                   Reject {rejectDialog.documentLabel}
                 </h3>
-                <p className="text-xs text-[#6b7280] mt-0.5">
+                <p className="mt-0.5 text-xs text-slate-400">
                   Add a reason before submitting rejection.
                 </p>
               </div>
               <button
                 type="button"
-                className="rounded-lg border border-[#e5e7eb] bg-white p-2 text-[#6b7280] hover:bg-[#f9fafb] transition-colors"
                 onClick={closeRejectDialog}
                 disabled={decisionLoading === rejectDialog.documentKey}
+                className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
+            {/* body */}
             <div className="p-5">
-              <label className="text-sm font-medium text-[#374151]">
-                Rejection comment
-              </label>
+              <label className="text-sm font-semibold text-slate-300">Rejection comment</label>
               <textarea
                 rows={4}
-                className="mt-1.5 w-full rounded-lg border border-[#fecaca] bg-[#fff1f2] px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#b91c1c] focus:border-transparent"
-                placeholder="Enter rejection reason..."
+                className="mt-2 w-full rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:border-rose-500/50 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                placeholder="Enter rejection reason…"
                 value={rejectDialog.comment}
-                onChange={(event) =>
-                  setRejectDialog((prev) => ({
-                    ...prev,
-                    comment: event.target.value,
-                    error: '',
-                  }))
+                onChange={(e) =>
+                  setRejectDialog((p) => ({ ...p, comment: e.target.value, error: '' }))
                 }
               />
               {rejectDialog.error && (
-                <p className="mt-2 text-xs font-medium text-[#b91c1c]">
-                  {rejectDialog.error}
-                </p>
+                <p className="mt-2 text-xs font-semibold text-rose-400">{rejectDialog.error}</p>
               )}
 
-              <div className="mt-4 flex items-center justify-end gap-2">
+              <div className="mt-5 flex items-center justify-end gap-2">
                 <button
                   type="button"
-                  className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-colors"
                   onClick={closeRejectDialog}
                   disabled={decisionLoading === rejectDialog.documentKey}
+                  className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className="rounded-lg border border-[#fecaca] bg-gradient-to-r from-[#fef2f2] to-[#fee2e2] px-4 py-2 text-sm font-semibold text-[#b91c1c] hover:from-[#fee2e2] hover:to-[#fecaca] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleRejectSubmit}
                   disabled={decisionLoading === rejectDialog.documentKey}
+                  className="rounded-xl border border-rose-500/30 bg-rose-500/15 px-5 py-2.5 text-sm font-bold text-rose-400 transition-all hover:border-rose-400/50 hover:bg-rose-500/25 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {decisionLoading === rejectDialog.documentKey ? 'Submitting...' : 'Submit Reject'}
+                  {decisionLoading === rejectDialog.documentKey ? 'Submitting…' : 'Submit Reject'}
                 </button>
               </div>
             </div>
@@ -827,63 +773,55 @@ const AdminMentorReview = () => {
         </div>
       )}
 
-      {/* Lightbox Modal */}
+      {/* ───────── LIGHTBOX ───────── */}
       {lightbox.open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 py-6 animate-fade-in"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 px-3 py-4 backdrop-blur-sm animate-fade-in"
           role="dialog"
           aria-modal="true"
-          onClick={() =>
-            setLightbox({ open: false, title: '', url: '', kind: 'unknown' })
-          }
+          onClick={() => setLightbox({ open: false, title: '', url: '', kind: 'unknown' })}
         >
           <div
-            className="w-full max-w-6xl rounded-3xl border border-[#e6e2f1] bg-white shadow-2xl overflow-hidden animate-fade-in-up"
-            onClick={(event) => event.stopPropagation()}
+            className="w-full max-w-6xl overflow-hidden rounded-3xl border border-slate-700 bg-[#0a0e1a] shadow-2xl animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-[#e6e2f1] px-6 py-4 bg-gradient-to-r from-[#faf8ff] to-white">
+            {/* header */}
+            <div className="flex items-center justify-between border-b border-slate-800 bg-[#0d1224] p-5">
               <div className="min-w-0 flex-1">
-                <h3 className="text-lg font-semibold text-[#111827] truncate">
-                  {lightbox.title}
-                </h3>
-                <p className="text-sm text-[#6b7280] truncate mt-0.5">
+                <h3 className="truncate text-lg font-bold text-white">{lightbox.title}</h3>
+                <p className="mt-0.5 truncate text-sm text-slate-500">
                   {getDocumentName(lightbox.url)}
                 </p>
               </div>
-              <div className="flex items-center gap-2 ml-4">
-                <button
-                  type="button"
-                  className="rounded-lg border border-[#e5e7eb] bg-white p-2 text-[#6b7280] hover:bg-[#f9fafb] transition-colors duration-200"
-                  onClick={() =>
-                    setLightbox({ open: false, title: '', url: '', kind: 'unknown' })
-                  }
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setLightbox({ open: false, title: '', url: '', kind: 'unknown' })}
+                className="ml-4 rounded-full border border-slate-700 bg-slate-800 p-2.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            {/* Modal Content */}
-            <div className="max-h-[80vh] overflow-auto bg-[#faf8ff] p-6">
+            {/* content */}
+            <div className="max-h-[82vh] overflow-auto bg-slate-900/50 p-4 sm:p-6">
               {lightbox.kind === 'image' && (
                 <img
                   src={lightbox.url}
                   alt={lightbox.title}
-                  className="mx-auto max-h-[72vh] w-auto max-w-full rounded-xl border-2 border-[#e2d7f5] bg-white shadow-2xl object-contain"
+                  className="mx-auto max-h-[74vh] w-auto max-w-full rounded-xl border-2 border-slate-700 bg-slate-900 object-contain shadow-2xl"
                 />
               )}
               {lightbox.kind === 'pdf' && (
                 <iframe
                   title={lightbox.title}
                   src={lightbox.url}
-                  className="w-full h-[72vh] rounded-xl border-2 border-[#e2d7f5] bg-white shadow-2xl"
+                  className="h-[74vh] w-full rounded-xl border-2 border-slate-700 bg-white shadow-2xl"
                 />
               )}
               {lightbox.kind === 'unknown' && (
-                <div className="rounded-xl border-2 border-[#e2d7f5] bg-white p-12 text-center">
-                  <AlertCircle className="w-16 h-16 mx-auto mb-4 text-[#9ca3af]" />
-                  <p className="text-sm text-[#6b7280]">
+                <div className="rounded-xl border-2 border-slate-700 bg-slate-800/50 p-12 text-center">
+                  <AlertCircle className="mx-auto mb-4 h-16 w-16 text-slate-600" />
+                  <p className="text-sm text-slate-400">
                     Preview is not available for this file type.
                   </p>
                 </div>
@@ -892,6 +830,31 @@ const AdminMentorReview = () => {
           </div>
         </div>
       )}
+
+      {/* ── animations ── */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20%, 60% { transform: translateX(-6px); }
+          40%, 80% { transform: translateX(6px); }
+        }
+        .animate-fade-in      { animation: fadeIn .4s ease-out both; }
+        .animate-fade-in-up   { animation: fadeInUp .5s ease-out both; }
+        .animate-fade-in-down { animation: fadeInDown .5s ease-out both; }
+        .animate-shake        { animation: shake .4s ease-in-out; }
+      `}</style>
     </div>
   );
 };

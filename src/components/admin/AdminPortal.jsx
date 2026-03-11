@@ -1,21 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  Filter, 
-  RefreshCw, 
-  ChevronLeft, 
-  ChevronRight, 
-  LogOut, 
-  Users, 
-  Mail, 
-  Lock, 
+import {
+  Search,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Users,
+  Mail,
+  Lock,
   AlertCircle,
   CheckCircle,
   Clock,
   XCircle,
   ArrowRight,
-  Inbox
+  Inbox,
+  Shield,
+  Eye,
 } from 'lucide-react';
 import { authApi } from '../../apis/api/authApi';
 import { mentorApi } from '../../apis/api/mentorApi';
@@ -26,7 +27,8 @@ import {
   setAuthSession,
 } from '../../apis/api/storage';
 
-// Utility functions
+/* ───────── helpers ───────── */
+
 const normalizeList = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.results)) return payload.results;
@@ -50,16 +52,18 @@ const formatStatusLabel = (value) => String(value || 'pending').replace(/_/g, ' 
 
 const getStatusChipClass = (status) => {
   if (status === 'completed' || status === 'verified')
-    return 'bg-[#dcfce7] text-[#166534] ring-1 ring-[#166534]/20';
+    return 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30';
   if (status === 'rejected')
-    return 'bg-[#fee2e2] text-[#b91c1c] ring-1 ring-[#b91c1c]/20';
+    return 'bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30';
   if (status === 'in_review')
-    return 'bg-[#fef3c7] text-[#92400e] ring-1 ring-[#92400e]/20';
-  return 'bg-[#ede9fe] text-[#5b2c91] ring-1 ring-[#5b2c91]/20';
+    return 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/30';
+  return 'bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/30';
 };
 
 const inputClass =
-  'mt-1.5 w-full rounded-lg border border-[#d7d0e2] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all duration-200';
+  'mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200';
+
+/* ───────── component ───────── */
 
 const AdminPortal = () => {
   const navigate = useNavigate();
@@ -73,7 +77,6 @@ const AdminPortal = () => {
   const [mentorLoading, setMentorLoading] = useState(false);
   const [mentorError, setMentorError] = useState('');
 
-  // Filter & Pagination state
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,7 +85,7 @@ const AdminPortal = () => {
 
   const isAdmin = session?.role === 'admin';
   const isOtherRoleLoggedIn = Boolean(
-    session?.accessToken && session?.role && session?.role !== 'admin'
+    session?.accessToken && session?.role && session?.role !== 'admin',
   );
 
   const applySession = (tokens, fallbackEmail) => {
@@ -156,11 +159,9 @@ const AdminPortal = () => {
     setSession(null);
   };
 
-  // Filter and sort mentors
   const filteredAndSortedMentors = useMemo(() => {
     let result = [...mentors];
 
-    // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -168,11 +169,10 @@ const AdminPortal = () => {
           mentor.first_name?.toLowerCase().includes(query) ||
           mentor.last_name?.toLowerCase().includes(query) ||
           mentor.email?.toLowerCase().includes(query) ||
-          String(mentor.id).includes(query)
+          String(mentor.id).includes(query),
       );
     }
 
-    // Status filter
     if (statusFilter !== 'all') {
       result = result.filter((mentor) => {
         const status = statusMap[mentor.id]?.current_status || 'pending';
@@ -180,13 +180,10 @@ const AdminPortal = () => {
       });
     }
 
-    // Sorting
     result.sort((a, b) => {
-      if (sortBy === 'newest') {
-        return Number(b?.id || 0) - Number(a?.id || 0);
-      } else if (sortBy === 'oldest') {
-        return Number(a?.id || 0) - Number(b?.id || 0);
-      } else if (sortBy === 'name') {
+      if (sortBy === 'newest') return Number(b?.id || 0) - Number(a?.id || 0);
+      if (sortBy === 'oldest') return Number(a?.id || 0) - Number(b?.id || 0);
+      if (sortBy === 'name') {
         const nameA = [a.first_name, a.last_name].filter(Boolean).join(' ').toLowerCase();
         const nameB = [b.first_name, b.last_name].filter(Boolean).join(' ').toLowerCase();
         return nameA.localeCompare(nameB);
@@ -197,54 +194,52 @@ const AdminPortal = () => {
     return result;
   }, [mentors, searchQuery, statusFilter, statusMap, sortBy]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredAndSortedMentors.length / itemsPerPage);
   const paginatedMentors = filteredAndSortedMentors.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
-  // Statistics
   const stats = useMemo(() => {
     const total = mentors.length;
     const pending = mentors.filter((m) => {
-      const status = statusMap[m.id]?.current_status || 'pending';
-      return status === 'pending' || status === 'in_review';
+      const s = statusMap[m.id]?.current_status || 'pending';
+      return s === 'pending' || s === 'in_review';
     }).length;
     const verified = mentors.filter((m) => {
-      const status = statusMap[m.id]?.current_status || 'pending';
-      return status === 'completed' || status === 'verified';
+      const s = statusMap[m.id]?.current_status || 'pending';
+      return s === 'completed' || s === 'verified';
     }).length;
     const rejected = mentors.filter((m) => {
-      const status = statusMap[m.id]?.current_status || 'pending';
-      return status === 'rejected';
+      const s = statusMap[m.id]?.current_status || 'pending';
+      return s === 'rejected';
     }).length;
-
     return { total, pending, verified, rejected };
   }, [mentors, statusMap]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, sortBy]);
 
+  /* ───────── other-role gate ───────── */
+
   if (isOtherRoleLoggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f5f0ff] via-[#f9f8ff] to-[#eef2ff] p-6 flex items-center justify-center">
-        <div className="w-full max-w-lg rounded-2xl border border-[#e6e2f1] bg-white p-8 shadow-xl animate-fade-in">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#fee2e2] mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-[#b91c1c]" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0b0f1a] p-6">
+        <div className="w-full max-w-lg animate-fade-in rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl backdrop-blur-sm">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/15 border border-rose-500/30">
+            <AlertCircle className="h-8 w-8 text-rose-400" />
           </div>
-          <h1 className="text-2xl font-bold text-[#111827] text-center">Admin Access Required</h1>
-          <p className="mt-3 text-sm text-[#6b7280] text-center">
+          <h1 className="text-center text-2xl font-bold text-white">Admin Access Required</h1>
+          <p className="mt-3 text-center text-sm text-slate-400">
             Please logout and continue with an admin account.
           </p>
           <button
             type="button"
-            className="mt-6 w-full rounded-lg bg-gradient-to-r from-[#5b2c91] to-[#4a2374] px-4 py-3 text-sm font-semibold text-white hover:from-[#4a2374] hover:to-[#3a1d5f] transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-[#5b2c91]/25"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all hover:from-violet-500 hover:to-indigo-500 hover:shadow-violet-500/40"
             onClick={handleLogout}
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="h-5 w-5" />
             Logout
           </button>
         </div>
@@ -252,60 +247,65 @@ const AdminPortal = () => {
     );
   }
 
+  /* ───────── login page ───────── */
+
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f5f0ff] via-[#f9f8ff] to-[#eef2ff] p-4 sm:p-6 flex items-center justify-center">
-        <div className="w-full max-w-5xl rounded-3xl border border-[#e6e2f1] bg-white shadow-2xl overflow-hidden animate-fade-in-up">
+      <div className="flex min-h-screen items-center justify-center bg-[#0b0f1a] bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,_#1e1b4b33,_transparent)] p-4 sm:p-6">
+        <div className="w-full max-w-5xl animate-fade-in-up overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl backdrop-blur-sm">
           <div className="grid md:grid-cols-[1fr_1.2fr]">
-            {/* Left Panel */}
-            <div className="relative bg-gradient-to-br from-[#5b2c91] via-[#4a2374] to-[#3a1d5f] text-white p-8 sm:p-12 overflow-hidden">
-              {/* Animated background circles */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse-slow" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
-              
+            {/* Left — branding */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-violet-700 via-violet-800 to-indigo-900 p-8 text-white sm:p-12">
+              <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
+              <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-white/5 blur-2xl" />
+
               <div className="relative z-10">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 text-xs font-semibold animate-fade-in">
-                  <span className="w-2 h-2 bg-[#dcfce7] rounded-full animate-pulse" />
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-bold backdrop-blur-sm">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
                   Admin Portal
                 </div>
-                <h1 className="mt-6 text-4xl font-bold leading-tight animate-slide-in-left">
+                <h1 className="mt-6 text-4xl font-black leading-tight">
                   Mentor Review Console
                 </h1>
-                <p className="mt-4 text-base text-white/90 animate-slide-in-left" style={{ animationDelay: '0.1s' }}>
-                  Review identity documents, training status, and onboarding decisions with our powerful admin dashboard.
+                <p className="mt-4 text-base leading-relaxed text-white/80">
+                  Review identity documents, training status, and onboarding decisions with our
+                  powerful admin dashboard.
                 </p>
-                
-                <div className="mt-8 space-y-3 animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
+
+                <div className="mt-8 space-y-3">
                   {[
-                    { text: 'Verify KYC documents', icon: CheckCircle },
-                    { text: 'Track onboarding status', icon: Clock },
-                    { text: 'Manage mentor approvals', icon: Users }
-                  ].map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <feature.icon className="w-5 h-5 text-[#dcfce7]" />
-                      <span className="text-sm">{feature.text}</span>
+                    { text: 'Verify KYC documents', Icon: CheckCircle },
+                    { text: 'Track onboarding status', Icon: Clock },
+                    { text: 'Manage mentor approvals', Icon: Users },
+                  ].map(({ text, Icon }) => (
+                    <div key={text} className="flex items-center gap-3">
+                      <Icon className="h-5 w-5 text-emerald-300" />
+                      <span className="text-sm text-white/90">{text}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Right Panel - Login Form */}
-            <div className="p-8 sm:p-12 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#5b2c91] to-[#4a2374] flex items-center justify-center shadow-lg shadow-[#5b2c91]/25">
-                  <Lock className="w-6 h-6 text-white" />
+            {/* Right — form */}
+            <div className="p-8 sm:p-12">
+              <div className="mb-8 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/25">
+                  <Lock className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-[#111827]">Sign in</h2>
-                  <p className="text-sm text-[#6b7280]">Access your admin account</p>
+                  <h2 className="text-2xl font-bold text-white">Sign in</h2>
+                  <p className="text-sm text-slate-400">Access your admin account</p>
                 </div>
               </div>
 
               <form className="space-y-5" onSubmit={handleLogin}>
                 <div className="space-y-2">
-                  <label htmlFor="adminLoginEmail" className="flex items-center gap-2 text-sm font-medium text-[#374151]">
-                    <Mail className="w-4 h-4 text-[#6b7280]" />
+                  <label
+                    htmlFor="adminLoginEmail"
+                    className="flex items-center gap-2 text-sm font-medium text-slate-300"
+                  >
+                    <Mail className="h-4 w-4 text-slate-500" />
                     Email Address
                   </label>
                   <input
@@ -314,15 +314,16 @@ const AdminPortal = () => {
                     placeholder="admin@example.com"
                     className={inputClass}
                     value={loginForm.email}
-                    onChange={(event) =>
-                      setLoginForm((prev) => ({ ...prev, email: event.target.value }))
-                    }
+                    onChange={(e) => setLoginForm((p) => ({ ...p, email: e.target.value }))}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="adminLoginPassword" className="flex items-center gap-2 text-sm font-medium text-[#374151]">
-                    <Lock className="w-4 h-4 text-[#6b7280]" />
+                  <label
+                    htmlFor="adminLoginPassword"
+                    className="flex items-center gap-2 text-sm font-medium text-slate-300"
+                  >
+                    <Lock className="h-4 w-4 text-slate-500" />
                     Password
                   </label>
                   <input
@@ -331,28 +332,26 @@ const AdminPortal = () => {
                     placeholder="Enter your password"
                     className={inputClass}
                     value={loginForm.password}
-                    onChange={(event) =>
-                      setLoginForm((prev) => ({ ...prev, password: event.target.value }))
-                    }
+                    onChange={(e) => setLoginForm((p) => ({ ...p, password: e.target.value }))}
                   />
                 </div>
 
                 {authError && (
-                  <div className="rounded-lg bg-[#fee2e2] border border-[#fecaca] px-4 py-3 text-sm text-[#b91c1c] flex items-start gap-2 animate-shake">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-400 animate-shake">
+                    <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
                     <span>{authError}</span>
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-gradient-to-r from-[#5b2c91] to-[#4a2374] px-4 py-3.5 text-sm font-semibold text-white hover:from-[#4a2374] hover:to-[#3a1d5f] focus:outline-none focus:ring-4 focus:ring-[#5b2c91]/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#5b2c91]/25"
                   disabled={authLoading}
+                  className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all hover:from-violet-500 hover:to-indigo-500 hover:shadow-violet-500/40 focus:outline-none focus:ring-4 focus:ring-violet-500/30 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]"
                 >
                   {authLoading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                      Signing in...
+                      <RefreshCw className="h-5 w-5 animate-spin" />
+                      Signing in…
                     </span>
                   ) : (
                     'Sign in to Dashboard'
@@ -360,10 +359,11 @@ const AdminPortal = () => {
                 </button>
               </form>
 
-              <div className="mt-6 pt-6 border-t border-[#e5e7eb]">
-                <p className="text-xs text-[#6b7280] text-center">
+              <div className="mt-6 border-t border-slate-800 pt-6">
+                <div className="flex items-center justify-center gap-2 text-xs text-slate-600">
+                  <Shield className="h-3.5 w-3.5" />
                   Protected by enterprise-grade security
-                </p>
+                </div>
               </div>
             </div>
           </div>
@@ -372,159 +372,221 @@ const AdminPortal = () => {
     );
   }
 
+  /* ───────── dashboard ───────── */
+
   return (
-    <div className="min-h-screen bg-[#f4f2f7] p-4 sm:p-6">
-      <div className="mx-auto max-w-[1400px]">
-        {/* Header */}
-        <div className="rounded-2xl border border-[#e6e2f1] bg-white/80 backdrop-blur-sm p-6 shadow-[0_10px_30px_rgba(91,44,145,0.10)] mb-6 animate-fade-in-down">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="min-h-screen bg-[#0b0f1a] bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,_#1e1b4b33,_transparent)] p-3 sm:p-6">
+      <div className="mx-auto max-w-[1440px]">
+        {/* ── header ── */}
+        <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl backdrop-blur-sm animate-fade-in-down">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#5b2c91] to-[#4a2374] flex items-center justify-center shadow-lg shadow-[#5b2c91]/25">
-                <Users className="w-6 h-6 text-white" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/25">
+                <Users className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#5b2c91] to-[#4a2374] bg-clip-text text-transparent">
-                  Mentor Dashboard
-                </h1>
-                <p className="text-sm text-[#6b7280] mt-1">
+                <h1 className="text-3xl font-black tracking-tight text-white">Mentor Dashboard</h1>
+                <p className="mt-1 text-sm text-slate-400">
                   Manage and review mentor applications
                 </p>
                 <button
                   type="button"
                   onClick={() => navigate('/admin/activity')}
-                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d8cbef] bg-[#f7f2ff] px-3 py-1.5 text-xs font-semibold text-[#5b2c91] transition-colors hover:bg-[#efe6ff]"
+                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3.5 py-1.5 text-xs font-bold text-violet-400 transition-colors hover:border-violet-400/50 hover:bg-violet-500/20"
                 >
                   Open Activity Analytics
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
+
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-all duration-200 flex items-center gap-2 shadow-sm"
                 onClick={loadMentorRows}
                 disabled={mentorLoading}
+                className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm font-semibold text-slate-300 shadow-sm transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
               >
-                <RefreshCw className={`w-5 h-5 ${mentorLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 ${mentorLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-all duration-200 flex items-center gap-2 shadow-sm"
                 onClick={handleLogout}
+                className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm font-semibold text-slate-300 shadow-sm transition-all hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-400"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="h-4 w-4" />
                 Logout
               </button>
             </div>
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* ── stat cards ── */}
+        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[
-            { label: 'Total Mentors', value: stats.total, color: '[#5b2c91]', bgColor: '[#ede9fe]', icon: Users },
-            { label: 'Pending Review', value: stats.pending, color: '[#92400e]', bgColor: '[#fef3c7]', icon: Clock },
-            { label: 'Verified', value: stats.verified, color: '[#166534]', bgColor: '[#dcfce7]', icon: CheckCircle },
-            { label: 'Rejected', value: stats.rejected, color: '[#b91c1c]', bgColor: '[#fee2e2]', icon: XCircle },
-          ].map((stat, idx) => (
+            {
+              label: 'Total Mentors',
+              value: stats.total,
+              accent: 'from-violet-400 to-purple-400',
+              iconBg: 'bg-violet-500/15 border-violet-500/30',
+              Icon: Users,
+            },
+            {
+              label: 'Pending Review',
+              value: stats.pending,
+              accent: 'from-amber-400 to-orange-400',
+              iconBg: 'bg-amber-500/15 border-amber-500/30',
+              Icon: Clock,
+            },
+            {
+              label: 'Verified',
+              value: stats.verified,
+              accent: 'from-emerald-400 to-teal-400',
+              iconBg: 'bg-emerald-500/15 border-emerald-500/30',
+              Icon: CheckCircle,
+            },
+            {
+              label: 'Rejected',
+              value: stats.rejected,
+              accent: 'from-rose-400 to-pink-400',
+              iconBg: 'bg-rose-500/15 border-rose-500/30',
+              Icon: XCircle,
+            },
+          ].map((card, idx) => (
             <div
-              key={stat.label}
-              className="rounded-xl border border-[#e6e2f1] bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300 animate-fade-in-up"
+              key={card.label}
+              className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-5 transition-all hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-xl hover:shadow-black/30 animate-fade-in-up"
               style={{ animationDelay: `${idx * 0.1}s` }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className={`w-10 h-10 rounded-lg bg-${stat.bgColor} flex items-center justify-center`}>
-                  <stat.icon className={`w-5 h-5 text-${stat.color}`} />
+              {/* glow */}
+              <div
+                className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${card.accent} opacity-10 blur-2xl transition-opacity group-hover:opacity-20`}
+              />
+
+              <div className="relative">
+                <div className="mb-3 flex items-center justify-between">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl border ${card.iconBg}`}
+                  >
+                    <card.Icon className="h-5 w-5 text-slate-300" />
+                  </div>
+                  <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    Live
+                  </span>
                 </div>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full bg-${stat.bgColor} text-${stat.color}`}>
-                  Live
-                </span>
+                <p className="text-sm text-slate-400">{card.label}</p>
+                <p
+                  className={`mt-1 bg-gradient-to-r ${card.accent} bg-clip-text text-4xl font-black text-transparent`}
+                >
+                  {card.value}
+                </p>
               </div>
-              <div className="text-sm text-[#6b7280] mb-1">{stat.label}</div>
-              <div className={`text-3xl font-bold text-${stat.color}`}>{stat.value}</div>
             </div>
           ))}
         </div>
 
-        {/* Filters & Search */}
-        <div className="rounded-xl border border-[#e6e2f1] bg-white p-5 shadow-sm mb-6 animate-fade-in">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9ca3af]">
-                <Search className="w-5 h-5" />
+        {/* ── filters ── */}
+        <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 animate-fade-in">
+          <div className="flex flex-col gap-4 lg:flex-row">
+            {/* search */}
+            <div className="relative flex-1">
+              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                <Search className="h-5 w-5" />
               </div>
               <input
                 type="text"
-                placeholder="Search by name, email, or ID..."
-                className="w-full pl-12 pr-4 py-3 rounded-lg border border-[#d7d0e2] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all duration-200"
+                placeholder="Search by name, email, or ID…"
+                className="w-full rounded-xl border border-slate-700 bg-slate-800/60 py-3 pl-12 pr-4 text-sm text-slate-200 placeholder:text-slate-500 transition-all focus:border-violet-500/50 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
 
-            {/* Status Filter */}
-            <select
-              className="px-4 py-3 rounded-lg border border-[#d7d0e2] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all duration-200 bg-white text-[#374151]"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="in_review">In Review</option>
-              <option value="verified">Verified</option>
-              <option value="completed">Completed</option>
-              <option value="rejected">Rejected</option>
-            </select>
-
-            {/* Sort */}
-            <select
-              className="px-4 py-3 rounded-lg border border-[#d7d0e2] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all duration-200 bg-white text-[#374151]"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="name">Name (A-Z)</option>
-            </select>
-
-            {/* Items per page */}
-            <select
-              className="px-4 py-3 rounded-lg border border-[#d7d0e2] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent transition-all duration-200 bg-white text-[#374151]"
-              value={itemsPerPage}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
-            >
-              <option value={5}>5 per page</option>
-              <option value={10}>10 per page</option>
-              <option value={25}>25 per page</option>
-              <option value={50}>50 per page</option>
-            </select>
+            {/* selects */}
+            {[
+              {
+                value: statusFilter,
+                setter: setStatusFilter,
+                options: [
+                  ['all', 'All Status'],
+                  ['pending', 'Pending'],
+                  ['in_review', 'In Review'],
+                  ['verified', 'Verified'],
+                  ['completed', 'Completed'],
+                  ['rejected', 'Rejected'],
+                ],
+              },
+              {
+                value: sortBy,
+                setter: setSortBy,
+                options: [
+                  ['newest', 'Newest First'],
+                  ['oldest', 'Oldest First'],
+                  ['name', 'Name (A-Z)'],
+                ],
+              },
+              {
+                value: itemsPerPage,
+                setter: (v) => setItemsPerPage(Number(v)),
+                options: [
+                  [5, '5 per page'],
+                  [10, '10 per page'],
+                  [25, '25 per page'],
+                  [50, '50 per page'],
+                ],
+              },
+            ].map((sel, i) => (
+              <select
+                key={i}
+                className="rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm text-slate-300 transition-all focus:border-violet-500/50 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                value={sel.value}
+                onChange={(e) => sel.setter(e.target.value)}
+              >
+                {sel.options.map(([val, label]) => (
+                  <option key={val} value={val}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            ))}
           </div>
 
-          {/* Active filters indicator */}
+          {/* active filters */}
           {(searchQuery || statusFilter !== 'all') && (
-            <div className="mt-4 flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-[#6b7280]">Active filters:</span>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-sm text-slate-500">Active filters:</span>
+
               {searchQuery && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#ede9fe] text-[#5b2c91] text-xs font-medium">
+                <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/15 px-3 py-1 text-xs font-medium text-violet-400">
                   Search: {searchQuery}
-                  <button onClick={() => setSearchQuery('')} className="hover:text-[#4a2374] ml-1">×</button>
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="ml-1 hover:text-violet-300"
+                  >
+                    ×
+                  </button>
                 </span>
               )}
+
               {statusFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#ede9fe] text-[#5b2c91] text-xs font-medium">
+                <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/15 px-3 py-1 text-xs font-medium text-violet-400">
                   Status: {formatStatusLabel(statusFilter)}
-                  <button onClick={() => setStatusFilter('all')} className="hover:text-[#4a2374] ml-1">×</button>
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className="ml-1 hover:text-violet-300"
+                  >
+                    ×
+                  </button>
                 </span>
               )}
+
               <button
                 onClick={() => {
                   setSearchQuery('');
                   setStatusFilter('all');
                 }}
-                className="text-xs text-[#5b2c91] hover:text-[#4a2374] font-medium"
+                className="text-xs font-semibold text-violet-500 hover:text-violet-400"
               >
                 Clear all
               </button>
@@ -532,103 +594,114 @@ const AdminPortal = () => {
           )}
         </div>
 
-        {/* Table */}
-        <div className="rounded-xl border border-[#e5e7eb] bg-white overflow-hidden shadow-sm animate-fade-in">
+        {/* ── table ── */}
+        <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 shadow-xl animate-fade-in">
+          {/* error banner */}
           {mentorError && (
-            <div className="p-4 bg-[#fee2e2] border-b border-[#fecaca] text-sm text-[#b91c1c] flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" />
+            <div className="flex items-center gap-2 border-b border-rose-500/20 bg-rose-500/10 px-5 py-3 text-sm font-medium text-rose-400">
+              <AlertCircle className="h-5 w-5" />
               {mentorError}
             </div>
           )}
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px]">
-              <thead className="bg-[#faf8ff] border-b border-[#e6e2f1]">
+            <table className="w-full min-w-[920px]">
+              <thead className="border-b border-slate-800 bg-slate-800/40">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                    Mentor
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                    Action
-                  </th>
+                  {['Mentor', 'Email', 'Created', 'Status', 'Action'].map((h, i) => (
+                    <th
+                      key={h}
+                      className={`px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500 ${
+                        i === 4 ? 'text-right' : 'text-left'
+                      }`}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#f1eef7]">
+
+              <tbody className="divide-y divide-slate-800/60">
                 {paginatedMentors.map((mentor, idx) => {
                   const itemStatus = statusMap[mentor.id]?.current_status || 'pending';
                   return (
                     <tr
                       key={mentor.id}
-                      className="hover:bg-[#fcfbff] transition-colors duration-150 animate-fade-in"
-                      style={{ animationDelay: `${idx * 0.05}s` }}
+                      className="transition-colors hover:bg-slate-800/40 animate-fade-in"
+                      style={{ animationDelay: `${idx * 0.04}s` }}
                     >
+                      {/* name + avatar */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5b2c91] to-[#4a2374] flex items-center justify-center text-white font-semibold text-sm shadow-md shadow-[#5b2c91]/25">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-sm font-bold text-white shadow-md shadow-violet-500/20">
                             {(mentor.first_name?.[0] || 'M').toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-sm font-semibold text-[#111827]">
-                              {[mentor.first_name, mentor.last_name].filter(Boolean).join(' ') || 'Mentor'}
-                            </div>
-                            <div className="text-xs text-[#6b7280]">ID: #{mentor.id}</div>
+                            <p className="text-sm font-semibold text-white">
+                              {[mentor.first_name, mentor.last_name].filter(Boolean).join(' ') ||
+                                'Mentor'}
+                            </p>
+                            <p className="text-xs text-slate-500">ID: #{mentor.id}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-[#6b7280]">{mentor.email || 'No email'}</div>
+
+                      {/* email */}
+                      <td className="px-6 py-4 text-sm text-slate-400">
+                        {mentor.email || 'No email'}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-[#6b7280]">{formatDateTime(mentor.created_at)}</div>
+
+                      {/* created */}
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {formatDateTime(mentor.created_at)}
                       </td>
+
+                      {/* status */}
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${getStatusChipClass(
-                            itemStatus
+                            itemStatus,
                           )}`}
                         >
                           {formatStatusLabel(itemStatus)}
                         </span>
                       </td>
+
+                      {/* action */}
                       <td className="px-6 py-4 text-right">
                         <button
                           type="button"
-                          className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5b2c91] to-[#4a2374] px-4 py-2 text-xs font-semibold text-white hover:from-[#4a2374] hover:to-[#3a1d5f] transition-all duration-200 shadow-sm shadow-[#5b2c91]/25 hover:shadow-md transform hover:scale-105"
                           onClick={() => navigate(`/admin/review/${mentor.id}`)}
+                          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-violet-500/20 transition-all hover:from-violet-500 hover:to-indigo-500 hover:shadow-violet-500/30 active:scale-95"
                         >
+                          <Eye className="h-3.5 w-3.5" />
                           Review
-                          <ArrowRight className="w-4 h-4" />
                         </button>
                       </td>
                     </tr>
                   );
                 })}
+
+                {/* empty */}
                 {!paginatedMentors.length && !mentorLoading && (
                   <tr>
-                    <td className="px-6 py-12 text-center" colSpan={5}>
-                      <div className="flex flex-col items-center justify-center text-[#9ca3af]">
-                        <Inbox className="w-16 h-16 mb-4 text-[#d1d5db]" />
-                        <p className="text-sm font-medium text-[#6b7280]">No mentors found</p>
-                        <p className="text-xs text-[#9ca3af] mt-1">Try adjusting your filters</p>
+                    <td colSpan={5} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center text-slate-600">
+                        <Inbox className="mb-4 h-16 w-16 text-slate-700" />
+                        <p className="text-sm font-semibold text-slate-400">No mentors found</p>
+                        <p className="mt-1 text-xs text-slate-600">Try adjusting your filters</p>
                       </div>
                     </td>
                   </tr>
                 )}
+
+                {/* loading */}
                 {mentorLoading && (
                   <tr>
-                    <td className="px-6 py-12 text-center" colSpan={5}>
+                    <td colSpan={5} className="px-6 py-16 text-center">
                       <div className="flex items-center justify-center gap-3">
-                        <RefreshCw className="w-8 h-8 text-[#5b2c91] animate-spin" />
-                        <span className="text-sm text-[#6b7280]">Loading mentors...</span>
+                        <RefreshCw className="h-8 w-8 animate-spin text-violet-500" />
+                        <span className="text-sm text-slate-400">Loading mentors…</span>
                       </div>
                     </td>
                   </tr>
@@ -637,48 +710,51 @@ const AdminPortal = () => {
             </table>
           </div>
 
-          {/* Pagination */}
+          {/* ── pagination ── */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-[#e6e2f1] bg-[#faf8ff]">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-sm text-[#6b7280]">
-                  Showing <span className="font-semibold text-[#111827]">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
-                  <span className="font-semibold text-[#111827]">
+            <div className="border-t border-slate-800 bg-slate-800/30 px-6 py-4">
+              <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+                <p className="text-sm text-slate-500">
+                  Showing{' '}
+                  <span className="font-bold text-slate-300">
+                    {(currentPage - 1) * itemsPerPage + 1}
+                  </span>{' '}
+                  to{' '}
+                  <span className="font-bold text-slate-300">
                     {Math.min(currentPage * itemsPerPage, filteredAndSortedMentors.length)}
                   </span>{' '}
-                  of <span className="font-semibold text-[#111827]">{filteredAndSortedMentors.length}</span> results
-                </div>
+                  of{' '}
+                  <span className="font-bold text-slate-300">
+                    {filteredAndSortedMentors.length}
+                  </span>{' '}
+                  results
+                </p>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-[#d7d0e2] bg-white hover:bg-[#f9fafb] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-slate-400 transition-all hover:border-slate-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="h-5 w-5" />
                   </button>
 
                   <div className="flex items-center gap-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
+                      if (totalPages <= 5) pageNum = i + 1;
+                      else if (currentPage <= 3) pageNum = i + 1;
+                      else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                      else pageNum = currentPage - 2 + i;
 
                       return (
                         <button
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`min-w-[40px] h-10 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          className={`min-w-[40px] rounded-lg py-2 text-sm font-bold transition-all ${
                             currentPage === pageNum
-                              ? 'bg-gradient-to-r from-[#5b2c91] to-[#4a2374] text-white shadow-md shadow-[#5b2c91]/25'
-                              : 'bg-white border border-[#d7d0e2] text-[#374151] hover:bg-[#f9fafb]'
+                              ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/25'
+                              : 'border border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600 hover:text-white'
                           }`}
                         >
                           {pageNum}
@@ -690,9 +766,9 @@ const AdminPortal = () => {
                   <button
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg border border-[#d7d0e2] bg-white hover:bg-[#f9fafb] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-slate-400 transition-all hover:border-slate-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="h-5 w-5" />
                   </button>
                 </div>
               </div>
@@ -700,6 +776,36 @@ const AdminPortal = () => {
           )}
         </div>
       </div>
+
+      {/* ── animations ── */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-24px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20%, 60% { transform: translateX(-6px); }
+          40%, 80% { transform: translateX(6px); }
+        }
+        .animate-fade-in       { animation: fadeIn .4s ease-out both; }
+        .animate-fade-in-up    { animation: fadeInUp .5s ease-out both; }
+        .animate-fade-in-down  { animation: fadeInDown .5s ease-out both; }
+        .animate-slide-in-left { animation: slideInLeft .5s ease-out both; }
+        .animate-shake         { animation: shake .4s ease-in-out; }
+      `}</style>
     </div>
   );
 };
