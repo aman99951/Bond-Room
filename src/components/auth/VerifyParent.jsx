@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import TopAuth from './TopAuth';
-import BottomAuth from './BottomAuth';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ShieldCheck } from 'lucide-react';
+import logo from '../assets/logo.png';
 import leftside from '../assets/Leftside.png';
 import errorIcon from '../assets/error.png';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
@@ -9,6 +9,8 @@ import {
   clearPendingMenteeRegistration,
   getPendingMenteeRegistration,
 } from '../../apis/api/storage';
+import '../LandingPage.css';
+import './VerifyParent.css';
 
 const VerifyParent = () => {
   const navigate = useNavigate();
@@ -73,110 +75,120 @@ const VerifyParent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
-      <TopAuth />
+    <div className="lp lp-vp">
+      <header className="lp-hdr">
+        <Link to="/" className="lp-logo" aria-label="Go to landing page">
+          <img src={logo} alt="Bond Room" />
+          <span>Bridging Old and New Destinies</span>
+        </Link>
 
-      <main className="flex-1">
-        <div className="flex w-full justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-10">
-          <div className="w-full max-w-[1266px] overflow-hidden rounded-xl border border-[#e6e2f1] bg-white shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-              <div className="hidden md:block">
-                <img
-                  src={leftside}
-                  alt="Find your safe space"
-                  className="h-full w-full object-cover"
+        <nav className="lp-nav">
+          <Link to="/">Home</Link>
+          <a href="/#about">About</a>
+          <a href="/#safety">Safety</a>
+        </nav>
+
+        <div className="lp-hdr-actions">
+          <Link to="/register" className="lp-ghost">Back</Link>
+        </div>
+      </header>
+
+      <main className="lp-vp-main">
+        <div className="lp-vp-orb lp-vp-orb-a" />
+        <div className="lp-vp-orb lp-vp-orb-b" />
+
+        <div className="lp-vp-shell">
+          <div className="lp-vp-grid">
+            <aside className="lp-vp-side">
+              <img src={leftside} alt="Find your safe space" className="lp-vp-side-image" />
+              <div className="lp-vp-side-overlay" />
+              <div className="lp-vp-side-copy">
+                <p className="lp-label">
+                  <span className="lp-rule" />
+                  Step 2 of 3
+                </p>
+                <h3>Parent consent verification</h3>
+                <p>
+                  A quick OTP check confirms guardian consent before the student continues to the needs assessment.
+                </p>
+              </div>
+            </aside>
+
+            <section className="lp-vp-form-wrap">
+              <div className="lp-login-pill">
+                <span className="lp-login-pill-dot" />
+                Verification
+              </div>
+              <h2 className="lp-vp-h2">Verify phone number</h2>
+              <p className="lp-vp-sub">Enter the 6-digit OTP sent to +91 {parentMobileMasked}</p>
+
+              <div className="lp-vp-consent-card">
+                <span className="lp-vp-consent-icon">
+                  <img src={errorIcon} alt="" className="h-3 w-3" />
+                </span>
+                <p>
+                  <strong>Explicit Consent:</strong> Entering this OTP confirms parent or guardian consent for participation and session recording.
+                </p>
+              </div>
+
+              <div className="lp-vp-otp-wrap">
+                <input
+                  value={otp}
+                  onChange={handleOtpChange}
+                  placeholder="Enter OTP"
+                  className="lp-input lp-vp-otp"
+                  maxLength={6}
+                  inputMode="numeric"
                 />
               </div>
 
-              <div className="flex w-full items-center justify-center bg-[#f7f5fa] p-5 sm:p-8 lg:p-12">
-                <div className="w-full max-w-md text-center">
-                  <div className="mx-auto h-11 w-11 rounded-full bg-[#5b2c91] flex items-center justify-center">
-                    <svg className="h-5 w-5 text-[#f2c94c]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path
-                        d="M12 3l7 3v6c0 4.1-3 7.8-7 9-4-1.2-7-4.9-7-9V6l7-3z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      />
-                    </svg>
-                  </div>
-                  <div className="mt-3 inline-flex items-center rounded-full bg-[#e9ddff] text-xs text-[#5b2c91] px-3 py-1 font-medium">
-                    Step 2 of 3
-                  </div>
-                  <h2
-                    className="mt-3 text-[#1f2937] text-center"
-                    style={{ fontSize: '24px', lineHeight: '25.5px', fontWeight: 600 }}
-                  >
-                    Verify phone number
-                  </h2>
-                  <p className="mt-1 text-xs text-[#6b7280]">
-                    Enter the 6-digit OTP sent to +91 {parentMobileMasked}
-                  </p>
-
-                  <div className="mt-5 rounded-lg border border-[#e3d7f5] bg-[#eadcf9] p-4 text-left text-[#3f3a4a] shadow-sm">
-                    <div className="flex items-start gap-3">
-                      <span className=" inline-flex h-7 w-7 items-center justify-center rounded-full">
-                        <img src={errorIcon} alt="" className="h-3 w-3" />
-                      </span>
-                      <p style={{ fontSize: '12px', lineHeight: '20px', fontWeight: 400 }}>
-                        <span style={{ fontSize: '12px', lineHeight: '20px', fontWeight: 700, color: '#2f273a' }}>
-                          Explicit Consent:
-                        </span>{' '}
-                        Entering this OTP confirms that a parent or guardian consents to the student&apos;s
-                        participation and session recording.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-center">
-                    <input
-                      value={otp}
-                      onChange={handleOtpChange}
-                      placeholder="Enter OTP"
-                      className="h-10 w-44 rounded-md border border-[#d7d0e2] bg-white text-center text-sm tracking-[0.5em]"
-                      maxLength={6}
-                      inputMode="numeric"
-                    />
-                  </div>
-
-                  <div className="mt-4 flex items-center justify-between text-xs text-[#6b7280]">
-                    <span>{otp.length ? `${otp.length}/6 digits` : 'Enter OTP'}</span>
-                    <button
-                      className="text-[#6b7280] hover:text-[#5b2c91] disabled:opacity-70"
-                      onClick={handleResend}
-                      type="button"
-                      disabled={loading}
-                    >
-                      Resend OTP
-                    </button>
-                  </div>
-
-                  {errorMessage && <p className="mt-3 text-sm text-red-600">{errorMessage}</p>}
-                  {!errorMessage && infoMessage && <p className="mt-3 text-sm text-green-700">{infoMessage}</p>}
-                  {!errorMessage && otpHint && <p className="mt-2 text-xs text-[#5b2c91]">{otpHint}</p>}
-
-                  <button
-                    type="button"
-                    onClick={handleVerify}
-                    className="mt-5 block w-full rounded-md bg-[#5b2c91] text-white py-2.5 text-sm text-center"
-                    disabled={loading}
-                  >
-                    {loading ? 'Verifying...' : 'Verify & Continue'}
-                  </button>
-                  <Link
-                    to="/register"
-                    className="mt-3 block w-full rounded-md border border-[#d7d0e2] bg-white py-2.5 text-[#6b7280] text-center"
-                    style={{ fontSize: '16px', lineHeight: '100%', fontWeight: 400 }}
-                  >
-                    Back to Registration
-                  </Link>
-                </div>
+              <div className="lp-vp-meta">
+                <span>{otp.length ? `${otp.length}/6 digits` : 'Enter OTP'}</span>
+                <button
+                  className="lp-vp-resend"
+                  onClick={handleResend}
+                  type="button"
+                  disabled={loading}
+                >
+                  Resend OTP
+                </button>
               </div>
-            </div>
+
+              {errorMessage && <p className="lp-msg lp-msg-error">{errorMessage}</p>}
+              {!errorMessage && infoMessage && <p className="lp-msg lp-msg-success">{infoMessage}</p>}
+              {!errorMessage && otpHint && <p className="lp-vp-hint">{otpHint}</p>}
+
+              <button
+                type="button"
+                onClick={handleVerify}
+                className="lp-login-submit"
+                disabled={loading}
+              >
+                {loading ? 'Verifying...' : 'Verify & Continue'}
+              </button>
+
+              <Link to="/register" className="lp-vp-back-link">
+                Back to Registration
+              </Link>
+
+              <p className="lp-vp-foot-note">
+                <ShieldCheck size={14} /> Your verification helps keep every student interaction safe.
+              </p>
+            </section>
           </div>
         </div>
       </main>
 
-      <BottomAuth />
+      <footer className="lp-footer lp-login-footer">
+        <div className="lp-footer-btm">
+          <span>(c) 2026 Bond Room Platform. All rights reserved.</span>
+          <span className="lp-login-footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Support</a>
+          </span>
+        </div>
+      </footer>
     </div>
   );
 };

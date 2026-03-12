@@ -1,31 +1,20 @@
 import React, { useState } from 'react';
-import TopAuth from './TopAuth';
-import BottomAuth from './BottomAuth';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
+import '../LandingPage.css';
+import './NeedsAssessment.css';
 
-const Choice = ({ label, selected, onClick }) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative flex w-full min-h-[72px] max-w-[260px] items-center justify-center rounded-[12px] border-2 px-4 py-4 text-center text-secondary sm:px-5 ${
-        selected ? 'border-[#41a34a] bg-[#f2faf3] shadow-sm' : 'border-default bg-white'
-      }`}
-    >
-      <span
-        className={`text-sm leading-5 sm:text-base sm:leading-6 ${selected ? 'font-semibold' : 'font-normal'}`}
-      >
-        {label}
-      </span>
-      {selected && (
-        <span className="absolute right-3 flex h-4 w-4 items-center justify-center rounded-full bg-[#41a34a] text-[10px] text-white">
-          {'\u2713'}
-        </span>
-      )}
-    </button>
-  );
-};
+const Choice = ({ label, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`lp-na-choice ${selected ? 'is-selected' : ''}`}
+  >
+    <span>{label}</span>
+    {selected && <span className="lp-na-choice-mark">{'\u2713'}</span>}
+  </button>
+);
 
 const NeedsAssessmentQ4 = () => {
   const navigate = useNavigate();
@@ -46,63 +35,71 @@ const NeedsAssessmentQ4 = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface text-primary flex flex-col">
-      <TopAuth />
+    <div className="lp lp-na">
+      <header className="lp-hdr">
+        <Link to="/" className="lp-logo" aria-label="Go to landing page">
+          <img src={logo} alt="Bond Room" />
+          <span>Bridging Old and New Destinies</span>
+        </Link>
+        <nav className="lp-nav">
+          <Link to="/">Home</Link>
+          <a href="/#about">About</a>
+          <a href="/#safety">Safety</a>
+        </nav>
+        <div className="lp-hdr-actions">
+          <Link to="/dashboard" className="lp-ghost">Dashboard</Link>
+        </div>
+      </header>
 
-      <main className="flex-1">
-        <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 sm:py-10 lg:px-20 lg:py-14">
-          <div className="mx-auto max-w-3xl">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-              <span className="text-xs">Step 3 of 3: Needs Assessment</span>
-              <span className="text-xs">Question 4 of 5</span>
-            </div>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
-              <div className="h-1.5 w-4/5 rounded-full bg-accent" />
-            </div>
+      <main className="lp-na-main">
+        <div className="lp-na-orb lp-na-orb-a" />
+        <div className="lp-na-orb lp-na-orb-b" />
 
-            <div className="mt-8 text-center sm:mt-10">
-              <h2 className="text-center text-2xl font-semibold leading-tight text-[#1f2937] sm:text-3xl lg:text-[36px] lg:leading-[45.5px]">
-                How comfortable are you talking to someone new?
-              </h2>
-            </div>
+        <div className="lp-na-shell">
+          <div className="lp-na-top">
+            <span>Step 3 of 3: Needs Assessment</span>
+            <span>Question 4 of 5</span>
+          </div>
+          <div className="lp-na-progress-track">
+            <div className="lp-na-progress-fill" style={{ width: '80%' }} />
+          </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:justify-items-center lg:grid-cols-3">
-              {options.map((option) => (
-                <Choice
-                  key={option}
-                  label={option}
-                  selected={selectedComfort === option}
-                  onClick={() => setSelectedComfort(option)}
-                />
-              ))}
-            </div>
+          <div className="lp-na-head">
+            <h2>How comfortable are you talking to someone new?</h2>
+          </div>
 
-            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
-              <Link
-                to="/needs-assessment/q3"
-                className="w-full rounded-md border border-default bg-white py-2.5 text-center text-sm text-muted sm:w-40"
-              >
-                Back
-              </Link>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full rounded-md bg-accent py-2.5 text-center text-sm text-on-accent sm:w-80"
-              >
-                Next Question {'\u2192'}
-              </button>
-            </div>
+          <div className="lp-na-grid">
+            {options.map((option) => (
+              <Choice
+                key={option}
+                label={option}
+                selected={selectedComfort === option}
+                onClick={() => setSelectedComfort(option)}
+              />
+            ))}
+          </div>
 
-            <div className="mt-4 text-center">
-              <button type="button" className="text-xs text-subtle underline" onClick={handleNext}>
-                Skip this question
-              </button>
-            </div>
+          <div className="lp-na-actions">
+            <Link to="/needs-assessment/q3" className="lp-na-btn-ghost">Back</Link>
+            <button type="button" onClick={handleNext} className="lp-na-btn-primary">Next Question {'\u2192'}</button>
+          </div>
+
+          <div className="lp-na-skip">
+            <button type="button" onClick={handleNext}>Skip this question</button>
           </div>
         </div>
       </main>
 
-      <BottomAuth />
+      <footer className="lp-footer lp-login-footer">
+        <div className="lp-footer-btm">
+          <span>(c) 2026 Bond Room Platform. All rights reserved.</span>
+          <span className="lp-login-footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Support</a>
+          </span>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { menteeApi } from '../../apis/api/menteeApi';
 import { mentorApi } from '../../apis/api/mentorApi';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import { getAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
+import { getIndiaGreeting } from '../../utils/indiaTime';
 import {
   X,
   LogOut,
@@ -54,6 +55,7 @@ const summarizeAvailability = (preferredTimes) => {
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [showLogout, setShowLogout] = useState(false);
+  const [greeting, setGreeting] = useState(() => getIndiaGreeting());
   const [menteeName, setMenteeName] = useState('');
   const [mentorName, setMentorName] = useState('');
   const [menteeAvatar, setMenteeAvatar] = useState('');
@@ -158,6 +160,14 @@ const Sidebar = ({ isOpen, onClose }) => {
     };
   }, [role]);
 
+  useEffect(() => {
+    setGreeting(getIndiaGreeting());
+    const timer = window.setInterval(() => {
+      setGreeting(getIndiaGreeting());
+    }, 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -251,7 +261,7 @@ return (
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-[#6b7280]">Good Morning</p>
+            <p className="text-xs text-[#6b7280]">{greeting}</p>
             <p className="text-base font-semibold text-[#111827] truncate">
               {displayName}
             </p>

@@ -1,8 +1,10 @@
-﻿import React, { useState } from 'react';
-import TopAuth from './TopAuth';
-import BottomAuth from './BottomAuth';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { AlertCircle, X } from 'lucide-react';
+import logo from '../assets/logo.png';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
+import '../LandingPage.css';
+import './NeedsAssessment.css';
 
 const MAX_SELECTIONS = 3;
 
@@ -16,28 +18,16 @@ const toArray = (value) => {
   return [];
 };
 
-const Choice = ({ label, selected, onClick }) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative flex w-full min-h-[72px] max-w-[260px] items-center justify-center rounded-[12px] border-2 px-4 py-4 text-center text-secondary sm:px-5 ${
-        selected ? 'border-[#41a34a] bg-[#f2faf3] shadow-sm' : 'border-default bg-white'
-      }`}
-    >
-      <span
-        className={`text-sm leading-5 sm:text-base sm:leading-6 ${selected ? 'font-semibold' : 'font-normal'}`}
-      >
-        {label}
-      </span>
-      {selected && (
-        <span className="absolute right-3 flex h-4 w-4 items-center justify-center rounded-full bg-[#41a34a] text-[10px] text-white">
-          {'\u2713'}
-        </span>
-      )}
-    </button>
-  );
-};
+const Choice = ({ label, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`lp-na-choice ${selected ? 'is-selected' : ''}`}
+  >
+    <span>{label}</span>
+    {selected && <span className="lp-na-choice-mark">{'\u2713'}</span>}
+  </button>
+);
 
 const NeedsAssessmentQ2 = () => {
   const navigate = useNavigate();
@@ -51,6 +41,11 @@ const NeedsAssessmentQ2 = () => {
   });
   const [otherCauseText, setOtherCauseText] = useState(draft.feeling_cause_other_text || '');
   const [localError, setLocalError] = useState('');
+  const [toastState, setToastState] = useState({
+    open: false,
+    message: '',
+    type: 'error',
+  });
 
   const options = [
     'Exam Pressure',
@@ -103,91 +98,118 @@ const NeedsAssessmentQ2 = () => {
     navigate('/needs-assessment/q3');
   };
 
+  useEffect(() => {
+    if (!localError) return;
+    setToastState({ open: true, message: localError, type: 'error' });
+  }, [localError]);
+
+  useEffect(() => {
+    if (!toastState.open) return undefined;
+    const timer = window.setTimeout(() => {
+      setToastState((prev) => ({ ...prev, open: false }));
+    }, 3500);
+    return () => window.clearTimeout(timer);
+  }, [toastState.open, toastState.message]);
+
   return (
-    <div className="min-h-screen bg-surface text-primary flex flex-col">
-      <TopAuth />
+    <div className="lp lp-na">
+      {toastState.open && (
+        <div className={`lp-na-toast lp-na-toast-${toastState.type}`} role="status" aria-live="polite">
+          <span className="lp-na-toast-icon">
+            <AlertCircle size={18} />
+          </span>
+          <p>{toastState.message}</p>
+          <button
+            type="button"
+            className="lp-na-toast-close"
+            aria-label="Close notification"
+            onClick={() => setToastState((prev) => ({ ...prev, open: false }))}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
-      <main className="flex-1">
-        <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 sm:py-10 lg:px-20 lg:py-14">
-          <div className="mx-auto max-w-3xl">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-              <span className="text-xs">Step 3 of 3: Needs Assessment</span>
-              <span className="text-xs">Question 2 of 5</span>
+      <header className="lp-hdr">
+        <Link to="/" className="lp-logo" aria-label="Go to landing page">
+          <img src={logo} alt="Bond Room" />
+          <span>Bridging Old and New Destinies</span>
+        </Link>
+        <nav className="lp-nav">
+          <Link to="/">Home</Link>
+          <a href="/#about">About</a>
+          <a href="/#safety">Safety</a>
+        </nav>
+        <div className="lp-hdr-actions">
+          <Link to="/dashboard" className="lp-ghost">Dashboard</Link>
+        </div>
+      </header>
+
+      <main className="lp-na-main">
+        <div className="lp-na-orb lp-na-orb-a" />
+        <div className="lp-na-orb lp-na-orb-b" />
+
+        <div className="lp-na-shell">
+          <div className="lp-na-top">
+            <span>Step 3 of 3: Needs Assessment</span>
+            <span>Question 2 of 5</span>
+          </div>
+          <div className="lp-na-progress-track">
+            <div className="lp-na-progress-fill" style={{ width: '40%' }} />
+          </div>
+
+          <div className="lp-na-head">
+            <h2>What&apos;s been causing this feeling?</h2>
+            <p>Select up to {MAX_SELECTIONS} options.</p>
+          </div>
+
+          <div className="lp-na-grid">
+            {options.map((option) => (
+              <Choice
+                key={option}
+                label={option}
+                selected={selectedCauses.includes(option)}
+                onClick={() => toggleCause(option)}
+              />
+            ))}
+          </div>
+
+          <p className="lp-na-meta">Selected: {selectedCauses.length}/{MAX_SELECTIONS}</p>
+
+          {selectedCauses.includes('Others') && (
+            <div className="lp-na-other">
+              <label htmlFor="causeOtherText">Tell us more about the cause</label>
+              <textarea
+                id="causeOtherText"
+                rows={3}
+                placeholder="Share in your own words..."
+                value={otherCauseText}
+                onChange={(event) => setOtherCauseText(event.target.value)}
+              />
             </div>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
-              <div className="h-1.5 w-2/5 rounded-full bg-accent" />
-            </div>
+          )}
 
-            <div className="mt-8 text-center sm:mt-10">
-              <h2 className="text-center text-2xl font-semibold leading-tight text-[#1f2937] sm:text-3xl lg:text-[36px] lg:leading-[45.5px]">
-                What's been causing this feeling?
-              </h2>
-              <p className="mt-2 text-sm text-[#6b7280]">
-                Select up to {MAX_SELECTIONS} options.
-              </p>
-            </div>
+          <div className="lp-na-actions">
+            <Link to="/needs-assessment" className="lp-na-btn-ghost">Back</Link>
+            <button type="button" onClick={handleNext} className="lp-na-btn-primary">Next Question {'\u2192'}</button>
+          </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:justify-items-center lg:grid-cols-3">
-              {options.map((option) => (
-                <Choice
-                  key={option}
-                  label={option}
-                  selected={selectedCauses.includes(option)}
-                  onClick={() => toggleCause(option)}
-                />
-              ))}
-            </div>
-
-            <p className="mt-4 text-center text-xs text-[#6b7280]">
-              Selected: {selectedCauses.length}/{MAX_SELECTIONS}
-            </p>
-
-            {selectedCauses.includes('Others') && (
-              <div className="mx-auto mt-4 max-w-xl">
-                <label htmlFor="causeOtherText" className="block text-xs text-[#6b7280]">
-                  Tell us more about the cause
-                </label>
-                <textarea
-                  id="causeOtherText"
-                  rows={3}
-                  className="mt-1 w-full rounded-md border border-[#d7d0e2] bg-white px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent"
-                  placeholder="Share in your own words..."
-                  value={otherCauseText}
-                  onChange={(event) => setOtherCauseText(event.target.value)}
-                />
-              </div>
-            )}
-
-            {localError && (
-              <p className="mt-4 text-center text-sm text-red-600">{localError}</p>
-            )}
-
-            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
-              <Link
-                to="/needs-assessment"
-                className="w-full rounded-md border border-default bg-white py-2.5 text-center text-sm text-muted sm:w-40"
-              >
-                Back
-              </Link>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full rounded-md bg-accent py-2.5 text-center text-sm text-on-accent sm:w-80"
-              >
-                Next Question {'\u2192'}
-              </button>
-            </div>
-
-            <div className="mt-4 text-center">
-              <button type="button" className="text-xs text-subtle underline" onClick={handleSkip}>
-                Skip this question
-              </button>
-            </div>
+          <div className="lp-na-skip">
+            <button type="button" onClick={handleSkip}>Skip this question</button>
           </div>
         </div>
       </main>
 
-      <BottomAuth />
+      <footer className="lp-footer lp-login-footer">
+        <div className="lp-footer-btm">
+          <span>(c) 2026 Bond Room Platform. All rights reserved.</span>
+          <span className="lp-login-footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Support</a>
+          </span>
+        </div>
+      </footer>
     </div>
   );
 };

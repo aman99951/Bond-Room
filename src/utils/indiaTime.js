@@ -98,6 +98,25 @@ export const getIndiaTimeLabel = (value, { hour12 = true } = {}) => {
   });
 };
 
+export const getIndiaHour = (value = new Date()) => {
+  const date = toDate(value);
+  if (Number.isNaN(date.getTime())) return 0;
+  return Number(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: INDIA_TIMEZONE,
+      hour: '2-digit',
+      hour12: false,
+    }).format(date)
+  );
+};
+
+export const getIndiaGreeting = (value = new Date()) => {
+  const hour = getIndiaHour(value);
+  if (hour < 12) return 'Good Morning';
+  if (hour < 17) return 'Good Afternoon';
+  return 'Good Evening';
+};
+
 export const indiaDateTimeToIso = (dateKey, timeLabel) => {
   const parts = parseDateKey(dateKey);
   if (!parts) return '';

@@ -85,6 +85,8 @@ const CLOUDINARY_CLOUD_NAME = String(import.meta.env.VITE_CLOUDINARY_CLOUD_NAME 
 const CLOUDINARY_UPLOAD_PRESET = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '').trim();
 const CLOUDINARY_UPLOAD_FOLDER = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_FOLDER || 'bond-room').trim();
 const SERVERLESS_MAX_UPLOAD_BYTES = Number(import.meta.env.VITE_SERVERLESS_MAX_UPLOAD_BYTES || 4 * 1024 * 1024);
+const ABUSE_TOAST_DEDUP_MS = 6000;
+const ABUSE_SUMMARY_DEDUP_MS = 12000;
 
 const toArray = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -178,6 +180,11 @@ const MeetingRoomShell = ({
   const recordingAudioDestinationRef = useRef(null);
   const recordingAudioNodesRef = useRef([]);
   const recordingAudioTrackIdsRef = useRef(new Set());
+  const toastTimerRef = useRef(null);
+  const lastLocalAbuseToastRef = useRef(0);
+  const lastRemoteAbuseToastRef = useRef(0);
+  const lastAbuseSummaryAtRef = useRef(0);
+  const abuseSummaryBusyRef = useRef(false);
   const sessionClosedSyncRef = useRef(false);
   const rtcConfigRef = useRef(DEFAULT_RTC_CONFIG);
   const exitingRef = useRef(false);
@@ -197,10 +204,16 @@ const MeetingRoomShell = ({
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [alert, setAlert] = useState(null);
   const [incidents, setIncidents] = useState([]);
+  const [toastState, setToastState] = useState({
+    open: false,
+    message: '',
+    type: 'warning',
+  });
   const [meetingSummary, setMeetingSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [remoteEnded, setRemoteEnded] = useState(false);
   const isMentorToolsEnabled = participantRole === 'mentor';
+  const canSpeechModeration = participantRole === 'mentor' || participantRole === 'mentee';
   const showManualMentorTools = false;
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -216,6 +229,18 @@ const MeetingRoomShell = ({
     if (!message) return;
     if (isSuppressedRtcError(message)) return;
     console.error('[MeetingRoomShell]', String(message));
+  }, []);
+
+  const showToast = useCallback((message, type = 'warning', duration = 4500) => {
+    const text = String(message || '').trim();
+    if (!text) return;
+    setToastState({ open: true, message: text, type });
+    if (toastTimerRef.current) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = window.setTimeout(() => {
+      setToastState((prev) => ({ ...prev, open: false }));
+    }, duration);
   }, []);
 
   const prepareRtcConfig = useCallback(async () => {
@@ -253,6 +278,13 @@ const MeetingRoomShell = ({
       'VITE_FORCE_RELAY is enabled but TURN config is incomplete. Add VITE_TURN_URL(S), VITE_TURN_USERNAME and VITE_TURN_CREDENTIAL, or disable VITE_FORCE_RELAY.'
     );
   }, [appendError]);
+
+  useEffect(() => () => {
+    if (toastTimerRef.current) {
+      window.clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+  }, []);
 
   const stopRecordingComposition = useCallback(() => {
     if (recordingCanvasRafRef.current) {
@@ -608,6 +640,37 @@ const MeetingRoomShell = ({
     }
   }, [api, applyRecordingSnapshot, sessionId]);
 
+  const generateAbuseEventSummary = useCallback(
+    async (transcriptHint = '') => {
+      if (!isMentorToolsEnabled || !sessionId) return;
+      const now = Date.now();
+      if (abuseSummaryBusyRef.current) return;
+      if (now - lastAbuseSummaryAtRef.current < ABUSE_SUMMARY_DEDUP_MS) return;
+      const transcript = String(transcriptHint || '').trim();
+      if (!transcript) return;
+
+      abuseSummaryBusyRef.current = true;
+      lastAbuseSummaryAtRef.current = now;
+      try {
+        const response = await api.analyzeSessionTranscript(sessionId, {
+          transcript,
+          speaker_role: 'system',
+          generate_summary: true,
+        });
+        const nextSummary = String(response?.summary || '').trim();
+        if (nextSummary) {
+          setMeetingSummary(nextSummary);
+        }
+        await pollRecordingStatus();
+      } catch (err) {
+        appendError(err?.message || 'Unable to update abuse summary.');
+      } finally {
+        abuseSummaryBusyRef.current = false;
+      }
+    },
+    [api, appendError, isMentorToolsEnabled, pollRecordingStatus, sessionId]
+  );
+
   const startRecordingStatusPolling = useCallback(() => {
     if (recordingStatusPollIntervalRef.current) return;
     pollRecordingStatus();
@@ -747,27 +810,63 @@ const MeetingRoomShell = ({
   }, [api, appendError, sessionId]);
 
   const analyzeTranscript = useCallback(
-    async (transcriptValue) => {
-      if (!isMentorToolsEnabled) return;
+    async (transcriptValue, { silent = false } = {}) => {
       const text = String(transcriptValue || '').trim();
       if (!sessionId || !text) return;
-      setAnalysisLoading(true);
+      if (!silent) {
+        setAnalysisLoading(true);
+      }
       try {
         const response = await api.analyzeSessionTranscript(sessionId, {
           transcript: text,
           speaker_role: participantRole,
         });
         if (response?.flagged) {
-          setAlert(response);
-          await loadIncidents();
+          if (isMentorToolsEnabled) {
+            setAlert(response);
+            await loadIncidents();
+          }
+          if (participantRole === 'mentee') {
+            const now = Date.now();
+            if (now - lastLocalAbuseToastRef.current > ABUSE_TOAST_DEDUP_MS) {
+              lastLocalAbuseToastRef.current = now;
+              showToast(
+                'Please use respectful language. This session is monitored.',
+                'error'
+              );
+            }
+            try {
+              await sendSignal('safety_alert', {
+                speaker_role: 'mentee',
+                severity: String(response?.severity || 'low').toLowerCase(),
+                message: 'Alert: Mentee used abusive language. Please check the conversation.',
+                transcript_excerpt: text.slice(0, 1200),
+                incident_id: response?.incident_id || null,
+                created_at: new Date().toISOString(),
+              });
+            } catch {
+              // no-op
+            }
+          }
         }
       } catch (err) {
         appendError(err?.message || 'Unable to analyze transcript.');
       } finally {
-        setAnalysisLoading(false);
+        if (!silent) {
+          setAnalysisLoading(false);
+        }
       }
     },
-    [api, appendError, isMentorToolsEnabled, loadIncidents, participantRole, sessionId]
+    [
+      api,
+      appendError,
+      isMentorToolsEnabled,
+      loadIncidents,
+      participantRole,
+      sendSignal,
+      sessionId,
+      showToast,
+    ]
   );
 
   const attachLocalTracksToPeer = useCallback((peer) => {
@@ -927,6 +1026,24 @@ const MeetingRoomShell = ({
             }
             continue;
           }
+          if (signalType === 'safety_alert') {
+            const speakerRole = String(payload?.speaker_role || '').trim().toLowerCase();
+            if (participantRole === 'mentor' && speakerRole === 'mentee') {
+              const now = Date.now();
+              if (now - lastRemoteAbuseToastRef.current > ABUSE_TOAST_DEDUP_MS) {
+                lastRemoteAbuseToastRef.current = now;
+                showToast(
+                  'Alert: Mentee used abusive language. Please guide the conversation respectfully.',
+                  'error'
+                );
+              }
+              const transcriptExcerpt = String(payload?.transcript_excerpt || '').trim();
+              if (transcriptExcerpt) {
+                generateAbuseEventSummary(transcriptExcerpt);
+              }
+            }
+            continue;
+          }
           if (signalType === 'bye') {
             // Ignore stale bye signals from previous attempts before signaling starts.
             if (!peer.currentRemoteDescription && peer.signalingState === 'stable') {
@@ -943,6 +1060,9 @@ const MeetingRoomShell = ({
     [
       appendError,
       ensurePeerConnection,
+      generateAbuseEventSummary,
+      participantRole,
+      showToast,
       sendSignal,
       sessionId,
     ]
@@ -988,7 +1108,7 @@ const MeetingRoomShell = ({
   }, [attachLocalTracksToPeer, ensurePeerConnection, publishLocalMediaState]);
 
   const startSpeechMonitoring = useCallback(async () => {
-    if (!isMentorToolsEnabled) return;
+    if (!canSpeechModeration) return;
     if (!hasSpeechRecognition || monitoring) return;
     const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) return;
@@ -1009,7 +1129,7 @@ const MeetingRoomShell = ({
       if (transcript) {
         transcriptSegmentsRef.current.push(transcript);
         setAnalysisInput((prev) => [prev, transcript].filter(Boolean).join(' '));
-        analyzeTranscript(transcript);
+        analyzeTranscript(transcript, { silent: true });
       }
     };
     recognition.onend = () => {
@@ -1045,7 +1165,7 @@ const MeetingRoomShell = ({
         // no-op
       }
     }
-  }, [analyzeTranscript, api, hasSpeechRecognition, isMentorToolsEnabled, monitoring, sessionId]);
+  }, [analyzeTranscript, api, canSpeechModeration, hasSpeechRecognition, monitoring, sessionId]);
 
   const stopRecording = useCallback(async () => {
     const recorder = recorderRef.current;
@@ -1562,24 +1682,53 @@ const MeetingRoomShell = ({
   }, []);
 
   useEffect(() => {
-    if (!isMentorToolsEnabled) return;
+    if (!canSpeechModeration && !isMentorToolsEnabled) return;
     if (connectionState !== 'connected') return;
     if (autoStartCompletedRef.current) return;
 
     autoStartCompletedRef.current = true;
     const startTools = async () => {
-      await startRecording();
       await startSpeechMonitoring();
-      await pollRecordingStatus();
+      if (isMentorToolsEnabled) {
+        await startRecording();
+        await pollRecordingStatus();
+      }
     };
     startTools();
   }, [
+    canSpeechModeration,
     connectionState,
     isMentorToolsEnabled,
     pollRecordingStatus,
     startRecording,
     startSpeechMonitoring,
   ]);
+
+  useEffect(() => {
+    if (!isMentorToolsEnabled || connectionState !== 'connected') return undefined;
+    if (recording || recordingStatus === 'recording') return undefined;
+    if (typeof MediaRecorder === 'undefined') return undefined;
+
+    let attempts = 0;
+    const maxAttempts = 6;
+    const retryTimer = window.setInterval(() => {
+      if (recording || recordingStatus === 'recording') {
+        window.clearInterval(retryTimer);
+        return;
+      }
+      if (!localStreamRef.current) return;
+      if (attempts >= maxAttempts) {
+        window.clearInterval(retryTimer);
+        return;
+      }
+      attempts += 1;
+      startRecording();
+    }, 2500);
+
+    return () => {
+      window.clearInterval(retryTimer);
+    };
+  }, [connectionState, isMentorToolsEnabled, recording, recordingStatus, startRecording]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1687,6 +1836,25 @@ const MeetingRoomShell = ({
                 <PhoneOff className="h-4 w-4" />
                 {exitLabel}
               </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {toastState.open ? (
+        <div className="pointer-events-none fixed right-4 top-4 z-[95] w-[92vw] max-w-sm">
+          <div
+            className={`rounded-xl border px-3 py-2 text-xs shadow-lg sm:text-sm ${
+              toastState.type === 'error'
+                ? 'border-[#fecaca] bg-[#fef2f2] text-[#7f1d1d]'
+                : 'border-[#fde68a] bg-[#fffbeb] text-[#78350f]'
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>{toastState.message}</div>
             </div>
           </div>
         </div>

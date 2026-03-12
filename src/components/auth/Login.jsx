@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Phone, Lock, ArrowRight, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
-import TopAuth from './TopAuth';
-import BottomAuth from './BottomAuth';
 import logo from '../assets/logo.png';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import { clearAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
 import { mentorApi } from '../../apis/api/mentorApi';
+import '../LandingPage.css';
+import './Login.css';
 
 const MOCK_OTP = '123456';
 
@@ -91,118 +91,123 @@ const Login = () => {
       y: 0,
       transition: {
         duration: 0.6,
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 }
+    visible: { opacity: 1, x: 0 },
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] text-[#1f2937] flex flex-col relative overflow-hidden font-sans">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#5b2c91]/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#6b4eff]/5 rounded-full blur-[100px] pointer-events-none" />
+    <div className="lp lp-login">
+      <header className="lp-hdr">
+        <Link to="/" className="lp-logo" aria-label="Go to landing page">
+          <img src={logo} alt="Bond Room" />
+          <span>Bridging Old and New Destinies</span>
+        </Link>
 
-      <TopAuth />
+        <nav className="lp-nav">
+          <Link to="/">Home</Link>
+          <a href="/#about">About</a>
+          <a href="/#safety">Safety</a>
+        </nav>
 
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative z-10">
-        <Motion.div 
+        <div className="lp-hdr-actions">
+          <Link to="/register" className="lp-solid">Student Sign Up</Link>
+        </div>
+      </header>
+
+      <main className="lp-login-main">
+        <div className="lp-login-orb lp-login-orb-a" />
+        <div className="lp-login-orb lp-login-orb-b" />
+
+        <Motion.div
           initial="hidden"
           animate="visible"
           variants={containerVariants}
-          className="w-full max-w-[1100px] overflow-hidden rounded-[2rem] border border-white/50 bg-white/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.05)]"
+          className="lp-login-shell"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1.3fr]">
-            {/* Left Panel: Branding & Info */}
-            <div className="hidden lg:flex bg-[#5b2c91] p-12 text-white flex-col justify-between relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-400/20 rounded-full blur-3xl -ml-24 -mb-24" />
-              
-              <Motion.div variants={itemVariants} className="relative z-10">
-                <div className="inline-flex items-center rounded-2xl bg-white/10 backdrop-blur-md px-4 py-3 border border-white/20">
-                  <img src={logo} alt="Bond Room" className="h-8 w-auto brightness-0 invert" />
+          <div className="lp-login-grid">
+            <section className="lp-login-brand">
+              <Motion.div variants={itemVariants} className="lp-login-brand-inner">
+                <div className="lp-login-badge">
+                  <span className="lp-edot" />
+                  Welcome back
                 </div>
-                <h3 className="mt-10 text-4xl font-bold leading-tight">
-                  Continue your<br />
-                  <span className="text-purple-200">growth journey</span>
+                <h3 className="lp-login-title">
+                  Continue your
+                  <br />
+                  growth journey
                 </h3>
-                <p className="mt-6 text-lg text-white/80 max-w-sm leading-relaxed">
+                <p className="lp-login-copy">
                   Join hundreds of mentors and mentees in building meaningful connections and driving real impact.
                 </p>
               </Motion.div>
 
-              <Motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 relative z-10">
-                <div className="rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur-sm group hover:bg-white/10 transition-colors duration-300">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mb-3">
-                    <Sparkles className="w-5 h-5 text-purple-200" />
+              <Motion.div variants={itemVariants} className="lp-login-stats">
+                <div className="lp-login-stat">
+                  <div className="lp-login-stat-ico">
+                    <Sparkles size={18} />
                   </div>
-                  <p className="text-2xl font-bold">1:1</p>
-                  <p className="mt-1 text-xs text-white/60 font-medium uppercase tracking-wider">Mentorship Sessions</p>
+                  <p>1:1</p>
+                  <span>Mentorship Sessions</span>
                 </div>
-                <div className="rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur-sm group hover:bg-white/10 transition-colors duration-300">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mb-3">
-                    <CheckCircle2 className="w-5 h-5 text-purple-200" />
+                <div className="lp-login-stat">
+                  <div className="lp-login-stat-ico">
+                    <CheckCircle2 size={18} />
                   </div>
-                  <p className="text-2xl font-bold">24/7</p>
-                  <p className="mt-1 text-xs text-white/60 font-medium uppercase tracking-wider">Active Support</p>
+                  <p>24/7</p>
+                  <span>Active Support</span>
                 </div>
               </Motion.div>
-            </div>
+            </section>
 
-            {/* Right Panel: Login Form */}
-            <div className="w-full bg-white p-8 sm:p-12 lg:p-16">
+            <section className="lp-login-form-wrap">
               <Motion.div variants={itemVariants}>
-                <div className="inline-flex items-center gap-2 rounded-full bg-purple-50 text-xs text-[#5b2c91] px-4 py-1.5 font-bold uppercase tracking-wider mb-4">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#5b2c91] animate-pulse" />
+                <div className="lp-login-pill">
+                  <span className="lp-login-pill-dot" />
                   Welcome back
                 </div>
-                <h2 className="text-3xl font-bold text-[#111827]">
-                  Login to your account
-                </h2>
-                <p className="mt-3 text-[#6b7280]">
-                  Enter your registered mobile number to continue.
-                </p>
+                <h2 className="lp-login-h2">Login to your account</h2>
+                <p className="lp-login-sub">Enter your registered mobile number to continue.</p>
               </Motion.div>
 
-              <Motion.form 
-                variants={itemVariants} 
-                className="mt-10 space-y-6" 
+              <Motion.form
+                variants={itemVariants}
+                className="lp-login-form"
                 onSubmit={handleLogin}
               >
-                <div className="space-y-2">
-                  <label htmlFor="loginMobile" className="text-sm font-semibold text-[#374151] flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-[#5b2c91]" />
+                <div className="lp-field">
+                  <label htmlFor="loginMobile">
+                    <Phone size={16} />
                     Mobile Number
                   </label>
-                  <div className="relative group">
-                    <input
-                      id="loginMobile"
-                      type="tel"
-                      className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-sm transition-all duration-200 focus:border-[#5b2c91] focus:ring-4 focus:ring-[#5b2c91]/5 outline-none placeholder:text-[#9ca3af]"
-                      placeholder="+91 9876543210"
-                      value={mobile}
-                      onChange={(event) => setMobile(event.target.value)}
-                    />
-                  </div>
-                  <div className="flex justify-end">
+                  <input
+                    id="loginMobile"
+                    type="tel"
+                    className="lp-input"
+                    placeholder="+91 9876543210"
+                    value={mobile}
+                    onChange={(event) => setMobile(event.target.value)}
+                  />
+                  <div className="lp-field-action">
                     <button
                       type="button"
-                      className="text-xs font-semibold text-[#5b2c91] hover:text-[#4a2476] transition-colors flex items-center gap-1 group"
+                      className="lp-generate-otp"
                       onClick={handleGenerateOtp}
                     >
-                      <Sparkles className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+                      <Sparkles size={12} />
                       Generate Mock OTP
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="loginOtp" className="text-sm font-semibold text-[#374151] flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-[#5b2c91]" />
+                <div className="lp-field">
+                  <label htmlFor="loginOtp">
+                    <Lock size={16} />
                     OTP Verification
                   </label>
                   <input
@@ -210,8 +215,8 @@ const Login = () => {
                     type="text"
                     inputMode="numeric"
                     maxLength={6}
-                    className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-sm transition-all duration-200 focus:border-[#5b2c91] focus:ring-4 focus:ring-[#5b2c91]/5 outline-none placeholder:text-[#9ca3af] tracking-[0.5em] text-center font-bold"
-                    placeholder="••••••"
+                    className="lp-input lp-input-otp"
+                    placeholder="******"
                     value={otp}
                     onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
                   />
@@ -219,27 +224,27 @@ const Login = () => {
 
                 <AnimatePresence mode="wait">
                   {errorMessage && (
-                    <Motion.div 
+                    <Motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="flex items-start gap-2 p-3.5 rounded-xl bg-red-50 text-red-700 text-sm font-medium border border-red-100"
+                      className="lp-msg lp-msg-error"
                     >
-                      <AlertCircle className="w-5 h-5 shrink-0" />
+                      <AlertCircle size={18} />
                       {errorMessage}
                     </Motion.div>
                   )}
                   {!errorMessage && infoMessage && (
-                    <Motion.div 
+                    <Motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="flex items-start gap-2 p-3.5 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-medium border border-emerald-100"
+                      className="lp-msg lp-msg-success"
                     >
-                      <CheckCircle2 className="w-5 h-5 shrink-0" />
+                      <CheckCircle2 size={18} />
                       <div>
                         {infoMessage}
-                        {otpHint && <div className="mt-1 font-bold text-xs uppercase tracking-wider">{otpHint}</div>}
+                        {otpHint && <div className="lp-msg-hint">{otpHint}</div>}
                       </div>
                     </Motion.div>
                   )}
@@ -250,39 +255,47 @@ const Login = () => {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#5b2c91] hover:bg-[#4a2476] text-white py-4 text-sm font-bold shadow-lg shadow-[#5b2c91]/20 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed group"
+                  className="lp-login-submit"
                 >
                   {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="lp-login-loading">
+                      <span className="lp-login-spinner" />
                       Signing in...
                     </div>
                   ) : (
                     <>
                       Sign In
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight size={16} />
                     </>
                   )}
                 </Motion.button>
 
-                <div className="text-center pt-2">
-                  <p className="text-sm text-[#6b7280]">
+                <div className="lp-login-register">
+                  <p>
                     Don&apos;t have an account?{' '}
-                    <Link to="/register" className="font-bold text-[#5b2c91] hover:text-[#4a2476] transition-colors decoration-2 underline-offset-4 hover:underline">
+                    <Link to="/register">
                       Create account
                     </Link>
                   </p>
                 </div>
               </Motion.form>
-            </div>
+            </section>
           </div>
         </Motion.div>
       </main>
 
-      <BottomAuth />
+      <footer className="lp-footer lp-login-footer">
+        <div className="lp-footer-btm">
+          <span>(c) 2026 Bond Room Platform. All rights reserved.</span>
+          <span className="lp-login-footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Support</a>
+          </span>
+        </div>
+      </footer>
     </div>
   );
 };
 
 export default Login;
-
