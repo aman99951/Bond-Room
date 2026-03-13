@@ -25,6 +25,12 @@ const formatTimeRangeInZone = (startTime, endTime) => {
   return `${startLabel} - ${endLabel}`;
 };
 
+const toNumberOrNull = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+};
+
 const toMentorData = (mentor) => {
   if (!mentor) return null;
   const name = `${mentor?.first_name || ''} ${mentor?.last_name || ''}`.trim();
@@ -33,8 +39,8 @@ const toMentorData = (mentor) => {
     name,
     location: mentor?.city_state || '',
     languages: Array.isArray(mentor?.languages) ? mentor.languages : [],
-    rating: mentor?.average_rating ? Number(mentor.average_rating) : null,
-    reviews: Number(mentor?.sessions_completed || 0),
+    rating: toNumberOrNull(mentor?.average_rating ?? mentor?.rating),
+    reviews: toNumberOrNull(mentor?.reviews_count ?? mentor?.total_reviews ?? mentor?.sessions_completed),
     bio: mentor?.bio || '',
     areas: Array.isArray(mentor?.care_areas) ? mentor.care_areas : [],
     avatar: mentor?.avatar || '',

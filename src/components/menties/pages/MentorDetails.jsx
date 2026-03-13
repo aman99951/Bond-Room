@@ -207,12 +207,12 @@ const MentorDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent p-3 sm:p-5 lg:p-8">
+    <div className="relative min-h-screen overflow-x-hidden bg-transparent p-3 sm:p-5 lg:p-8">
       <div className="mx-auto max-w-6xl">
         {/* Back Link */}
         <Link
           to="/mentors"
-          className="mb-4 inline-flex items-center gap-2 text-sm text-[#6b7280] transition-colors hover:text-[#5D3699] sm:mb-6"
+          className="mb-4 inline-flex items-center gap-2 rounded-xl border border-[#e8dcff] bg-white px-3 py-2 text-sm text-[#6b7280] shadow-sm transition-colors hover:text-[#5D3699] sm:mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to recommendations
@@ -221,11 +221,11 @@ const MentorDetails = () => {
         {/* Main Grid */}
         <div className="grid gap-5 lg:gap-6 xl:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
           {/* Left Sidebar - Mentor Card */}
-          <div className="space-y-5 xl:sticky xl:top-6 xl:self-start">
+          <div className="space-y-5 xl:self-start">
             <aside className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
               {/* Header Background */}
-              <div className="relative h-24 bg-[#5D3699]">
-                <div className="absolute inset-0 opacity-20">
+              <div className="relative h-24 bg-white">
+                <div className="absolute inset-0 opacity-5">
                   <div className="absolute inset-0" style={{
                     backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.2) 0%, transparent 50%)'
                   }} />
@@ -245,7 +245,7 @@ const MentorDetails = () => {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-[#f5f3ff]">
+                        <div className="flex h-full w-full items-center justify-center bg-[#f3f4f6]">
                           <User className="h-10 w-10 text-[#5D3699]" />
                         </div>
                       )}
@@ -271,7 +271,7 @@ const MentorDetails = () => {
 
                   {/* Qualification Badge */}
                   {mentor?.qualification && (
-                    <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf3] px-3 py-1.5 text-xs font-semibold text-[#10b981]">
+                    <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f6] px-3 py-1.5 text-xs font-semibold text-[#374151] ring-1 ring-[#e5e7eb]">
                       <Award className="h-3.5 w-3.5" />
                       {mentor.qualification}
                     </div>
@@ -283,7 +283,7 @@ const MentorDetails = () => {
                       {mentor.languages.map((language) => (
                         <span
                           key={language}
-                          className="inline-flex items-center gap-1 rounded-full bg-[#f5f3ff] px-3 py-1 text-xs font-medium text-[#5D3699]"
+                          className="inline-flex items-center gap-1 rounded-full bg-[#f3f4f6] px-3 py-1 text-xs font-medium text-[#374151] ring-1 ring-[#e5e7eb]"
                         >
                           <Globe className="h-3 w-3" />
                           {language}
@@ -294,7 +294,7 @@ const MentorDetails = () => {
 
                   {/* Rating */}
                   {(rating || reviewCount != null) && (
-                    <div className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl bg-[#f8fafc] px-4 py-3">
+                    <div className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-[#e5e7eb]">
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
@@ -319,7 +319,7 @@ const MentorDetails = () => {
                 {/* CTA Button */}
                 <Link
                   to={`/book-session${mentorIdSuffix}`}
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md"
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#4a2b7a] hover:shadow-md"
                 >
                   <Calendar className="h-5 w-5" />
                   Schedule Session
@@ -327,7 +327,7 @@ const MentorDetails = () => {
 
                 {/* AI Matched Areas */}
                 {Array.isArray(mentor?.areas) && mentor.areas.length > 0 && (
-                  <div className="mt-6 rounded-xl bg-[#f5f3ff] p-4">
+                  <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-[#e5e7eb]">
                     <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#5D3699]">
                       <Sparkles className="h-4 w-4" />
                       AI Matched For
@@ -336,7 +336,7 @@ const MentorDetails = () => {
                       {mentor.areas.map((area) => (
                         <span
                           key={area}
-                          className="rounded-full bg-white px-3 py-1 text-xs font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20"
+                          className="rounded-full bg-white px-3 py-1 text-xs font-medium text-[#374151] ring-1 ring-[#e5e7eb]"
                         >
                           {area}
                         </span>
@@ -352,7 +352,7 @@ const MentorDetails = () => {
               <h3 className="text-sm font-semibold text-[#111827]">Quick Info</h3>
               <div className="mt-4 space-y-3">
                 <div className="flex items-center gap-3 text-sm text-[#6b7280]">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f5f3ff]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white ring-1 ring-[#e8dcff]">
                     <Clock className="h-4 w-4 text-[#5D3699]" />
                   </div>
                   <span>Usually responds within 24h</span>
@@ -385,7 +385,7 @@ const MentorDetails = () => {
             {/* About Section */}
             <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3f4f6]">
                   <User className="h-5 w-5 text-[#5D3699]" />
                 </div>
                 <h2 className="text-lg font-semibold text-[#111827]">About the Mentor</h2>
@@ -426,7 +426,7 @@ const MentorDetails = () => {
             {/* Wisdom Areas */}
             <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3f4f6]">
                   <BookOpen className="h-5 w-5 text-[#5D3699]" />
                 </div>
                 <div>
@@ -439,7 +439,7 @@ const MentorDetails = () => {
                 {(mentor?.areas || []).map((area) => (
                   <span
                     key={area}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#f5f3ff] px-4 py-2 text-sm font-medium text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#f3f4f6] px-4 py-2 text-sm font-medium text-[#374151] transition-colors hover:bg-[#e5e7eb]"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     {area}
@@ -455,7 +455,7 @@ const MentorDetails = () => {
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3f4f6]">
                     <Calendar className="h-5 w-5 text-[#5D3699]" />
                   </div>
                   <div>
@@ -463,7 +463,7 @@ const MentorDetails = () => {
                     <p className="text-xs text-[#6b7280]">Click any time slot to book instantly</p>
                   </div>
                 </div>
-                <div className="inline-flex items-center gap-2 self-start rounded-lg bg-[#f8fafc] px-2 py-1.5 ring-1 ring-[#e5e7eb] sm:self-auto">
+                  <div className="inline-flex items-center gap-2 self-start rounded-lg bg-white px-2 py-1.5 ring-1 ring-[#e8dcff] sm:self-auto">
                   <button
                     type="button"
                     onClick={() => setWeekStartKey((prev) => (canGoPrevWeek ? addDaysToDateKey(prev, -7) : prev))}
@@ -548,7 +548,7 @@ const MentorDetails = () => {
                 </div>
 
                 <div className="hidden overflow-x-auto lg:block">
-                  <div className="min-w-[620px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
+                  <div className="min-w-[620px] rounded-xl bg-white p-3 ring-1 ring-[#e8dcff]">
                     <div className="grid grid-cols-7 gap-2 border-b border-[#e5e7eb] pb-3">
                       {weekColumns.map((column) => {
                         const isTodayColumn = column.dateKey === todayDateKey;
@@ -652,7 +652,7 @@ const MentorDetails = () => {
             {/* Reviews Section */}
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3f4f6]">
                   <MessageCircle className="h-5 w-5 text-[#5D3699]" />
                 </div>
                 <div>
@@ -667,7 +667,7 @@ const MentorDetails = () => {
                   reviewList.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-xl bg-[#f8fafc] p-4 ring-1 ring-[#e5e7eb]"
+                      className="rounded-xl bg-white p-4 ring-1 ring-[#e8dcff]"
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex items-center gap-3">
@@ -706,7 +706,7 @@ const MentorDetails = () => {
                     </div>
                   ))
                 ) : review?.comments ? (
-                  <div className="rounded-xl bg-[#f8fafc] p-4 ring-1 ring-[#e5e7eb]">
+                  <div className="rounded-xl bg-white p-4 ring-1 ring-[#e8dcff]">
                     <div className="flex items-center gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star
@@ -726,8 +726,8 @@ const MentorDetails = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center rounded-xl bg-[#f8fafc] py-12 text-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f5f3ff]">
+                  <div className="flex flex-col items-center justify-center rounded-xl bg-white py-12 text-center ring-1 ring-[#e8dcff]">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f3f4f6]">
                       <MessageCircle className="h-7 w-7 text-[#9ca3af]" />
                     </div>
                     <p className="mt-4 text-sm font-medium text-[#111827]">No reviews yet</p>
@@ -740,17 +740,17 @@ const MentorDetails = () => {
             </div>
 
             {/* CTA Card */}
-            <div className="rounded-2xl bg-[#5D3699] p-4 text-white shadow-lg shadow-[#5D3699]/20 sm:p-6">
+            <div className="rounded-2xl bg-white p-4 text-[#111827] shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-lg font-semibold">Ready to connect?</h3>
-                  <p className="mt-1 text-sm text-white/80">
+                  <p className="mt-1 text-sm text-[#6b7280]">
                     Book a session with {displayName} today
                   </p>
                 </div>
                 <Link
                   to={`/book-session${mentorIdSuffix}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#5D3699] transition-all hover:bg-[#f5f3ff] sm:w-auto"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#4a2b7a] sm:w-auto"
                 >
                   <Calendar className="h-5 w-5" />
                   Schedule Now

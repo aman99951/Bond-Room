@@ -235,19 +235,8 @@ const Register = () => {
 
         <div className="lp-register-shell">
           <div className="lp-register-grid">
-            <aside className="lp-register-side">
-              <img src={leftside} alt="Find your safe space" className="lp-register-side-image" />
-              <div className="lp-register-side-overlay" />
-              <div className="lp-register-side-copy">
-                <p className="lp-label">
-                  <span className="lp-rule" />
-                  Step 1 of 3
-                </p>
-                <h3>Your safe space starts here.</h3>
-                <p>
-                  Preparing for exams can feel overwhelming. Bond Room helps you connect with trusted mentors who listen without judgment.
-                </p>
-              </div>
+            <aside className="lp-register-side lp-register-side-clean" aria-hidden="true">
+              <img src={leftside} alt="" className="lp-register-side-image" />
             </aside>
 
             <section className="lp-register-form-wrap">

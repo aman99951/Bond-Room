@@ -783,24 +783,24 @@ const MentorRegister = () => {
       <main className="bg-transparent flex-1">
         <div className="flex w-full justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-10">
           <div className="w-full max-w-[1266px] overflow-hidden rounded-xl bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] animate-scaleIn">
-            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+            <div className="grid grid-cols-1 items-stretch xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
               {/* Left Panel */}
-              <div className="relative hidden h-full grid-rows-2 bg-transparent xl:grid">
+              <div className="relative hidden h-full min-h-0 overflow-hidden bg-transparent xl:grid xl:grid-rows-2">
                 <img
                   src={imageContainer}
                   alt=""
                   aria-hidden="true"
                   className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[300px] h-[300px] md:w-[380px] md:h-[380px] lg:w-[500px] lg:h-[500px] animate-pulse-slow"
                 />
-                <div className="grid grid-cols-[1.05fr_1fr]">
-                  <div className="overflow-hidden">
+                <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
+                  <div className="min-h-0 overflow-hidden">
                     <img
                       src={mentorLeft}
                       alt="Mentor guidance"
                       className="h-full w-full object-cover hover:scale-105 transition-transform duration-700"
                     />
                   </div>
-                  <div className="relative bg-[#5b2c91] p-6 text-white flex flex-col justify-between">
+                  <div className="relative flex min-h-0 flex-col justify-between bg-[#5b2c91] p-6 text-white">
                     <div className="animate-fadeIn">
                       <h3 className="font-sans font-bold text-[37px] leading-[36.5px]">
                         Join a
@@ -817,15 +817,15 @@ const MentorRegister = () => {
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-[1.05fr_1fr]">
-                  <div className="bg-[#f2c94c] p-6 text-[#1f2937] flex items-center justify-center">
+                <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
+                  <div className="flex min-h-0 items-center justify-center bg-[#f2c94c] p-6 text-[#1f2937]">
                     <ul className="list-disc pl-4 space-y-3 text-sm animate-fadeIn">
                       <li>Bond Room exists to restore human connection in an exam-driven system.</li>
                       <li>You are not expected to teach.</li>
                       <li>Your presence and perspective are enough.</li>
                     </ul>
                   </div>
-                  <div className="bg-black overflow-hidden">
+                  <div className="min-h-0 overflow-hidden bg-black">
                     <img
                       src={mentorBottom}
                       alt="Students"

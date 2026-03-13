@@ -107,6 +107,14 @@
   overflow: hidden;
 }
 
+.lp-register-side-clean {
+  min-height: 720px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(93, 54, 153, 0.1), transparent 45%),
+    radial-gradient(circle at 80% 70%, rgba(139, 96, 236, 0.1), transparent 45%),
+    linear-gradient(180deg, #faf7ff 0%, #f5efff 100%);
+}
+
 .lp-register-side-image {
   width: 100%;
   height: 100%;

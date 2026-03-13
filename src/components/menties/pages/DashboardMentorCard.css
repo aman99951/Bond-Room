@@ -1,0 +1,66 @@
+@keyframes dm-float {
+  0%, 100% { transform: translateY(0px) rotateX(3deg) rotateY(-3deg); }
+  50% { transform: translateY(-8px) rotateX(5deg) rotateY(-5deg); }
+}
+
+@keyframes dm-pulse-glow {
+  0%, 100% { box-shadow: 0 0 24px rgba(124, 58, 237, 0.2), 0 0 44px rgba(124, 58, 237, 0.08); }
+  50% { box-shadow: 0 0 34px rgba(124, 58, 237, 0.3), 0 0 64px rgba(124, 58, 237, 0.14); }
+}
+
+@keyframes dm-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes dm-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes dm-badge-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.dm-card-3d {
+  animation: dm-float 6s ease-in-out infinite, dm-pulse-glow 4s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.dm-gradient-border {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 25%, #d946ef 50%, #a855f7 75%, #7c3aed 100%);
+  background-size: 300% 300%;
+  animation: dm-shimmer 8s linear infinite;
+}
+
+.dm-glass-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fcfaff 45%, #f8f3ff 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dm-avatar-ring {
+  background: conic-gradient(from 0deg, #7c3aed, #a855f7, #d946ef, #a855f7, #7c3aed);
+  animation: dm-rotate 4s linear infinite;
+}
+
+.dm-specialty-tag {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.22);
+}
+
+.dm-book-btn {
+  background: #5D3699;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dm-book-btn:hover {
+  transform: translateY(-2px);
+  background: #4a2b7a;
+  box-shadow: 0 12px 30px rgba(93, 54, 153, 0.35);
+}
+
+.dm-badge-animate {
+  animation: dm-badge-pop 2s ease-in-out infinite;
+}

@@ -217,12 +217,14 @@ return (
   <div className="min-h-screen p-3 sm:p-6 lg:p-8">
     <div className="mx-auto max-w-6xl">
       {/* Header Section */}
-      <div className="mb-8">
+      <div className="relative mb-8 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {/* Title with decorative element */}
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20 sm:h-12 sm:w-12">
-              <User className="h-6 w-6 text-white" />
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#f5f3ff] sm:h-12 sm:w-12">
+              <User className="h-6 w-6 text-[#5D3699]" />
             </div>
             <div className="min-w-0">
               <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-3xl">

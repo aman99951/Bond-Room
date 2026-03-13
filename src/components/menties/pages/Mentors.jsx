@@ -1,18 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { setSelectedMentorId } from '../../../apis/api/storage';
 import { useMenteeData } from '../../../apis/apihook/useMenteeData';
+import './DashboardMentorCard.css';
 import {
   Sparkles,
   MapPin,
   Star,
   Calendar,
+  Languages,
   ChevronLeft,
   ChevronRight,
   User,
-  Award,
+  Crown,
+  Brain,
+  BookOpen,
   ArrowRight,
   CheckCircle2,
   Users,
@@ -42,7 +46,17 @@ const toNumberOrNull = (value) => {
 
 const mapMentorToCard = (entry) => {
   const mentor = entry?.mentor || entry || {};
-  const rating = toNumberOrNull(mentor?.average_rating);
+  const reviews = toNumberOrNull(mentor?.reviews_count ?? entry?.total_reviews);
+  const rawRating = toNumberOrNull(mentor?.average_rating ?? mentor?.rating ?? entry?.average_rating);
+  const rating = reviews === 0 ? 0 : rawRating;
+  const languageList = Array.isArray(mentor?.languages)
+    ? mentor.languages
+    : Array.isArray(mentor?.language_preferences)
+      ? mentor.language_preferences
+      : mentor?.language
+        ? [mentor.language]
+        : [];
+  const languageText = languageList.filter(Boolean).join(', ');
 
   return {
     id: mentor?.id ?? null,
@@ -54,14 +68,116 @@ const mapMentorToCard = (entry) => {
         ? mentor.tags
         : [],
     rating,
-    reviews:
-      mentor?.reviews_count ??
-      entry?.total_reviews ??
-      null,
-    blurb: mentor?.bio || mentor?.blurb || '',
+    reviews,
+    blurb: entry?.explanation || mentor?.bio || mentor?.blurb || '',
     topMatch: Boolean(entry?.top_match ?? mentor?.top_match),
     avatar: mentor?.avatar || mentor?.profile_photo || '',
+    languageText,
   };
+};
+
+const MentorRecommendationCard = ({ mentor, onOpenProfile, onSchedule }) => {
+  const initials = (mentor.name || 'M')
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+  const primaryTag = mentor.tags?.[0] || '';
+  const secondaryTag = mentor.tags?.[1] || '';
+  const spokenText = mentor.languageText ? `Mentor speaks ${mentor.languageText}` : '';
+
+  return (
+    <div className="dm-card-3d relative h-full w-full min-w-0 rounded-3xl">
+      <div className="dm-gradient-border absolute -inset-[1px] rounded-3xl opacity-60" />
+      <div className="dm-glass-card relative flex h-full min-h-[252px] flex-col rounded-3xl border border-white/70 p-4 shadow-xl sm:p-5">
+        {mentor.topMatch && (
+          <div className="dm-badge-animate absolute -top-3 left-4">
+            <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-3 py-1 text-[10px] font-bold text-white">
+              <Crown className="h-3 w-3" />
+              Top Match
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-start gap-3">
+          <div className="relative flex-shrink-0">
+            <div className="dm-avatar-ring absolute -inset-1 rounded-full" />
+            <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[#5D3699] text-sm font-bold text-white">
+              {mentor.avatar ? <img src={mentor.avatar} alt={mentor.name} className="h-full w-full object-cover" /> : initials}
+            </div>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-base font-bold text-[#111827]">{mentor.name}</h3>
+            <div className="mt-1 flex items-center gap-1 text-[11px] text-[#6b7280]">
+              <MapPin className="h-3 w-3" />
+              <span className="truncate">{mentor.location || 'Location unavailable'}</span>
+            </div>
+            {mentor.rating != null ? (
+              <div className="mt-2 flex items-center gap-1.5">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <Star
+                    key={i}
+                    className={`h-3.5 w-3.5 ${i < Math.floor(mentor.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-[#d1d5db]'}`}
+                  />
+                ))}
+                <span className="ml-1 text-xs font-semibold text-[#111827]">{Number(mentor.rating).toFixed(1)}</span>
+                {mentor.reviews != null && <span className="text-[10px] text-[#6b7280]">({mentor.reviews})</span>}
+              </div>
+            ) : (
+              <div className="mt-2 text-[11px] text-[#6b7280]">No ratings yet</div>
+            )}
+          </div>
+        </div>
+
+        {(primaryTag || secondaryTag) && (
+          <div className="mt-3 flex items-center gap-2">
+            {primaryTag && (
+              <div className="dm-specialty-tag flex items-center gap-1 rounded-lg px-2.5 py-1">
+                <Brain className="h-3 w-3 text-purple-300" />
+                <span className="text-[11px] text-[#4c1d95]">{primaryTag}</span>
+              </div>
+            )}
+            {secondaryTag && (
+              <div className="dm-specialty-tag flex items-center gap-1 rounded-lg px-2.5 py-1">
+                <BookOpen className="h-3 w-3 text-pink-300" />
+                <span className="text-[11px] text-[#4c1d95]">{secondaryTag}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {spokenText && (
+          <div className="mt-2 flex items-center gap-1 text-[11px] text-[#6b7280]">
+            <Languages className="h-3 w-3" />
+            <span>{spokenText}</span>
+          </div>
+        )}
+
+        <p className="mt-3 flex-1 text-xs leading-5 text-[#4b5563] line-clamp-3">
+          {mentor.blurb || 'No description available.'}
+        </p>
+
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            onClick={onOpenProfile}
+            className="flex-1 rounded-lg border border-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#6b7280] transition hover:bg-[#f9fafb] hover:text-[#111827]"
+          >
+            Profile
+          </button>
+          <button
+            onClick={onSchedule}
+            className="dm-book-btn inline-flex flex-[1.4] items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white"
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            Schedule
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const Mentors = () => {
@@ -92,7 +208,40 @@ const Mentors = () => {
         const recommendedResponse = await menteeApi.getRecommendedMentors({ mentee_id: mentee.id });
         const recommendedList = normalizeList(recommendedResponse);
         const cards = recommendedList.map((item) => mapMentorToCard(item));
-        if (!cancelled) setMentors(cards);
+
+        const mentorIds = [...new Set(cards.map((card) => Number(card.id)).filter((id) => Number.isFinite(id) && id > 0))];
+        const reviewResults = await Promise.allSettled(
+          mentorIds.map(async (mentorId) => {
+            const response = await menteeApi.getMentorReviews(mentorId);
+            const summary = response?.summary || {};
+            return {
+              mentorId,
+              rating: toNumberOrNull(summary?.average_rating),
+              reviews: toNumberOrNull(summary?.total_reviews),
+            };
+          })
+        );
+
+        const reviewSummaryMap = {};
+        reviewResults.forEach((result) => {
+          if (result.status !== 'fulfilled') return;
+          reviewSummaryMap[String(result.value.mentorId)] = {
+            rating: result.value.rating,
+            reviews: result.value.reviews,
+          };
+        });
+
+        const cardsWithReviewSummary = cards.map((card) => {
+          const summary = reviewSummaryMap[String(card.id)];
+          if (!summary) return card;
+          return {
+            ...card,
+            rating: summary.rating != null ? summary.rating : card.rating,
+            reviews: summary.reviews != null ? summary.reviews : card.reviews,
+          };
+        });
+
+        if (!cancelled) setMentors(cardsWithReviewSummary);
       } catch (err) {
         if (!cancelled) {
           setError(err?.message || 'Unable to load recommendations right now.');
@@ -154,7 +303,7 @@ const Mentors = () => {
     <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
         {/* Header Section */}
-        <div className="mb-8">
+        <div className="mb-8 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20 transition-transform hover:scale-105">
@@ -205,111 +354,25 @@ const Mentors = () => {
           animate="visible"
           className="grid gap-6 sm:grid-cols-2"
         >
-          <AnimatePresence mode="popLayout">
-            {paginatedMentorCards.map((m) => (
-              <Motion.div
-                layout
-                key={m.id || m.name}
-                variants={cardVariants}
-                whileHover={{ y: -4 }}
-                className={`group relative flex flex-col h-full overflow-hidden rounded-3xl bg-white p-6 shadow-sm border transition-all duration-300 ${m.topMatch
-                    ? 'border-[#5D3699]/30 ring-1 ring-[#5D3699]/10'
-                    : 'border-[#e5e7eb] hover:border-[#5D3699]/30 hover:shadow-md'
-                  }`}
-              >
-                {/* Top Match Badge */}
-                {m.topMatch && (
-                  <div className="absolute right-6 top-6">
-                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider shadow-md">
-                      <Award className="h-3 w-3" />
-                      Top Match
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex gap-5 mb-6">
-                  <div className="relative shrink-0">
-                    <div className="h-20 w-20 overflow-hidden rounded-2xl bg-[#f5f3ff] ring-4 ring-white shadow-md">
-                      {m.avatar ? (
-                        <img src={m.avatar} alt={m.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <User className="h-8 w-8 text-[#5D3699]" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-bold text-[#111827] truncate group-hover:text-[#5D3699] transition-colors">
-                      {m.name}
-                    </h3>
-                    
-                    <div className="mt-1.5 flex flex-col gap-2">
-                      {m.location && (
-                        <div className="flex items-center gap-1.5 text-sm text-[#6b7280]">
-                          <MapPin className="h-3.5 w-3.5 text-[#9ca3af]" />
-                          <span className="truncate">{m.location}</span>
-                        </div>
-                      )}
-                      {m.rating != null && (
-                        <div className="flex items-center gap-2 self-start">
-                          <div className="flex items-center gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-3 w-3 ${i < Math.floor(m.rating) ? 'fill-[#f59e0b] text-[#f59e0b]' : 'text-[#e5e7eb]'}`} />
-                            ))}
-                          </div>
-                          <span className="text-xs font-bold text-[#111827]">{Number(m.rating).toFixed(1)}</span>
-                          {m.reviews != null && <span className="text-[10px] font-medium text-[#9ca3af]">({m.reviews})</span>}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {m.tags.slice(0, 3).map((t) => (
-                    <span key={t} className="px-3 py-1 text-[11px] font-semibold rounded-lg bg-[#f5f3ff] text-[#5D3699] border border-[#5D3699]/5">
-                      {t}
-                    </span>
-                  ))}
-                  {m.tags.length > 3 && (
-                    <span className="text-[10px] font-medium text-[#9ca3af] self-center">+{m.tags.length - 3}</span>
-                  )}
-                </div>
-
-                <p className="text-sm leading-relaxed text-[#6b7280] mb-8 line-clamp-2 font-medium">
-                  {m.blurb || "Experienced mentor ready to support your growth and personal development goals."}
-                </p>
-
-                <div className="mt-auto pt-6 border-t border-[#f3f4f6] flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      setSelectedMentorId(m.id);
-                      navigate(m.id ? `/mentor-profile?mentorId=${m.id}` : '/mentor-profile');
-                    }}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-[#e5e7eb] text-[#6b7280] text-sm font-semibold hover:bg-[#f9fafb] hover:text-[#111827] transition-all"
-                  >
-                    Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedMentorId(m.id);
-                      navigate(m.id ? `/mentor-details?mentorId=${m.id}` : '/mentor-details');
-                    }}
-                    className={`flex-[1.5] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${m.topMatch
-                        ? 'bg-[#5D3699] text-white hover:bg-[#4a2b7a]'
-                        : 'bg-white text-[#5D3699] border border-[#5D3699]/20 hover:bg-[#f5f3ff]'
-                      }`}
-                  >
-                    <Calendar className="h-4 w-4" />
-                    Schedule
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </Motion.div>
-            ))}
-          </AnimatePresence>
+          {paginatedMentorCards.map((m, index) => (
+            <Motion.div
+              key={`${currentPage}-${m.id ?? m.name ?? 'mentor'}-${index}`}
+              variants={cardVariants}
+              className="h-full"
+            >
+              <MentorRecommendationCard
+                mentor={m}
+                onOpenProfile={() => {
+                  setSelectedMentorId(m.id);
+                  navigate(m.id ? `/mentor-profile?mentorId=${m.id}` : '/mentor-profile');
+                }}
+                onSchedule={() => {
+                  setSelectedMentorId(m.id);
+                  navigate(m.id ? `/mentor-details?mentorId=${m.id}` : '/mentor-details');
+                }}
+              />
+            </Motion.div>
+          ))}
         </Motion.div>
 
         {/* Empty State (Only if not loading) */}
@@ -396,4 +459,3 @@ const Mentors = () => {
 };
 
 export default Mentors;
-

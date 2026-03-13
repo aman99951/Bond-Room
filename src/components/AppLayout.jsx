@@ -139,6 +139,15 @@ const ProtectedApp = ({ children }) => {
   return children;
 };
 
+const RootRoute = () => {
+  const session = getAuthSession();
+  const uiRole = mapAppRoleToUiRole(session?.role);
+  if (session?.accessToken && uiRole === 'menties') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <LandingPage />;
+};
+
 const ReturnToPreviousRoute = () => {
   const navigate = useNavigate();
   const session = getAuthSession();
@@ -255,7 +264,7 @@ const AppLayout = () => {
       <ScrollToTop />
       <AuthExpiryWatcher />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<RootRoute />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/mentor-register" element={<MentorRegister />} />

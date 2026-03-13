@@ -517,12 +517,14 @@ const MySessions = () => {
 return (
   <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
     {/* Header Section */}
-    <div className="mb-8">
+    <div className="relative mb-8 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
+      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
+      <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         {/* Title with decorative element */}
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
-            <Calendar className="h-6 w-6 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f3ff]">
+            <Calendar className="h-6 w-6 text-[#5D3699]" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-[#111827] sm:text-3xl">

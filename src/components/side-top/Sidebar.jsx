@@ -270,7 +270,7 @@ return (
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-2">
+      <nav className="no-scrollbar flex-1 overflow-y-auto px-3 py-2">
         <ul className="space-y-1">
           {navRoutes.map((item) => {
             const Icon = item.icon;

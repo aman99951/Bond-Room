@@ -10,8 +10,9 @@ const ACTIVE_MEETING_EVENT = 'meeting:change';
 const AUTH_LOGOUT_EVENT = 'auth:logout';
 
 export const mapAppRoleToUiRole = (appRole) => {
-  if (appRole === 'admin') return 'admins';
-  if (appRole === 'mentor') return 'mentors';
+  const normalizedRole = String(appRole || '').trim().toLowerCase();
+  if (normalizedRole === 'admin' || normalizedRole === 'admins') return 'admins';
+  if (normalizedRole === 'mentor' || normalizedRole === 'mentors') return 'mentors';
   return 'menties';
 };
 

@@ -129,12 +129,14 @@ const SessionRequests = () => {
 return (
   <div className="min-h-screen p-4 sm:p-6 lg:p-8">
     {/* Header Section */}
-    <div className="mb-8">
+    <div className="relative mb-8 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
+      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
+      <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Title with decorative element */}
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
-            <Inbox className="h-6 w-6 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f3ff]">
+            <Inbox className="h-6 w-6 text-[#5D3699]" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
@@ -151,9 +153,9 @@ return (
           type="button"
           onClick={loadRequests}
           disabled={loading}
-          className="group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className="group inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9cdf3] bg-white px-5 py-2.5 text-sm font-medium text-[#4a2b7a] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#bda7e8] hover:shadow disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <RefreshCw className={`h-4 w-4 text-gray-500 transition-transform group-hover:text-[#5D3699] ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-[#6b5f84] transition-transform group-hover:text-[#5D3699] ${loading ? 'animate-spin' : ''}`} />
           {loading ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>

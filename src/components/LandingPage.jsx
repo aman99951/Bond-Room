@@ -6,17 +6,14 @@ import {
 import logo       from './assets/logo.png';
 import heroLeft   from './assets/left.png';
 import heroRight  from './assets/right.png';
-import mentorLeft from './assets/cap2.jpg';
 import avatarOne  from './assets/avatar-1.jpg';
-import avatarTwo  from './assets/avatar-2.jpg';
-import mentorTwo  from './assets/mentor2.png';
-import mentorThree from './assets/mentor-left.png';
 import students   from './assets/teach2.png';
 import {
   ShieldCheck, Users, Bot, Smile,
   Twitter, Linkedin, LockKeyhole,
   Ear, Brain, Handshake, ArrowUpRight,
 } from 'lucide-react';
+import { menteeApi } from '../apis/api/menteeApi';
 import './LandingPage.css';
 
 /* ══════════════════════════════════════════
@@ -262,57 +259,52 @@ const howItems = [
   { Icon: Handshake, n: '03', title: 'Guide',      body: 'Meaningful 1-on-1 sessions that provide perspective and direction.' },
 ];
 
-const mentorCards = [
-  {
-    image: heroRight,
-    name: 'Dr. Anand K.',
-    role: 'Retired Professor',
-    tags: ['Academic Stress', 'Physics'],
-    copy: 'I help students find joy in learning rather than fearing exams.',
-  },
-  {
-    image: mentorLeft,
-    name: 'Mrs. Radha',
-    role: 'Ex-HR Director',
-    tags: ['Career Guidance', 'Confidence'],
-    copy: 'Guiding young minds to discover their true potential.',
-  },
-  {
-    image: avatarTwo,
-    name: 'Col. Singh (Retd)',
-    role: 'Army Veteran',
-    tags: ['Discipline', 'Leadership'],
-    copy: 'Building character and resilience for the challenges ahead.',
-  },
-  {
-    image: students,
-    name: 'Ms. Kavya N.',
-    role: 'School Counselor',
-    tags: ['Mental Wellness', 'Routine'],
-    copy: 'Small daily habits can unlock confidence and calm focus.',
-  },
-  {
-    image: mentorTwo,
-    name: 'Mr. Vivek J.',
-    role: 'Startup Founder',
-    tags: ['Problem Solving', 'Communication'],
-    copy: 'I coach students to turn curiosity into practical life skills.',
-  },
-  {
-    image: avatarOne,
-    name: 'Dr. Seema T.',
-    role: 'Clinical Psychologist',
-    tags: ['Emotional Safety', 'Listening'],
-    copy: 'Every child deserves a space to be heard without judgment.',
-  },
-  {
-    image: mentorThree,
-    name: 'Ms. Naina P.',
-    role: 'Life Skills Coach',
-    tags: ['Communication', 'Confidence'],
-    copy: 'Helping students develop confidence, clarity, and life skills.',
-  },
-];
+const normalizeList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.mentors)) return payload.mentors;
+  return [];
+};
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+
+const resolveMediaUrl = (value) => {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('/')) {
+    const base = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
+    return base ? `${base}${value}` : value;
+  }
+  return value;
+};
+
+const toLandingMentorCard = (mentor) => {
+  const source = mentor?.mentor && typeof mentor.mentor === 'object' ? mentor.mentor : mentor;
+  const name = `${source?.first_name || ''} ${source?.last_name || ''}`.trim() || `Mentor #${source?.id || ''}`;
+  const tags = Array.isArray(source?.care_areas) ? source.care_areas.slice(0, 2) : [];
+  const languages = Array.isArray(source?.languages) ? source.languages.filter(Boolean) : [];
+  const bio = String(source?.bio || '').trim();
+  const rating = Number(source?.average_rating || 0);
+  const ratingText = Number.isFinite(rating) && rating > 0 ? `${rating.toFixed(1)} rated` : 'Verified mentor';
+
+  return {
+    id: source?.id,
+    image: resolveMediaUrl(source?.profile_photo || source?.avatar || ''),
+    name,
+    role: source?.qualification || source?.city_state || 'Mentor',
+    tags,
+    copy:
+      bio ||
+      `Speaks ${languages.slice(0, 2).join(', ') || 'multiple languages'} and supports ${tags.join(' and ') || 'student growth'}.`,
+    city: source?.city_state || '',
+    qualification: source?.qualification || '',
+    languages,
+    rating: Number.isFinite(rating) ? rating : 0,
+    ratingText,
+  };
+};
 
 /* shared motion variants */
 const fadeUp = {
@@ -442,13 +434,15 @@ const HeroDepthScene = ({ parallax }) => {
   );
 };
 
-const MentorRingCarousel = ({ items }) => {
+const MentorRingCarousel = ({ items, onSelectMentor }) => {
   const stageRef = useRef(null);
   const cardRefs = useRef([]);
   const rafRef = useRef(null);
   const lastTsRef = useRef(null);
   const hoverRef = useRef(false);
   const dragRef = useRef(false);
+  const draggedRef = useRef(false);
+  const dragDistanceRef = useRef(0);
   const lastPointerXRef = useRef(0);
   const phaseRef = useRef(0);
   const speedRef = useRef(0.17);
@@ -458,6 +452,7 @@ const MentorRingCarousel = ({ items }) => {
   const HOVER_SPEED = 0.35;
   const DRAG_PHASE_MULTIPLIER = 0.0033;
   const DRAG_MOMENTUM_MULTIPLIER = 0.0019;
+  const DRAG_CLICK_THRESHOLD = 8;
 
   const applyArcLayout = () => {
     const stageWidth = stageRef.current?.clientWidth || 1280;
@@ -545,6 +540,8 @@ const MentorRingCarousel = ({ items }) => {
 
   const handlePointerDown = (event) => {
     dragRef.current = true;
+    draggedRef.current = false;
+    dragDistanceRef.current = 0;
     lastPointerXRef.current = event.clientX;
     targetSpeedRef.current = 0;
     speedRef.current = 0;
@@ -556,6 +553,10 @@ const MentorRingCarousel = ({ items }) => {
 
     const dx = event.clientX - lastPointerXRef.current;
     lastPointerXRef.current = event.clientX;
+    dragDistanceRef.current += Math.abs(dx);
+    if (dragDistanceRef.current > DRAG_CLICK_THRESHOLD) {
+      draggedRef.current = true;
+    }
 
     phaseRef.current = (phaseRef.current - dx * DRAG_PHASE_MULTIPLIER + items.length) % items.length;
     speedRef.current = -dx * DRAG_MOMENTUM_MULTIPLIER;
@@ -570,6 +571,28 @@ const MentorRingCarousel = ({ items }) => {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
     targetSpeedRef.current = hoverRef.current ? HOVER_SPEED : BASE_SPEED;
+    window.setTimeout(() => {
+      draggedRef.current = false;
+    }, 0);
+  };
+
+  const handleCardPointerUp = (event, item) => {
+    event.stopPropagation();
+    if (dragDistanceRef.current > DRAG_CLICK_THRESHOLD) return;
+    if (typeof onSelectMentor === 'function') {
+      onSelectMentor(item);
+    }
+  };
+
+  const handleViewDetails = (event, item) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragRef.current = false;
+    draggedRef.current = false;
+    dragDistanceRef.current = 0;
+    if (typeof onSelectMentor === 'function') {
+      onSelectMentor(item);
+    }
   };
 
   return (
@@ -585,7 +608,8 @@ const MentorRingCarousel = ({ items }) => {
         onPointerCancel={handlePointerEnd}
       >
         <div className="lp-arc-track">
-          {items.map(({ image, name, role }, index) => {
+          {items.map((item, index) => {
+            const { image, name, role } = item;
             return (
               <div
                 key={`${name}-${index}`}
@@ -593,6 +617,7 @@ const MentorRingCarousel = ({ items }) => {
                 ref={(el) => {
                   cardRefs.current[index] = el;
                 }}
+                onPointerUp={(event) => handleCardPointerUp(event, item)}
               >
                 <div className="lp-arc-card-inner">
                   <img src={image} alt={name} className="lp-arc-img" draggable={false} />
@@ -600,6 +625,18 @@ const MentorRingCarousel = ({ items }) => {
                   <div className="lp-arc-info">
                     <strong>{name}</strong>
                     <span>{role}</span>
+                    <button
+                      type="button"
+                      className="lp-arc-action"
+                      onPointerDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                      onPointerUp={(event) => handleViewDetails(event, item)}
+                      onClick={(event) => handleViewDetails(event, item)}
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               </div>
@@ -616,6 +653,8 @@ const MentorRingCarousel = ({ items }) => {
 export default function LandingPage() {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [activeStory, setActiveStory] = useState(0);
+  const [mentorCards, setMentorCards] = useState([]);
+  const [selectedMentor, setSelectedMentor] = useState(null);
   const { scrollY } = useScroll();
   const parallax    = useTransform(scrollY, [0, 600], [0, -50]);
 
@@ -627,6 +666,30 @@ export default function LandingPage() {
   useEffect(() => {
     document.body.style.background = '#f7f4ff';
     return () => { document.body.style.background = ''; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadMentors = async () => {
+      try {
+        const payload = await menteeApi.listPublicMentors();
+        const list = normalizeList(payload);
+        const mapped = list.map(toLandingMentorCard).filter((item) => item?.name);
+        if (!cancelled) {
+          setMentorCards(mapped);
+        }
+      } catch {
+        if (!cancelled) {
+          setMentorCards([]);
+        }
+      }
+    };
+
+    loadMentors();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -979,13 +1042,110 @@ export default function LandingPage() {
             </motion.div>
             <SplitWords text="Wisdom You Can See" className="lp-h2" />
           </div>
-          <motion.a href="/mentors" className="lp-link-arr" variants={fadeUp}>
+          <motion.a href="/login" className="lp-link-arr" variants={fadeUp}>
             Meet all <ArrowUpRight size={14} />
           </motion.a>
         </motion.div>
 
-        <MentorRingCarousel items={mentorCards} />
+        {mentorCards.length > 0 ? (
+          <MentorRingCarousel items={mentorCards} onSelectMentor={setSelectedMentor} />
+        ) : (
+          <div className="rounded-2xl border border-[#ddd7ed] bg-white/75 p-6 text-center text-sm text-[#5f6b81]">
+            No mentors available from API right now.
+          </div>
+        )}
       </motion.section>
+      <AnimatePresence>
+        {selectedMentor ? (
+          <motion.div
+            className="lp-mentor-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedMentor(null)}
+          >
+            <motion.div
+              className="lp-mentor-modal"
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ duration: 0.24 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="lp-mentor-modal-orb lp-mentor-modal-orb-a" />
+              <div className="lp-mentor-modal-orb lp-mentor-modal-orb-b" />
+
+              <div className="lp-mentor-modal-content">
+                <div className="lp-mentor-modal-top">
+                  <div className="lp-mentor-modal-avatar">
+                    {selectedMentor?.image ? (
+                      <img src={selectedMentor.image} alt={selectedMentor.name} className="h-full w-full object-cover" />
+                    ) : null}
+                  </div>
+                  <div className="lp-mentor-modal-head">
+                    <p className="lp-mentor-modal-pill">
+                      Mentor Profile
+                    </p>
+                    <h3>{selectedMentor.name}</h3>
+                    <p className="lp-mentor-modal-role">
+                      {selectedMentor.qualification || selectedMentor.role || 'Mentor'}
+                      {selectedMentor.city ? ` | ${selectedMentor.city}` : ''}
+                    </p>
+                    <p className="lp-mentor-modal-copy">{selectedMentor.copy}</p>
+                  </div>
+                </div>
+
+                <div className="lp-mentor-modal-metrics">
+                  <div>
+                    <span>Rating</span>
+                    <strong>{selectedMentor.rating > 0 ? selectedMentor.rating.toFixed(1) : 'New'}</strong>
+                  </div>
+                  <div>
+                    <span>Languages</span>
+                    <strong>{(selectedMentor.languages || []).length || 0}</strong>
+                  </div>
+                  <div>
+                    <span>Specialties</span>
+                    <strong>{(selectedMentor.tags || []).length || 0}</strong>
+                  </div>
+                </div>
+
+                <div className="lp-mentor-modal-section">
+                  <p>Expertise</p>
+                  <div className="lp-mentor-modal-tags">
+                    {(selectedMentor.tags || []).map((tag) => (
+                      <span key={tag} className="lp-tag-primary">
+                        {tag}
+                      </span>
+                    ))}
+                    {(selectedMentor.languages || []).slice(0, 3).map((language) => (
+                      <span key={language} className="lp-tag-secondary">
+                        {language}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lp-mentor-modal-actions">
+                  <button
+                    type="button"
+                    className="lp-mentor-modal-btn lp-mentor-modal-btn-secondary"
+                    onClick={() => setSelectedMentor(null)}
+                  >
+                    Close
+                  </button>
+                  <a
+                    href="/login"
+                    className="lp-mentor-modal-btn lp-mentor-modal-btn-primary"
+                  >
+                    Continue to Match
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {/* ═══ EDITORIAL CTA ═══ */}
       <motion.section
@@ -1059,4 +1219,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
 

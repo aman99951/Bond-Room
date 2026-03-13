@@ -23,6 +23,7 @@ export const menteeApi = {
   listMenteeRequests: (params = {}) => apiClient.get(`/mentee-requests/${buildQuery(params)}`),
 
   listMentors: (params = {}) => apiClient.get(`/mentors/${buildQuery(params)}`),
+  listPublicMentors: (params = {}) => apiClient.get(`/mentors/${buildQuery(params)}`, { auth: false }),
   getMentorById: (mentorId) => apiClient.get(`/mentors/${mentorId}/`),
   getMentorReviews: (mentorId) => apiClient.get(`/mentors/${mentorId}/reviews/`),
   getRecommendedMentors: (params = {}) => apiClient.get(`/mentors/recommended/${buildQuery(params)}`),

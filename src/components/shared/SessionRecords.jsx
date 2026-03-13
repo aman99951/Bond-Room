@@ -228,7 +228,7 @@ const SessionRecords = () => {
 
   return (
     <div className="min-h-screen bg-transparent p-2 sm:p-4 lg:p-6">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mb-6 flex flex-col gap-4 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] lg:flex-row lg:items-center lg:justify-between lg:p-6">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#5D3699] text-white">
             <FileText className="h-5 w-5" />

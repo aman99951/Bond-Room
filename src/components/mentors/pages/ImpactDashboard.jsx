@@ -348,15 +348,18 @@ const ImpactDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-transparent text-[#111827] p-6 sm:p-8 rounded-2xl">
-      <div className="max-w-full mx-auto">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen bg-transparent p-4 text-[#111827] sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-[1400px]">
+        <div className="relative overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
+          <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
           <div>
-            <h2 className="font-sans font-bold text-[30px] leading-[36px] tracking-[0px] align-middle text-[#333333]">Impact Dashboard</h2>
+            <h2 className="font-sans text-[30px] font-bold leading-[36px] tracking-[0px] align-middle text-[#1f1a32]">Impact Dashboard</h2>
+            <p className="mt-1 text-sm text-[#6b5f84]">Track your mentoring outcomes, ratings, and monthly impact.</p>
           </div>
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white px-3 py-2 text-xs text-[#1f2937] self-start sm:self-auto"
+            className="inline-flex items-center gap-2 self-start rounded-xl border border-[#d9cdf3] bg-white px-3 py-2 text-xs font-medium text-[#4a2b7a] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#bda7e8] hover:shadow sm:self-auto"
             onClick={handleExport}
           >
             <Download className="h-3.5 w-3.5" aria-hidden="true" />
@@ -367,7 +370,7 @@ const ImpactDashboard = () => {
         {showTrainingPendingCard && (
           <button
             type="button"
-            className="mt-5 w-full rounded-xl border border-[#d9c8f5] bg-gradient-to-r from-[#f5f0ff] to-white p-4 text-left hover:border-[#c9b5e8] transition"
+            className="mt-5 w-full rounded-2xl border border-[#d9c8f5] bg-gradient-to-r from-[#f5f0ff] via-[#fbf9ff] to-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#c9b5e8] hover:shadow-md"
             onClick={() => navigate('/mentor-training-modules')}
           >
             <p className="text-xs uppercase tracking-[0.08em] text-[#7c3aed]">Optional</p>
@@ -381,7 +384,7 @@ const ImpactDashboard = () => {
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <button
             type="button"
-            className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm text-left hover:border-[#c9b5e8] transition cursor-pointer"
+            className="group rounded-2xl border border-[#e6e2f1] bg-[linear-gradient(145deg,#ffffff_0%,#f9f6ff_100%)] p-4 text-left shadow-[0_10px_24px_-18px_rgba(93,54,153,0.55)] transition hover:-translate-y-0.5 hover:border-[#c9b5e8] hover:shadow-[0_18px_32px_-20px_rgba(93,54,153,0.6)] cursor-pointer"
             onClick={() => navigate('/mentor-session-records')}
           >
             <p
@@ -391,7 +394,7 @@ const ImpactDashboard = () => {
               Total Sessions
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <span className="h-8 w-8 rounded-full bg-[#ede9fe] text-[#5b2c91] flex items-center justify-center">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ede9fe] text-[#5b2c91] transition-transform group-hover:scale-105">
                 <Video className="h-4 w-4" />
               </span>
               <span className="text-[24px] font-semibold text-[#5b2c91]">
@@ -404,7 +407,7 @@ const ImpactDashboard = () => {
           </button>
           <button
             type="button"
-            className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm text-left hover:border-[#c9b5e8] transition cursor-pointer"
+            className="group rounded-2xl border border-[#e6e2f1] bg-[linear-gradient(145deg,#ffffff_0%,#f8fff9_100%)] p-4 text-left shadow-[0_10px_24px_-18px_rgba(31,128,73,0.45)] transition hover:-translate-y-0.5 hover:border-[#b9e4c9] hover:shadow-[0_18px_32px_-20px_rgba(31,128,73,0.5)] cursor-pointer"
             onClick={() => setDonatedPopupOpen(true)}
           >
             <div className="flex items-center justify-between">
@@ -416,7 +419,7 @@ const ImpactDashboard = () => {
               </p>
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <span className="h-8 w-8 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dcfce7] text-[#16a34a] transition-transform group-hover:scale-105">
                 <Leaf className="h-4 w-4" />
               </span>
               <span className="text-[24px] font-semibold text-[#16a34a]">
@@ -427,7 +430,7 @@ const ImpactDashboard = () => {
           </button>
           <button
             type="button"
-            className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm text-left hover:border-[#c9b5e8] transition cursor-pointer"
+            className="group rounded-2xl border border-[#e6e2f1] bg-[linear-gradient(145deg,#ffffff_0%,#f5f9ff_100%)] p-4 text-left shadow-[0_10px_24px_-18px_rgba(59,130,246,0.5)] transition hover:-translate-y-0.5 hover:border-[#bdd8ff] hover:shadow-[0_18px_32px_-20px_rgba(59,130,246,0.55)] cursor-pointer"
             onClick={() => {
               setClaimedPopupMessage('');
               setClaimedPopupOpen(true);
@@ -440,7 +443,7 @@ const ImpactDashboard = () => {
               Total Claimed
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <span className="h-8 w-8 rounded-full bg-[#dbeafe] text-[#3b82f6] flex items-center justify-center">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dbeafe] text-[#3b82f6] transition-transform group-hover:scale-105">
                 <Clock className="h-4 w-4" />
               </span>
               <span className="text-[24px] font-semibold text-[#3b82f6]">
@@ -451,7 +454,7 @@ const ImpactDashboard = () => {
           </button>
           <button
             type="button"
-            className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm text-left hover:border-[#c9b5e8] transition cursor-pointer"
+            className="group rounded-2xl border border-[#e6e2f1] bg-[linear-gradient(145deg,#ffffff_0%,#fffbf0_100%)] p-4 text-left shadow-[0_10px_24px_-18px_rgba(245,158,11,0.5)] transition hover:-translate-y-0.5 hover:border-[#f8d89a] hover:shadow-[0_18px_32px_-20px_rgba(245,158,11,0.5)] cursor-pointer"
             onClick={() => setRatingPopupOpen(true)}
           >
             <p
@@ -461,7 +464,7 @@ const ImpactDashboard = () => {
               Avg. Rating
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <span className="h-8 w-8 rounded-full bg-[#fef3c7] text-[#f59e0b] flex items-center justify-center">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fef3c7] text-[#f59e0b] transition-transform group-hover:scale-105">
                 <Star className="h-4 w-4" />
               </span>
               <span className="text-[24px] font-semibold text-[#f59e0b]">{summary.average_rating || 0}</span>
@@ -471,7 +474,7 @@ const ImpactDashboard = () => {
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-xl border border-white/15 bg-white p-4 shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
+          <div className="rounded-2xl border border-[#e6def8] bg-[linear-gradient(155deg,#ffffff_0%,#faf6ff_100%)] p-4 shadow-[0_16px_30px_-22px_rgba(93,54,153,0.45)]">
             <h3
               className="text-[#333333]"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
@@ -485,15 +488,15 @@ const ImpactDashboard = () => {
                     <span>{item.label}</span>
                     <span>{item.value}%</span>
                   </div>
-                  <div className="mt-2 h-2 w-full rounded-full bg-[#ede9fe]">
-                    <div className="h-2 rounded-full bg-[#5b2c91]" style={{ width: `${Math.min(item.value, 100)}%` }} />
+                  <div className="mt-2 h-2 w-full rounded-full bg-[#efe7ff]">
+                    <div className="h-2 rounded-full bg-[linear-gradient(90deg,#7b4cbc,#5b2c91)]" style={{ width: `${Math.min(item.value, 100)}%` }} />
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-xl bg-[#4b2a86] p-4 shadow-[0_8px_20px_rgba(0,0,0,0.3)] text-white">
+          <div className="rounded-2xl bg-[linear-gradient(135deg,#4b2a86_0%,#5f35a7_55%,#7b4cbc_100%)] p-4 text-white shadow-[0_16px_30px_-20px_rgba(75,42,134,0.7)] ring-1 ring-white/15">
             <h3
               className="text-white"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
@@ -513,7 +516,7 @@ const ImpactDashboard = () => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#e6e2f1] bg-white p-4 shadow-sm flex flex-col items-center">
+          <div className="flex flex-col items-center rounded-2xl border border-[#e6def8] bg-[linear-gradient(155deg,#ffffff_0%,#faf6ff_100%)] p-4 shadow-[0_16px_30px_-22px_rgba(93,54,153,0.45)]">
             <h3
               className="text-[#333333] self-start"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
@@ -522,37 +525,48 @@ const ImpactDashboard = () => {
             </h3>
             <div
               className="mt-6 h-36 w-36 rounded-full flex items-center justify-center"
-              style={{ background: `conic-gradient(#22c55e 0% ${donationRatio}%, #3b82f6 ${donationRatio}% 100%)` }}
+              style={{ background: `conic-gradient(#8b5cf6 0% ${donationRatio}%, #d6c2ff ${donationRatio}% 100%)` }}
             >
-              <div className="h-28 w-28 rounded-full bg-white flex items-center justify-center">
-                <span className="text-[16px] font-semibold text-[#333333]">{donationRatio}%</span>
+              <div className="h-28 w-28 rounded-full bg-[linear-gradient(145deg,#ffffff,#f7f2ff)] flex items-center justify-center ring-1 ring-[#e6def8]">
+                <span className="text-[16px] font-semibold text-[#5b2c91]">{donationRatio}%</span>
               </div>
             </div>
             <div className="mt-4 flex items-center gap-4 text-[11px] text-[#475467]">
               <span className="inline-flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#3b82f6]" />
+                <span className="h-2 w-2 rounded-full bg-[#d6c2ff]" />
                 Claimed
               </span>
               <span className="inline-flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
+                <span className="h-2 w-2 rounded-full bg-[#8b5cf6]" />
                 Donated
               </span>
+            </div>
+            <div className="mt-4 grid w-full grid-cols-2 gap-2 text-[11px]">
+              <div className="rounded-lg bg-white px-3 py-2 text-[#5b2c91] ring-1 ring-[#e6def8]">
+                Donated: {Number(summary.total_donated || 0)}
+              </div>
+              <div className="rounded-lg bg-white px-3 py-2 text-[#6b5f84] ring-1 ring-[#e6def8]">
+                Claimed: {Number(summary.total_claimed || 0)}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-5 rounded-xl border border-white/15 bg-white shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
-            <div className="p-4">
+        <div className="mt-5 overflow-hidden rounded-2xl border border-[#e6def8] bg-[linear-gradient(160deg,#ffffff_0%,#fcfaff_100%)] shadow-[0_18px_34px_-24px_rgba(93,54,153,0.45)]">
+          <div className="flex items-center justify-between border-b border-[#e6def8] bg-[linear-gradient(120deg,#f8f4ff_0%,#f2ebff_100%)] p-4">
             <h3
-              className="text-[#333333]"
-              style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
+              className="text-[#3f2b66]"
+              style={{ fontSize: '18px', lineHeight: '22px', fontWeight: 600 }}
             >
               Session Ledger
             </h3>
+            <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#5D3699] ring-1 ring-[#dccff5]">
+              Recent Activity
+            </span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-[11px]">
-              <thead className="text-[#475467] border-t border-[#e6e2f1]">
+            <table className="w-full text-left text-[12px]">
+              <thead className="border-y border-[#e6def8] bg-[#f7f1ff] text-[#5b4d78]">
               <tr>
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Mentee</th>
@@ -567,19 +581,21 @@ const ImpactDashboard = () => {
                 const statusLabel = getStatusLabel(row.status);
                 const badgeClass =
                   statusLabel === 'Reported'
-                    ? 'bg-[#dbeafe] text-[#2563eb]'
+                    ? 'bg-[#fee2e2] text-[#b91c1c]'
                     : statusLabel === 'Donated'
-                      ? 'bg-[#22c55e] text-white'
-                      : 'bg-[#f59e0b] text-white';
+                      ? 'bg-[#ede3ff] text-[#5D3699]'
+                      : statusLabel === 'Claimed'
+                        ? 'bg-[#e9ddff] text-[#4a2b7a]'
+                        : 'bg-[#e2e8f0] text-[#334155]';
                 return (
-                    <tr key={row.id} className="border-t border-[#f1f5f9] text-[#1f2937]">
+                    <tr key={row.id} className="border-t border-[#f1edf9] text-[#1f2937] transition-colors hover:bg-[#faf6ff]">
                     <td className="px-4 py-3">
                       {row.date ? new Date(row.date).toLocaleDateString() : '—'}
                     </td>
                     <td className="px-4 py-3">{row.mentee}</td>
                     <td className="px-4 py-3">{row.duration}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] ${badgeClass}`}>
+                      <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ${badgeClass}`}>
                         {statusLabel}
                       </span>
                     </td>
@@ -599,8 +615,8 @@ const ImpactDashboard = () => {
                 );
               })}
               {!tableRows.length && (
-                <tr className="border-t border-[#f1f5f9] text-[#1f2937]">
-                  <td className="px-4 py-3 text-xs text-[#475467]" colSpan={6}>
+                <tr className="border-t border-[#f1edf9] text-[#1f2937]">
+                  <td className="px-4 py-3 text-sm text-[#475467]" colSpan={6}>
                     No ledger entries yet.
                   </td>
                 </tr>
@@ -608,15 +624,15 @@ const ImpactDashboard = () => {
             </tbody>
           </table>
         </div>
-          <div className="flex items-center justify-between p-4 text-[11px] text-[#475467] border-t border-[#e6e2f1]">
-            <span>
+          <div className="flex items-center justify-between border-t border-[#e6def8] bg-white p-4 text-[12px] text-[#475467]">
+            <span className="rounded-lg bg-[#faf6ff] px-2 py-1 text-[12px] text-[#4a2b7a] ring-1 ring-[#e6def8]">
               Showing {ledgerRows.length ? (ledgerPage - 1) * ledgerPageSize + 1 : 0}-
               {Math.min(ledgerPage * ledgerPageSize, ledgerRows.length)} of {ledgerRows.length} sessions
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="rounded-md border border-[#e6e2f1] px-3 py-1 disabled:opacity-50"
+                className="rounded-md border border-[#e6def8] bg-white px-3 py-1 text-[#4a2b7a] transition-colors hover:bg-[#f8f4ff] disabled:opacity-50"
                 onClick={() => setLedgerPage((prev) => Math.max(1, prev - 1))}
                 disabled={isInitialLoading || ledgerPage <= 1}
               >
@@ -624,7 +640,7 @@ const ImpactDashboard = () => {
               </button>
               <button
                 type="button"
-                className="rounded-md bg-[#5b2c91] text-white px-3 py-1 disabled:opacity-50"
+                className="rounded-md bg-[#5D3699] px-3 py-1 text-white transition-colors hover:bg-[#4a2b7a] disabled:opacity-50"
                 onClick={() => setLedgerPage((prev) => Math.min(totalLedgerPages, prev + 1))}
                 disabled={isInitialLoading || ledgerPage >= totalLedgerPages}
               >

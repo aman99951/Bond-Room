@@ -362,7 +362,7 @@ const MySessions = () => {
 return (
   <div className="bg-transparent p-3 sm:p-5 lg:p-8">
     {/* Header Section */}
-    <div className="mb-6 sm:mb-8">
+    <div className="mb-6 sm:mb-8 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:p-6">
       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         {/* Title with Icon */}
         <div className="flex min-w-0 items-center gap-3">

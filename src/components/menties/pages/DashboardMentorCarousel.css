@@ -1,0 +1,46 @@
+.dash-mentor-arc .lp-arc-stage {
+  --card-w: clamp(150px, 13vw, 220px);
+  --card-h: clamp(220px, 24vw, 300px);
+  height: clamp(300px, 32vw, 400px);
+}
+
+.dash-mentor-arc .lp-arc-stage::before {
+  background: none;
+}
+
+.dash-mentor-arc .lp-arc-stage::after {
+  background: none;
+}
+
+.dash-mentor-arc .lp-arc-card-inner {
+  border: 1px solid rgba(229, 231, 235, 0.95);
+  box-shadow:
+    0 16px 28px rgba(17, 24, 39, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset;
+}
+
+.dash-mentor-arc .lp-arc-overlay {
+  background:
+    linear-gradient(180deg, rgba(18, 10, 44, 0) 34%, rgba(18, 10, 44, 0.58) 100%),
+    radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.23), transparent 45%);
+}
+
+.dash-mentor-arc .lp-arc-info strong {
+  color: #f8fafc;
+}
+
+.dash-mentor-arc .lp-arc-info span {
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.dash-mentor-arc .dash-arc-empty {
+  background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
+}
+
+@media (max-width: 768px) {
+  .dash-mentor-arc .lp-arc-stage {
+    --card-w: clamp(112px, 22vw, 156px);
+    --card-h: clamp(168px, 33vw, 224px);
+    height: clamp(250px, 46vw, 330px);
+  }
+}
