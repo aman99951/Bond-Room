@@ -87,6 +87,42 @@ const CLOUDINARY_UPLOAD_FOLDER = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_F
 const SERVERLESS_MAX_UPLOAD_BYTES = Number(import.meta.env.VITE_SERVERLESS_MAX_UPLOAD_BYTES || 4 * 1024 * 1024);
 const ABUSE_TOAST_DEDUP_MS = 6000;
 const ABUSE_SUMMARY_DEDUP_MS = 12000;
+const AUTO_VIDEO_SCAN_INTERVAL_MS = Number(import.meta.env.VITE_VIDEO_SAFETY_SCAN_MS || 6000);
+const AUTO_VIDEO_ALERT_DEDUP_MS = Number(import.meta.env.VITE_VIDEO_ALERT_DEDUP_MS || 30000);
+const SPEECH_DUPLICATE_WINDOW_MS = Number(import.meta.env.VITE_SPEECH_DUPLICATE_WINDOW_MS || 1800);
+const LOCAL_ABUSE_TERMS = [
+  'idiot',
+  'stupid',
+  'shut up',
+  'loser',
+  'hate you',
+  'kill yourself',
+  'moron',
+  'useless',
+  'dumb',
+  'fool',
+  'bastard',
+  'asshole',
+  'fuck',
+  'fucker',
+  'fucking',
+  'fuck off',
+  'shit',
+  'bitch',
+  'motherfucker',
+  'madarchod',
+  'madar chod',
+  'behenchod',
+  'behen chod',
+  'benchod',
+  'bsdk',
+  'bkl',
+  'gandu',
+  'kameena',
+  'haramzada',
+  'chutiya',
+  'harami',
+];
 
 const toArray = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -98,6 +134,121 @@ const normalizeSignalPayload = (value) => {
   if (!value) return {};
   if (typeof value.toJSON === 'function') return value.toJSON();
   return value;
+};
+
+const getParticipantDisplayRole = (role) => {
+  const normalized = String(role || '').trim().toLowerCase();
+  if (normalized === 'mentor') return 'Mentor';
+  if (normalized === 'mentee') return 'Mentee';
+  return 'Participant';
+};
+
+const formatIncidentTypeLabel = (value) =>
+  String(value || 'unknown')
+    .trim()
+    .replace(/_/g, ' ')
+    .toLowerCase();
+
+const normalizeAbuseText = (value) =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[-_/]+/g, ' ')
+    .replace(/[^\w\s*]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const compactAbuseText = (value) =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[@]/g, 'a')
+    .replace(/[$]/g, 's')
+    .replace(/[!1]/g, 'i')
+    .replace(/[0]/g, 'o')
+    .replace(/[3]/g, 'e')
+    .replace(/[4]/g, 'a')
+    .replace(/[5]/g, 's')
+    .replace(/[7]/g, 't')
+    .replace(/[^a-z0-9]+/g, '');
+
+const escapeRegex = (value) => String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const severityFromMatchCount = (count) => {
+  if (count >= 3) return 'high';
+  if (count >= 2) return 'medium';
+  return 'low';
+};
+
+const detectLocalAbusiveTerms = (value) => {
+  const source = normalizeAbuseText(value);
+  if (!source) return [];
+  const sourceCompact = compactAbuseText(value);
+  const sourceTokens = source.split(/\s+/).filter(Boolean);
+  const matches = [];
+
+  const isMaskedTokenLikelyTerm = (tokenValue, termValue) => {
+    const token = String(tokenValue || '').trim().toLowerCase();
+    const term = String(termValue || '').trim().toLowerCase();
+    if (!token || !term || !token.includes('*')) return false;
+    if (term.length < 4 || token[0] !== term[0]) return false;
+
+    const wildcardPattern = new RegExp(`^${escapeRegex(token).replace(/\\\*/g, '[a-z]*')}$`, 'i');
+    if (!wildcardPattern.test(term)) return false;
+
+    const explicitLetters = token.replace(/\*/g, '');
+    if (explicitLetters.length >= 2) {
+      let cursor = 0;
+      for (const char of explicitLetters) {
+        cursor = term.indexOf(char, cursor);
+        if (cursor === -1) return false;
+        cursor += 1;
+      }
+    }
+
+    const trailingLetterMatch = token.match(/[a-z](?=[^a-z]*$)/i);
+    if (trailingLetterMatch && trailingLetterMatch[0] !== term[term.length - 1]) {
+      return false;
+    }
+
+    return Math.abs(token.length - term.length) <= 3;
+  };
+
+  for (const term of LOCAL_ABUSE_TERMS) {
+    const normalized = normalizeAbuseText(term);
+    if (!normalized) continue;
+    const pattern = new RegExp(`\\b${escapeRegex(normalized).replace(/\s+/g, '\\s+')}\\b`, 'i');
+    if (pattern.test(source)) {
+      matches.push(normalized);
+      continue;
+    }
+    const compact = compactAbuseText(normalized.replace(/\*/g, ''));
+    if (compact && compact.length >= 4 && sourceCompact.includes(compact)) {
+      matches.push(normalized);
+      continue;
+    }
+
+    if (!normalized.includes(' ') && sourceTokens.some((token) => isMaskedTokenLikelyTerm(token, normalized))) {
+      matches.push(normalized);
+    }
+  }
+  return Array.from(new Set(matches));
+};
+
+const buildLanguageAlertMessage = (speakerRole, viewerRole) => {
+  const speaker = getParticipantDisplayRole(speakerRole);
+  const speakerNormalized = String(speakerRole || '').trim().toLowerCase();
+  const viewerNormalized = String(viewerRole || '').trim().toLowerCase();
+  if (speakerNormalized && speakerNormalized === viewerNormalized) {
+    return 'Warning: Bad wording detected. Please maintain respectful communication during the session.';
+  }
+  if (speakerNormalized === 'mentee') {
+    return 'Alert: Mentee used bad wording. Please guide the conversation respectfully.';
+  }
+  if (speakerNormalized === 'mentor') {
+    return 'Alert: Mentor used bad wording. You may continue cautiously or end the session if needed.';
+  }
+  return `Alert: ${speaker} used bad wording.`;
 };
 
 const isSuppressedRtcError = (message) => {
@@ -165,9 +316,11 @@ const MeetingRoomShell = ({
   const recorderRef = useRef(null);
   const recordingChunksRef = useRef([]);
   const transcriptSegmentsRef = useRef([]);
+  const roleTranscriptSegmentsRef = useRef({ mentor: [], mentee: [] });
   const recognitionRef = useRef(null);
   const autoMonitoringRef = useRef(false);
-  const autoStartCompletedRef = useRef(false);
+  const speechRestartTimerRef = useRef(null);
+  const speechRestartDelayRef = useRef(550);
   const summaryRequestedRef = useRef(false);
   const remoteStreamStateCleanupRef = useRef(null);
   const remoteMediaSignalRef = useRef({ micEnabled: null, cameraEnabled: null });
@@ -183,12 +336,17 @@ const MeetingRoomShell = ({
   const toastTimerRef = useRef(null);
   const lastLocalAbuseToastRef = useRef(0);
   const lastRemoteAbuseToastRef = useRef(0);
+  const lastSpeechModerationRef = useRef({ text: '', at: 0 });
+  const lastInterimFeedAtRef = useRef(0);
   const lastAbuseSummaryAtRef = useRef(0);
   const abuseSummaryBusyRef = useRef(false);
+  const videoAnalysisBusyRef = useRef(false);
+  const videoScanErrorAtRef = useRef(0);
+  const lastVideoAlertByKeyRef = useRef({});
   const sessionClosedSyncRef = useRef(false);
   const rtcConfigRef = useRef(DEFAULT_RTC_CONFIG);
   const exitingRef = useRef(false);
-
+  const monitoringFeedIdRef = useRef(0);
   const [connectionState, setConnectionState] = useState('idle');
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
@@ -212,8 +370,13 @@ const MeetingRoomShell = ({
   const [meetingSummary, setMeetingSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [remoteEnded, setRemoteEnded] = useState(false);
+  const [monitoringFeed, setMonitoringFeed] = useState([]);
+  const [liveInterimTranscript, setLiveInterimTranscript] = useState('');
+  const monitoringActive = monitoringStatus || monitoring;
   const isMentorToolsEnabled = participantRole === 'mentor';
   const canSpeechModeration = participantRole === 'mentor' || participantRole === 'mentee';
+  const monitoringMetadataKey =
+    participantRole === 'mentor' ? 'monitoring_started_mentor' : 'monitoring_started_mentee';
   const showManualMentorTools = false;
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -229,6 +392,36 @@ const MeetingRoomShell = ({
     if (!message) return;
     if (isSuppressedRtcError(message)) return;
     console.error('[MeetingRoomShell]', String(message));
+  }, []);
+
+  const appendMonitoringTranscript = useCallback((text, source = 'local') => {
+    const value = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!value) return;
+    monitoringFeedIdRef.current += 1;
+    const nextEntry = {
+      id: monitoringFeedIdRef.current,
+      text: value,
+      source: String(source || 'local').trim().toLowerCase(),
+      at: new Date().toISOString(),
+    };
+    setMonitoringFeed((prev) => [nextEntry, ...prev].slice(0, 40));
+  }, []);
+
+  const appendRoleTranscriptSegment = useCallback((roleValue, textValue) => {
+    const role = String(roleValue || '').trim().toLowerCase();
+    if (role !== 'mentor' && role !== 'mentee') return;
+    const value = String(textValue || '').replace(/\s+/g, ' ').trim();
+    if (!value) return;
+    const bucket = roleTranscriptSegmentsRef.current?.[role];
+    if (!Array.isArray(bucket)) {
+      roleTranscriptSegmentsRef.current[role] = [value];
+      return;
+    }
+    if (bucket[bucket.length - 1] === value) return;
+    bucket.push(value);
+    if (bucket.length > 240) {
+      bucket.splice(0, bucket.length - 240);
+    }
   }, []);
 
   const showToast = useCallback((message, type = 'warning', duration = 4500) => {
@@ -546,10 +739,17 @@ const MeetingRoomShell = ({
 
   const stopSpeechMonitoring = useCallback(async () => {
     autoMonitoringRef.current = false;
+    speechRestartDelayRef.current = 550;
+    if (speechRestartTimerRef.current) {
+      window.clearTimeout(speechRestartTimerRef.current);
+      speechRestartTimerRef.current = null;
+    }
     const recognition = recognitionRef.current;
     if (recognition) {
       try {
         recognition.onend = null;
+        recognition.onerror = null;
+        recognition.onresult = null;
         recognition.stop();
       } catch {
         // no-op
@@ -558,20 +758,23 @@ const MeetingRoomShell = ({
     }
     setMonitoring(false);
     setMonitoringStatus(false);
+    lastSpeechModerationRef.current = { text: '', at: 0 };
+    lastInterimFeedAtRef.current = 0;
+    setLiveInterimTranscript('');
     if (isMentorToolsEnabled && sessionId) {
       const recordingActive = Boolean(recorderRef.current && recorderRef.current.state !== 'inactive');
       try {
         await api.updateSessionRecording(sessionId, {
           status: recordingActive ? 'recording' : 'stopped',
           metadata: {
-            monitoring_started: false,
+            [monitoringMetadataKey]: false,
           },
         });
       } catch {
         // no-op
       }
     }
-  }, [api, isMentorToolsEnabled, sessionId]);
+  }, [api, isMentorToolsEnabled, monitoringMetadataKey, sessionId]);
 
   const closePeerConnection = useCallback(() => {
     detachRemoteStreamStateListeners();
@@ -616,9 +819,11 @@ const MeetingRoomShell = ({
     (payload) => {
       const nextStatus = String(payload?.status || 'not_started').toLowerCase();
       const metadata = payload?.metadata && typeof payload.metadata === 'object' ? payload.metadata : {};
-      const nextMonitoring = Boolean(metadata.monitoring_started);
       setRecordingStatus(nextStatus);
-      setMonitoringStatus(nextMonitoring);
+      const roleMonitoring = metadata?.[monitoringMetadataKey];
+      if (!autoMonitoringRef.current && !recognitionRef.current && typeof roleMonitoring === 'boolean') {
+        setMonitoringStatus(roleMonitoring);
+      }
       if (participantRole === 'mentor') {
         setRecording(nextStatus === 'recording');
       }
@@ -627,7 +832,7 @@ const MeetingRoomShell = ({
         setMeetingSummary(savedSummary);
       }
     },
-    [participantRole]
+    [monitoringMetadataKey, participantRole]
   );
 
   const pollRecordingStatus = useCallback(async () => {
@@ -799,6 +1004,30 @@ const MeetingRoomShell = ({
     return stream.getVideoTracks()[0] || null;
   }, []);
 
+  const captureVideoFrameDataUrl = useCallback((videoElement) => {
+    if (!videoElement || typeof document === 'undefined') return '';
+    const sourceWidth = Number(videoElement.videoWidth || 0);
+    const sourceHeight = Number(videoElement.videoHeight || 0);
+    if (!sourceWidth || !sourceHeight) return '';
+
+    const maxWidth = 640;
+    const scale = Math.min(1, maxWidth / sourceWidth);
+    const targetWidth = Math.max(160, Math.round(sourceWidth * scale));
+    const targetHeight = Math.max(90, Math.round(sourceHeight * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const context = canvas.getContext('2d', { alpha: false });
+    if (!context) return '';
+    context.drawImage(videoElement, 0, 0, targetWidth, targetHeight);
+    try {
+      return canvas.toDataURL('image/jpeg', 0.68);
+    } catch {
+      return '';
+    }
+  }, []);
+
   const loadIncidents = useCallback(async () => {
     if (!sessionId) return;
     try {
@@ -813,48 +1042,130 @@ const MeetingRoomShell = ({
     async (transcriptValue, { silent = false } = {}) => {
       const text = String(transcriptValue || '').trim();
       if (!sessionId || !text) return;
+      const localMatches = detectLocalAbusiveTerms(text);
+      const localSeverity = severityFromMatchCount(localMatches.length);
+      let response = null;
+
       if (!silent) {
         setAnalysisLoading(true);
       }
+
+      // Show toast IMMEDIATELY for local matches — do NOT wait for API
+      if (localMatches.length > 0) {
+        console.log('[MeetingRoomShell] Local bad words detected:', localMatches);
+        const now = Date.now();
+        if (now - lastLocalAbuseToastRef.current > ABUSE_TOAST_DEDUP_MS) {
+          lastLocalAbuseToastRef.current = now;
+          showToast(
+            buildLanguageAlertMessage(participantRole, participantRole),
+            'error'
+          );
+        }
+
+        if (isMentorToolsEnabled) {
+          setAlert({
+            flagged: true,
+            speaker_role: participantRole,
+            severity: localSeverity,
+            matched_terms: localMatches,
+            confidence_score: Math.min(0.98, 0.58 + localMatches.length * 0.14),
+            incident_type: 'verbal_abuse',
+            recommended_action:
+              localSeverity === 'high'
+                ? 'terminate_session'
+                : localSeverity === 'medium'
+                  ? 'escalate_review'
+                  : 'warn',
+          });
+        }
+
+        try {
+          const viewerRole = participantRole === 'mentor' ? 'mentee' : 'mentor';
+          sendSignal('safety_alert', {
+            alert_kind: 'language',
+            speaker_role: participantRole,
+            severity: localSeverity || 'low',
+            matched_terms: localMatches,
+            message: buildLanguageAlertMessage(participantRole, viewerRole),
+            transcript_excerpt: text.slice(0, 1200),
+            incident_id: null,
+            created_at: new Date().toISOString(),
+          });
+        } catch {
+          // no-op
+        }
+      }
+
+      // API call runs in background — not blocking the local toast above
       try {
-        const response = await api.analyzeSessionTranscript(sessionId, {
+        response = await api.analyzeSessionTranscript(sessionId, {
           transcript: text,
           speaker_role: participantRole,
         });
-        if (response?.flagged) {
-          if (isMentorToolsEnabled) {
-            setAlert(response);
-            await loadIncidents();
-          }
-          if (participantRole === 'mentee') {
-            const now = Date.now();
-            if (now - lastLocalAbuseToastRef.current > ABUSE_TOAST_DEDUP_MS) {
-              lastLocalAbuseToastRef.current = now;
-              showToast(
-                'Please use respectful language. This session is monitored.',
-                'error'
-              );
-            }
-            try {
-              await sendSignal('safety_alert', {
-                speaker_role: 'mentee',
-                severity: String(response?.severity || 'low').toLowerCase(),
-                message: 'Alert: Mentee used abusive language. Please check the conversation.',
-                transcript_excerpt: text.slice(0, 1200),
-                incident_id: response?.incident_id || null,
-                created_at: new Date().toISOString(),
-              });
-            } catch {
-              // no-op
-            }
-          }
-        }
       } catch (err) {
         appendError(err?.message || 'Unable to analyze transcript.');
-      } finally {
-        if (!silent) {
-          setAnalysisLoading(false);
+      }
+
+      // Handle any additional server-side flags the API returns
+      if (response?.flagged) {
+        const resolvedSeverity = String(response?.severity || localSeverity || 'low').toLowerCase();
+        const resolvedMatches = Array.isArray(response?.matched_terms)
+          ? response.matched_terms
+          : localMatches;
+
+        if (localMatches.length === 0) {
+          try {
+            const viewerRole = participantRole === 'mentor' ? 'mentee' : 'mentor';
+            sendSignal('safety_alert', {
+              alert_kind: 'language',
+              speaker_role: participantRole,
+              severity: resolvedSeverity || 'low',
+              matched_terms: resolvedMatches,
+              message: buildLanguageAlertMessage(participantRole, viewerRole),
+              transcript_excerpt: text.slice(0, 1200),
+              incident_id: response?.incident_id || null,
+              created_at: new Date().toISOString(),
+            });
+          } catch {
+            // no-op
+          }
         }
+
+        if (isMentorToolsEnabled) {
+          setAlert(
+            response || {
+              flagged: true,
+              speaker_role: participantRole,
+              severity: resolvedSeverity,
+              matched_terms: resolvedMatches,
+              confidence_score: Math.min(0.98, 0.58 + resolvedMatches.length * 0.14),
+              incident_type: 'verbal_abuse',
+              recommended_action:
+                resolvedSeverity === 'high'
+                  ? 'terminate_session'
+                  : resolvedSeverity === 'medium'
+                    ? 'escalate_review'
+                    : 'warn',
+            }
+          );
+          await loadIncidents();
+        }
+
+        // Only show a second toast if there wasn't already a local match toast
+        if (localMatches.length === 0) {
+          const now = Date.now();
+          if (now - lastLocalAbuseToastRef.current > ABUSE_TOAST_DEDUP_MS) {
+            lastLocalAbuseToastRef.current = now;
+            showToast(
+              buildLanguageAlertMessage(participantRole, participantRole),
+              'error'
+            );
+          }
+        }
+      }
+
+      if (!silent) {
+        setAnalysisLoading(false);
       }
     },
     [
@@ -868,6 +1179,134 @@ const MeetingRoomShell = ({
       showToast,
     ]
   );
+
+  const runAutoVideoBehaviorScan = useCallback(async () => {
+    if (!sessionId) return;
+    if (typeof api?.analyzeSessionVideoFrame !== 'function') return;
+    if (videoAnalysisBusyRef.current) return;
+
+    const candidates = [];
+    const localTrack = localStreamRef.current?.getVideoTracks?.()[0];
+    if (cameraEnabled && localTrack && localTrack.readyState === 'live' && localTrack.enabled !== false) {
+      candidates.push({
+        speakerRole: participantRole,
+        videoElement: localVideoRef.current,
+        sourceLabel: 'local',
+      });
+    }
+
+    const remoteTrack = remoteStreamRef.current?.getVideoTracks?.()[0];
+    if (remoteCameraEnabled !== false && remoteTrack && remoteTrack.readyState === 'live' && remoteTrack.enabled !== false) {
+      candidates.push({
+        speakerRole: participantRole === 'mentor' ? 'mentee' : 'mentor',
+        videoElement: remoteVideoRef.current,
+        sourceLabel: 'remote',
+      });
+    }
+
+    if (!candidates.length) return;
+
+    videoAnalysisBusyRef.current = true;
+    try {
+      for (const candidate of candidates) {
+        const frameDataUrl = captureVideoFrameDataUrl(candidate.videoElement);
+        if (!frameDataUrl) continue;
+
+        const speakerRole = candidate.speakerRole;
+        const response = await api.analyzeSessionVideoFrame(sessionId, {
+          speaker_role: speakerRole,
+          frame_data_url: frameDataUrl,
+          notes: `Realtime video safety scan from ${participantRole} client (${candidate.sourceLabel}).`,
+        });
+        if (!response?.flagged) continue;
+
+        const incidentType = String(response?.incident_type || 'unknown').trim().toLowerCase() || 'unknown';
+        const severity = String(response?.severity || 'medium').trim().toLowerCase() || 'medium';
+        const recommendedAction =
+          String(response?.recommended_action || 'warn').trim().toLowerCase() || 'warn';
+        const incidentLabel = formatIncidentTypeLabel(incidentType);
+        const alertKey = `${speakerRole}:${incidentType}`;
+        const now = Date.now();
+        const lastAlertAt = Number(lastVideoAlertByKeyRef.current[alertKey] || 0);
+        if (now - lastAlertAt < AUTO_VIDEO_ALERT_DEDUP_MS) continue;
+        lastVideoAlertByKeyRef.current[alertKey] = now;
+
+        const fallbackMessage = `Alert: ${getParticipantDisplayRole(speakerRole)} showed ${incidentLabel}.`;
+        const toastMessage =
+          recommendedAction === 'terminate_session'
+            ? `${fallbackMessage} Please end the session.`
+            : recommendedAction === 'escalate_review'
+              ? `${fallbackMessage} This has been escalated for review.`
+              : fallbackMessage;
+        showToast(toastMessage, severity === 'high' ? 'error' : 'warning', 6500);
+
+        if (isMentorToolsEnabled && speakerRole === 'mentee') {
+          setAlert({
+            flagged: true,
+            speaker_role: speakerRole,
+            incident_type: incidentType,
+            severity,
+            recommended_action: recommendedAction,
+            confidence_score: Number(response?.confidence_score || 0),
+            matched_terms: Array.isArray(response?.matched_terms) ? response.matched_terms : [],
+          });
+          await loadIncidents();
+          await generateAbuseEventSummary(`Video behavior alert detected: ${incidentLabel}.`);
+          try {
+            await api.updateSessionRecording(sessionId, {
+              status: recordingStatus === 'recording' ? 'recording' : 'stopped',
+              metadata: {
+                abuse_detected: true,
+                last_abuse_type: 'behavior',
+                last_abuse_detected_at: new Date().toISOString(),
+                last_abuse_incident_type: incidentType,
+              },
+            });
+          } catch {
+            // no-op
+          }
+        }
+
+        try {
+          await sendSignal('safety_alert', {
+            alert_kind: 'behavior',
+            speaker_role: speakerRole,
+            incident_type: incidentType,
+            severity,
+            recommended_action: recommendedAction,
+            message: toastMessage,
+            incident_id: response?.incident_id || null,
+            created_at: new Date().toISOString(),
+          });
+        } catch {
+          // no-op
+        }
+        break;
+      }
+    } catch (err) {
+      const now = Date.now();
+      if (now - videoScanErrorAtRef.current > 15000) {
+        videoScanErrorAtRef.current = now;
+        appendError(err?.message || 'Unable to analyze video frame.');
+      }
+    } finally {
+      videoAnalysisBusyRef.current = false;
+    }
+  }, [
+    api,
+    appendError,
+    captureVideoFrameDataUrl,
+    generateAbuseEventSummary,
+    isMentorToolsEnabled,
+    loadIncidents,
+    participantRole,
+    cameraEnabled,
+    recordingStatus,
+    remoteCameraEnabled,
+    sendSignal,
+    sessionId,
+    showToast,
+  ]);
 
   const attachLocalTracksToPeer = useCallback((peer) => {
     const stream = localStreamRef.current;
@@ -920,8 +1359,7 @@ const MeetingRoomShell = ({
       const text = String(event?.errorText || '').trim();
       if (text || code) {
         appendError(
-          `ICE candidate error${code ? ` (${code})` : ''}${host ? ` on ${host}` : ''}${
-            text ? `: ${text}` : ''
+          `ICE candidate error${code ? ` (${code})` : ''}${host ? ` on ${host}` : ''}${text ? `: ${text}` : ''
           }`
         );
       }
@@ -1026,18 +1464,71 @@ const MeetingRoomShell = ({
             }
             continue;
           }
+          if (signalType === 'transcript') {
+            const speakerRole = String(payload?.speaker_role || '').trim().toLowerCase();
+            const transcriptExcerpt = String(
+              payload?.transcript_excerpt || payload?.transcript || payload?.text || ''
+            ).trim();
+            if (transcriptExcerpt && speakerRole && speakerRole !== participantRole) {
+              appendMonitoringTranscript(transcriptExcerpt, speakerRole);
+              appendRoleTranscriptSegment(speakerRole, transcriptExcerpt);
+              transcriptSegmentsRef.current.push(transcriptExcerpt);
+              setAnalysisInput((prev) => [prev, transcriptExcerpt].filter(Boolean).join(' '));
+            }
+            continue;
+          }
+          if (signalType === 'transcript_bundle') {
+            const speakerRole = String(payload?.speaker_role || '').trim().toLowerCase();
+            if (!speakerRole || speakerRole === participantRole) continue;
+            const segments = Array.isArray(payload?.segments) ? payload.segments : [];
+            segments
+              .map((item) => String(item || '').replace(/\s+/g, ' ').trim())
+              .filter(Boolean)
+              .forEach((segment) => {
+                appendRoleTranscriptSegment(speakerRole, segment);
+              });
+            continue;
+          }
           if (signalType === 'safety_alert') {
             const speakerRole = String(payload?.speaker_role || '').trim().toLowerCase();
-            if (participantRole === 'mentor' && speakerRole === 'mentee') {
+            const alertKind = String(payload?.alert_kind || 'language').trim().toLowerCase();
+            const transcriptExcerpt = String(payload?.transcript_excerpt || '').trim();
+            if (transcriptExcerpt && speakerRole && speakerRole !== participantRole) {
+              appendMonitoringTranscript(transcriptExcerpt, speakerRole);
+            }
+            if (alertKind === 'behavior') {
+              const incidentType = String(payload?.incident_type || 'unknown').trim().toLowerCase();
+              const severity = String(payload?.severity || 'medium').trim().toLowerCase();
+              const fallbackMessage = `Alert: ${getParticipantDisplayRole(
+                speakerRole
+              )} showed ${formatIncidentTypeLabel(incidentType)}.`;
+              const message = String(payload?.message || '').trim() || fallbackMessage;
+              const now = Date.now();
+              const dedupeKey = `remote:${speakerRole}:${incidentType}`;
+              const lastAlertAt = Number(lastVideoAlertByKeyRef.current[dedupeKey] || 0);
+              if (now - lastAlertAt > ABUSE_TOAST_DEDUP_MS) {
+                lastVideoAlertByKeyRef.current[dedupeKey] = now;
+                showToast(message, severity === 'high' ? 'error' : 'warning', 6500);
+              }
+              if (participantRole === 'mentor' && speakerRole === 'mentee') {
+                generateAbuseEventSummary(
+                  `Video behavior alert: ${formatIncidentTypeLabel(incidentType)}.`
+                );
+              }
+              continue;
+            }
+            if (speakerRole && speakerRole !== participantRole) {
               const now = Date.now();
               if (now - lastRemoteAbuseToastRef.current > ABUSE_TOAST_DEDUP_MS) {
                 lastRemoteAbuseToastRef.current = now;
                 showToast(
-                  'Alert: Mentee used abusive language. Please guide the conversation respectfully.',
+                  String(payload?.message || '').trim() ||
+                  buildLanguageAlertMessage(speakerRole, participantRole),
                   'error'
                 );
               }
-              const transcriptExcerpt = String(payload?.transcript_excerpt || '').trim();
+            }
+            if (participantRole === 'mentor' && speakerRole === 'mentee') {
               if (transcriptExcerpt) {
                 generateAbuseEventSummary(transcriptExcerpt);
               }
@@ -1058,6 +1549,8 @@ const MeetingRoomShell = ({
       }
     },
     [
+      appendMonitoringTranscript,
+      appendRoleTranscriptSegment,
       appendError,
       ensurePeerConnection,
       generateAbuseEventSummary,
@@ -1109,63 +1602,231 @@ const MeetingRoomShell = ({
 
   const startSpeechMonitoring = useCallback(async () => {
     if (!canSpeechModeration) return;
-    if (!hasSpeechRecognition || monitoring) return;
+    if (!hasSpeechRecognition) return;
     const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) return;
 
-    const recognition = new SpeechRecognitionCtor();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
     autoMonitoringRef.current = true;
 
-    recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .slice(event.resultIndex)
-        .filter((item) => item.isFinal)
-        .map((item) => item[0]?.transcript || '')
-        .join(' ')
-        .trim();
-      if (transcript) {
-        transcriptSegmentsRef.current.push(transcript);
-        setAnalysisInput((prev) => [prev, transcript].filter(Boolean).join(' '));
-        analyzeTranscript(transcript, { silent: true });
+    const scheduleRestart = (delayMs = 700) => {
+      if (typeof window === 'undefined') return;
+      if (!autoMonitoringRef.current) return;
+      if (speechRestartTimerRef.current) {
+        window.clearTimeout(speechRestartTimerRef.current);
+      }
+      const nextDelay = Math.min(Math.max(delayMs, 500), 2800);
+      speechRestartDelayRef.current = nextDelay;
+      speechRestartTimerRef.current = window.setTimeout(() => {
+        speechRestartTimerRef.current = null;
+        if (!autoMonitoringRef.current) return;
+        const activeRecognition = recognitionRef.current;
+        if (!activeRecognition) return;
+        try {
+          activeRecognition.start();
+          setMonitoring(true);
+          setMonitoringStatus(true);
+          speechRestartDelayRef.current = 700;
+        } catch (restartErr) {
+          const restartCode = String(restartErr?.name || restartErr?.message || '').toLowerCase();
+          if (restartCode.includes('invalidstate')) {
+            setMonitoring(true);
+            setMonitoringStatus(true);
+            return;
+          }
+          if (
+            restartCode.includes('not-allowed') ||
+            restartCode.includes('service-not-allowed') ||
+            restartCode.includes('notallowed')
+          ) {
+            autoMonitoringRef.current = false;
+            recognitionRef.current = null;
+            setMonitoring(false);
+            setMonitoringStatus(false);
+            showToast('Microphone speech monitoring permission is blocked.', 'warning', 6000);
+            return;
+          }
+          scheduleRestart(Math.min(nextDelay + 300, 2800));
+        }
+      }, nextDelay);
+    };
+
+    const commitTranscript = (value, { broadcast = true, analyze = true } = {}) => {
+      const text = String(value || '').replace(/\s+/g, ' ').trim();
+      if (!text) return;
+      const now = Date.now();
+      const previous = lastSpeechModerationRef.current;
+      if (previous.text === text && now - previous.at < SPEECH_DUPLICATE_WINDOW_MS) {
+        return;
+      }
+      lastSpeechModerationRef.current = { text, at: now };
+      transcriptSegmentsRef.current.push(text);
+      appendRoleTranscriptSegment(participantRole, text);
+      appendMonitoringTranscript(text, 'local');
+      setAnalysisInput((prev) => [prev, text].filter(Boolean).join(' '));
+      if (broadcast) {
+        Promise.resolve(
+          sendSignal('transcript', {
+            speaker_role: participantRole,
+            transcript_excerpt: text.slice(0, 1200),
+            created_at: new Date().toISOString(),
+          })
+        ).catch(() => {
+          // no-op
+        });
+      }
+      if (analyze) {
+        analyzeTranscript(text, { silent: true });
       }
     };
-    recognition.onend = () => {
-      if (autoMonitoringRef.current) {
+
+    let recognition = recognitionRef.current;
+    if (!recognition) {
+      recognition = new SpeechRecognitionCtor();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      recognition.lang = 'en-US';
+      if ('profanityFilter' in recognition) {
         try {
-          recognition.start();
+          recognition.profanityFilter = false;
         } catch {
-          autoMonitoringRef.current = false;
-          setMonitoring(false);
+          // no-op
         }
       }
-    };
-    recognition.onerror = () => {
-      autoMonitoringRef.current = false;
-      setMonitoring(false);
-    };
 
-    recognition.start();
-    recognitionRef.current = recognition;
-    setMonitoring(true);
-    setMonitoringStatus(true);
+      recognition.onresult = (event) => {
+        const rows = Array.from(event.results).slice(event.resultIndex);
+        const finalTranscript = rows
+          .filter((item) => item?.isFinal)
+          .map((item) => String(item?.[0]?.transcript || '').trim())
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        const interimTranscript = rows
+          .filter((item) => !item?.isFinal)
+          .map((item) => String(item?.[0]?.transcript || '').trim())
+          .filter(Boolean)
+          .join(' ')
+          .trim();
 
-    if (sessionId) {
+        setLiveInterimTranscript(interimTranscript);
+        if (interimTranscript) {
+          const now = Date.now();
+          const wordCount = interimTranscript.split(/\s+/).filter(Boolean).length;
+          if (wordCount >= 2 && now - lastInterimFeedAtRef.current > 900) {
+            lastInterimFeedAtRef.current = now;
+            appendMonitoringTranscript(interimTranscript, 'local');
+          }
+        }
+
+        if (!finalTranscript) return;
+        setLiveInterimTranscript('');
+        commitTranscript(finalTranscript);
+      };
+
+      recognition.onstart = () => {
+        speechRestartDelayRef.current = 700;
+        if (speechRestartTimerRef.current) {
+          window.clearTimeout(speechRestartTimerRef.current);
+          speechRestartTimerRef.current = null;
+        }
+        setMonitoring(true);
+        setMonitoringStatus(true);
+      };
+
+      recognition.onend = () => {
+        setLiveInterimTranscript('');
+        if (autoMonitoringRef.current) {
+          setMonitoring(true);
+          setMonitoringStatus(true);
+          scheduleRestart(speechRestartDelayRef.current);
+          return;
+        }
+        setMonitoring(false);
+        setMonitoringStatus(false);
+      };
+
+      recognition.onerror = (event) => {
+        const code = String(event?.error || '').trim().toLowerCase();
+        if (code === 'not-allowed' || code === 'service-not-allowed') {
+          autoMonitoringRef.current = false;
+          setMonitoring(false);
+          setMonitoringStatus(false);
+          showToast('Microphone speech monitoring permission is blocked.', 'warning', 6000);
+          return;
+        }
+        if (code) {
+          appendError(`Speech monitoring error: ${code}`);
+        }
+        if (autoMonitoringRef.current) {
+          setMonitoring(true);
+          setMonitoringStatus(true);
+          scheduleRestart(Math.min(speechRestartDelayRef.current + 300, 2800));
+          return;
+        }
+        setMonitoring(false);
+        setMonitoringStatus(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+
+    try {
+      recognition.start();
+      setMonitoring(true);
+      setMonitoringStatus(true);
+    } catch (err) {
+      const code = String(err?.name || err?.message || '').toLowerCase();
+      if (code.includes('invalidstate')) {
+        setMonitoring(true);
+        setMonitoringStatus(true);
+      } else if (
+        code.includes('not-allowed') ||
+        code.includes('service-not-allowed') ||
+        code.includes('notallowed')
+      ) {
+        autoMonitoringRef.current = false;
+        setMonitoring(false);
+        setMonitoringStatus(false);
+        showToast('Microphone speech monitoring permission is blocked.', 'warning', 6000);
+        return;
+      } else {
+        setMonitoring(true);
+        setMonitoringStatus(true);
+        scheduleRestart(Math.min(speechRestartDelayRef.current + 300, 2800));
+        appendError(err?.message || 'Unable to start speech monitoring. Retrying...');
+        return;
+      }
+    }
+
+    if (sessionId && isMentorToolsEnabled) {
       const recordingActive = Boolean(recorderRef.current && recorderRef.current.state !== 'inactive');
       try {
         await api.updateSessionRecording(sessionId, {
           status: recordingActive ? 'recording' : 'not_started',
           metadata: {
-            monitoring_started: true,
+            [monitoringMetadataKey]: true,
           },
         });
       } catch {
         // no-op
       }
     }
-  }, [analyzeTranscript, api, canSpeechModeration, hasSpeechRecognition, monitoring, sessionId]);
+  }, [
+    analyzeTranscript,
+    api,
+    appendMonitoringTranscript,
+    appendRoleTranscriptSegment,
+    appendError,
+    canSpeechModeration,
+    hasSpeechRecognition,
+    isMentorToolsEnabled,
+    monitoringMetadataKey,
+    participantRole,
+    sessionId,
+    sendSignal,
+    showToast,
+  ]);
 
   const stopRecording = useCallback(async () => {
     const recorder = recorderRef.current;
@@ -1185,14 +1846,14 @@ const MeetingRoomShell = ({
           status: 'stopped',
           metadata: {
             recording_started: false,
-            monitoring_started: monitoringActive,
+            [monitoringMetadataKey]: monitoringActive,
           },
         });
       } catch (err) {
         appendError(err?.message || 'Unable to update recording status.');
       }
     }
-  }, [api, appendError, isMentorToolsEnabled, sessionId, stopRecordingComposition]);
+  }, [api, appendError, isMentorToolsEnabled, monitoringMetadataKey, sessionId, stopRecordingComposition]);
 
   const startRecording = useCallback(async () => {
     if (!isMentorToolsEnabled) return;
@@ -1230,7 +1891,7 @@ const MeetingRoomShell = ({
           const metadataBase = {
             mime_type: recorder.mimeType || 'video/webm',
             recording_started: false,
-            monitoring_started: monitoringActive,
+            [monitoringMetadataKey]: monitoringActive,
           };
           let persisted = false;
 
@@ -1328,7 +1989,7 @@ const MeetingRoomShell = ({
             role: participantRole,
             source: 'browser_media_recorder',
             recording_started: true,
-            monitoring_started: monitoringActive,
+            [monitoringMetadataKey]: monitoringActive,
           },
         });
       }
@@ -1341,6 +2002,7 @@ const MeetingRoomShell = ({
     appendError,
     createMixedRecordingStream,
     isMentorToolsEnabled,
+    monitoringMetadataKey,
     participantRole,
     sessionId,
     stopRecordingComposition,
@@ -1350,7 +2012,31 @@ const MeetingRoomShell = ({
   const generateMeetingSummary = useCallback(async () => {
     if (!isMentorToolsEnabled || !sessionId) return;
     if (summaryRequestedRef.current) return;
-    const transcript = transcriptSegmentsRef.current.join(' ').trim() || String(analysisInput || '').trim();
+    const roleBuckets = roleTranscriptSegmentsRef.current || { mentor: [], mentee: [] };
+    const menteeTranscript = Array.isArray(roleBuckets.mentee)
+      ? roleBuckets.mentee.join(' ').trim()
+      : '';
+    const mentorTranscript = Array.isArray(roleBuckets.mentor)
+      ? roleBuckets.mentor.join(' ').trim()
+      : '';
+    const transcriptFromRoles = [
+      menteeTranscript ? `Mentee: ${menteeTranscript}` : '',
+      mentorTranscript ? `Mentor: ${mentorTranscript}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+      .trim();
+    const transcriptFromSegments = transcriptSegmentsRef.current.join(' ').trim();
+    const transcriptFromInput = String(analysisInput || '').trim();
+    const transcriptFromFeed = monitoringFeed
+      .slice()
+      .reverse()
+      .map((entry) => String(entry?.text || '').trim())
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    const transcript =
+      transcriptFromRoles || transcriptFromSegments || transcriptFromInput || transcriptFromFeed;
     if (!transcript) return;
 
     summaryRequestedRef.current = true;
@@ -1374,7 +2060,25 @@ const MeetingRoomShell = ({
     } finally {
       setSummaryLoading(false);
     }
-  }, [analysisInput, api, appendError, isMentorToolsEnabled, pollRecordingStatus, sessionId]);
+  }, [analysisInput, api, appendError, isMentorToolsEnabled, monitoringFeed, pollRecordingStatus, sessionId]);
+
+  const sendLocalTranscriptBundle = useCallback(async () => {
+    if (!sessionId) return;
+    const role = String(participantRole || '').trim().toLowerCase();
+    if (role !== 'mentor' && role !== 'mentee') return;
+    const roleSegments = roleTranscriptSegmentsRef.current?.[role];
+    if (!Array.isArray(roleSegments) || !roleSegments.length) return;
+    const segments = roleSegments
+      .map((item) => String(item || '').replace(/\s+/g, ' ').trim())
+      .filter(Boolean)
+      .slice(-200);
+    if (!segments.length) return;
+    await sendSignal('transcript_bundle', {
+      speaker_role: role,
+      segments,
+      created_at: new Date().toISOString(),
+    });
+  }, [participantRole, sendSignal, sessionId]);
 
   const toggleMic = useCallback(async () => {
     const stream = localStreamRef.current;
@@ -1471,6 +2175,11 @@ const MeetingRoomShell = ({
     if (exitingRef.current) return;
     exitingRef.current = true;
     if (sessionId) {
+      try {
+        await sendLocalTranscriptBundle();
+      } catch {
+        // no-op
+      }
       if (!triggeredByRemote) {
         try {
           await sendSignal('bye', {});
@@ -1483,6 +2192,13 @@ const MeetingRoomShell = ({
       setSelectedSessionId(sessionId);
     }
     await stopSpeechMonitoring();
+    if (isMentorToolsEnabled) {
+      try {
+        await pollSignals();
+      } catch {
+        // no-op
+      }
+    }
     await generateMeetingSummary();
     await stopRecording();
     stopRecordingStatusPolling();
@@ -1504,6 +2220,9 @@ const MeetingRoomShell = ({
     generateMeetingSummary,
     markSessionClosed,
     navigate,
+    pollSignals,
+    isMentorToolsEnabled,
+    sendLocalTranscriptBundle,
     sendSignal,
     sessionId,
     stopMediaTracks,
@@ -1573,25 +2292,7 @@ const MeetingRoomShell = ({
       closePeerConnection();
       stopMediaTracks();
     };
-  }, [
-    appendError,
-    closePeerConnection,
-    createOfferIfNeeded,
-    initializeLocalMedia,
-    isMentorToolsEnabled,
-    loadIncidents,
-    prepareRtcConfig,
-    pollSignals,
-    sessionId,
-    startRecordingStatusPolling,
-    startPolling,
-    stopMediaTracks,
-    stopReconnectLoop,
-    stopRecordingStatusPolling,
-    stopPolling,
-    stopRecording,
-    stopSpeechMonitoring,
-  ]);
+  }, [participantRole, sessionId]);
 
   useEffect(() => {
     if (participantRole !== 'mentor' || !sessionId) return undefined;
@@ -1667,6 +2368,13 @@ const MeetingRoomShell = ({
   }, [connectionState, participantRole, sessionId]);
 
   useEffect(() => {
+    monitoringFeedIdRef.current = 0;
+    setMonitoringFeed([]);
+    setLiveInterimTranscript('');
+    roleTranscriptSegmentsRef.current = { mentor: [], mentee: [] };
+  }, [participantRole, sessionId]);
+
+  useEffect(() => {
     if (typeof document === 'undefined') return undefined;
     const handleFullscreenChange = () => {
       const currentFullscreenEl = document.fullscreenElement || document.webkitFullscreenElement;
@@ -1682,27 +2390,37 @@ const MeetingRoomShell = ({
   }, []);
 
   useEffect(() => {
-    if (!canSpeechModeration && !isMentorToolsEnabled) return;
-    if (connectionState !== 'connected') return;
-    if (autoStartCompletedRef.current) return;
-
-    autoStartCompletedRef.current = true;
-    const startTools = async () => {
-      await startSpeechMonitoring();
-      if (isMentorToolsEnabled) {
-        await startRecording();
-        await pollRecordingStatus();
-      }
-    };
-    startTools();
+    if (!sessionId) return undefined;
+    if (connectionState !== 'connected') return undefined;
+    if (!canSpeechModeration || !hasSpeechRecognition) return undefined;
+    if (!localStreamRef.current) return undefined;
+    if (monitoringActive) return undefined;
+    startSpeechMonitoring();
+    return undefined;
   }, [
     canSpeechModeration,
     connectionState,
-    isMentorToolsEnabled,
-    pollRecordingStatus,
-    startRecording,
+    hasSpeechRecognition,
+    monitoringActive,
+    sessionId,
     startSpeechMonitoring,
   ]);
+
+  useEffect(() => {
+    if (!sessionId) return undefined;
+    if (connectionState !== 'connected') return undefined;
+    if (typeof api?.analyzeSessionVideoFrame !== 'function') return undefined;
+    const initialScanTimer = window.setTimeout(() => {
+      runAutoVideoBehaviorScan();
+    }, 1200);
+    const interval = window.setInterval(() => {
+      runAutoVideoBehaviorScan();
+    }, Math.max(4500, AUTO_VIDEO_SCAN_INTERVAL_MS));
+    return () => {
+      window.clearTimeout(initialScanTimer);
+      window.clearInterval(interval);
+    };
+  }, [api, connectionState, runAutoVideoBehaviorScan, sessionId]);
 
   useEffect(() => {
     if (!isMentorToolsEnabled || connectionState !== 'connected') return undefined;
@@ -1844,11 +2562,10 @@ const MeetingRoomShell = ({
       {toastState.open ? (
         <div className="pointer-events-none fixed right-4 top-4 z-[95] w-[92vw] max-w-sm">
           <div
-            className={`rounded-xl border px-3 py-2 text-xs shadow-lg sm:text-sm ${
-              toastState.type === 'error'
-                ? 'border-[#fecaca] bg-[#fef2f2] text-[#7f1d1d]'
-                : 'border-[#fde68a] bg-[#fffbeb] text-[#78350f]'
-            }`}
+            className={`rounded-xl border px-3 py-2 text-xs shadow-lg sm:text-sm ${toastState.type === 'error'
+              ? 'border-[#fecaca] bg-[#fef2f2] text-[#7f1d1d]'
+              : 'border-[#fde68a] bg-[#fffbeb] text-[#78350f]'
+              }`}
             role="status"
             aria-live="polite"
           >
@@ -1864,265 +2581,330 @@ const MeetingRoomShell = ({
       <div
         className={`${showFullUi ? '' : 'absolute left-[-99999px] top-0 h-px w-px overflow-hidden'} min-h-[75vh] p-3 sm:p-5 lg:p-6`}
       >
-      <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-[#111827] sm:text-2xl">{title}</h1>
-            <p className="text-xs text-[#6b7280] sm:text-sm">
-              Session #{sessionId || '-'} | Role: {participantRole} | Connection: {connectionState}
-            </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${
-                  recordingStatus === 'recording'
+        <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="text-xl font-bold text-[#111827] sm:text-2xl">{title}</h1>
+              <p className="text-xs text-[#6b7280] sm:text-sm">
+                Session #{sessionId || '-'} | Role: {participantRole} | Connection: {connectionState}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${recordingStatus === 'recording'
                     ? 'bg-[#dcfce7] text-[#166534]'
                     : 'bg-[#f3f4f6] text-[#374151]'
-                }`}
-              >
-                Recording: {recordingStatus === 'recording' ? 'Started' : 'Not Started'}
-              </span>
-              <span
-                className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${
-                  monitoringStatus ? 'bg-[#ede9fe] text-[#5b21b6]' : 'bg-[#f3f4f6] text-[#374151]'
-                }`}
-              >
-                Monitoring: {monitoringStatus ? 'Started' : 'Not Started'}
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={leaveMeeting}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#ef4444] px-3 py-2 text-xs font-semibold text-white hover:bg-[#dc2626]"
-          >
-            <PhoneOff className="h-4 w-4" />
-            {exitLabel}
-          </button>
-        </div>
-      </div>
-      {meetingSummary ? (
-        <div className="mb-4 rounded-xl border border-[#d1fae5] bg-[#ecfdf5] px-4 py-3 text-sm text-[#065f46]">
-          <div className="text-xs font-semibold uppercase tracking-wide text-[#047857]">Meeting Summary</div>
-          <div className="mt-1">{meetingSummary}</div>
-        </div>
-      ) : null}
-      {summaryLoading ? (
-        <div className="mb-4 rounded-xl border border-[#dbeafe] bg-[#eff6ff] px-4 py-3 text-xs text-[#1d4ed8]">
-          Generating meeting summary...
-        </div>
-      ) : null}
-
-      {isMentorToolsEnabled && alert?.flagged ? (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 sm:text-sm">
-          <div className="flex items-start gap-2">
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-            <div>
-              <div className="font-semibold">
-                Abusive language detected ({alert?.severity || 'low'})
-              </div>
-              <div>Matched terms: {(alert?.matched_terms || []).join(', ') || 'none'}</div>
-              {alert?.flagged_mentee_info?.id ? (
-                <div className="mt-1">
-                  Mentee: {alert.flagged_mentee_info.first_name} {alert.flagged_mentee_info.last_name}
-                  {' | '}Email: {alert.flagged_mentee_info.email}
-                  {' | '}Parent Mobile: {alert.flagged_mentee_info.parent_mobile || '-'}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <div
-        ref={stageContainerRef}
-        className={`overflow-hidden bg-black ${
-          isFullscreen ? 'rounded-none border-0' : 'rounded-xl border border-[#e5e7eb]'
-        }`}
-      >
-        <div
-          className={`relative ${
-            isFullscreen ? 'h-[100vh] min-h-[100vh]' : 'h-[56vh] min-h-[320px] sm:h-[62vh] lg:h-[70vh]'
-          }`}
-        >
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className={`h-full w-full bg-[#111827] object-cover ${
-              remoteCameraEnabled === false ? 'invisible' : 'visible'
-            }`}
-          />
-          {remoteCameraEnabled === false ? (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-sm font-semibold text-white">
-              Peer Camera Off
-            </div>
-          ) : null}
-          <div className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/65 px-2 py-1 text-[10px] font-semibold text-white sm:left-3 sm:top-3">
-            {peerLabel}
-          </div>
-          {remoteCameraEnabled === false || remoteMicEnabled === false ? (
-            <div className="pointer-events-none absolute left-2 top-10 flex flex-wrap gap-1 sm:left-3 sm:top-12">
-              {remoteCameraEnabled === false ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
-                  <VideoOff className="h-3 w-3" />
-                  Camera Off
-                </span>
-              ) : null}
-              {remoteMicEnabled === false ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
-                  <MicOff className="h-3 w-3" />
-                  Mic Off
-                </span>
-              ) : null}
-            </div>
-          ) : null}
-
-          <div className="absolute bottom-3 right-3 w-[42vw] min-w-[120px] max-w-[180px] sm:w-[220px] sm:max-w-[220px] lg:w-[260px] lg:max-w-[260px]">
-            <div className="relative overflow-hidden rounded-lg border border-white/30 bg-[#111827] shadow-xl">
-              <video
-                ref={localVideoRef}
-                autoPlay
-                muted
-                playsInline
-                className={`h-[92px] w-full object-cover sm:h-[128px] lg:h-[146px] ${
-                  cameraEnabled ? 'visible' : 'invisible'
-                }`}
-              />
-              {!cameraEnabled ? (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-xs font-semibold text-white">
-                  Camera Off
-                </div>
-              ) : null}
-              <div className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-black/65 px-2 py-0.5 text-[9px] font-semibold text-white sm:left-2 sm:top-2 sm:text-[10px]">
-                You
-              </div>
-              {!cameraEnabled || !micEnabled ? (
-                <div className="pointer-events-none absolute left-1.5 top-7 flex flex-wrap gap-1 sm:left-2 sm:top-8">
-                  {!cameraEnabled ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
-                      <VideoOff className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                      Cam Off
-                    </span>
-                  ) : null}
-                  {!micEnabled ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
-                      <MicOff className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                      Mic Off
-                    </span>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </div>
-
-          {isFullscreen ? (
-            <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center px-3">
-              <div className="flex items-center gap-2 rounded-full bg-black/70 px-3 py-2 backdrop-blur">
-                <button
-                  type="button"
-                  onClick={toggleMic}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+                    }`}
                 >
-                  {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                  {micEnabled ? 'Mic On' : 'Mic Off'}
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleCamera}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+                  Recording: {recordingStatus === 'recording' ? 'Started' : 'Not Started'}
+                </span>
+                <span
+                  className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${monitoringActive ? 'bg-[#ede9fe] text-[#5b21b6]' : 'bg-[#f3f4f6] text-[#374151]'
+                    }`}
                 >
-                  {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                  {cameraEnabled ? 'Camera On' : 'Camera Off'}
-                </button>
+                  Monitoring: {monitoringActive ? 'Started' : 'Not Started'}
+                </span>
               </div>
             </div>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white p-3 sm:p-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleMic}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#f3f4f6] px-3 py-2 text-xs font-semibold text-[#111827] hover:bg-[#e5e7eb]"
-          >
-            {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-            {micEnabled ? 'Mute Mic' : 'Unmute Mic'}
-          </button>
-          <button
-            type="button"
-            onClick={toggleCamera}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#f3f4f6] px-3 py-2 text-xs font-semibold text-[#111827] hover:bg-[#e5e7eb]"
-          >
-            {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-            {cameraEnabled ? 'Stop Camera' : 'Start Camera'}
-          </button>
-          <button
-            type="button"
-            onClick={toggleFullscreen}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#f3f4f6] px-3 py-2 text-xs font-semibold text-[#111827] hover:bg-[#e5e7eb]"
-          >
-            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            {isFullscreen ? 'Exit Full Screen' : 'Full Screen'}
-          </button>
-          {showManualMentorTools ? (
-            <>
-              <button
-                type="button"
-                onClick={recording ? stopRecording : startRecording}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white ${
-                  recording ? 'bg-[#ef4444] hover:bg-[#dc2626]' : 'bg-[#2563eb] hover:bg-[#1d4ed8]'
-                }`}
-                hidden={!isMentorToolsEnabled}
-              >
-                {recording ? 'Stop Recording' : 'Start Recording'}
-              </button>
-              <button
-                type="button"
-                onClick={monitoring ? stopSpeechMonitoring : startSpeechMonitoring}
-                disabled={!hasSpeechRecognition}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#7c3aed] px-3 py-2 text-xs font-semibold text-white hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:bg-[#c4b5fd]"
-                hidden={!isMentorToolsEnabled}
-              >
-                {monitoring ? 'Stop Monitoring' : 'Start Monitoring'}
-              </button>
-            </>
-          ) : null}
-        </div>
-        {showManualMentorTools && isMentorToolsEnabled && !hasSpeechRecognition ? (
-          <p className="mt-2 text-xs text-[#6b7280]">
-            Browser speech recognition is unavailable. Use manual transcript input below.
-          </p>
-        ) : null}
-      </div>
-
-      {showManualMentorTools && isMentorToolsEnabled ? (
-        <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white p-3 sm:p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#111827]">
-            <AlertTriangle className="h-4 w-4 text-[#f59e0b]" />
-            Call Analysis
-          </div>
-          <textarea
-            value={analysisInput}
-            onChange={(event) => setAnalysisInput(event.target.value)}
-            rows={3}
-            placeholder="Paste or type conversation snippet for abuse detection."
-            className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm text-[#111827] focus:border-[#7c3aed] focus:outline-none"
-          />
-          <div className="mt-2 flex items-center justify-between">
             <button
               type="button"
-              onClick={() => analyzeTranscript(analysisInput)}
-              disabled={analysisLoading || !analysisInput.trim()}
-              className="rounded-lg bg-[#111827] px-3 py-2 text-xs font-semibold text-white hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:bg-[#9ca3af]"
+              onClick={leaveMeeting}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#ef4444] px-3 py-2 text-xs font-semibold text-white hover:bg-[#dc2626]"
             >
-              {analysisLoading ? 'Analyzing...' : 'Analyze Snippet'}
+              <PhoneOff className="h-4 w-4" />
+              {exitLabel}
             </button>
-            <span className="text-xs text-[#6b7280]">Incidents Logged: {incidents.length}</span>
           </div>
         </div>
-      ) : null}
+        <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-sm font-semibold text-[#111827]">Monitoring Words (Realtime)</div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${monitoringActive
+                  ? 'bg-[#dcfce7] text-[#166534]'
+                  : 'bg-[#f3f4f6] text-[#374151]'
+                  }`}
+              >
+                Speech Engine: {monitoringActive ? 'Running' : 'Stopped'}
+              </span>
+              <span className="text-[11px] text-[#6b7280]">Latest {monitoringFeed.length} entries</span>
+              <button
+                type="button"
+                onClick={monitoringActive ? stopSpeechMonitoring : startSpeechMonitoring}
+                disabled={!hasSpeechRecognition}
+                className="inline-flex items-center rounded-md bg-[#111827] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:bg-[#9ca3af]"
+              >
+                {monitoringActive ? 'Stop Monitoring' : 'Start Monitoring'}
+              </button>
+            </div>
+          </div>
+          <div className="mt-2 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 text-xs text-[#374151]">
+            {liveInterimTranscript
+              ? `Listening: ${liveInterimTranscript}`
+              : 'Listening: waiting for speech...'}
+          </div>
+          <div className="mt-2 max-h-44 overflow-y-auto rounded-lg border border-[#e5e7eb] bg-white">
+            {monitoringFeed.length ? (
+              <div className="divide-y divide-[#f3f4f6]">
+                {monitoringFeed.map((entry) => (
+                  <div key={entry.id} className="px-3 py-2 text-xs text-[#111827]">
+                    <div className="mb-1 flex items-center gap-2">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${entry.source === 'local'
+                          ? 'bg-[#dbeafe] text-[#1d4ed8]'
+                          : 'bg-[#ede9fe] text-[#5b21b6]'
+                          }`}
+                      >
+                        {entry.source === 'local' ? 'You' : getParticipantDisplayRole(entry.source)}
+                      </span>
+                      <span className="text-[10px] text-[#6b7280]">
+                        {new Date(entry.at).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <div>{entry.text}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-3 py-4 text-xs text-[#6b7280]">
+                No monitoring words yet. Start speaking to see live words here.
+              </div>
+            )}
+          </div>
+        </div>
+        {meetingSummary ? (
+          <div className="mb-4 rounded-xl border border-[#d1fae5] bg-[#ecfdf5] px-4 py-3 text-sm text-[#065f46]">
+            <div className="text-xs font-semibold uppercase tracking-wide text-[#047857]">Meeting Summary</div>
+            <div className="mt-1">{meetingSummary}</div>
+          </div>
+        ) : null}
+        {summaryLoading ? (
+          <div className="mb-4 rounded-xl border border-[#dbeafe] bg-[#eff6ff] px-4 py-3 text-xs text-[#1d4ed8]">
+            Generating meeting summary...
+          </div>
+        ) : null}
+
+        {isMentorToolsEnabled && alert?.flagged ? (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 sm:text-sm">
+            <div className="flex items-start gap-2">
+              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                {String(alert?.incident_type || 'verbal_abuse').toLowerCase() === 'verbal_abuse' ? (
+                  <>
+                    <div className="font-semibold">
+                      Abusive language detected ({alert?.severity || 'low'})
+                    </div>
+                    <div>Matched terms: {(alert?.matched_terms || []).join(', ') || 'none'}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="font-semibold">
+                      Video behavior detected: {formatIncidentTypeLabel(alert?.incident_type)} (
+                      {alert?.severity || 'low'})
+                    </div>
+                    <div>
+                      Recommended action:{' '}
+                      {String(alert?.recommended_action || 'warn').replace(/_/g, ' ')}
+                    </div>
+                  </>
+                )}
+                {alert?.flagged_mentee_info?.id ? (
+                  <div className="mt-1">
+                    Mentee: {alert.flagged_mentee_info.first_name} {alert.flagged_mentee_info.last_name}
+                    {' | '}Email: {alert.flagged_mentee_info.email}
+                    {' | '}Parent Mobile: {alert.flagged_mentee_info.parent_mobile || '-'}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <div
+          ref={stageContainerRef}
+          className={`overflow-hidden bg-black ${isFullscreen ? 'rounded-none border-0' : 'rounded-xl border border-[#e5e7eb]'
+            }`}
+        >
+          <div
+            className={`relative ${isFullscreen ? 'h-[100vh] min-h-[100vh]' : 'h-[56vh] min-h-[320px] sm:h-[62vh] lg:h-[70vh]'
+              }`}
+          >
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+              className={`h-full w-full bg-[#111827] object-cover ${remoteCameraEnabled === false ? 'invisible' : 'visible'
+                }`}
+            />
+            {remoteCameraEnabled === false ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-sm font-semibold text-white">
+                Peer Camera Off
+              </div>
+            ) : null}
+            <div className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/65 px-2 py-1 text-[10px] font-semibold text-white sm:left-3 sm:top-3">
+              {peerLabel}
+            </div>
+            {remoteCameraEnabled === false || remoteMicEnabled === false ? (
+              <div className="pointer-events-none absolute left-2 top-10 flex flex-wrap gap-1 sm:left-3 sm:top-12">
+                {remoteCameraEnabled === false ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
+                    <VideoOff className="h-3 w-3" />
+                    Camera Off
+                  </span>
+                ) : null}
+                {remoteMicEnabled === false ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">
+                    <MicOff className="h-3 w-3" />
+                    Mic Off
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="absolute bottom-3 right-3 w-[42vw] min-w-[120px] max-w-[180px] sm:w-[220px] sm:max-w-[220px] lg:w-[260px] lg:max-w-[260px]">
+              <div className="relative overflow-hidden rounded-lg border border-white/30 bg-[#111827] shadow-xl">
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className={`h-[92px] w-full object-cover sm:h-[128px] lg:h-[146px] ${cameraEnabled ? 'visible' : 'invisible'
+                    }`}
+                />
+                {!cameraEnabled ? (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-xs font-semibold text-white">
+                    Camera Off
+                  </div>
+                ) : null}
+                <div className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-black/65 px-2 py-0.5 text-[9px] font-semibold text-white sm:left-2 sm:top-2 sm:text-[10px]">
+                  You
+                </div>
+                {!cameraEnabled || !micEnabled ? (
+                  <div className="pointer-events-none absolute left-1.5 top-7 flex flex-wrap gap-1 sm:left-2 sm:top-8">
+                    {!cameraEnabled ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
+                        <VideoOff className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                        Cam Off
+                      </span>
+                    ) : null}
+                    {!micEnabled ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
+                        <MicOff className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                        Mic Off
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {isFullscreen ? (
+              <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center px-3">
+                <div className="flex items-center gap-2 rounded-full bg-black/70 px-3 py-2 backdrop-blur">
+                  <button
+                    type="button"
+                    onClick={toggleMic}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+                  >
+                    {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                    {micEnabled ? 'Mic On' : 'Mic Off'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleCamera}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+                  >
+                    {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                    {cameraEnabled ? 'Camera On' : 'Camera Off'}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white p-3 sm:p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleMic}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#f3f4f6] px-3 py-2 text-xs font-semibold text-[#111827] hover:bg-[#e5e7eb]"
+            >
+              {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+              {micEnabled ? 'Mute Mic' : 'Unmute Mic'}
+            </button>
+            <button
+              type="button"
+              onClick={toggleCamera}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#f3f4f6] px-3 py-2 text-xs font-semibold text-[#111827] hover:bg-[#e5e7eb]"
+            >
+              {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+              {cameraEnabled ? 'Stop Camera' : 'Start Camera'}
+            </button>
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#f3f4f6] px-3 py-2 text-xs font-semibold text-[#111827] hover:bg-[#e5e7eb]"
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {isFullscreen ? 'Exit Full Screen' : 'Full Screen'}
+            </button>
+            {showManualMentorTools ? (
+              <>
+                <button
+                  type="button"
+                  onClick={recording ? stopRecording : startRecording}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white ${recording ? 'bg-[#ef4444] hover:bg-[#dc2626]' : 'bg-[#2563eb] hover:bg-[#1d4ed8]'
+                    }`}
+                  hidden={!isMentorToolsEnabled}
+                >
+                  {recording ? 'Stop Recording' : 'Start Recording'}
+                </button>
+                <button
+                  type="button"
+                  onClick={monitoringActive ? stopSpeechMonitoring : startSpeechMonitoring}
+                  disabled={!hasSpeechRecognition}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#7c3aed] px-3 py-2 text-xs font-semibold text-white hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:bg-[#c4b5fd]"
+                  hidden={!isMentorToolsEnabled}
+                >
+                  {monitoringActive ? 'Stop Monitoring' : 'Start Monitoring'}
+                </button>
+              </>
+            ) : null}
+          </div>
+          {showManualMentorTools && isMentorToolsEnabled && !hasSpeechRecognition ? (
+            <p className="mt-2 text-xs text-[#6b7280]">
+              Browser speech recognition is unavailable. Use manual transcript input below.
+            </p>
+          ) : null}
+        </div>
+
+        {showManualMentorTools && isMentorToolsEnabled ? (
+          <div className="mt-4 rounded-xl border border-[#e5e7eb] bg-white p-3 sm:p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#111827]">
+              <AlertTriangle className="h-4 w-4 text-[#f59e0b]" />
+              Call Analysis
+            </div>
+            <textarea
+              value={analysisInput}
+              onChange={(event) => setAnalysisInput(event.target.value)}
+              rows={3}
+              placeholder="Paste or type conversation snippet for abuse detection."
+              className="w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm text-[#111827] focus:border-[#7c3aed] focus:outline-none"
+            />
+            <div className="mt-2 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => analyzeTranscript(analysisInput)}
+                disabled={analysisLoading || !analysisInput.trim()}
+                className="rounded-lg bg-[#111827] px-3 py-2 text-xs font-semibold text-white hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:bg-[#9ca3af]"
+              >
+                {analysisLoading ? 'Analyzing...' : 'Analyze Snippet'}
+              </button>
+              <span className="text-xs text-[#6b7280]">Incidents Logged: {incidents.length}</span>
+            </div>
+          </div>
+        ) : null}
       </div>
     </>
   );
