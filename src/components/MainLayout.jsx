@@ -44,6 +44,10 @@ const MainLayout = () => {
   const [apiLoading, setApiLoading] = useState(false);
   const [mentorTourOpen, setMentorTourOpen] = useState(false);
   const [mentorTourStep, setMentorTourStep] = useState(0);
+  const isMeetingRoute =
+    location.pathname.includes('/mentee-meeting-room') ||
+    location.pathname.includes('/mentor-meeting-room') ||
+    location.pathname.includes('/zoom-meeting');
 
   useEffect(() => {
     const unsubscribe = subscribeToApiLoading((loading) => {
@@ -157,7 +161,7 @@ const MainLayout = () => {
       </div>
 
       {/* ── Global loading spinner ── */}
-      {apiLoading ? (
+      {apiLoading && !isMeetingRoute ? (
         <div className="fixed inset-0 z-[60] pointer-events-none flex items-center justify-center">
           <div className="rounded-full bg-white/85 p-4 shadow-md border border-default">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#d9d3e5] border-t-[#5D3699]" />

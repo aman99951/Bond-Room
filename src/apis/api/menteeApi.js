@@ -39,17 +39,21 @@ export const menteeApi = {
   listSessionMeetingSignals: (sessionId, params = {}) =>
     apiClient.get(`/sessions/${sessionId}/meeting-signals/${buildQuery(params)}`, { trackLoading: false }),
   sendSessionMeetingSignal: (sessionId, payload) =>
-    apiClient.post(`/sessions/${sessionId}/meeting-signals/`, payload),
+    apiClient.post(`/sessions/${sessionId}/meeting-signals/`, payload, { trackLoading: false }),
   getSessionRecording: (sessionId) =>
     apiClient.get(`/sessions/${sessionId}/recording/`, { trackLoading: false }),
   getSessionRecordingUploadSignature: (sessionId, payload = {}) =>
-    apiClient.post(`/sessions/${sessionId}/recording-upload-signature/`, payload),
-  updateSessionRecording: (sessionId, payload) =>
-    apiClient.post(`/sessions/${sessionId}/recording/`, payload),
+    apiClient.post(`/sessions/${sessionId}/recording-upload-signature/`, payload, { trackLoading: false }),
+  // Recording state updates are mentor/admin-only on backend; avoid 403 noise from mentee clients.
+  updateSessionRecording: async () => ({ skipped: true }),
   analyzeSessionTranscript: (sessionId, payload) =>
-    apiClient.post(`/sessions/${sessionId}/analyze-transcript/`, payload),
+    apiClient.post(`/sessions/${sessionId}/analyze-transcript/`, payload, { trackLoading: false }),
+  reportSessionBehavior: (sessionId, payload) =>
+    apiClient.post(`/sessions/${sessionId}/report-behavior/`, payload, { trackLoading: false }),
+  analyzeSessionVideoFrame: (sessionId, payload) =>
+    apiClient.post(`/sessions/${sessionId}/analyze-video-frame/`, payload, { trackLoading: false }),
   listSessionAbuseIncidents: (sessionId) =>
-    apiClient.get(`/sessions/${sessionId}/abuse-incidents/`),
+    apiClient.get(`/sessions/${sessionId}/abuse-incidents/`, { trackLoading: false }),
 
   getSessionFeedback: (sessionId) => apiClient.get(`/sessions/${sessionId}/feedback/`),
   submitSessionFeedback: (sessionId, payload) => apiClient.post(`/sessions/${sessionId}/feedback/`, payload),

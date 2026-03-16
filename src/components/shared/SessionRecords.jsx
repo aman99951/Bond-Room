@@ -64,6 +64,13 @@ const formatFileSize = (value) => {
   return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 };
 
+const getSessionSortTime = (session) => {
+  const rawValue = session?.scheduled_start || session?.updated_at || session?.created_at || '';
+  const parsed = new Date(rawValue);
+  const millis = parsed.getTime();
+  return Number.isNaN(millis) ? 0 : millis;
+};
+
 const getMenteeName = (session) => {
   const fromLinkedMentee =
     typeof session?.mentee === 'object'
@@ -223,7 +230,8 @@ const SessionRecords = () => {
           }
         }
         return true;
-      });
+      })
+      .sort((left, right) => getSessionSortTime(right.session) - getSessionSortTime(left.session));
   }, [isMentorRole, mentorMap, recordingsBySession, searchValue, sessions, statusFilter]);
 
   return (

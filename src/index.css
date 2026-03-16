@@ -160,3 +160,16 @@ select option:hover {
 .animate-slide-in-left { animation: slide-in-left 0.6s ease-out; }
 .animate-shake { animation: shake 0.5s ease-in-out; }
 .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+
+/* Meeting room: suppress browser-native video loading/control overlays (buffer spinner). */
+.meeting-video::-webkit-media-controls,
+.meeting-video::-webkit-media-controls-enclosure,
+.meeting-video::-webkit-media-controls-panel,
+.meeting-video::-webkit-media-controls-overlay-enclosure,
+.meeting-video::-webkit-media-controls-play-button,
+.meeting-video::-webkit-media-controls-start-playback-button,
+.meeting-video::-webkit-media-controls-loading-panel {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+}

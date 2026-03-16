@@ -98,7 +98,7 @@ const OnboardingStatus = () => {
 
   const steps = useMemo(
     () => [
-      { key: 'application_status', label: 'Application Submitted', required: true },
+      { key: 'application_status', label: 'Personal Detials', required: true },
       { key: 'identity_status', label: 'Document Verification', required: true },
       { key: 'training_status', label: 'Training Module', link: '/mentor-training-modules', optional: true },
     ],
@@ -297,7 +297,7 @@ const OnboardingStatus = () => {
                       <p className="font-semibold text-[#5b2c91]">Verification in Progress</p>
                       <p className="mt-1 text-sm text-[#5b2c91]">
                         You will be notified via email and SMS once the document verification is complete.
-                        Dashboard unlocks after Application Submitted and Document Verification are completed.
+                        Dashboard unlocks after Personal Details and Document Verification are completed.
                       </p>
                     </>
                   )}
