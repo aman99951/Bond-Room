@@ -90,6 +90,13 @@ const ABUSE_SUMMARY_DEDUP_MS = 12000;
 const AUTO_VIDEO_SCAN_INTERVAL_MS = Number(import.meta.env.VITE_VIDEO_SAFETY_SCAN_MS || 6000);
 const AUTO_VIDEO_ALERT_DEDUP_MS = Number(import.meta.env.VITE_VIDEO_ALERT_DEDUP_MS || 30000);
 const SPEECH_DUPLICATE_WINDOW_MS = Number(import.meta.env.VITE_SPEECH_DUPLICATE_WINDOW_MS || 1800);
+const SPEECH_IDLE_AUTO_STOP_MS = Number(import.meta.env.VITE_SPEECH_IDLE_AUTO_STOP_MS || 20000);
+const SPEECH_ACTIVITY_GATE_THRESHOLD = Number(import.meta.env.VITE_SPEECH_ACTIVITY_GATE_THRESHOLD || 0.012);
+const SPEECH_ACTIVITY_GATE_PEAK_THRESHOLD = Number(
+  import.meta.env.VITE_SPEECH_ACTIVITY_GATE_PEAK_THRESHOLD || 0.05
+);
+const SPEECH_ACTIVITY_GATE_HOLD_MS = Number(import.meta.env.VITE_SPEECH_ACTIVITY_GATE_HOLD_MS || 320);
+const SPEECH_ACTIVITY_GATE_POLL_MS = Number(import.meta.env.VITE_SPEECH_ACTIVITY_GATE_POLL_MS || 140);
 const LOCAL_ABUSE_TERMS = [
   'idiot',
   'stupid',
@@ -327,6 +334,14 @@ const MeetingRoomShell = ({
   const autoMonitoringRef = useRef(false);
   const speechRestartTimerRef = useRef(null);
   const speechRestartDelayRef = useRef(550);
+  const speechInactivityTimerRef = useRef(null);
+  const monitoringAutoStartBlockedRef = useRef(false);
+  const speechActivityGateIntervalRef = useRef(null);
+  const speechActivityGateContextRef = useRef(null);
+  const speechActivityGateAnalyserRef = useRef(null);
+  const speechActivityGateSourceRef = useRef(null);
+  const speechActivityGateDataRef = useRef(null);
+  const speechActivityGateVoiceSinceRef = useRef(0);
   const summaryRequestedRef = useRef(false);
   const remoteStreamStateCleanupRef = useRef(null);
   const remoteMediaSignalRef = useRef({ micEnabled: null, cameraEnabled: null });
@@ -385,6 +400,7 @@ const MeetingRoomShell = ({
   const monitoringMetadataKey =
     participantRole === 'mentor' ? 'monitoring_started_mentor' : 'monitoring_started_mentee';
   const showManualMentorTools = false;
+  const showMonitoringPanel = false;
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const sessionIdFromQuery = Number(searchParams.get('sessionId') || 0);
@@ -744,12 +760,19 @@ const MeetingRoomShell = ({
     setRemoteCameraEnabled(null);
   }, [detachRemoteStreamStateListeners, stopRecordingComposition]);
 
-  const stopSpeechMonitoring = useCallback(async () => {
+  const stopSpeechMonitoring = useCallback(async ({ suppressAutoStart = true } = {}) => {
+    if (suppressAutoStart) {
+      monitoringAutoStartBlockedRef.current = true;
+    }
     autoMonitoringRef.current = false;
     speechRestartDelayRef.current = 550;
     if (speechRestartTimerRef.current) {
       window.clearTimeout(speechRestartTimerRef.current);
       speechRestartTimerRef.current = null;
+    }
+    if (speechInactivityTimerRef.current) {
+      window.clearTimeout(speechInactivityTimerRef.current);
+      speechInactivityTimerRef.current = null;
     }
     const recognition = recognitionRef.current;
     if (recognition) {
@@ -782,6 +805,31 @@ const MeetingRoomShell = ({
       }
     }
   }, [api, isMentorToolsEnabled, monitoringMetadataKey, sessionId]);
+
+  const stopSpeechActivityGate = useCallback(() => {
+    if (typeof window !== 'undefined' && speechActivityGateIntervalRef.current) {
+      window.clearInterval(speechActivityGateIntervalRef.current);
+    }
+    speechActivityGateIntervalRef.current = null;
+    speechActivityGateVoiceSinceRef.current = 0;
+    speechActivityGateDataRef.current = null;
+    speechActivityGateAnalyserRef.current = null;
+    if (speechActivityGateSourceRef.current) {
+      try {
+        speechActivityGateSourceRef.current.disconnect();
+      } catch {
+        // no-op
+      }
+    }
+    speechActivityGateSourceRef.current = null;
+    const context = speechActivityGateContextRef.current;
+    speechActivityGateContextRef.current = null;
+    if (context && typeof context.close === 'function') {
+      Promise.resolve(context.close()).catch(() => {
+        // no-op
+      });
+    }
+  }, []);
 
   const closePeerConnection = useCallback(() => {
     detachRemoteStreamStateListeners();
@@ -1614,14 +1662,32 @@ const MeetingRoomShell = ({
     return stream;
   }, [attachLocalTracksToPeer, ensurePeerConnection, publishLocalMediaState]);
 
-  const startSpeechMonitoring = useCallback(async () => {
+  const startSpeechMonitoring = useCallback(async ({ manual = false } = {}) => {
     if (!canSpeechModeration) return;
     if (!hasSpeechRecognition) return;
     if (!micEnabled) return;
     const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) return;
+    if (!manual && monitoringAutoStartBlockedRef.current) return;
+    if (manual) {
+      monitoringAutoStartBlockedRef.current = false;
+    }
 
     autoMonitoringRef.current = true;
+
+    const markSpeechActivity = () => {
+      if (typeof window === 'undefined') return;
+      if (!autoMonitoringRef.current) return;
+      if (speechInactivityTimerRef.current) {
+        window.clearTimeout(speechInactivityTimerRef.current);
+      }
+      speechInactivityTimerRef.current = window.setTimeout(() => {
+        speechInactivityTimerRef.current = null;
+        if (!autoMonitoringRef.current) return;
+        monitoringAutoStartBlockedRef.current = true;
+        void stopSpeechMonitoring({ suppressAutoStart: true });
+      }, Math.max(4000, SPEECH_IDLE_AUTO_STOP_MS));
+    };
 
     const scheduleRestart = (delayMs = 700) => {
       if (typeof window === 'undefined') return;
@@ -1725,6 +1791,9 @@ const MeetingRoomShell = ({
           .join(' ')
           .trim();
 
+        if (interimTranscript || finalTranscript) {
+          markSpeechActivity();
+        }
         setLiveInterimTranscript(interimTranscript);
         if (interimTranscript) {
           const now = Date.now();
@@ -1789,11 +1858,13 @@ const MeetingRoomShell = ({
 
     try {
       recognition.start();
+      markSpeechActivity();
       setMonitoring(true);
       setMonitoringStatus(true);
     } catch (err) {
       const code = String(err?.name || err?.message || '').toLowerCase();
       if (code.includes('invalidstate')) {
+        markSpeechActivity();
         setMonitoring(true);
         setMonitoringStatus(true);
       } else if (
@@ -1843,6 +1914,98 @@ const MeetingRoomShell = ({
     sessionId,
     sendSignal,
     showToast,
+    stopSpeechMonitoring,
+  ]);
+
+  const handleStartMonitoring = useCallback(() => {
+    startSpeechMonitoring({ manual: true });
+  }, [startSpeechMonitoring]);
+
+  const handleStopMonitoring = useCallback(() => {
+    stopSpeechMonitoring({ suppressAutoStart: true });
+  }, [stopSpeechMonitoring]);
+
+  const startSpeechActivityGate = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    if (!canSpeechModeration) return;
+    if (connectionState !== 'connected') return;
+    if (!micEnabled) return;
+    if (speechActivityGateIntervalRef.current) return;
+
+    const stream = localStreamRef.current;
+    if (!stream) return;
+    const liveAudioTracks = stream
+      .getAudioTracks()
+      .filter((track) => track && track.readyState === 'live' && track.enabled);
+    if (!liveAudioTracks.length) return;
+
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) return;
+
+    try {
+      const context = new AudioContextCtor();
+      if (typeof context.resume === 'function' && context.state === 'suspended') {
+        await context.resume().catch(() => {
+          // no-op
+        });
+      }
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.85;
+      const source = context.createMediaStreamSource(new MediaStream(liveAudioTracks));
+      source.connect(analyser);
+      const data = new Uint8Array(analyser.fftSize);
+
+      speechActivityGateContextRef.current = context;
+      speechActivityGateAnalyserRef.current = analyser;
+      speechActivityGateSourceRef.current = source;
+      speechActivityGateDataRef.current = data;
+      speechActivityGateVoiceSinceRef.current = 0;
+
+      speechActivityGateIntervalRef.current = window.setInterval(() => {
+        const activeAnalyser = speechActivityGateAnalyserRef.current;
+        const activeData = speechActivityGateDataRef.current;
+        if (!activeAnalyser || !activeData) return;
+
+        activeAnalyser.getByteTimeDomainData(activeData);
+        let sumSquares = 0;
+        let peakAbs = 0;
+        for (let i = 0; i < activeData.length; i += 1) {
+          const centered = (activeData[i] - 128) / 128;
+          const abs = Math.abs(centered);
+          if (abs > peakAbs) {
+            peakAbs = abs;
+          }
+          sumSquares += centered * centered;
+        }
+        const rms = Math.sqrt(sumSquares / activeData.length);
+        const now = Date.now();
+
+        if (rms >= SPEECH_ACTIVITY_GATE_THRESHOLD || peakAbs >= SPEECH_ACTIVITY_GATE_PEAK_THRESHOLD) {
+          if (!speechActivityGateVoiceSinceRef.current) {
+            speechActivityGateVoiceSinceRef.current = now;
+          }
+          if (now - speechActivityGateVoiceSinceRef.current >= Math.max(300, SPEECH_ACTIVITY_GATE_HOLD_MS)) {
+            if (!autoMonitoringRef.current && !recognitionRef.current) {
+              monitoringAutoStartBlockedRef.current = false;
+              void startSpeechMonitoring({ manual: false });
+            }
+            speechActivityGateVoiceSinceRef.current = now;
+          }
+          return;
+        }
+
+        speechActivityGateVoiceSinceRef.current = 0;
+      }, Math.max(120, SPEECH_ACTIVITY_GATE_POLL_MS));
+    } catch {
+      stopSpeechActivityGate();
+    }
+  }, [
+    canSpeechModeration,
+    connectionState,
+    micEnabled,
+    startSpeechMonitoring,
+    stopSpeechActivityGate,
   ]);
 
   const stopRecording = useCallback(async () => {
@@ -2107,6 +2270,11 @@ const MeetingRoomShell = ({
       });
       micEnabledRef.current = nextEnabled;
       setMicEnabled(nextEnabled);
+      if (!nextEnabled) {
+        monitoringAutoStartBlockedRef.current = true;
+        stopSpeechActivityGate();
+        void stopSpeechMonitoring({ suppressAutoStart: true });
+      }
       await publishLocalMediaState(nextEnabled, cameraEnabled);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
@@ -2114,7 +2282,14 @@ const MeetingRoomShell = ({
     } catch (err) {
       appendError(err?.message || 'Unable to toggle microphone.');
     }
-  }, [appendError, cameraEnabled, micEnabled, publishLocalMediaState]);
+  }, [
+    appendError,
+    cameraEnabled,
+    micEnabled,
+    publishLocalMediaState,
+    stopSpeechActivityGate,
+    stopSpeechMonitoring,
+  ]);
 
   const toggleCamera = useCallback(async () => {
     const stream = localStreamRef.current;
@@ -2209,6 +2384,7 @@ const MeetingRoomShell = ({
       await markSessionClosed();
       setSelectedSessionId(sessionId);
     }
+    stopSpeechActivityGate();
     await stopSpeechMonitoring();
     if (isMentorToolsEnabled) {
       try {
@@ -2249,6 +2425,7 @@ const MeetingRoomShell = ({
     stopPolling,
     stopRecording,
     stopSpeechMonitoring,
+    stopSpeechActivityGate,
     onExit,
   ]);
 
@@ -2302,6 +2479,7 @@ const MeetingRoomShell = ({
     setupMeeting();
     return () => {
       cancelled = true;
+      stopSpeechActivityGate();
       stopSpeechMonitoring();
       stopRecording();
       stopRecordingStatusPolling();
@@ -2390,6 +2568,7 @@ const MeetingRoomShell = ({
     setMonitoringFeed([]);
     setLiveInterimTranscript('');
     roleTranscriptSegmentsRef.current = { mentor: [], mentee: [] };
+    monitoringAutoStartBlockedRef.current = false;
   }, [participantRole, sessionId]);
 
   useEffect(() => {
@@ -2413,21 +2592,36 @@ const MeetingRoomShell = ({
 
   useEffect(() => {
     if (!sessionId) return undefined;
-    if (connectionState !== 'connected') return undefined;
-    if (!micEnabled) return undefined;
-    if (!canSpeechModeration || !hasSpeechRecognition) return undefined;
-    if (!localStreamRef.current) return undefined;
-    if (monitoringActive) return undefined;
-    startSpeechMonitoring();
-    return undefined;
+    if (!canSpeechModeration || !hasSpeechRecognition) {
+      stopSpeechActivityGate();
+      return undefined;
+    }
+    if (connectionState !== 'connected') {
+      stopSpeechActivityGate();
+      return undefined;
+    }
+    if (!micEnabled) {
+      stopSpeechActivityGate();
+      if (autoMonitoringRef.current || recognitionRef.current) {
+        monitoringAutoStartBlockedRef.current = true;
+        void stopSpeechMonitoring({ suppressAutoStart: true });
+      }
+      return undefined;
+    }
+
+    startSpeechActivityGate();
+    return () => {
+      stopSpeechActivityGate();
+    };
   }, [
     canSpeechModeration,
     connectionState,
     hasSpeechRecognition,
     micEnabled,
-    monitoringActive,
     sessionId,
-    startSpeechMonitoring,
+    startSpeechActivityGate,
+    stopSpeechActivityGate,
+    stopSpeechMonitoring,
   ]);
 
   useEffect(() => {
@@ -2646,63 +2840,65 @@ const MeetingRoomShell = ({
             </button>
           </div>
         </div>
-        <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-sm font-semibold text-[#111827]">Monitoring Words (Realtime)</div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${monitoringActive
-                  ? 'bg-[#dcfce7] text-[#166534]'
-                  : 'bg-[#f3f4f6] text-[#374151]'
-                  }`}
-              >
-                Speech Engine: {monitoringActive ? 'Running' : 'Stopped'}
-              </span>
-              <span className="text-[11px] text-[#6b7280]">Latest {monitoringFeed.length} entries</span>
-              <button
-                type="button"
-                onClick={monitoringActive ? stopSpeechMonitoring : startSpeechMonitoring}
-                disabled={!hasSpeechRecognition}
-                className="inline-flex items-center rounded-md bg-[#111827] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:bg-[#9ca3af]"
-              >
-                {monitoringActive ? 'Stop Monitoring' : 'Start Monitoring'}
-              </button>
+        {showMonitoringPanel ? (
+          <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-semibold text-[#111827]">Monitoring Words (Realtime)</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${monitoringActive
+                    ? 'bg-[#dcfce7] text-[#166534]'
+                    : 'bg-[#f3f4f6] text-[#374151]'
+                    }`}
+                >
+                  Speech Engine: {monitoringActive ? 'Running' : 'Stopped'}
+                </span>
+                <span className="text-[11px] text-[#6b7280]">Latest {monitoringFeed.length} entries</span>
+                <button
+                  type="button"
+                  onClick={monitoringActive ? handleStopMonitoring : handleStartMonitoring}
+                  disabled={!hasSpeechRecognition}
+                  className="inline-flex items-center rounded-md bg-[#111827] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:bg-[#9ca3af]"
+                >
+                  {monitoringActive ? 'Stop Monitoring' : 'Start Monitoring'}
+                </button>
+              </div>
+            </div>
+            <div className="mt-2 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 text-xs text-[#374151]">
+              {liveInterimTranscript
+                ? `Listening: ${liveInterimTranscript}`
+                : 'Listening: waiting for speech...'}
+            </div>
+            <div className="mt-2 max-h-44 overflow-y-auto rounded-lg border border-[#e5e7eb] bg-white">
+              {monitoringFeed.length ? (
+                <div className="divide-y divide-[#f3f4f6]">
+                  {monitoringFeed.map((entry) => (
+                    <div key={entry.id} className="px-3 py-2 text-xs text-[#111827]">
+                      <div className="mb-1 flex items-center gap-2">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${entry.source === 'local'
+                            ? 'bg-[#dbeafe] text-[#1d4ed8]'
+                            : 'bg-[#ede9fe] text-[#5b21b6]'
+                            }`}
+                        >
+                          {entry.source === 'local' ? 'You' : getParticipantDisplayRole(entry.source)}
+                        </span>
+                        <span className="text-[10px] text-[#6b7280]">
+                          {new Date(entry.at).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <div>{entry.text}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-3 py-4 text-xs text-[#6b7280]">
+                  No monitoring words yet. Start speaking to see live words here.
+                </div>
+              )}
             </div>
           </div>
-          <div className="mt-2 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 text-xs text-[#374151]">
-            {liveInterimTranscript
-              ? `Listening: ${liveInterimTranscript}`
-              : 'Listening: waiting for speech...'}
-          </div>
-          <div className="mt-2 max-h-44 overflow-y-auto rounded-lg border border-[#e5e7eb] bg-white">
-            {monitoringFeed.length ? (
-              <div className="divide-y divide-[#f3f4f6]">
-                {monitoringFeed.map((entry) => (
-                  <div key={entry.id} className="px-3 py-2 text-xs text-[#111827]">
-                    <div className="mb-1 flex items-center gap-2">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${entry.source === 'local'
-                          ? 'bg-[#dbeafe] text-[#1d4ed8]'
-                          : 'bg-[#ede9fe] text-[#5b21b6]'
-                          }`}
-                      >
-                        {entry.source === 'local' ? 'You' : getParticipantDisplayRole(entry.source)}
-                      </span>
-                      <span className="text-[10px] text-[#6b7280]">
-                        {new Date(entry.at).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <div>{entry.text}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="px-3 py-4 text-xs text-[#6b7280]">
-                No monitoring words yet. Start speaking to see live words here.
-              </div>
-            )}
-          </div>
-        </div>
+        ) : null}
         {meetingSummary ? (
           <div className="mb-4 rounded-xl border border-[#d1fae5] bg-[#ecfdf5] px-4 py-3 text-sm text-[#065f46]">
             <div className="text-xs font-semibold uppercase tracking-wide text-[#047857]">Meeting Summary</div>
@@ -2893,7 +3089,7 @@ const MeetingRoomShell = ({
                 </button>
                 <button
                   type="button"
-                  onClick={monitoringActive ? stopSpeechMonitoring : startSpeechMonitoring}
+                  onClick={monitoringActive ? handleStopMonitoring : handleStartMonitoring}
                   disabled={!hasSpeechRecognition}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-[#7c3aed] px-3 py-2 text-xs font-semibold text-white hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:bg-[#c4b5fd]"
                   hidden={!isMentorToolsEnabled}
