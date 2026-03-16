@@ -143,6 +143,12 @@ const getParticipantDisplayRole = (role) => {
   return 'Participant';
 };
 
+const normalizeParticipantRole = (role) => {
+  const normalized = String(role || '').trim().toLowerCase();
+  if (normalized === 'mentor' || normalized === 'mentee') return normalized;
+  return '';
+};
+
 const formatIncidentTypeLabel = (value) =>
   String(value || 'unknown')
     .trim()
@@ -349,6 +355,7 @@ const MeetingRoomShell = ({
   const monitoringFeedIdRef = useRef(0);
   const [connectionState, setConnectionState] = useState('idle');
   const [micEnabled, setMicEnabled] = useState(true);
+  const micEnabledRef = useRef(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [remoteMicEnabled, setRemoteMicEnabled] = useState(null);
   const [remoteCameraEnabled, setRemoteCameraEnabled] = useState(null);
@@ -1409,6 +1416,7 @@ const MeetingRoomShell = ({
         lastSignalIdRef.current = Math.max(lastSignalIdRef.current, Number(signal.id) || 0);
         const signalType = String(signal?.signal_type || '').toLowerCase();
         const payload = signal?.payload || {};
+        const signalSenderRole = normalizeParticipantRole(signal?.sender_role);
         try {
           if (signalType === 'offer') {
             // Ignore stale offers once signaling has moved away from stable.
@@ -1465,7 +1473,8 @@ const MeetingRoomShell = ({
             continue;
           }
           if (signalType === 'transcript') {
-            const speakerRole = String(payload?.speaker_role || '').trim().toLowerCase();
+            const payloadSpeakerRole = normalizeParticipantRole(payload?.speaker_role);
+            const speakerRole = signalSenderRole || payloadSpeakerRole;
             const transcriptExcerpt = String(
               payload?.transcript_excerpt || payload?.transcript || payload?.text || ''
             ).trim();
@@ -1478,7 +1487,8 @@ const MeetingRoomShell = ({
             continue;
           }
           if (signalType === 'transcript_bundle') {
-            const speakerRole = String(payload?.speaker_role || '').trim().toLowerCase();
+            const payloadSpeakerRole = normalizeParticipantRole(payload?.speaker_role);
+            const speakerRole = signalSenderRole || payloadSpeakerRole;
             if (!speakerRole || speakerRole === participantRole) continue;
             const segments = Array.isArray(payload?.segments) ? payload.segments : [];
             segments
@@ -1587,7 +1597,11 @@ const MeetingRoomShell = ({
     }
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
-      audio: true,
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
     });
     localStreamRef.current = stream;
     if (localVideoRef.current) {
@@ -1603,6 +1617,7 @@ const MeetingRoomShell = ({
   const startSpeechMonitoring = useCallback(async () => {
     if (!canSpeechModeration) return;
     if (!hasSpeechRecognition) return;
+    if (!micEnabled) return;
     const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) return;
 
@@ -1651,6 +1666,7 @@ const MeetingRoomShell = ({
     };
 
     const commitTranscript = (value, { broadcast = true, analyze = true } = {}) => {
+      if (!micEnabledRef.current) return;
       const text = String(value || '').replace(/\s+/g, ' ').trim();
       if (!text) return;
       const now = Date.now();
@@ -1821,6 +1837,7 @@ const MeetingRoomShell = ({
     canSpeechModeration,
     hasSpeechRecognition,
     isMentorToolsEnabled,
+    micEnabled,
     monitoringMetadataKey,
     participantRole,
     sessionId,
@@ -2088,6 +2105,7 @@ const MeetingRoomShell = ({
       stream.getAudioTracks().forEach((track) => {
         track.enabled = nextEnabled;
       });
+      micEnabledRef.current = nextEnabled;
       setMicEnabled(nextEnabled);
       await publishLocalMediaState(nextEnabled, cameraEnabled);
       if (localVideoRef.current) {
@@ -2390,8 +2408,13 @@ const MeetingRoomShell = ({
   }, []);
 
   useEffect(() => {
+    micEnabledRef.current = Boolean(micEnabled);
+  }, [micEnabled]);
+
+  useEffect(() => {
     if (!sessionId) return undefined;
     if (connectionState !== 'connected') return undefined;
+    if (!micEnabled) return undefined;
     if (!canSpeechModeration || !hasSpeechRecognition) return undefined;
     if (!localStreamRef.current) return undefined;
     if (monitoringActive) return undefined;
@@ -2401,10 +2424,18 @@ const MeetingRoomShell = ({
     canSpeechModeration,
     connectionState,
     hasSpeechRecognition,
+    micEnabled,
     monitoringActive,
     sessionId,
     startSpeechMonitoring,
   ]);
+
+  useEffect(() => {
+    if (micEnabled) return undefined;
+    if (!monitoringActive) return undefined;
+    stopSpeechMonitoring();
+    return undefined;
+  }, [micEnabled, monitoringActive, stopSpeechMonitoring]);
 
   useEffect(() => {
     if (!sessionId) return undefined;
