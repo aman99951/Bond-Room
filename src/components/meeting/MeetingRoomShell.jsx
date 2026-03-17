@@ -389,6 +389,7 @@ const MeetingRoomShell = ({
     message: '',
     type: 'warning',
   });
+  const [showEntryGuidance, setShowEntryGuidance] = useState(uiMode !== 'background');
   const [meetingSummary, setMeetingSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [remoteEnded, setRemoteEnded] = useState(false);
@@ -2129,14 +2130,17 @@ const MeetingRoomShell = ({
             try {
               await api.updateSessionRecording(sessionId, formData);
             } catch (err) {
-              if (err?.status === 413) {
+              if (err?.status === 413 || err?.status === 503) {
                 try {
                   await api.updateSessionRecording(sessionId, {
                     status: 'failed',
                     file_size_bytes: String(blob.size),
                     metadata: {
                       ...metadataBase,
-                      upload_skipped_reason: 'payload_too_large_for_serverless',
+                      upload_skipped_reason:
+                        err?.status === 503
+                          ? 'server_upload_disabled_without_cloud_storage'
+                          : 'payload_too_large_for_serverless',
                       max_serverless_upload_bytes: SERVERLESS_MAX_UPLOAD_BYTES,
                     },
                   });
@@ -2144,7 +2148,9 @@ const MeetingRoomShell = ({
                   // no-op
                 }
                 appendError(
-                  'Recording upload exceeded deployment size limits. Configure Cloudinary direct upload.'
+                  err?.status === 503
+                    ? 'Recording file upload is disabled on this deployment. Configure Cloudinary signed/direct upload to save recordings.'
+                    : 'Recording upload exceeded deployment size limits. Configure Cloudinary direct upload.'
                 );
               } else {
                 throw err;
@@ -2797,6 +2803,40 @@ const MeetingRoomShell = ({
             <div className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>{toastState.message}</div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showFullUi && showEntryGuidance ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 py-6">
+          <div className="w-full max-w-lg rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-full bg-[#fef3c7] p-2 text-[#92400e]">
+                <ShieldAlert className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-base font-bold text-[#111827] sm:text-lg">Meeting Room Guidance</h2>
+                <p className="mt-1 text-sm font-semibold text-[#b91c1c]">
+                  No background sound is allowed.
+                </p>
+                <ul className="mt-3 space-y-1.5 text-xs text-[#374151] sm:text-sm">
+                  <li>Use a quiet place before joining the session.</li>
+                  <li>Use earphones/headphones to avoid echo and noise leaks.</li>
+                  <li>Keep your mic muted when you are not speaking.</li>
+                  <li>No TV, music, fan noise, or people talking in the background.</li>
+                  <li>Speak clearly and maintain a respectful conversation.</li>
+                </ul>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowEntryGuidance(false)}
+                className="inline-flex items-center rounded-lg bg-[#111827] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1f2937] sm:text-sm"
+              >
+                I Understand
+              </button>
             </div>
           </div>
         </div>
