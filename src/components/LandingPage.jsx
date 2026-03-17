@@ -186,7 +186,7 @@ const Count = ({ to, suffix = '' }) => {
    that was clipping descenders like "y","g" etc.)
    We clip each word individually with a mask.
 ══════════════════════════════════════════ */
-const SplitWords = ({ text, className = '', delay = 0 }) => (
+const SplitWords = ({ text, className = '', delay = 0, animate = true }) => (
   <span className={className} style={{ display: 'inline' }}>
     {text.split(' ').map((w, i) => (
       /* IMPORTANT: padding-bottom gives room for descenders before the clip */
@@ -199,10 +199,11 @@ const SplitWords = ({ text, className = '', delay = 0 }) => (
       }}>
         <motion.span
           style={{ display: 'inline-block', paddingBottom: '0.05em' }}
-          initial={{ y: '115%' }}
-          whileInView={{ y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay: delay + i * 0.08 }}
+          initial={animate ? { y: '115%' } : { y: 0 }}
+          whileInView={animate ? { y: 0 } : undefined}
+          animate={!animate ? { y: 0 } : undefined}
+          viewport={animate ? { once: true } : undefined}
+          transition={animate ? { duration: 0.75, ease: [0.22, 1, 0.36, 1], delay: delay + i * 0.08 } : undefined}
         >
           {w}
         </motion.span>
@@ -216,7 +217,7 @@ const SplitWords = ({ text, className = '', delay = 0 }) => (
    with extra descender padding so letters
    like "b","y","G" show fully)
 ══════════════════════════════════════════ */
-const HeroWord = ({ children, className = '', delay = 0, animate = true }) => (
+const HeroWord = ({ children, className = '', delay = 0 }) => (
   <span style={{
     display: 'inline-block',
     overflow: 'hidden',
@@ -228,7 +229,7 @@ const HeroWord = ({ children, className = '', delay = 0, animate = true }) => (
     <motion.span
       className={className}
       style={{ display: 'inline-block' }}
-      initial={animate ? { y: '115%' } : { y: 0 }}
+      initial={{ y: 0 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1], delay }}
     >
@@ -1170,11 +1171,11 @@ export default function LandingPage() {
           </motion.div>
 
           <div className="lp-cta-type">
-            <SplitWords text="Let's tell your"  className="lp-cta-line"              delay={0}    />
+            <SplitWords text="Let's tell your"  className="lp-cta-line"              delay={0}    animate={false} />
             <br />
-            <SplitWords text="next success"     className="lp-cta-line lp-cta-ol"   delay={0.15} />
+            <SplitWords text="next success"     className="lp-cta-line lp-cta-ol"   delay={0.15} animate={false} />
             <br />
-            <SplitWords text="story."           className="lp-cta-line"              delay={0.3}  />
+            <SplitWords text="story."           className="lp-cta-line"              delay={0.3}  animate={false} />
           </div>
 
           <motion.div className="lp-cta-acts"

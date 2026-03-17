@@ -1,12 +1,12 @@
-/* ═══════════════════════════════════════════════
-   Bond Room — Editorial Landing Page CSS
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Bond Room â€” Editorial Landing Page CSS
    Fixed: cursor trail z-index, word descender
    clip, full responsive grid breakpoints
-═══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
 
-/* ── tokens ── */
+/* â”€â”€ tokens â”€â”€ */
 .lp {
   --bg:   #f7f4ff;
   --ink:  #1d2332;
@@ -19,7 +19,7 @@
   --sh:   0 20px 52px rgba(43,26,89,0.14);
 }
 
-/* ── base ── */
+/* â”€â”€ base â”€â”€ */
 .lp, .lp *, .lp *::before, .lp *::after { box-sizing: border-box; margin: 0; padding: 0; }
 /* hide native cursor only when custom cursor is active */
 html.has-custom-cursor,
@@ -36,13 +36,13 @@ html.has-custom-cursor * {
 .lp img { display: block; max-width: 100%; }
 .lp a   { text-decoration: none; }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    CURSOR
    z-index values:
-     canvas  9995  — trail behind dot/ring
-     ring    9996  — lerp ring
-     dot     9999  — solid tip always on top
-══════════════════════════════════════ */
+     canvas  9995  â€” trail behind dot/ring
+     ring    9996  â€” lerp ring
+     dot     9999  â€” solid tip always on top
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cr-canvas {
   position: fixed;
   inset: 0;
@@ -82,14 +82,14 @@ html.has-custom-cursor * {
   box-shadow: 0 0 0 1px rgba(185,154,239,0.28), 0 0 14px rgba(112,72,207,0.3);
 }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ROOT
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp { position: relative; overflow: hidden; background: var(--bg); }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    HEADER
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-hdr {
   position: fixed; top: 0; left: 0; right: 0;
   z-index: 200;
@@ -151,7 +151,7 @@ html.has-custom-cursor * {
 
 .lp-hdr-actions { display: flex; align-items: center; gap: 10px; }
 
-/* ── buttons ── */
+/* â”€â”€ buttons â”€â”€ */
 .lp-ghost {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 9px 18px; border-radius: 999px;
@@ -216,15 +216,15 @@ html.has-custom-cursor * {
 }
 .lp-drawer a:hover { color: var(--acc); }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    HERO
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-hero {
   position: relative;
-  min-height: 100svh;
-  padding: 130px clamp(20px,5vw,60px) 80px;
-  display: flex; flex-direction: column; justify-content: flex-end;
-  overflow: visible;        /* NEVER clip the hero — words need space */
+  min-height: auto;
+  padding: 96px clamp(20px,5vw,60px) 52px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  overflow: visible;        /* NEVER clip the hero â€” words need space */
 }
 
 /* 3D hero depth scene */
@@ -509,7 +509,7 @@ html.has-custom-cursor * {
   animation: floatB 13s ease-in-out infinite;
 }
 
-.lp-hero-body { position: relative; z-index: 2; max-width: 1260px; width: 100%; margin: 0 auto; }
+.lp-hero-body { position: relative; z-index: 2; max-width: 1260px; width: 100%; margin: 44px auto; }
 
 @media (min-width: 1081px) {
   .lp-hero-body { padding-right: min(42vw, 520px); }
@@ -521,7 +521,7 @@ html.has-custom-cursor * {
   font-size: 0.68rem; text-transform: uppercase;
   letter-spacing: 0.22em; color: var(--mute);
   font-family: 'DM Mono', monospace;
-  margin-bottom: 36px;
+  margin-bottom: 22px;
 }
 .lp-edot {
   width: 7px; height: 7px; border-radius: 50%;
@@ -529,17 +529,17 @@ html.has-custom-cursor * {
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* ── TYPE BLOCK ──
+/* â”€â”€ TYPE BLOCK â”€â”€
    Key rules:
-   • overflow: visible  — never clip anything here
-   • line-height: 1     — tight stacking
-   • each .lp-row uses align-items:flex-end (baseline align)
+   â€¢ overflow: visible  â€” never clip anything here
+   â€¢ line-height: 1     â€” tight stacking
+   â€¢ each .lp-row uses align-items:flex-end (baseline align)
 */
 .lp-type-block {
   display: flex; flex-direction: column;
   gap: 4px;                 /* small breathing room between rows */
-  margin-bottom: 48px;
-  overflow: visible;        /* critical — never clip */
+  margin-bottom: 28px;
+  overflow: visible;        /* critical â€” never clip */
 }
 
 .lp-row {
@@ -552,10 +552,10 @@ html.has-custom-cursor * {
   padding-bottom: 4px;
 }
 
-/* ── WORDS
+/* â”€â”€ WORDS
    HeroWord in JSX wraps with overflow:hidden + paddingBottom:0.12em
    so descenders ("y","g","b") are never cut.
-   These CSS classes only control font/colour — not overflow.
+   These CSS classes only control font/colour â€” not overflow.
 */
 .lp-w {
   font-family: 'Playfair Display', Georgia, serif;
@@ -564,7 +564,7 @@ html.has-custom-cursor * {
   letter-spacing: -0.035em;
   line-height: 1;
   color: var(--ink);
-  /* no overflow:hidden here — that's handled in JSX HeroWord wrapper */
+  /* no overflow:hidden here â€” that's handled in JSX HeroWord wrapper */
 }
 .lp-w-muted   { color: var(--mute); font-size: clamp(1.8rem, 4.5vw, 4rem); }
 .lp-w-accent  { color: var(--acc); }
@@ -607,8 +607,8 @@ html.has-custom-cursor * {
 /* hero footer strip */
 .lp-hero-foot {
   display: flex; align-items: flex-start;
-  flex-wrap: wrap; gap: 20px 40px;
-  padding-top: 28px; border-top: 1px solid var(--line);
+  flex-wrap: wrap; gap: 14px 24px;
+  padding-top: 18px; border-top: 1px solid var(--line);
 }
 .lp-hero-desc { color: #4f5d74; font-size: 1rem; line-height: 1.65; max-width: 380px; font-weight: 500; }
 .lp-hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -627,9 +627,9 @@ html.has-custom-cursor * {
   font-family: 'DM Mono', monospace; z-index: 2;
 }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MARQUEE
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-marquee {
   display: flex; overflow: hidden;
   border-top: 1px solid var(--line);
@@ -651,9 +651,9 @@ html.has-custom-cursor * {
   border-right: 1px solid var(--line);
 }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    STATS
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-stats {
   display: grid; grid-template-columns: repeat(4,1fr);
   border-bottom: 1px solid var(--line);
@@ -676,7 +676,7 @@ html.has-custom-cursor * {
 }
 .lp-stat {
   display: flex; flex-direction: column; gap: 6px;
-  padding: 44px clamp(20px,4vw,56px);
+  padding: 30px clamp(20px,4vw,44px);
   border-right: 1px solid var(--line);
   position: relative;
   z-index: 1;
@@ -700,17 +700,17 @@ html.has-custom-cursor * {
   font-family: 'DM Mono', monospace;
 }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SECTIONS (shared)
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-sec {
-  padding: 88px clamp(20px,5vw,60px);
+  padding: 64px clamp(20px,5vw,52px);
   max-width: 1260px; margin: 0 auto;
   position: relative;
 }
 
 .lp-sec:not(.lp-trust-sec) {
-  margin-top: 26px;
+  margin-top: 14px;
   border: 1px solid rgba(222,214,242,0.9);
   border-radius: 28px;
   background: linear-gradient(160deg, rgba(255,255,255,0.93), rgba(247,243,255,0.78));
@@ -763,7 +763,7 @@ html.has-custom-cursor * {
 }
 .lp-sec-head {
   display: flex; flex-direction: column; gap: 14px;
-  margin-bottom: 52px;
+  margin-bottom: 30px;
 }
 .lp-sec-head--row {
   flex-direction: row; align-items: flex-end;
@@ -802,9 +802,9 @@ html.has-custom-cursor * {
 }
 .lp-link-arr:hover { gap: 9px; }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    HOW IT WORKS
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-how-grid {
   display: grid; grid-template-columns: repeat(3,1fr);
   gap: 2px; border: 1px solid var(--line);
@@ -812,7 +812,7 @@ html.has-custom-cursor * {
   background: var(--line);
 }
 .lp-how-card {
-  background: var(--wht); padding: 36px 28px 30px;
+  background: var(--wht); padding: 28px 22px 22px;
   position: relative; transition: background .25s;
   transform-style: preserve-3d;
   perspective: 1100px;
@@ -860,9 +860,9 @@ html.has-custom-cursor * {
 }
 .lp-how-card p { color: #4f5d74; font-size: 0.9rem; line-height: 1.6; }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    TRUST
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-trust-sec { max-width: unset; padding-inline: 0; }
 .lp-trust-sec .lp-sec-head {
   max-width: 1260px; margin-inline: auto;
@@ -876,9 +876,9 @@ html.has-custom-cursor * {
 .lp-trust-card {
   background: linear-gradient(145deg, var(--dark), var(--acc2));
   background-size: 220% 220%;
-  border-radius: 20px; padding: 44px 36px;
+  border-radius: 20px; padding: 30px 24px;
   display: flex; flex-direction: column;
-  justify-content: space-between; gap: 36px;
+  justify-content: space-between; gap: 22px;
   position: relative; overflow: hidden;
   color: var(--wht);
   transform-style: preserve-3d;
@@ -938,12 +938,12 @@ html.has-custom-cursor * {
 }
 .lp-trust-item p { font-size: 0.86rem; color: #4f5d74; line-height: 1.55; }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    STORIES
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-story-stage { max-width: 800px; position: relative; }
 .lp-story {
-  padding: 38px 34px;
+  padding: 28px 24px;
   border: 1px solid rgba(212,202,235,0.88);
   border-radius: 22px;
   background: linear-gradient(165deg, rgba(255,255,255,0.95), rgba(245,239,255,0.82));
@@ -990,7 +990,7 @@ html.has-custom-cursor * {
 .lp-sauthor strong { display: block; font-size: 0.9rem; }
 .lp-sauthor span   { font-size: 0.72rem; color: #54627a; font-family: 'DM Mono', monospace; }
 
-.lp-sdots { display: flex; gap: 8px; margin-top: 22px; }
+.lp-sdots { display: flex; gap: 8px; margin-top: 14px; }
 .lp-sdot {
   height: 6px; width: 8px; border-radius: 999px;
   background: var(--line); border: none; padding: 0;
@@ -998,9 +998,9 @@ html.has-custom-cursor * {
 }
 .lp-sdot.active { background: var(--acc); }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MENTORS
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-mentor-carousel-shell {
   position: relative;
   margin-top: 18px;
@@ -1177,14 +1177,14 @@ html.has-custom-cursor * {
   color: #5d3aa1;
 }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FLAT-ARC 3D MENTOR CAROUSEL
    Matches Framer "3D Ring Carousel" reference:
-   – All 5 cards always visible, spread full width
-   – Center card faces forward, outer cards rotate inward
-   – Height tapers from center outward (arc silhouette)
-   – Hover lifts card with glow (toggleable)
-══════════════════════════════════════ */
+   â€“ All 5 cards always visible, spread full width
+   â€“ Center card faces forward, outer cards rotate inward
+   â€“ Height tapers from center outward (arc silhouette)
+   â€“ Hover lifts card with glow (toggleable)
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .lp-arc-shell {
   width: 100%;
@@ -1844,13 +1844,13 @@ html.has-custom-cursor * {
   display: none;
 }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    EDITORIAL CTA
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-cta-sec {
   position: relative;
   background: linear-gradient(145deg, var(--dark) 0%, var(--acc2) 100%);
-  padding: 100px clamp(20px,5vw,60px);
+  padding: 68px clamp(20px,5vw,52px);
   overflow: hidden;
   color: var(--wht);
 }
@@ -1892,7 +1892,7 @@ html.has-custom-cursor * {
 .lp-cta-inner p, .lp-cta-inner a, .lp-cta-inner span {
   color: var(--wht);
 }
-.lp-cta-type { margin: 24px 0 44px; overflow: visible; }
+.lp-cta-type { margin: 12px 0 20px; overflow: visible; }
 .lp-cta-line {
   font-family: 'Playfair Display', serif;
   font-size: clamp(2.8rem, 8.5vw, 7.5rem);
@@ -1907,11 +1907,11 @@ html.has-custom-cursor * {
 .lp-cta-inner .lp-label-lt { color: rgba(255,255,255,0.55); }
 .lp-cta-acts { display: flex; gap: 12px; flex-wrap: wrap; }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FOOTER
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .lp-footer {
-  padding: 44px clamp(20px,5vw,60px) 28px;
+  padding: 30px clamp(20px,5vw,52px) 20px;
   border-top: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(247,244,255,0.95));
   position: relative;
@@ -1928,8 +1928,8 @@ html.has-custom-cursor * {
 }
 .lp-footer-top {
   display: grid; grid-template-columns: auto 1fr auto;
-  align-items: center; gap: 24px;
-  padding-bottom: 32px; margin-bottom: 20px;
+  align-items: center; gap: 16px;
+  padding-bottom: 20px; margin-bottom: 14px;
   border-bottom: 1px solid var(--line);
   position: relative;
   z-index: 1;
@@ -1955,9 +1955,9 @@ html.has-custom-cursor * {
 }
 .lp-footer-btm span { display: flex; align-items: center; gap: 5px; }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    KEYFRAMES
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @keyframes floatA {
   0%,100% { transform: translate(0,0);      }
   50%      { transform: translate(22px,30px); }
@@ -2007,11 +2007,11 @@ html.has-custom-cursor * {
   to { transform: translateX(120%); }
 }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    RESPONSIVE
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── tablet landscape (≤ 1080px) ── */
+/* â”€â”€ tablet landscape (â‰¤ 1080px) â”€â”€ */
 @media (max-width: 1080px) {
   .lp-hero-depth    { display: none; }
   .lp-stats         { grid-template-columns: repeat(2,1fr); }
@@ -2023,11 +2023,11 @@ html.has-custom-cursor * {
   /* arc carousel handled inline */
 }
 
-/* ── tablet portrait (≤ 768px) ── */
+/* â”€â”€ tablet portrait (â‰¤ 768px) â”€â”€ */
 @media (max-width: 768px) {
   .lp-nav, .lp-hdr-actions { display: none; }
   .lp-burger { display: flex; }
-  .lp-sec:not(.lp-trust-sec) { margin-top: 18px; border-radius: 22px; }
+  .lp-sec:not(.lp-trust-sec) { margin-top: 12px; border-radius: 22px; }
 
   /* hero: scale type down gracefully */
   .lp-w       { font-size: clamp(2.8rem, 13vw, 5.5rem); }
@@ -2050,11 +2050,11 @@ html.has-custom-cursor * {
   .lp-drawer { inset: 0 0 0 20%; }
 }
 
-/* ── mobile (≤ 480px) ── */
+/* â”€â”€ mobile (â‰¤ 480px) â”€â”€ */
 @media (max-width: 480px) {
   .lp-w       { font-size: clamp(2.2rem, 16vw, 4rem); }
   .lp-w-muted { font-size: clamp(1.2rem, 8vw, 2rem); }
-  .lp-sec:not(.lp-trust-sec) { margin-top: 14px; border-radius: 18px; }
+  .lp-sec:not(.lp-trust-sec) { margin-top: 10px; border-radius: 18px; }
 
   .lp-pill    { width: 58px; height: 44px; }
   .lp-pill-lg { width: 82px; height: 58px; }
@@ -2069,10 +2069,11 @@ html.has-custom-cursor * {
   .lp-cta-acts { flex-direction: column; align-items: stretch; }
   /* arc carousel handled inline */
 
-  .lp-sec { padding: 60px clamp(16px,5vw,28px); }
+  .lp-sec { padding: 46px clamp(16px,5vw,24px); }
 }
 
-/* ── reduced motion ── */
+/* â”€â”€ reduced motion â”€â”€ */
 @media (prefers-reduced-motion: reduce) {
   .lp, .lp *, .lp *::before, .lp *::after { animation: none !important; transition: none !important; }
 }
+
