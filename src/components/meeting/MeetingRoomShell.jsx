@@ -389,7 +389,8 @@ const MeetingRoomShell = ({
     message: '',
     type: 'warning',
   });
-  const [showEntryGuidance, setShowEntryGuidance] = useState(uiMode !== 'background');
+  const [showEntryGuidance, setShowEntryGuidance] = useState(false);
+  const guidanceShownKeyRef = useRef('');
   const [meetingSummary, setMeetingSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [remoteEnded, setRemoteEnded] = useState(false);
@@ -2756,6 +2757,14 @@ const MeetingRoomShell = ({
   }, [api, participantRole, sessionId]);
 
   const showFullUi = uiMode !== 'background';
+
+  useEffect(() => {
+    if (!showFullUi || !sessionId) return;
+    const nextKey = `${participantRole}:${sessionId}`;
+    if (guidanceShownKeyRef.current === nextKey) return;
+    guidanceShownKeyRef.current = nextKey;
+    setShowEntryGuidance(true);
+  }, [participantRole, sessionId, showFullUi]);
 
   return (
     <>
