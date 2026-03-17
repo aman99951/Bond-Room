@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Calendar, Clock, FileText, Search, Video } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, FileText, Search, Video } from 'lucide-react';
 import { menteeApi } from '../../apis/api/menteeApi';
 import { mentorApi } from '../../apis/api/mentorApi';
 import { getAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
@@ -106,12 +106,19 @@ const getStatusClasses = (statusValue) => {
   return 'bg-gray-100 text-gray-700 ring-1 ring-gray-200';
 };
 
+const formatIncidentLabel = (value) =>
+  String(value || 'unknown')
+    .trim()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
 const SessionRecords = () => {
   const role = mapAppRoleToUiRole(getAuthSession()?.role) || 'menties';
   const isMentorRole = role === 'mentors';
 
   const [sessions, setSessions] = useState([]);
   const [recordingsBySession, setRecordingsBySession] = useState({});
+  const [incidentsBySession, setIncidentsBySession] = useState({});
   const [mentorMap, setMentorMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -158,14 +165,28 @@ const SessionRecords = () => {
           })
         );
 
+        const incidentEntries = await Promise.all(
+          sessionItems.map(async (session) => {
+            try {
+              const payload = await sessionApi.listSessionAbuseIncidents(session.id);
+              const rows = normalizeList(payload);
+              return [String(session.id), rows];
+            } catch {
+              return [String(session.id), []];
+            }
+          })
+        );
+
         if (cancelled) return;
         setSessions(sessionItems);
         setRecordingsBySession(Object.fromEntries(recordingEntries));
+        setIncidentsBySession(Object.fromEntries(incidentEntries));
       } catch (err) {
         if (!cancelled) {
           setError(err?.message || 'Unable to load session records.');
           setSessions([]);
           setRecordingsBySession({});
+          setIncidentsBySession({});
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -191,10 +212,29 @@ const SessionRecords = () => {
     return sessions
       .map((session) => {
         const recording = recordingsBySession[String(session.id)] || null;
+        const incidents = Array.isArray(incidentsBySession[String(session.id)])
+          ? incidentsBySession[String(session.id)]
+          : [];
         const metadata = recording?.metadata && typeof recording.metadata === 'object' ? recording.metadata : {};
         const summary = String(metadata?.meeting_summary || '').trim();
         const highlights = Array.isArray(metadata?.meeting_highlights) ? metadata.meeting_highlights : [];
         const actionItems = Array.isArray(metadata?.meeting_action_items) ? metadata.meeting_action_items : [];
+        const mentorWarnings = incidents
+          .filter((incident) => String(incident?.speaker_role || '').toLowerCase() === 'mentor')
+          .map((incident) => {
+            const type = String(incident?.incident_type || '').toLowerCase();
+            const severity = String(incident?.severity || 'low').toLowerCase();
+            const badWordWarning =
+              type === 'verbal_abuse'
+                ? `Warning: Mentor used inappropriate language (${severity}).`
+                : '';
+            const videoWarning =
+              type && type !== 'verbal_abuse'
+                ? `Warning: Mentor video behavior flagged (${formatIncidentLabel(type)} • ${severity}).`
+                : '';
+            return badWordWarning || videoWarning;
+          })
+          .filter(Boolean);
 
         const participant = isMentorRole
           ? {
@@ -215,6 +255,7 @@ const SessionRecords = () => {
           summary,
           highlights,
           actionItems,
+          mentorWarnings,
         };
       })
       .filter((item) => {
@@ -232,7 +273,7 @@ const SessionRecords = () => {
         return true;
       })
       .sort((left, right) => getSessionSortTime(right.session) - getSessionSortTime(left.session));
-  }, [isMentorRole, mentorMap, recordingsBySession, searchValue, sessions, statusFilter]);
+  }, [incidentsBySession, isMentorRole, mentorMap, recordingsBySession, searchValue, sessions, statusFilter]);
 
   return (
     <div className="min-h-screen bg-transparent p-2 sm:p-4 lg:p-6">
@@ -292,7 +333,7 @@ const SessionRecords = () => {
 
       <div className="grid gap-4">
         {rows.map((item) => {
-          const { session, recording, participant, summary, highlights, actionItems } = item;
+          const { session, recording, participant, summary, highlights, actionItems, mentorWarnings } = item;
           const recordingStatus = String(recording?.status || 'not_started').toLowerCase();
           return (
             <div key={session.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-5">
@@ -364,6 +405,16 @@ const SessionRecords = () => {
                   <div className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
                     Meeting Summary
                   </div>
+                  {mentorWarnings.length ? (
+                    <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                      {mentorWarnings.slice(0, 2).map((warningText, index) => (
+                        <div key={`${session.id}-warning-${index}`} className="flex items-start gap-2">
+                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          <span>{warningText}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   <p className="mt-2 text-sm text-[#111827]">
                     {summary || 'Summary not generated yet for this session.'}
                   </p>

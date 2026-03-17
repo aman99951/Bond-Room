@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom';
 import {
   Activity,
+  AlertTriangle,
   ArrowLeft,
   ExternalLink,
   Maximize2,
@@ -49,6 +50,11 @@ const toDisplayDate = (value) => {
 
 const toStatusLabel = (value) =>
   String(value || 'pending')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+const toIncidentLabel = (value) =>
+  String(value || 'unknown')
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -126,6 +132,7 @@ const AdminActivityPage = () => {
   const [sessions, setSessions] = useState([]);
   const [onboardingStatusMap, setOnboardingStatusMap] = useState({});
   const [recordingsBySession, setRecordingsBySession] = useState({});
+  const [incidentsBySession, setIncidentsBySession] = useState({});
   const [activeStatKey, setActiveStatKey] = useState(null);
   const [recordingPreview, setRecordingPreview] = useState(null);
   const recordingVideoRef = useRef(null);
@@ -167,16 +174,29 @@ const AdminActivityPage = () => {
         }),
       );
 
+      const incidentEntries = await Promise.all(
+        recent.map(async (s) => {
+          try {
+            const payload = await mentorApi.listSessionAbuseIncidents(s.id);
+            return [String(s.id), normalizeList(payload)];
+          } catch {
+            return [String(s.id), []];
+          }
+        }),
+      );
+
       setMentors(mentorItems);
       setSessions(sessionItems);
       setOnboardingStatusMap(statusMap);
       setRecordingsBySession(Object.fromEntries(recEntries));
+      setIncidentsBySession(Object.fromEntries(incidentEntries));
     } catch (err) {
       setError(err?.message || 'Unable to load activity data.');
       setMentors([]);
       setSessions([]);
       setOnboardingStatusMap({});
       setRecordingsBySession({});
+      setIncidentsBySession({});
     } finally {
       setLoading(false);
     }
@@ -265,6 +285,17 @@ const AdminActivityPage = () => {
         .sort((l, r) => new Date(r?.scheduled_start || r?.created_at || 0) - new Date(l?.scheduled_start || l?.created_at || 0))
         .map((s) => {
           const rec = recordingsBySession[String(s.id)] || null;
+          const incidents = Array.isArray(incidentsBySession[String(s.id)]) ? incidentsBySession[String(s.id)] : [];
+          const mentorWarnings = incidents
+            .filter((incident) => String(incident?.speaker_role || '').toLowerCase() === 'mentor')
+            .map((incident) => {
+              const incidentType = String(incident?.incident_type || '').toLowerCase();
+              const severity = String(incident?.severity || 'low').toLowerCase();
+              if (incidentType === 'verbal_abuse') {
+                return `Mentor bad language (${severity})`;
+              }
+              return `Mentor video behavior (${toIncidentLabel(incidentType)} • ${severity})`;
+            });
           const menteeName = getSessionMenteeName(s);
           return {
             id: s.id,
@@ -273,9 +304,10 @@ const AdminActivityPage = () => {
             status: s.status || 'pending',
             scheduledStart: s.scheduled_start || s.created_at,
             recordingUrl: resolveMediaUrl(rec?.recording_url || rec?.recording_file || ''),
+            mentorWarnings,
           };
         }),
-    [menteeNameById, mentorNameById, recordingsBySession, sessions],
+    [incidentsBySession, menteeNameById, mentorNameById, recordingsBySession, sessions],
   );
 
   const mentorActivityRows = useMemo(() => {
@@ -356,6 +388,7 @@ const AdminActivityPage = () => {
             <th className="px-4 py-2.5">Mentee</th>
             <th className="px-4 py-2.5">Date</th>
             <th className="px-4 py-2.5">Status</th>
+            <th className="px-4 py-2.5">Warning</th>
             <th className="px-4 py-2.5">Recording</th>
           </tr>
         </thead>
@@ -370,6 +403,16 @@ const AdminActivityPage = () => {
                 <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${statusColor(row.status)}`}>
                   {toStatusLabel(row.status)}
                 </span>
+              </td>
+              <td className="px-4 py-3.5">
+                {Array.isArray(row.mentorWarnings) && row.mentorWarnings.length ? (
+                  <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/35 bg-amber-500/12 px-2.5 py-1 text-[11px] font-semibold text-amber-300">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    {row.mentorWarnings[0]}
+                  </div>
+                ) : (
+                  <span className="text-xs text-slate-600">—</span>
+                )}
               </td>
               <td className="rounded-r-xl px-4 py-3.5">
                 {row.recordingUrl ? (
@@ -389,7 +432,7 @@ const AdminActivityPage = () => {
           ))}
           {!rows.length && (
             <tr>
-              <td colSpan={6} className="px-4 py-14 text-center text-sm text-slate-600">
+              <td colSpan={7} className="px-4 py-14 text-center text-sm text-slate-600">
                 No data available.
               </td>
             </tr>
