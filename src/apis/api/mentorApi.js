@@ -56,6 +56,10 @@ export const mentorApi = {
     apiClient.get(`/sessions/${sessionId}/meeting-signals/${buildQuery(params)}`, { trackLoading: false }),
   sendSessionMeetingSignal: (sessionId, payload) =>
     apiClient.post(`/sessions/${sessionId}/meeting-signals/`, payload, { trackLoading: false }),
+  sendRealtimeTranscriptChunk: (sessionId, payload) =>
+    apiClient.post(`/sessions/${sessionId}/realtime-transcript-chunk/`, payload, { trackLoading: false }),
+  sendMentorRealtimeTranscriptSignal: (sessionId, payload) =>
+    apiClient.post(`/sessions/${sessionId}/mentor-monitoring-transcript/`, payload, { trackLoading: false }),
   getSessionRecording: (sessionId) =>
     apiClient.get(`/sessions/${sessionId}/recording/`, { trackLoading: false }),
   getSessionRecordingUploadSignature: (sessionId, payload = {}) =>

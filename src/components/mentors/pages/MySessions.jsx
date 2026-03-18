@@ -520,7 +520,7 @@ return (
     <div className="relative mb-8 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
       <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
       <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
-      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
         {/* Title with decorative element */}
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f3ff]">
@@ -537,7 +537,7 @@ return (
         </div>
 
         {/* Controls Section */}
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:w-auto md:justify-end">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:w-auto xl:justify-end">
           {/* Search Input */}
           <div className="relative w-full sm:w-auto">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
@@ -687,9 +687,9 @@ return (
     {view === 'calendar' ? (
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[900px] lg:min-w-[1240px]">
+          <div className="min-w-[980px] pr-2 lg:min-w-[1330px] lg:pr-3">
             {/* Calendar Header */}
-            <div className="grid grid-cols-[62px_repeat(7,minmax(118px,1fr))] bg-[#f8fafc] lg:grid-cols-[90px_repeat(7,minmax(160px,1fr))]">
+            <div className="grid grid-cols-[62px_repeat(7,minmax(130px,1fr))] bg-[#f8fafc] lg:grid-cols-[90px_repeat(7,minmax(176px,1fr))]">
               <div className="p-2.5 lg:p-4" />
               {days.map((d) => (
                 <div
@@ -723,7 +723,7 @@ return (
                   (s) => s.hourIndex === idx && (canJoinSession(s) || s.needsSelection)
                 );
                 return (
-                  <div key={h} className="grid grid-cols-[62px_repeat(7,minmax(118px,1fr))] lg:grid-cols-[90px_repeat(7,minmax(160px,1fr))]">
+                  <div key={h} className="grid grid-cols-[62px_repeat(7,minmax(130px,1fr))] lg:grid-cols-[90px_repeat(7,minmax(176px,1fr))]">
                     <div className="flex items-start justify-end p-2.5 pr-3 text-[10px] font-medium text-[#9ca3af] sm:text-xs lg:p-3 lg:pr-4">
                       {h}
                     </div>

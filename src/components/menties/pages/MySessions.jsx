@@ -363,7 +363,7 @@ return (
   <div className="bg-transparent p-3 sm:p-5 lg:p-8">
     {/* Header Section */}
     <div className="mb-6 sm:mb-8 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:p-6">
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
         {/* Title with Icon */}
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
@@ -380,9 +380,9 @@ return (
         </div>
 
         {/* Controls */}
-        <div className="grid w-full grid-cols-1 gap-3 md:flex md:w-auto md:items-center md:justify-end">
+        <div className="grid w-full grid-cols-1 gap-3 xl:flex xl:w-auto xl:items-center xl:justify-end">
           {/* Search — full width row */}
-          <div className="relative w-full md:min-w-[220px] md:flex-1 lg:w-72 lg:flex-none">
+          <div className="relative w-full xl:min-w-[220px] xl:flex-1 xl:w-72 xl:flex-none">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
             <input
               type="text"
@@ -402,12 +402,12 @@ return (
           </div>
 
           {/* Filters row — two filters side by side on mobile */}
-          <div className="grid grid-cols-2 gap-3 md:contents">
+          <div className="grid grid-cols-2 gap-3 xl:contents">
             {/* Filter Dropdown */}
             <div className="relative" tabIndex={0} onBlur={() => setFilterOpen(false)}>
               <button
                 type="button"
-                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 md:w-[160px] lg:w-40"
+                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 xl:w-[160px]"
                 onClick={() => setFilterOpen((o) => !o)}
               >
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -445,7 +445,7 @@ return (
             <div className="relative" tabIndex={0} onBlur={() => setWeekFilterOpen(false)}>
               <button
                 type="button"
-                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 md:w-[152px] lg:w-36"
+                className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] md:px-4 xl:w-[152px]"
                 onClick={() => setWeekFilterOpen((o) => !o)}
               >
                 <span className="truncate">{weekFilterValue}</span>
@@ -478,9 +478,9 @@ return (
           </div>
 
           {/* View Toggle — own row on mobile */}
-          <div className="flex h-11 w-full items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] md:w-auto md:min-w-[190px]">
+          <div className="flex h-11 w-full items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] xl:w-auto xl:min-w-[190px]">
             <button
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 md:flex-none ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 xl:flex-none ${
                 view === 'calendar'
                   ? 'bg-[#5D3699] text-white shadow-md'
                   : 'text-[#6b7280] hover:text-[#111827]'
@@ -491,7 +491,7 @@ return (
               Calendar
             </button>
             <button
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 md:flex-none ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 xl:flex-none ${
                 view === 'table'
                   ? 'bg-[#5D3699] text-white shadow-md'
                   : 'text-[#6b7280] hover:text-[#111827]'
@@ -530,9 +530,9 @@ return (
     {view === 'calendar' ? (
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[900px] lg:min-w-[1240px]">
+          <div className="min-w-[980px] pr-2 lg:min-w-[1330px] lg:pr-3">
             {/* Calendar Header */}
-            <div className="grid grid-cols-[62px_repeat(7,minmax(118px,1fr))] bg-[#f8fafc] lg:grid-cols-[90px_repeat(7,minmax(160px,1fr))]">
+            <div className="grid grid-cols-[62px_repeat(7,minmax(130px,1fr))] bg-[#f8fafc] lg:grid-cols-[90px_repeat(7,minmax(176px,1fr))]">
               <div className="p-2.5 lg:p-4" />
               {days.map((d) => (
                 <div
@@ -569,7 +569,7 @@ return (
                   (s) => s.hourIndex === idx && isFeedbackEligible(s)
                 );
                 return (
-                  <div key={h} className="grid grid-cols-[62px_repeat(7,minmax(118px,1fr))] lg:grid-cols-[90px_repeat(7,minmax(160px,1fr))]">
+                  <div key={h} className="grid grid-cols-[62px_repeat(7,minmax(130px,1fr))] lg:grid-cols-[90px_repeat(7,minmax(176px,1fr))]">
                     <div className="flex items-start justify-end p-2.5 pr-3 text-[10px] font-medium text-[#9ca3af] sm:text-xs lg:p-3 lg:pr-4">
                       {h}
                     </div>

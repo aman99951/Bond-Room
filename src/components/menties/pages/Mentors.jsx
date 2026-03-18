@@ -304,8 +304,8 @@ const Mentors = () => {
       <div className="mx-auto max-w-7xl">
         {/* Header Section */}
         <div className="mb-8 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-4">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 items-start gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20 transition-transform hover:scale-105">
                 <Users className="h-7 w-7 text-white" />
               </div>
@@ -320,18 +320,18 @@ const Mentors = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative group">
+            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] xl:w-auto xl:grid-cols-[minmax(0,1fr)_auto]">
+              <div className="relative group min-w-0">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af] group-focus-within:text-[#5D3699] transition-colors" />
                 <input 
                   type="text"
                   placeholder="Search mentors..."
                   value={searchTerm}
                   onChange={(e) => setSearchArea(e.target.value)}
-                  className="w-full sm:w-64 pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#e5e7eb] focus:border-[#5D3699] focus:ring-4 focus:ring-[#f5f3ff] outline-none transition-all text-sm shadow-sm"
+                  className="w-full sm:min-w-[260px] xl:w-64 pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#e5e7eb] focus:border-[#5D3699] focus:ring-4 focus:ring-[#f5f3ff] outline-none transition-all text-sm shadow-sm"
                 />
               </div>
-              <div className="flex items-center gap-2 self-start rounded-xl bg-[#f5f3ff] px-4 py-2.5 border border-[#5D3699]/10">
+              <div className="flex items-center gap-2 rounded-xl bg-[#f5f3ff] px-4 py-2.5 border border-[#5D3699]/10 sm:justify-self-end sm:self-start">
                 <CheckCircle2 className="h-4 w-4 text-[#5D3699]" />
                 <span className="text-xs font-bold text-[#5D3699] uppercase tracking-wider">AI Analysis</span>
               </div>

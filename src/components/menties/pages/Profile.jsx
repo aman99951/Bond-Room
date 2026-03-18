@@ -349,13 +349,13 @@ const Profile = () => {
     <div className="p-4 sm:p-6 lg:p-8 bg-transparent">
       <div className="mx-auto max-w-full">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
+        <div className="mb-6 sm:mb-8 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:p-6">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
               <User className="h-6 w-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-[#111827] sm:text-3xl">
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold tracking-tight text-[#111827] sm:text-3xl">
                 My Profile
               </h1>
               <p className="mt-1 text-sm text-[#6b7280]">
@@ -485,21 +485,21 @@ const Profile = () => {
 
               {/* Assessment Card */}
               <div className="rounded-2xl bg-[#f5f3ff] p-5 ring-1 ring-[#5D3699]/10">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-start gap-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex min-w-0 items-start gap-4">
                     <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[#5D3699]">
                       <Sparkles className="h-6 w-6 text-white" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-base font-semibold text-[#111827]">
                         Mood & Needs Assessment
                       </h3>
                       {assessmentSummary.lastTaken && assessmentSummary.focus ? (
-                        <p className="mt-1 text-sm text-[#6b7280]">
+                        <p className="mt-1 break-words text-sm leading-relaxed text-[#6b7280]">
                           Last taken on{' '}
                           <span className="font-medium text-[#111827]">{assessmentSummary.lastTaken}</span>
                           <br className="sm:hidden" />
-                          <span className="hidden sm:inline"> Â· </span>
+                          <span className="hidden sm:inline">{' · '}</span>
                           Focus:{' '}
                           <span className="font-medium text-[#5D3699]">{assessmentSummary.focus}</span>
                         </p>
@@ -513,7 +513,7 @@ const Profile = () => {
                   <button
                     type="button"
                     onClick={() => navigate('/needs-assessment')}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20 transition-all hover:bg-[#5D3699] hover:text-white sm:flex-shrink-0"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20 transition-all hover:bg-[#5D3699] hover:text-white sm:w-auto sm:self-start lg:flex-shrink-0 lg:self-auto"
                   >
                     <RefreshCw className="h-4 w-4" />
                     Retake Assessment
@@ -747,3 +747,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

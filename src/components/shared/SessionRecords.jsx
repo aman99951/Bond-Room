@@ -277,8 +277,8 @@ const SessionRecords = () => {
 
   return (
     <div className="min-h-screen bg-transparent p-2 sm:p-4 lg:p-6">
-      <div className="mb-6 flex flex-col gap-4 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] lg:flex-row lg:items-center lg:justify-between lg:p-6">
-        <div className="flex items-center gap-3">
+      <div className="mb-6 flex flex-col gap-4 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] xl:flex-row xl:items-center xl:justify-between lg:p-6">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#5D3699] text-white">
             <FileText className="h-5 w-5" />
           </div>
@@ -290,21 +290,21 @@ const SessionRecords = () => {
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-          <div className="relative w-full sm:w-[280px]">
+        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] xl:w-auto">
+          <div className="relative min-w-0">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
             <input
               type="text"
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               placeholder="Search by person, topic, or session id"
-              className="h-11 w-full rounded-xl border-0 bg-white pl-10 pr-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:ring-2 focus:ring-[#5D3699]"
+              className="h-11 w-full sm:min-w-[280px] xl:w-[320px] rounded-xl border-0 bg-white pl-10 pr-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:ring-2 focus:ring-[#5D3699]"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="h-11 rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:ring-2 focus:ring-[#5D3699]"
+            className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:ring-2 focus:ring-[#5D3699] sm:w-auto sm:justify-self-end"
           >
             {statuses.map((statusValue) => (
               <option key={statusValue} value={statusValue}>

@@ -40,6 +40,10 @@ export const menteeApi = {
     apiClient.get(`/sessions/${sessionId}/meeting-signals/${buildQuery(params)}`, { trackLoading: false }),
   sendSessionMeetingSignal: (sessionId, payload) =>
     apiClient.post(`/sessions/${sessionId}/meeting-signals/`, payload, { trackLoading: false }),
+  sendRealtimeTranscriptChunk: (sessionId, payload) =>
+    apiClient.post(`/sessions/${sessionId}/realtime-transcript-chunk/`, payload, { trackLoading: false }),
+  sendMenteeRealtimeTranscriptSignal: (sessionId, payload) =>
+    apiClient.post(`/sessions/${sessionId}/mentee-monitoring-transcript/`, payload, { trackLoading: false }),
   getSessionRecording: (sessionId) =>
     apiClient.get(`/sessions/${sessionId}/recording/`, { trackLoading: false }),
   getSessionRecordingUploadSignature: (sessionId, payload = {}) =>

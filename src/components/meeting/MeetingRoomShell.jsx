@@ -90,13 +90,16 @@ const ABUSE_SUMMARY_DEDUP_MS = 12000;
 const AUTO_VIDEO_SCAN_INTERVAL_MS = Number(import.meta.env.VITE_VIDEO_SAFETY_SCAN_MS || 6000);
 const AUTO_VIDEO_ALERT_DEDUP_MS = Number(import.meta.env.VITE_VIDEO_ALERT_DEDUP_MS || 30000);
 const SPEECH_DUPLICATE_WINDOW_MS = Number(import.meta.env.VITE_SPEECH_DUPLICATE_WINDOW_MS || 1800);
-const SPEECH_IDLE_AUTO_STOP_MS = Number(import.meta.env.VITE_SPEECH_IDLE_AUTO_STOP_MS || 20000);
-const SPEECH_ACTIVITY_GATE_THRESHOLD = Number(import.meta.env.VITE_SPEECH_ACTIVITY_GATE_THRESHOLD || 0.012);
+const SPEECH_ACTIVITY_GATE_THRESHOLD = Number(import.meta.env.VITE_SPEECH_ACTIVITY_GATE_THRESHOLD || 0.02);
 const SPEECH_ACTIVITY_GATE_PEAK_THRESHOLD = Number(
-  import.meta.env.VITE_SPEECH_ACTIVITY_GATE_PEAK_THRESHOLD || 0.05
+  import.meta.env.VITE_SPEECH_ACTIVITY_GATE_PEAK_THRESHOLD || 0.09
 );
-const SPEECH_ACTIVITY_GATE_HOLD_MS = Number(import.meta.env.VITE_SPEECH_ACTIVITY_GATE_HOLD_MS || 320);
+const SPEECH_ACTIVITY_GATE_HOLD_MS = Number(import.meta.env.VITE_SPEECH_ACTIVITY_GATE_HOLD_MS || 520);
 const SPEECH_ACTIVITY_GATE_POLL_MS = Number(import.meta.env.VITE_SPEECH_ACTIVITY_GATE_POLL_MS || 140);
+const SPEECH_MONITOR_STATE_CHANGE_COOLDOWN_MS = Number(
+  import.meta.env.VITE_SPEECH_MONITOR_STATE_CHANGE_COOLDOWN_MS || 1600
+);
+const AUTO_START_MONITORING_FROM_VOICE = false;
 const LOCAL_ABUSE_TERMS = [
   'idiot',
   'stupid',
@@ -330,8 +333,16 @@ const MeetingRoomShell = ({
   const recordingChunksRef = useRef([]);
   const transcriptSegmentsRef = useRef([]);
   const roleTranscriptSegmentsRef = useRef({ mentor: [], mentee: [] });
-  const recognitionRef = useRef(null);
+  const localRecognitionRef = useRef(null);
+  const localChunkRecorderRef = useRef(null);
+  const localChunkStreamRef = useRef(null);
+  const localChunkUploadQueueRef = useRef([]);
+  const localChunkUploadBusyRef = useRef(false);
+  const localChunkSeqRef = useRef(0);
+  const localChunkRotateTimerRef = useRef(null);
+  const remoteTranscriptQueueRef = useRef([]);
   const autoMonitoringRef = useRef(false);
+  const speechStartingRef = useRef(false);
   const speechRestartTimerRef = useRef(null);
   const speechRestartDelayRef = useRef(550);
   const speechInactivityTimerRef = useRef(null);
@@ -342,10 +353,12 @@ const MeetingRoomShell = ({
   const speechActivityGateSourceRef = useRef(null);
   const speechActivityGateDataRef = useRef(null);
   const speechActivityGateVoiceSinceRef = useRef(0);
+  const speechActivityGateSilenceSinceRef = useRef(0);
+  const speechMonitorStateChangedAtRef = useRef(0);
+  const speechAutoStartAttemptAtRef = useRef(0);
   const summaryRequestedRef = useRef(false);
   const remoteStreamStateCleanupRef = useRef(null);
   const remoteMediaSignalRef = useRef({ micEnabled: null, cameraEnabled: null });
-  const placeholderVideoTrackRef = useRef(null);
   const cameraTracksRef = useRef(new Set());
   const recordingMixedStreamRef = useRef(null);
   const recordingCanvasRef = useRef(null);
@@ -357,7 +370,8 @@ const MeetingRoomShell = ({
   const toastTimerRef = useRef(null);
   const lastLocalAbuseToastRef = useRef(0);
   const lastRemoteAbuseToastRef = useRef(0);
-  const lastSpeechModerationRef = useRef({ text: '', at: 0 });
+  const lastLocalTranscriptRef = useRef({ text: '', at: 0 });
+  const lastRemoteTranscriptRef = useRef({ text: '', at: 0 });
   const lastInterimFeedAtRef = useRef(0);
   const lastAbuseSummaryAtRef = useRef(0);
   const abuseSummaryBusyRef = useRef(false);
@@ -369,20 +383,20 @@ const MeetingRoomShell = ({
   const exitingRef = useRef(false);
   const monitoringFeedIdRef = useRef(0);
   const [connectionState, setConnectionState] = useState('idle');
-  const [micEnabled, setMicEnabled] = useState(true);
-  const micEnabledRef = useRef(true);
-  const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [micEnabled, setMicEnabled] = useState(false);
+  const micEnabledRef = useRef(false);
+  const [cameraEnabled, setCameraEnabled] = useState(false);
   const [remoteMicEnabled, setRemoteMicEnabled] = useState(null);
   const [remoteCameraEnabled, setRemoteCameraEnabled] = useState(null);
   const [peerLabel, setPeerLabel] = useState('Peer');
   const [recording, setRecording] = useState(false);
   const [recordingStatus, setRecordingStatus] = useState('not_started');
   const [monitoring, setMonitoring] = useState(false);
-  const [monitoringStatus, setMonitoringStatus] = useState(false);
+  const [, setMonitoringStatus] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [analysisInput, setAnalysisInput] = useState('');
   const [analysisLoading, setAnalysisLoading] = useState(false);
-  const [alert, setAlert] = useState(null);
+  const [, setAlert] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [toastState, setToastState] = useState({
     open: false,
@@ -396,13 +410,17 @@ const MeetingRoomShell = ({
   const [remoteEnded, setRemoteEnded] = useState(false);
   const [monitoringFeed, setMonitoringFeed] = useState([]);
   const [liveInterimTranscript, setLiveInterimTranscript] = useState('');
-  const monitoringActive = monitoringStatus || monitoring;
+  const monitoringActive = monitoring;
   const isMentorToolsEnabled = participantRole === 'mentor';
   const canSpeechModeration = participantRole === 'mentor' || participantRole === 'mentee';
   const monitoringMetadataKey =
     participantRole === 'mentor' ? 'monitoring_started_mentor' : 'monitoring_started_mentee';
   const showManualMentorTools = false;
   const showMonitoringPanel = false;
+  const localRealtimeTranscriptSignalType =
+    participantRole === 'mentor' ? 'mentor_transcript' : 'mentee_transcript';
+  const localTranscriptBundleSignalType =
+    participantRole === 'mentor' ? 'mentor_bundle' : 'mentee_bundle';
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const sessionIdFromQuery = Number(searchParams.get('sessionId') || 0);
@@ -412,6 +430,11 @@ const MeetingRoomShell = ({
     if (typeof window === 'undefined') return false;
     return Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
   }, []);
+  const hasChunkedTranscription = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return typeof window.MediaRecorder !== 'undefined';
+  }, []);
+  const hasMonitoringCapability = hasChunkedTranscription || hasSpeechRecognition;
 
   const appendError = useCallback((message) => {
     if (!message) return;
@@ -658,10 +681,10 @@ const MeetingRoomShell = ({
     }
     const hasLiveAudio = stream
       .getAudioTracks()
-      .some((track) => track.readyState === 'live' && !track.muted);
+      .some((track) => track.readyState === 'live' && !track.muted && track.enabled !== false);
     const hasLiveVideo = stream
       .getVideoTracks()
-      .some((track) => track.readyState === 'live' && !track.muted);
+      .some((track) => track.readyState === 'live' && !track.muted && track.enabled !== false);
     const signalState = remoteMediaSignalRef.current || {};
     setRemoteMicEnabled(
       typeof signalState.micEnabled === 'boolean' ? signalState.micEnabled : hasLiveAudio
@@ -739,14 +762,6 @@ const MeetingRoomShell = ({
       }
     });
     cameraTracksRef.current.clear();
-    if (placeholderVideoTrackRef.current) {
-      try {
-        placeholderVideoTrackRef.current.stop();
-      } catch {
-        // no-op
-      }
-      placeholderVideoTrackRef.current = null;
-    }
     const localStream = localStreamRef.current;
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());
@@ -762,51 +777,88 @@ const MeetingRoomShell = ({
     setRemoteCameraEnabled(null);
   }, [detachRemoteStreamStateListeners, stopRecordingComposition]);
 
-  const stopSpeechMonitoring = useCallback(async ({ suppressAutoStart = true } = {}) => {
-    if (suppressAutoStart) {
-      monitoringAutoStartBlockedRef.current = true;
-    }
-    autoMonitoringRef.current = false;
-    speechRestartDelayRef.current = 550;
-    if (speechRestartTimerRef.current) {
-      window.clearTimeout(speechRestartTimerRef.current);
-      speechRestartTimerRef.current = null;
-    }
-    if (speechInactivityTimerRef.current) {
-      window.clearTimeout(speechInactivityTimerRef.current);
-      speechInactivityTimerRef.current = null;
-    }
-    const recognition = recognitionRef.current;
-    if (recognition) {
-      try {
-        recognition.onend = null;
-        recognition.onerror = null;
-        recognition.onresult = null;
-        recognition.stop();
-      } catch {
-        // no-op
+  const stopSpeechMonitoring = useCallback(
+    async ({ suppressAutoStart = true } = {}) => {
+      if (suppressAutoStart) {
+        monitoringAutoStartBlockedRef.current = true;
       }
-      recognitionRef.current = null;
-    }
-    setMonitoring(false);
-    setMonitoringStatus(false);
-    lastSpeechModerationRef.current = { text: '', at: 0 };
-    lastInterimFeedAtRef.current = 0;
-    setLiveInterimTranscript('');
-    if (isMentorToolsEnabled && sessionId) {
-      const recordingActive = Boolean(recorderRef.current && recorderRef.current.state !== 'inactive');
-      try {
-        await api.updateSessionRecording(sessionId, {
-          status: recordingActive ? 'recording' : 'stopped',
-          metadata: {
-            [monitoringMetadataKey]: false,
-          },
-        });
-      } catch {
-        // no-op
+      if (localChunkRotateTimerRef.current) {
+        window.clearInterval(localChunkRotateTimerRef.current);
+        localChunkRotateTimerRef.current = null;
       }
-    }
-  }, [api, isMentorToolsEnabled, monitoringMetadataKey, sessionId]);
+      const chunkRecorder = localChunkRecorderRef.current;
+      if (chunkRecorder) {
+        try {
+          chunkRecorder.ondataavailable = null;
+          chunkRecorder.onerror = null;
+          chunkRecorder.onstop = null;
+          if (chunkRecorder.state !== 'inactive') {
+            chunkRecorder.stop();
+          }
+        } catch {
+          // no-op
+        }
+        localChunkRecorderRef.current = null;
+      }
+      if (localChunkStreamRef.current) {
+        try {
+          localChunkStreamRef.current.getTracks().forEach((track) => track.stop());
+        } catch {
+          // no-op
+        }
+        localChunkStreamRef.current = null;
+      }
+      localChunkUploadQueueRef.current = [];
+      localChunkUploadBusyRef.current = false;
+      localChunkSeqRef.current = 0;
+      autoMonitoringRef.current = false;
+      speechStartingRef.current = false;
+      speechRestartDelayRef.current = 550;
+
+      if (speechRestartTimerRef.current) {
+        window.clearTimeout(speechRestartTimerRef.current);
+        speechRestartTimerRef.current = null;
+      }
+      if (speechInactivityTimerRef.current) {
+        window.clearTimeout(speechInactivityTimerRef.current);
+        speechInactivityTimerRef.current = null;
+      }
+
+      const recognition = localRecognitionRef.current;
+      if (recognition) {
+        try {
+          recognition.onend = null;
+          recognition.onerror = null;
+          recognition.onresult = null;
+          recognition.stop();
+        } catch {
+          // no-op
+        }
+        localRecognitionRef.current = null;
+      }
+
+      setMonitoring(false);
+      setMonitoringStatus(false);
+      setLiveInterimTranscript('');
+      lastLocalTranscriptRef.current = { text: '', at: 0 };
+      lastInterimFeedAtRef.current = 0;
+
+      if (isMentorToolsEnabled && sessionId) {
+        const recordingActive = Boolean(recorderRef.current && recorderRef.current.state !== 'inactive');
+        try {
+          await api.updateSessionRecording(sessionId, {
+            status: recordingActive ? 'recording' : 'stopped',
+            metadata: {
+              [monitoringMetadataKey]: false,
+            },
+          });
+        } catch {
+          // no-op
+        }
+      }
+    },
+    [api, isMentorToolsEnabled, monitoringMetadataKey, sessionId]
+  );
 
   const stopSpeechActivityGate = useCallback(() => {
     if (typeof window !== 'undefined' && speechActivityGateIntervalRef.current) {
@@ -814,6 +866,7 @@ const MeetingRoomShell = ({
     }
     speechActivityGateIntervalRef.current = null;
     speechActivityGateVoiceSinceRef.current = 0;
+    speechActivityGateSilenceSinceRef.current = 0;
     speechActivityGateDataRef.current = null;
     speechActivityGateAnalyserRef.current = null;
     if (speechActivityGateSourceRef.current) {
@@ -878,7 +931,7 @@ const MeetingRoomShell = ({
       const metadata = payload?.metadata && typeof payload.metadata === 'object' ? payload.metadata : {};
       setRecordingStatus(nextStatus);
       const roleMonitoring = metadata?.[monitoringMetadataKey];
-      if (!autoMonitoringRef.current && !recognitionRef.current && typeof roleMonitoring === 'boolean') {
+      if (!autoMonitoringRef.current && !localRecognitionRef.current && typeof roleMonitoring === 'boolean') {
         setMonitoringStatus(roleMonitoring);
       }
       if (participantRole === 'mentor') {
@@ -1019,6 +1072,58 @@ const MeetingRoomShell = ({
     [api, sessionId]
   );
 
+  const sendRealtimeTranscriptSignal = useCallback(
+    async (payload, signalTypeFallback = localRealtimeTranscriptSignalType) => {
+      if (!sessionId) return;
+      const normalizedPayload = normalizeSignalPayload(payload);
+      try {
+        if (
+          participantRole === 'mentor' &&
+          typeof api.sendMentorRealtimeTranscriptSignal === 'function'
+        ) {
+          await api.sendMentorRealtimeTranscriptSignal(sessionId, {
+            signal_type: signalTypeFallback,
+            payload: normalizedPayload,
+          });
+          return;
+        }
+        if (
+          participantRole === 'mentee' &&
+          typeof api.sendMenteeRealtimeTranscriptSignal === 'function'
+        ) {
+          await api.sendMenteeRealtimeTranscriptSignal(sessionId, {
+            signal_type: signalTypeFallback,
+            payload: normalizedPayload,
+          });
+          return;
+        }
+      } catch {
+        // Fall back to the shared meeting signal channel if role-specific endpoint fails.
+      }
+      await sendSignal(signalTypeFallback, normalizedPayload);
+    },
+    [api, localRealtimeTranscriptSignalType, participantRole, sendSignal, sessionId]
+  );
+
+  const sendRealtimeTranscriptChunk = useCallback(
+    async (audioBlob, sequence = 0) => {
+      if (!sessionId || !audioBlob || Number(audioBlob.size || 0) < 256) return '';
+      if (typeof api.sendRealtimeTranscriptChunk !== 'function') return '';
+      try {
+        const formData = new FormData();
+        formData.append('audio_chunk', audioBlob, `transcript-chunk-${Date.now()}.webm`);
+        formData.append('sequence', String(Number(sequence || 0)));
+        formData.append('created_at', new Date().toISOString());
+        const response = await api.sendRealtimeTranscriptChunk(sessionId, formData);
+        return String(response?.transcript_excerpt || '').trim();
+      } catch (err) {
+        appendError(err?.message || 'Unable to stream transcript chunk.');
+        return '';
+      }
+    },
+    [api, appendError, sessionId]
+  );
+
   const markSessionClosed = useCallback(async () => {
     if (!sessionId) return;
     if (sessionClosedSyncRef.current) return;
@@ -1046,20 +1151,6 @@ const MeetingRoomShell = ({
     },
     [appendError, sendSignal, sessionId]
   );
-
-  const _createPlaceholderVideoTrack = useCallback(() => {
-    if (typeof document === 'undefined') return null;
-    const canvas = document.createElement('canvas');
-    canvas.width = 16;
-    canvas.height = 16;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    const stream = canvas.captureStream(1);
-    return stream.getVideoTracks()[0] || null;
-  }, []);
 
   const captureVideoFrameDataUrl = useCallback((videoElement) => {
     if (!videoElement || typeof document === 'undefined') return '';
@@ -1522,21 +1613,53 @@ const MeetingRoomShell = ({
             }
             continue;
           }
-          if (signalType === 'transcript') {
+          if (
+            signalType === 'transcript' ||
+            signalType === 'mentor_transcript' ||
+            signalType === 'mentee_transcript'
+          ) {
             const payloadSpeakerRole = normalizeParticipantRole(payload?.speaker_role);
             const speakerRole = signalSenderRole || payloadSpeakerRole;
+            if (speakerRole && speakerRole === participantRole) continue;
             const transcriptExcerpt = String(
               payload?.transcript_excerpt || payload?.transcript || payload?.text || ''
             ).trim();
-            if (transcriptExcerpt && speakerRole && speakerRole !== participantRole) {
-              appendMonitoringTranscript(transcriptExcerpt, speakerRole);
-              appendRoleTranscriptSegment(speakerRole, transcriptExcerpt);
-              transcriptSegmentsRef.current.push(transcriptExcerpt);
-              setAnalysisInput((prev) => [prev, transcriptExcerpt].filter(Boolean).join(' '));
+            if (transcriptExcerpt && speakerRole) {
+              const now = Date.now();
+              const lastRemote = lastRemoteTranscriptRef.current;
+              if (
+                lastRemote.text === transcriptExcerpt &&
+                now - lastRemote.at < SPEECH_DUPLICATE_WINDOW_MS
+              ) {
+                continue;
+              }
+
+              lastRemoteTranscriptRef.current = { text: transcriptExcerpt, at: now };
+              remoteTranscriptQueueRef.current.push({
+                text: transcriptExcerpt,
+                role: speakerRole,
+                at: now,
+              });
+
+              Promise.resolve().then(() => {
+                const queue = remoteTranscriptQueueRef.current;
+                if (!queue.length) return;
+                queue.forEach((item) => {
+                  appendMonitoringTranscript(item.text, item.role);
+                  appendRoleTranscriptSegment(item.role, item.text);
+                  transcriptSegmentsRef.current.push(item.text);
+                  setAnalysisInput((prev) => [prev, item.text].filter(Boolean).join(' '));
+                });
+                remoteTranscriptQueueRef.current = [];
+              });
             }
             continue;
           }
-          if (signalType === 'transcript_bundle') {
+          if (
+            signalType === 'transcript_bundle' ||
+            signalType === 'mentor_bundle' ||
+            signalType === 'mentee_bundle'
+          ) {
             const payloadSpeakerRole = normalizeParticipantRole(payload?.speaker_role);
             const speakerRole = signalSenderRole || payloadSpeakerRole;
             if (!speakerRole || speakerRole === participantRole) continue;
@@ -1653,6 +1776,12 @@ const MeetingRoomShell = ({
         autoGainControl: true,
       },
     });
+    stream.getAudioTracks().forEach((track) => {
+      track.enabled = Boolean(micEnabledRef.current);
+    });
+    stream.getVideoTracks().forEach((track) => {
+      track.enabled = Boolean(cameraEnabled);
+    });
     localStreamRef.current = stream;
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = stream;
@@ -1660,112 +1789,228 @@ const MeetingRoomShell = ({
 
     const peer = ensurePeerConnection();
     attachLocalTracksToPeer(peer);
-    await publishLocalMediaState(true, true);
+    await publishLocalMediaState(Boolean(micEnabledRef.current), Boolean(cameraEnabled));
     return stream;
-  }, [attachLocalTracksToPeer, ensurePeerConnection, publishLocalMediaState]);
+  }, [attachLocalTracksToPeer, cameraEnabled, ensurePeerConnection, publishLocalMediaState]);
 
-  const startSpeechMonitoring = useCallback(async ({ manual = false } = {}) => {
-    if (!canSpeechModeration) return;
-    if (!hasSpeechRecognition) return;
-    if (!micEnabled) return;
-    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognitionCtor) return;
-    if (!manual && monitoringAutoStartBlockedRef.current) return;
-    if (manual) {
-      monitoringAutoStartBlockedRef.current = false;
-    }
-
-    autoMonitoringRef.current = true;
-
-    const markSpeechActivity = () => {
-      if (typeof window === 'undefined') return;
-      if (!autoMonitoringRef.current) return;
-      if (speechInactivityTimerRef.current) {
-        window.clearTimeout(speechInactivityTimerRef.current);
-      }
-      speechInactivityTimerRef.current = window.setTimeout(() => {
-        speechInactivityTimerRef.current = null;
-        if (!autoMonitoringRef.current) return;
-        monitoringAutoStartBlockedRef.current = true;
-        void stopSpeechMonitoring({ suppressAutoStart: true });
-      }, Math.max(4000, SPEECH_IDLE_AUTO_STOP_MS));
-    };
-
-    const scheduleRestart = (delayMs = 700) => {
-      if (typeof window === 'undefined') return;
-      if (!autoMonitoringRef.current) return;
-      if (speechRestartTimerRef.current) {
-        window.clearTimeout(speechRestartTimerRef.current);
-      }
-      const nextDelay = Math.min(Math.max(delayMs, 500), 2800);
-      speechRestartDelayRef.current = nextDelay;
-      speechRestartTimerRef.current = window.setTimeout(() => {
-        speechRestartTimerRef.current = null;
-        if (!autoMonitoringRef.current) return;
-        const activeRecognition = recognitionRef.current;
-        if (!activeRecognition) return;
-        try {
-          activeRecognition.start();
-          setMonitoring(true);
-          setMonitoringStatus(true);
-          speechRestartDelayRef.current = 700;
-        } catch (restartErr) {
-          const restartCode = String(restartErr?.name || restartErr?.message || '').toLowerCase();
-          if (restartCode.includes('invalidstate')) {
-            setMonitoring(true);
-            setMonitoringStatus(true);
-            return;
-          }
-          if (
-            restartCode.includes('not-allowed') ||
-            restartCode.includes('service-not-allowed') ||
-            restartCode.includes('notallowed')
-          ) {
-            autoMonitoringRef.current = false;
-            recognitionRef.current = null;
-            setMonitoring(false);
-            setMonitoringStatus(false);
-            showToast('Microphone speech monitoring permission is blocked.', 'warning', 6000);
-            return;
-          }
-          scheduleRestart(Math.min(nextDelay + 300, 2800));
-        }
-      }, nextDelay);
-    };
-
-    const commitTranscript = (value, { broadcast = true, analyze = true } = {}) => {
+  const startSpeechMonitoring = useCallback(
+    async ({ manual = false } = {}) => {
+      if (!canSpeechModeration) return;
       if (!micEnabledRef.current) return;
-      const text = String(value || '').replace(/\s+/g, ' ').trim();
-      if (!text) return;
-      const now = Date.now();
-      const previous = lastSpeechModerationRef.current;
-      if (previous.text === text && now - previous.at < SPEECH_DUPLICATE_WINDOW_MS) {
+      const supportsServerChunkMonitoring =
+        hasChunkedTranscription && typeof api.sendRealtimeTranscriptChunk === 'function';
+      const SpeechRecognitionCtor =
+        typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
+      if (!supportsServerChunkMonitoring && !SpeechRecognitionCtor) return;
+      if (!manual && monitoringAutoStartBlockedRef.current) return;
+      if (manual) {
+        monitoringAutoStartBlockedRef.current = false;
+      } else {
+        const now = Date.now();
+        if (now - speechAutoStartAttemptAtRef.current < 900) return;
+        speechAutoStartAttemptAtRef.current = now;
+      }
+
+      if (speechStartingRef.current || localRecognitionRef.current) {
+        setMonitoring(true);
+        setMonitoringStatus(true);
         return;
       }
-      lastSpeechModerationRef.current = { text, at: now };
-      transcriptSegmentsRef.current.push(text);
-      appendRoleTranscriptSegment(participantRole, text);
-      appendMonitoringTranscript(text, 'local');
-      setAnalysisInput((prev) => [prev, text].filter(Boolean).join(' '));
-      if (broadcast) {
-        Promise.resolve(
-          sendSignal('transcript', {
-            speaker_role: participantRole,
-            transcript_excerpt: text.slice(0, 1200),
-            created_at: new Date().toISOString(),
-          })
-        ).catch(() => {
-          // no-op
-        });
-      }
-      if (analyze) {
-        analyzeTranscript(text, { silent: true });
-      }
-    };
+      speechStartingRef.current = true;
 
-    let recognition = recognitionRef.current;
-    if (!recognition) {
-      recognition = new SpeechRecognitionCtor();
+      autoMonitoringRef.current = true;
+
+      if (supportsServerChunkMonitoring) {
+        try {
+          const stream = localStreamRef.current;
+          const liveAudioTracks = stream
+            ? stream
+              .getAudioTracks()
+              .filter((track) => track && track.readyState === 'live' && track.enabled)
+            : [];
+          if (!liveAudioTracks.length) {
+            throw new Error('No live microphone track is available.');
+          }
+
+          const uploadAndCommit = async () => {
+            if (localChunkUploadBusyRef.current) return;
+            localChunkUploadBusyRef.current = true;
+            try {
+              while (
+                localChunkUploadQueueRef.current.length &&
+                autoMonitoringRef.current &&
+                micEnabledRef.current
+              ) {
+                const item = localChunkUploadQueueRef.current.shift();
+                if (!item?.blob) continue;
+                const transcriptText = await sendRealtimeTranscriptChunk(item.blob, item.sequence);
+                const text = String(transcriptText || '').replace(/\s+/g, ' ').trim();
+                if (!text) continue;
+
+                const now = Date.now();
+                const previous = lastLocalTranscriptRef.current;
+                if (previous.text === text && now - previous.at < SPEECH_DUPLICATE_WINDOW_MS) {
+                  continue;
+                }
+                lastLocalTranscriptRef.current = { text, at: now };
+                transcriptSegmentsRef.current.push(text);
+                appendRoleTranscriptSegment(participantRole, text);
+                appendMonitoringTranscript(text, 'local');
+                setAnalysisInput((prev) => [prev, text].filter(Boolean).join(' '));
+                analyzeTranscript(text, { silent: true });
+              }
+            } finally {
+              localChunkUploadBusyRef.current = false;
+            }
+          };
+
+          const chunkStream = new MediaStream(liveAudioTracks.map((track) => track.clone()));
+          localChunkStreamRef.current = chunkStream;
+          const preferredMimeTypes = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus',
+          ];
+          const selectedMimeType = preferredMimeTypes.find(
+            (item) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(item)
+          );
+          const buildRecorder = () =>
+            selectedMimeType && selectedMimeType.length
+              ? new MediaRecorder(chunkStream, { mimeType: selectedMimeType })
+              : new MediaRecorder(chunkStream);
+
+          const attachRecorderHandlers = (recorderInstance) => {
+            recorderInstance.ondataavailable = (event) => {
+              const blob = event?.data;
+              if (!blob || Number(blob.size || 0) < 512) return;
+              localChunkSeqRef.current += 1;
+              localChunkUploadQueueRef.current.push({
+                sequence: localChunkSeqRef.current,
+                blob,
+              });
+              void uploadAndCommit();
+            };
+            recorderInstance.onerror = (event) => {
+              const message = String(event?.error?.message || event?.message || '').trim();
+              if (message) {
+                appendError(message);
+              }
+            };
+            recorderInstance.onstop = () => {
+              if (!autoMonitoringRef.current || !micEnabledRef.current) return;
+              try {
+                const nextRecorder = buildRecorder();
+                attachRecorderHandlers(nextRecorder);
+                nextRecorder.start();
+                localChunkRecorderRef.current = nextRecorder;
+              } catch (err) {
+                appendError(err?.message || 'Unable to continue transcript chunk recording.');
+              }
+            };
+          };
+
+          const recorder = buildRecorder();
+          attachRecorderHandlers(recorder);
+          recorder.start();
+          localChunkRecorderRef.current = recorder;
+          if (localChunkRotateTimerRef.current) {
+            window.clearInterval(localChunkRotateTimerRef.current);
+          }
+          localChunkRotateTimerRef.current = window.setInterval(() => {
+            const activeRecorder = localChunkRecorderRef.current;
+            if (!activeRecorder) return;
+            if (activeRecorder.state === 'recording') {
+              try {
+                activeRecorder.stop();
+              } catch {
+                // no-op
+              }
+            }
+          }, 1800);
+          speechStartingRef.current = false;
+          setMonitoring(true);
+          setMonitoringStatus(true);
+
+          if (sessionId && isMentorToolsEnabled) {
+            const recordingActive = Boolean(recorderRef.current && recorderRef.current.state !== 'inactive');
+            try {
+              await api.updateSessionRecording(sessionId, {
+                status: recordingActive ? 'recording' : 'not_started',
+                metadata: {
+                  [monitoringMetadataKey]: true,
+                },
+              });
+            } catch {
+              // no-op
+            }
+          }
+          return;
+        } catch (err) {
+          autoMonitoringRef.current = false;
+          speechStartingRef.current = false;
+          localChunkRecorderRef.current = null;
+          if (localChunkStreamRef.current) {
+            try {
+              localChunkStreamRef.current.getTracks().forEach((track) => track.stop());
+            } catch {
+              // no-op
+            }
+            localChunkStreamRef.current = null;
+          }
+          if (localChunkRotateTimerRef.current) {
+            window.clearInterval(localChunkRotateTimerRef.current);
+            localChunkRotateTimerRef.current = null;
+          }
+          setMonitoring(false);
+          setMonitoringStatus(false);
+          showToast(err?.message || 'Unable to start server transcript monitoring.', 'error');
+          return;
+        }
+      }
+
+      if (!SpeechRecognitionCtor) {
+        autoMonitoringRef.current = false;
+        speechStartingRef.current = false;
+        setMonitoring(false);
+        setMonitoringStatus(false);
+        return;
+      }
+
+      const commitLocalTranscript = (value, { broadcast = true, analyze = true } = {}) => {
+        if (!micEnabledRef.current) return;
+        const text = String(value || '').replace(/\s+/g, ' ').trim();
+        if (!text) return;
+
+        const now = Date.now();
+        const previous = lastLocalTranscriptRef.current;
+        if (previous.text === text && now - previous.at < SPEECH_DUPLICATE_WINDOW_MS) {
+          return;
+        }
+        lastLocalTranscriptRef.current = { text, at: now };
+
+        transcriptSegmentsRef.current.push(text);
+        appendRoleTranscriptSegment(participantRole, text);
+        appendMonitoringTranscript(text, 'local');
+        setAnalysisInput((prev) => [prev, text].filter(Boolean).join(' '));
+
+        if (broadcast) {
+          Promise.resolve(
+            sendRealtimeTranscriptSignal({
+              speaker_role: participantRole,
+              transcript_excerpt: text.slice(0, 1200),
+              created_at: new Date().toISOString(),
+            })
+          ).catch(() => {
+            // no-op
+          });
+        }
+
+        if (analyze) {
+          analyzeTranscript(text, { silent: true });
+        }
+      };
+
+      const recognition = new SpeechRecognitionCtor();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
@@ -1793,9 +2038,6 @@ const MeetingRoomShell = ({
           .join(' ')
           .trim();
 
-        if (interimTranscript || finalTranscript) {
-          markSpeechActivity();
-        }
         setLiveInterimTranscript(interimTranscript);
         if (interimTranscript) {
           const now = Date.now();
@@ -1808,116 +2050,120 @@ const MeetingRoomShell = ({
 
         if (!finalTranscript) return;
         setLiveInterimTranscript('');
-        commitTranscript(finalTranscript);
+        commitLocalTranscript(finalTranscript);
       };
 
       recognition.onstart = () => {
+        speechStartingRef.current = false;
         speechRestartDelayRef.current = 700;
-        if (speechRestartTimerRef.current) {
-          window.clearTimeout(speechRestartTimerRef.current);
-          speechRestartTimerRef.current = null;
-        }
+        speechMonitorStateChangedAtRef.current = Date.now();
         setMonitoring(true);
         setMonitoringStatus(true);
       };
 
       recognition.onend = () => {
         setLiveInterimTranscript('');
-        if (autoMonitoringRef.current) {
-          setMonitoring(true);
-          setMonitoringStatus(true);
-          scheduleRestart(speechRestartDelayRef.current);
+        if (autoMonitoringRef.current && micEnabledRef.current) {
+          if (speechRestartTimerRef.current) {
+            window.clearTimeout(speechRestartTimerRef.current);
+          }
+          speechRestartTimerRef.current = window.setTimeout(() => {
+            speechRestartTimerRef.current = null;
+            if (!autoMonitoringRef.current || !micEnabledRef.current) return;
+            try {
+              speechStartingRef.current = true;
+              recognition.start();
+              setMonitoring(true);
+              setMonitoringStatus(true);
+            } catch (err) {
+              speechStartingRef.current = false;
+              const code = String(err?.name || err?.message || '').toLowerCase();
+              if (!code.includes('invalidstate')) {
+                appendError(err?.message || 'Speech monitoring restart failed.');
+              }
+            }
+          }, 700);
           return;
         }
+
+        localRecognitionRef.current = null;
+        speechStartingRef.current = false;
         setMonitoring(false);
         setMonitoringStatus(false);
       };
 
       recognition.onerror = (event) => {
         const code = String(event?.error || '').trim().toLowerCase();
+        if (code === 'aborted' || code === 'no-speech' || code === 'network') {
+          speechStartingRef.current = false;
+          return;
+        }
         if (code === 'not-allowed' || code === 'service-not-allowed') {
           autoMonitoringRef.current = false;
+          speechStartingRef.current = false;
+          localRecognitionRef.current = null;
           setMonitoring(false);
           setMonitoringStatus(false);
           showToast('Microphone speech monitoring permission is blocked.', 'warning', 6000);
           return;
         }
-        if (code) {
-          appendError(`Speech monitoring error: ${code}`);
-        }
-        if (autoMonitoringRef.current) {
-          setMonitoring(true);
-          setMonitoringStatus(true);
-          scheduleRestart(Math.min(speechRestartDelayRef.current + 300, 2800));
-          return;
-        }
-        setMonitoring(false);
-        setMonitoringStatus(false);
+        speechStartingRef.current = false;
       };
 
-      recognitionRef.current = recognition;
-    }
-
-    try {
-      recognition.start();
-      markSpeechActivity();
-      setMonitoring(true);
-      setMonitoringStatus(true);
-    } catch (err) {
-      const code = String(err?.name || err?.message || '').toLowerCase();
-      if (code.includes('invalidstate')) {
-        markSpeechActivity();
-        setMonitoring(true);
-        setMonitoringStatus(true);
-      } else if (
-        code.includes('not-allowed') ||
-        code.includes('service-not-allowed') ||
-        code.includes('notallowed')
-      ) {
-        autoMonitoringRef.current = false;
-        setMonitoring(false);
-        setMonitoringStatus(false);
-        showToast('Microphone speech monitoring permission is blocked.', 'warning', 6000);
-        return;
-      } else {
-        setMonitoring(true);
-        setMonitoringStatus(true);
-        scheduleRestart(Math.min(speechRestartDelayRef.current + 300, 2800));
-        appendError(err?.message || 'Unable to start speech monitoring. Retrying...');
-        return;
-      }
-    }
-
-    if (sessionId && isMentorToolsEnabled) {
-      const recordingActive = Boolean(recorderRef.current && recorderRef.current.state !== 'inactive');
       try {
-        await api.updateSessionRecording(sessionId, {
-          status: recordingActive ? 'recording' : 'not_started',
-          metadata: {
-            [monitoringMetadataKey]: true,
-          },
-        });
-      } catch {
-        // no-op
+        recognition.start();
+        localRecognitionRef.current = recognition;
+        setMonitoring(true);
+        setMonitoringStatus(true);
+      } catch (err) {
+        const code = String(err?.name || err?.message || '').toLowerCase();
+        if (code.includes('invalidstate')) {
+          speechStartingRef.current = false;
+          setMonitoring(true);
+          setMonitoringStatus(true);
+        } else {
+          autoMonitoringRef.current = false;
+          speechStartingRef.current = false;
+          localRecognitionRef.current = null;
+          setMonitoring(false);
+          setMonitoringStatus(false);
+          showToast('Unable to start speech monitoring.', 'error');
+          return;
+        }
       }
-    }
-  }, [
-    analyzeTranscript,
-    api,
-    appendMonitoringTranscript,
-    appendRoleTranscriptSegment,
-    appendError,
-    canSpeechModeration,
-    hasSpeechRecognition,
-    isMentorToolsEnabled,
-    micEnabled,
-    monitoringMetadataKey,
-    participantRole,
-    sessionId,
-    sendSignal,
-    showToast,
-    stopSpeechMonitoring,
-  ]);
+
+      if (sessionId && isMentorToolsEnabled) {
+        const recordingActive = Boolean(recorderRef.current && recorderRef.current.state !== 'inactive');
+        try {
+          await api.updateSessionRecording(sessionId, {
+            status: recordingActive ? 'recording' : 'not_started',
+            metadata: {
+              [monitoringMetadataKey]: true,
+            },
+          });
+        } catch {
+          // no-op
+        }
+      }
+      speechStartingRef.current = false;
+    },
+    [
+      analyzeTranscript,
+      api,
+      appendError,
+      appendMonitoringTranscript,
+      appendRoleTranscriptSegment,
+      canSpeechModeration,
+      hasChunkedTranscription,
+      isMentorToolsEnabled,
+      monitoringMetadataKey,
+      participantRole,
+      sessionId,
+      sendRealtimeTranscriptChunk,
+      sendRealtimeTranscriptSignal,
+      showToast,
+    ]
+  );
 
   const handleStartMonitoring = useCallback(() => {
     startSpeechMonitoring({ manual: true });
@@ -1930,7 +2176,7 @@ const MeetingRoomShell = ({
   const startSpeechActivityGate = useCallback(async () => {
     if (typeof window === 'undefined') return;
     if (!canSpeechModeration) return;
-    if (connectionState !== 'connected') return;
+    if (!AUTO_START_MONITORING_FROM_VOICE) return;
     if (!micEnabled) return;
     if (speechActivityGateIntervalRef.current) return;
 
@@ -1982,31 +2228,31 @@ const MeetingRoomShell = ({
         }
         const rms = Math.sqrt(sumSquares / activeData.length);
         const now = Date.now();
+        const nearVoiceDetected =
+          rms >= SPEECH_ACTIVITY_GATE_THRESHOLD || peakAbs >= SPEECH_ACTIVITY_GATE_PEAK_THRESHOLD;
 
-        if (rms >= SPEECH_ACTIVITY_GATE_THRESHOLD || peakAbs >= SPEECH_ACTIVITY_GATE_PEAK_THRESHOLD) {
+        if (nearVoiceDetected) {
           if (!speechActivityGateVoiceSinceRef.current) {
             speechActivityGateVoiceSinceRef.current = now;
           }
+          speechActivityGateSilenceSinceRef.current = 0;
           if (now - speechActivityGateVoiceSinceRef.current >= Math.max(300, SPEECH_ACTIVITY_GATE_HOLD_MS)) {
-            if (!autoMonitoringRef.current && !recognitionRef.current) {
-              monitoringAutoStartBlockedRef.current = false;
-              void startSpeechMonitoring({ manual: false });
-            }
             speechActivityGateVoiceSinceRef.current = now;
           }
           return;
         }
 
         speechActivityGateVoiceSinceRef.current = 0;
+        speechActivityGateSilenceSinceRef.current = 0;
       }, Math.max(120, SPEECH_ACTIVITY_GATE_POLL_MS));
     } catch {
       stopSpeechActivityGate();
     }
   }, [
     canSpeechModeration,
-    connectionState,
     micEnabled,
-    startSpeechMonitoring,
+    monitoringActive,
+    speechAutoStartAttemptAtRef,
     stopSpeechActivityGate,
   ]);
 
@@ -2260,12 +2506,12 @@ const MeetingRoomShell = ({
       .filter(Boolean)
       .slice(-200);
     if (!segments.length) return;
-    await sendSignal('transcript_bundle', {
+    await sendSignal(localTranscriptBundleSignalType, {
       speaker_role: role,
       segments,
       created_at: new Date().toISOString(),
     });
-  }, [participantRole, sendSignal, sessionId]);
+  }, [localTranscriptBundleSignalType, participantRole, sendSignal, sessionId]);
 
   const toggleMic = useCallback(async () => {
     const stream = localStreamRef.current;
@@ -2281,6 +2527,9 @@ const MeetingRoomShell = ({
         monitoringAutoStartBlockedRef.current = true;
         stopSpeechActivityGate();
         void stopSpeechMonitoring({ suppressAutoStart: true });
+      } else if (canSpeechModeration && hasMonitoringCapability) {
+        monitoringAutoStartBlockedRef.current = false;
+        void startSpeechMonitoring({ manual: true });
       }
       await publishLocalMediaState(nextEnabled, cameraEnabled);
       if (localVideoRef.current) {
@@ -2292,8 +2541,11 @@ const MeetingRoomShell = ({
   }, [
     appendError,
     cameraEnabled,
+    canSpeechModeration,
+    hasMonitoringCapability,
     micEnabled,
     publishLocalMediaState,
+    startSpeechMonitoring,
     stopSpeechActivityGate,
     stopSpeechMonitoring,
   ]);
@@ -2305,9 +2557,6 @@ const MeetingRoomShell = ({
     try {
       const currentTracks = stream.getVideoTracks();
       if (!nextEnabled) {
-        if (senderRef.current.video) {
-          await senderRef.current.video.replaceTrack(null);
-        }
         currentTracks.forEach((track) => {
           try {
             track.stop();
@@ -2317,6 +2566,9 @@ const MeetingRoomShell = ({
           stream.removeTrack(track);
           cameraTracksRef.current.delete(track);
         });
+        if (senderRef.current.video) {
+          await senderRef.current.video.replaceTrack(null);
+        }
       } else if (currentTracks.length === 0) {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const nextTrack = videoStream.getVideoTracks()[0];
@@ -2486,6 +2738,17 @@ const MeetingRoomShell = ({
     setupMeeting();
     return () => {
       cancelled = true;
+      if (localRecognitionRef.current) {
+        try {
+          localRecognitionRef.current.stop();
+        } catch {
+          // no-op
+        }
+        localRecognitionRef.current = null;
+      }
+      remoteTranscriptQueueRef.current = [];
+      lastLocalTranscriptRef.current = { text: '', at: 0 };
+      lastRemoteTranscriptRef.current = { text: '', at: 0 };
       stopSpeechActivityGate();
       stopSpeechMonitoring();
       stopRecording();
@@ -2575,7 +2838,11 @@ const MeetingRoomShell = ({
     setMonitoringFeed([]);
     setLiveInterimTranscript('');
     roleTranscriptSegmentsRef.current = { mentor: [], mentee: [] };
+    remoteTranscriptQueueRef.current = [];
+    lastLocalTranscriptRef.current = { text: '', at: 0 };
+    lastRemoteTranscriptRef.current = { text: '', at: 0 };
     monitoringAutoStartBlockedRef.current = false;
+    speechMonitorStateChangedAtRef.current = 0;
   }, [participantRole, sessionId]);
 
   useEffect(() => {
@@ -2599,17 +2866,13 @@ const MeetingRoomShell = ({
 
   useEffect(() => {
     if (!sessionId) return undefined;
-    if (!canSpeechModeration || !hasSpeechRecognition) {
-      stopSpeechActivityGate();
-      return undefined;
-    }
-    if (connectionState !== 'connected') {
+    if (!canSpeechModeration || !hasMonitoringCapability) {
       stopSpeechActivityGate();
       return undefined;
     }
     if (!micEnabled) {
       stopSpeechActivityGate();
-      if (autoMonitoringRef.current || recognitionRef.current) {
+      if (autoMonitoringRef.current || localRecognitionRef.current || speechStartingRef.current) {
         monitoringAutoStartBlockedRef.current = true;
         void stopSpeechMonitoring({ suppressAutoStart: true });
       }
@@ -2622,13 +2885,37 @@ const MeetingRoomShell = ({
     };
   }, [
     canSpeechModeration,
-    connectionState,
-    hasSpeechRecognition,
+    hasMonitoringCapability,
     micEnabled,
     sessionId,
     startSpeechActivityGate,
     stopSpeechActivityGate,
     stopSpeechMonitoring,
+  ]);
+
+  useEffect(() => {
+    if (!sessionId) return undefined;
+    if (!canSpeechModeration || !hasMonitoringCapability) return undefined;
+    if (!micEnabled) return undefined;
+    if (monitoringActive || autoMonitoringRef.current || localRecognitionRef.current || speechStartingRef.current) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      speechAutoStartAttemptAtRef.current = 0;
+      void startSpeechMonitoring({ manual: false });
+    }, 120);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [
+    canSpeechModeration,
+    hasMonitoringCapability,
+    micEnabled,
+    monitoringActive,
+    sessionId,
+    startSpeechMonitoring,
   ]);
 
   useEffect(() => {
@@ -2799,7 +3086,7 @@ const MeetingRoomShell = ({
         </div>
       ) : null}
 
-      {toastState.open ? (
+      {toastState.open && !isFullscreen ? (
         <div className="pointer-events-none fixed right-4 top-4 z-[95] w-[92vw] max-w-sm">
           <div
             className={`rounded-xl border px-3 py-2 text-xs shadow-lg sm:text-sm ${toastState.type === 'error'
@@ -2906,7 +3193,7 @@ const MeetingRoomShell = ({
                 <button
                   type="button"
                   onClick={monitoringActive ? handleStopMonitoring : handleStartMonitoring}
-                  disabled={!hasSpeechRecognition}
+                  disabled={!hasMonitoringCapability}
                   className="inline-flex items-center rounded-md bg-[#111827] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:bg-[#9ca3af]"
                 >
                   {monitoringActive ? 'Stop Monitoring' : 'Start Monitoring'}
@@ -2960,41 +3247,7 @@ const MeetingRoomShell = ({
           </div>
         ) : null}
 
-        {isMentorToolsEnabled && alert?.flagged ? (
-          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 sm:text-sm">
-            <div className="flex items-start gap-2">
-              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-              <div>
-                {String(alert?.incident_type || 'verbal_abuse').toLowerCase() === 'verbal_abuse' ? (
-                  <>
-                    <div className="font-semibold">
-                      Abusive language detected ({alert?.severity || 'low'})
-                    </div>
-                    <div>Matched terms: {(alert?.matched_terms || []).join(', ') || 'none'}</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="font-semibold">
-                      Video behavior detected: {formatIncidentTypeLabel(alert?.incident_type)} (
-                      {alert?.severity || 'low'})
-                    </div>
-                    <div>
-                      Recommended action:{' '}
-                      {String(alert?.recommended_action || 'warn').replace(/_/g, ' ')}
-                    </div>
-                  </>
-                )}
-                {alert?.flagged_mentee_info?.id ? (
-                  <div className="mt-1">
-                    Mentee: {alert.flagged_mentee_info.first_name} {alert.flagged_mentee_info.last_name}
-                    {' | '}Email: {alert.flagged_mentee_info.email}
-                    {' | '}Parent Mobile: {alert.flagged_mentee_info.parent_mobile || '-'}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        ) : null}
+        {null}
 
         <div
           ref={stageContainerRef}
@@ -3034,6 +3287,24 @@ const MeetingRoomShell = ({
                     Mic Off
                   </span>
                 ) : null}
+              </div>
+            ) : null}
+            {toastState.open && isFullscreen ? (
+              <div className="pointer-events-none absolute right-3 top-3 z-30 w-[92vw] max-w-sm sm:right-4 sm:top-4">
+                <div
+                  className={`rounded-xl border px-3 py-2 text-xs shadow-lg sm:text-sm ${
+                    toastState.type === 'error'
+                      ? 'border-[#fecaca] bg-[#fef2f2] text-[#7f1d1d]'
+                      : 'border-[#fde68a] bg-[#fffbeb] text-[#78350f]'
+                  }`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div>{toastState.message}</div>
+                  </div>
+                </div>
               </div>
             ) : null}
 
@@ -3139,7 +3410,7 @@ const MeetingRoomShell = ({
                 <button
                   type="button"
                   onClick={monitoringActive ? handleStopMonitoring : handleStartMonitoring}
-                  disabled={!hasSpeechRecognition}
+                  disabled={!hasMonitoringCapability}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-[#7c3aed] px-3 py-2 text-xs font-semibold text-white hover:bg-[#6d28d9] disabled:cursor-not-allowed disabled:bg-[#c4b5fd]"
                   hidden={!isMentorToolsEnabled}
                 >
@@ -3148,7 +3419,7 @@ const MeetingRoomShell = ({
               </>
             ) : null}
           </div>
-          {showManualMentorTools && isMentorToolsEnabled && !hasSpeechRecognition ? (
+          {showManualMentorTools && isMentorToolsEnabled && !hasMonitoringCapability ? (
             <p className="mt-2 text-xs text-[#6b7280]">
               Browser speech recognition is unavailable. Use manual transcript input below.
             </p>
