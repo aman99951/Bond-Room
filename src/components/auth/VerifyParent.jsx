@@ -260,9 +260,7 @@ const VerifyParent = () => {
                 {loading ? 'Verifying...' : 'Verify & Continue'}
               </button>
 
-              <Link to="/register" className="lp-vp-back-link">
-                Back to Registration
-              </Link>
+            
 
               <p className="lp-vp-foot-note">
                 <ShieldCheck size={14} /> Your verification helps keep every student interaction safe.
