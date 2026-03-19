@@ -63,6 +63,13 @@ const parseTime = (value) => {
   return { hour: Number.isNaN(hour) ? 0 : hour, minute: Number.isNaN(minute) ? 0 : minute };
 };
 
+const toMinutes = (label) => {
+  const value = String(label || '').trim();
+  if (!/^\d{2}:\d{2}$/.test(value)) return NaN;
+  const parsed = parseTime(value);
+  return parsed.hour * 60 + parsed.minute;
+};
+
 const isWithinAllowedWindow = (startLabel, endLabel) => {
   if (!startLabel || !endLabel) return false;
   const startTime = parseTime(startLabel);
@@ -80,6 +87,11 @@ const ManageAvailability = () => {
   const [copyOpen, setCopyOpen] = useState(null);
   const [copyTargets, setCopyTargets] = useState([]);
   const [pendingMove, setPendingMove] = useState(null);
+  const [rangePicker, setRangePicker] = useState({
+    dayLabel: '',
+    startTime: '10:30',
+    endTime: '11:30',
+  });
   const popoverRef = useRef(null);
   const dragPayloadRef = useRef(null);
   const dragTargetRef = useRef(null);
@@ -253,50 +265,77 @@ const ManageAvailability = () => {
     }
   };
 
-  const slotPresets = [
-    { time: '08:00', end: '09:00' },
-    { time: '09:00', end: '10:00' },
-    { time: '10:00', end: '11:00' },
-    { time: '11:00', end: '12:00' },
-    { time: '12:00', end: '13:00' },
-    { time: '13:00', end: '14:00' },
-    { time: '14:00', end: '15:00' },
-    { time: '15:00', end: '16:00' },
-    { time: '16:00', end: '17:00' },
-    { time: '17:00', end: '18:00' },
-    { time: '18:00', end: '19:00' },
-  ];
-
-  const addSlot = async (dayLabel) => {
-    if (!mentor?.id) return;
+  const openRangePicker = (dayLabel) => {
     const targetDay = days.find((day) => day.label === dayLabel);
     const todayKey = formatIndiaDateKey(new Date());
     if (targetDay?.dateKey && todayKey && targetDay.dateKey < todayKey) {
       setError("Can't add availability slots to past dates.");
       return;
     }
-    const usedTimes = new Set((targetDay?.slots || []).map((slot) => slot.time));
-    const preset = slotPresets.find((slot) => !usedTimes.has(slot.time));
-    if (!preset) {
-      setError('Availability slots are limited to 08:00-19:00.');
+    setError('');
+    setRangePicker({
+      dayLabel,
+      startTime: '10:30',
+      endTime: '11:30',
+    });
+  };
+
+  const closeRangePicker = () => {
+    setRangePicker({ dayLabel: '', startTime: '10:30', endTime: '11:30' });
+  };
+
+  const addCustomSlot = async () => {
+    if (!mentor?.id || !rangePicker.dayLabel) return;
+    const targetDay = days.find((day) => day.label === rangePicker.dayLabel);
+    if (!targetDay?.dateKey) return;
+
+    const startLabel = String(rangePicker.startTime || '').trim();
+    const endLabel = String(rangePicker.endTime || '').trim();
+    const startMinutes = toMinutes(startLabel);
+    const endMinutes = toMinutes(endLabel);
+    if (Number.isNaN(startMinutes) || Number.isNaN(endMinutes)) {
+      setError('Choose valid start and end time.');
       return;
     }
-    if (!isWithinAllowedWindow(preset.time, preset.end)) {
-      setError('Slots must be between 08:00 and 19:00.');
+    if (endMinutes <= startMinutes) {
+      setError('End time must be later than start time.');
+      return;
+    }
+    if (!isWithinAllowedWindow(startLabel, endLabel)) {
+      setError('Slots must be within 08:00 and 19:00.');
+      return;
+    }
+    if (hasDuplicateSlot(targetDay.slots, startLabel, endLabel)) {
+      setError('This time slot already exists for that day.');
+      return;
+    }
+    const overlapsExisting = (targetDay.slots || []).some((slot) => {
+      const slotStart = toMinutes(slot.time);
+      const slotEnd = toMinutes(slot.end);
+      if (Number.isNaN(slotStart) || Number.isNaN(slotEnd)) return false;
+      return startMinutes < slotEnd && endMinutes > slotStart;
+    });
+    if (overlapsExisting) {
+      setError('This range overlaps an existing slot.');
       return;
     }
 
+    setLoading(true);
+    setError('');
     try {
       await mentorApi.createAvailabilitySlot({
         mentor: mentor.id,
-        start_time: indiaDateTimeToIso(targetDay.dateKey, preset.time),
-        end_time: indiaDateTimeToIso(targetDay.dateKey, preset.end),
+        start_time: indiaDateTimeToIso(targetDay.dateKey, startLabel),
+        end_time: indiaDateTimeToIso(targetDay.dateKey, endLabel),
         timezone: timezoneLabel,
         is_available: true,
       });
       await loadSlots(weekStartKey);
+      closeRangePicker();
     } catch (err) {
       setError(err?.message || 'Unable to add availability slot.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -774,11 +813,11 @@ const ManageAvailability = () => {
                     <button
                       type="button"
                       className="mt-auto inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#cfb9ef] bg-white text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-60"
-                      onClick={() => addSlot(day.label)}
+                      onClick={() => openRangePicker(day.label)}
                       disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
                     >
                       <Plus className="h-4 w-4" />
-                      Add Slot
+                      Add Time
                     </button>
                   </div>
                 </div>
@@ -982,11 +1021,11 @@ const ManageAvailability = () => {
                     <button
                       type="button"
                       className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#cfb9ef] bg-white text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-60"
-                      onClick={() => addSlot(day.label)}
+                      onClick={() => openRangePicker(day.label)}
                       disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
                     >
                       <Plus className="h-4 w-4" />
-                      Add Slot
+                      Add Time
                     </button>
                   </div>
                 );
@@ -995,6 +1034,69 @@ const ManageAvailability = () => {
           </div>
         </div>
       </div>
+
+      {rangePicker.dayLabel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="bg-[#5D3699] px-6 py-4">
+              <h3 className="text-lg font-bold text-white">Add Availability Time</h3>
+            </div>
+            <div className="space-y-4 p-6">
+              <p className="text-sm text-[#374151]">
+                {rangePicker.dayLabel} - choose your exact time range.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-xs font-semibold text-[#374151]">
+                  Start
+                  <input
+                    type="time"
+                    step="1800"
+                    min="08:00"
+                    max="18:30"
+                    value={rangePicker.startTime}
+                    onChange={(e) =>
+                      setRangePicker((prev) => ({ ...prev, startTime: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm text-[#111827] focus:border-[#5D3699] focus:outline-none"
+                  />
+                </label>
+                <label className="text-xs font-semibold text-[#374151]">
+                  End
+                  <input
+                    type="time"
+                    step="1800"
+                    min="08:30"
+                    max="19:00"
+                    value={rangePicker.endTime}
+                    onChange={(e) =>
+                      setRangePicker((prev) => ({ ...prev, endTime: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-lg border border-[#d1d5db] px-3 py-2 text-sm text-[#111827] focus:border-[#5D3699] focus:outline-none"
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 px-6 pb-6">
+              <button
+                type="button"
+                className="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-[#374151] ring-1 ring-[#e5e7eb] transition-colors hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={closeRangePicker}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-xl bg-[#5D3699] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#4a2b7a] disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={addCustomSlot}
+                disabled={loading}
+              >
+                {loading ? 'Saving...' : 'Add Slot'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Move Confirmation Modal */}
       {pendingMove && (
