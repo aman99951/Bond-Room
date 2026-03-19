@@ -58,6 +58,13 @@ const toIncidentLabel = (value) =>
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
+const alertBadgeClass = (severity) => {
+  const value = String(severity || '').toLowerCase();
+  if (value === 'high') return 'border-rose-500/40 bg-rose-500/15 text-rose-300';
+  if (value === 'medium') return 'border-amber-500/40 bg-amber-500/15 text-amber-300';
+  return 'border-slate-500/40 bg-slate-500/15 text-slate-300';
+};
+
 const statusColor = (status) => {
   const n = String(status || '').toLowerCase();
   if (n === 'completed' || n === 'verified')
@@ -133,17 +140,25 @@ const AdminActivityPage = () => {
   const [onboardingStatusMap, setOnboardingStatusMap] = useState({});
   const [recordingsBySession, setRecordingsBySession] = useState({});
   const [incidentsBySession, setIncidentsBySession] = useState({});
+  const [realtimeAlerts, setRealtimeAlerts] = useState([]);
+  const [terminateBusyId, setTerminateBusyId] = useState(null);
+  const [terminateError, setTerminateError] = useState('');
   const [activeStatKey, setActiveStatKey] = useState(null);
   const [recordingPreview, setRecordingPreview] = useState(null);
   const recordingVideoRef = useRef(null);
+  const lastIncidentIdBySessionRef = useRef({});
+  const hasLoadedOnceRef = useRef(false);
+  const alertTimerRef = useRef(null);
 
   const isAdmin = session?.role === 'admin';
 
   /* ── data fetching ── */
-  const loadActivity = useCallback(async () => {
+  const loadActivity = useCallback(async ({ silent = false } = {}) => {
     if (!isAdmin) return;
-    setLoading(true);
-    setError('');
+    if (!silent) {
+      setLoading(true);
+      setError('');
+    }
     try {
       const [mentorRes, sessionRes, onboardingRes] = await Promise.all([
         mentorApi.getMentors(),
@@ -185,26 +200,114 @@ const AdminActivityPage = () => {
         }),
       );
 
+      const alerts = [];
+      const nextIncidentMap = {};
+      incidentEntries.forEach(([sessionId, incidents]) => {
+        const rows = Array.isArray(incidents) ? incidents : [];
+        let maxId = 0;
+        rows.forEach((incident) => {
+          const incidentId = Number(incident?.id || 0);
+          if (incidentId > maxId) maxId = incidentId;
+        });
+        const lastSeen = Number(lastIncidentIdBySessionRef.current[sessionId] || 0);
+        if (hasLoadedOnceRef.current && rows.length) {
+          rows.forEach((incident) => {
+            const incidentId = Number(incident?.id || 0);
+            if (incidentId <= lastSeen) return;
+            const speakerRole = String(incident?.speaker_role || 'unknown').toLowerCase();
+            const incidentType = toIncidentLabel(incident?.incident_type || 'unknown');
+            const severity = String(incident?.severity || 'low').toLowerCase();
+            alerts.push({
+              id: `${sessionId}-${incidentId}`,
+              sessionId,
+              speakerRole,
+              incidentType,
+              severity,
+              createdAt: incident?.created_at || '',
+            });
+          });
+        }
+        nextIncidentMap[sessionId] = maxId;
+      });
+
+      if (alerts.length) {
+        setRealtimeAlerts((prev) => {
+          const next = [...alerts, ...prev].slice(0, 6);
+          return next;
+        });
+        if (alertTimerRef.current) {
+          window.clearTimeout(alertTimerRef.current);
+        }
+        alertTimerRef.current = window.setTimeout(() => {
+          setRealtimeAlerts((prev) => prev.slice(0, 3));
+        }, 8000);
+      }
+      lastIncidentIdBySessionRef.current = nextIncidentMap;
+
       setMentors(mentorItems);
       setSessions(sessionItems);
       setOnboardingStatusMap(statusMap);
       setRecordingsBySession(Object.fromEntries(recEntries));
       setIncidentsBySession(Object.fromEntries(incidentEntries));
     } catch (err) {
-      setError(err?.message || 'Unable to load activity data.');
+      if (!silent) {
+        setError(err?.message || 'Unable to load activity data.');
+      }
       setMentors([]);
       setSessions([]);
       setOnboardingStatusMap({});
       setRecordingsBySession({});
       setIncidentsBySession({});
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
+      if (!hasLoadedOnceRef.current) {
+        hasLoadedOnceRef.current = true;
+      }
     }
   }, [isAdmin]);
 
   useEffect(() => {
     loadActivity();
   }, [loadActivity]);
+
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+    const timer = window.setInterval(() => {
+      loadActivity({ silent: true });
+    }, 6000);
+    return () => window.clearInterval(timer);
+  }, [isAdmin, loadActivity]);
+
+  useEffect(() => {
+    return () => {
+      if (alertTimerRef.current) {
+        window.clearTimeout(alertTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleTerminateSessionById = useCallback(
+    async (sessionId) => {
+      if (!sessionId) return;
+      const confirmText = `End session #${sessionId}? This will disconnect participants.`;
+      if (!window.confirm(confirmText)) return;
+      const reason =
+        window.prompt('Reason for ending the session (optional):', 'Safety alert review') || '';
+      setTerminateBusyId(sessionId);
+      setTerminateError('');
+      try {
+        await mentorApi.terminateSession(sessionId, { reason });
+        await loadActivity();
+      } catch (err) {
+        setTerminateError(err?.message || 'Unable to end the session.');
+      } finally {
+        setTerminateBusyId(null);
+      }
+    },
+    [loadActivity],
+  );
 
   /* ── derived data ── */
   const summary = useMemo(() => {
@@ -294,8 +397,19 @@ const AdminActivityPage = () => {
               if (incidentType === 'verbal_abuse') {
                 return `Mentor bad language (${severity})`;
               }
-              return `Mentor video behavior (${toIncidentLabel(incidentType)} • ${severity})`;
+              return `Mentor video behavior (${toIncidentLabel(incidentType)} - ${severity})`;
             });
+          const menteeWarnings = incidents
+            .filter((incident) => String(incident?.speaker_role || '').toLowerCase() === 'mentee')
+            .map((incident) => {
+              const incidentType = String(incident?.incident_type || '').toLowerCase();
+              const severity = String(incident?.severity || 'low').toLowerCase();
+              if (incidentType === 'verbal_abuse') {
+                return `Mentee bad language (${severity})`;
+              }
+              return `Mentee video behavior (${toIncidentLabel(incidentType)} - ${severity})`;
+            });
+          const warningSummary = [...mentorWarnings, ...menteeWarnings];
           const menteeName = getSessionMenteeName(s);
           return {
             id: s.id,
@@ -304,7 +418,7 @@ const AdminActivityPage = () => {
             status: s.status || 'pending',
             scheduledStart: s.scheduled_start || s.created_at,
             recordingUrl: resolveMediaUrl(rec?.recording_url || rec?.recording_file || ''),
-            mentorWarnings,
+            warningSummary,
           };
         }),
     [incidentsBySession, menteeNameById, mentorNameById, recordingsBySession, sessions],
@@ -381,20 +495,21 @@ const AdminActivityPage = () => {
   const SessionTable = ({ rows }) => (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[860px] border-separate border-spacing-y-1.5">
-        <thead>
-          <tr className="text-left text-[11px] uppercase tracking-widest text-slate-500">
-            <th className="px-4 py-2.5">Session</th>
-            <th className="px-4 py-2.5">Mentor</th>
-            <th className="px-4 py-2.5">Mentee</th>
-            <th className="px-4 py-2.5">Date</th>
-            <th className="px-4 py-2.5">Status</th>
-            <th className="px-4 py-2.5">Warning</th>
-            <th className="px-4 py-2.5">Recording</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id} className="group rounded-xl bg-slate-800/50 text-sm transition-colors hover:bg-slate-700/60">
+          <thead>
+            <tr className="text-left text-[11px] uppercase tracking-widest text-slate-500">
+              <th className="px-4 py-2.5">Session</th>
+              <th className="px-4 py-2.5">Mentor</th>
+              <th className="px-4 py-2.5">Mentee</th>
+              <th className="px-4 py-2.5">Date</th>
+              <th className="px-4 py-2.5">Status</th>
+              <th className="px-4 py-2.5">Alerts</th>
+              <th className="px-4 py-2.5">Recording</th>
+              <th className="px-4 py-2.5">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id} className="group rounded-xl bg-slate-800/50 text-sm transition-colors hover:bg-slate-700/60">
               <td className="rounded-l-xl px-4 py-3.5 font-bold text-white">#{row.id}</td>
               <td className="px-4 py-3.5 text-slate-300">{row.mentorName}</td>
               <td className="px-4 py-3.5 text-slate-300">{row.menteeName}</td>
@@ -404,48 +519,114 @@ const AdminActivityPage = () => {
                   {toStatusLabel(row.status)}
                 </span>
               </td>
-              <td className="px-4 py-3.5">
-                {Array.isArray(row.mentorWarnings) && row.mentorWarnings.length ? (
-                  <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/35 bg-amber-500/12 px-2.5 py-1 text-[11px] font-semibold text-amber-300">
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    {row.mentorWarnings[0]}
-                  </div>
-                ) : (
-                  <span className="text-xs text-slate-600">—</span>
-                )}
-              </td>
-              <td className="rounded-r-xl px-4 py-3.5">
-                {row.recordingUrl ? (
+                <td className="px-4 py-3.5">
+                  {Array.isArray(row.warningSummary) && row.warningSummary.length ? (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {row.warningSummary.slice(0, 2).map((label, idx) => (
+                        <span
+                          key={`${row.id}-warning-${idx}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/35 bg-amber-500/12 px-2.5 py-1 text-[11px] font-semibold text-amber-300"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          {label}
+                        </span>
+                      ))}
+                      {row.warningSummary.length > 2 ? (
+                        <span className="text-[11px] font-semibold text-slate-400">
+                          +{row.warningSummary.length - 2} more
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-600">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3.5">
+                  {row.recordingUrl ? (
                   <button
                     type="button"
                     onClick={() => openRecordingPreview(row)}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-violet-500/40 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-400 transition-all hover:border-violet-400/60 hover:bg-violet-500/20 hover:text-violet-300"
                   >
                     <PlayCircle className="h-3.5 w-3.5" />
-                    Watch
-                  </button>
-                ) : (
-                  <span className="text-xs text-slate-600">—</span>
-                )}
-              </td>
-            </tr>
-          ))}
-          {!rows.length && (
-            <tr>
-              <td colSpan={7} className="px-4 py-14 text-center text-sm text-slate-600">
-                No data available.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                      Watch
+                    </button>
+                  ) : (
+                    <span className="text-xs text-slate-600">—</span>
+                  )}
+                </td>
+                <td className="rounded-r-xl px-4 py-3.5">
+                  {(() => {
+                    const statusValue = String(row.status || '').toLowerCase();
+                    const canTerminate = !['completed', 'canceled', 'no_show'].includes(statusValue);
+                    const isBusy = terminateBusyId === row.id;
+                    if (!canTerminate) return <span className="text-xs text-slate-600">—</span>;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => handleTerminateSessionById(row.id)}
+                        disabled={isBusy}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 transition-all hover:border-rose-400/70 hover:bg-rose-500/20 hover:text-rose-200 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isBusy ? 'Ending...' : 'End Session'}
+                      </button>
+                    );
+                  })()}
+                </td>
+              </tr>
+            ))}
+            {!rows.length && (
+              <tr>
+                <td colSpan={8} className="px-4 py-14 text-center text-sm text-slate-600">
+                  No data available.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
     </div>
   );
 
   /* ───────── render ───────── */
   return (
-    <div className="min-h-screen bg-[#0b0f1a] bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,_#1e1b4b33,_transparent)] p-3 sm:p-6">
-      <div className="mx-auto max-w-[1520px]">
+    <>
+      {realtimeAlerts.length ? (
+        <div className="fixed right-4 top-4 z-[90] flex w-[92vw] max-w-sm flex-col gap-2">
+          {realtimeAlerts.map((alert) => (
+            <div
+              key={alert.id}
+              className={`rounded-xl border px-3 py-2 text-xs shadow-lg sm:text-sm ${alertBadgeClass(alert.severity)}`}
+              role="status"
+              aria-live="polite"
+            >
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div className="min-w-0">
+                  <div className="font-semibold text-white/90">
+                    Session #{alert.sessionId} alert
+                  </div>
+                  <div className="text-[11px] text-slate-200/90">
+                    {String(alert.speakerRole || 'participant').replace(/\b\w/g, (c) =>
+                      c.toUpperCase()
+                    )}{' '}
+                    {alert.incidentType} ({alert.severity})
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleTerminateSessionById(Number(alert.sessionId))}
+                  disabled={terminateBusyId === Number(alert.sessionId)}
+                  className="ml-auto inline-flex items-center rounded-md border border-rose-500/50 bg-rose-500/20 px-2 py-1 text-[10px] font-semibold text-rose-100 transition-colors hover:bg-rose-500/30 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {terminateBusyId === Number(alert.sessionId) ? 'Ending...' : 'End'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <div className="min-h-screen bg-[#0b0f1a] bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,_#1e1b4b33,_transparent)] p-3 sm:p-6">
+        <div className="mx-auto max-w-[1520px]">
 
         {/* ── page card ── */}
         <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 shadow-2xl backdrop-blur-sm sm:p-8">
@@ -485,11 +666,16 @@ const AdminActivityPage = () => {
           </div>
 
           {/* ── error ── */}
-          {error && (
-            <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-400">
-              {error}
-            </div>
-          )}
+            {error && (
+              <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-400">
+                {error}
+              </div>
+            )}
+            {terminateError && (
+              <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-400">
+                {terminateError}
+              </div>
+            )}
 
           {/* ── stat cards ── */}
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -858,7 +1044,7 @@ const AdminActivityPage = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
