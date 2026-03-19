@@ -875,6 +875,7 @@ const AdminActivityPage = () => {
         </div>
       </div>
 
+      </div>
       {/* ───────── STAT DETAIL MODAL ───────── */}
       {activeStatMeta && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm" onClick={() => setActiveStatKey(null)}>

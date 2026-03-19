@@ -527,6 +527,13 @@ const ManageAvailability = () => {
 
   return (
     <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
+      {error ? (
+        <div className="fixed right-4 top-4 z-[80] w-[92vw] max-w-sm">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+            {error}
+          </div>
+        </div>
+      ) : null}
       <div className="mx-auto max-w-[1400px]">
         {/* Header */}
         <div className="relative mb-6 flex flex-col gap-4 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:flex-row sm:items-center sm:justify-between sm:p-6">
