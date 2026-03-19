@@ -336,7 +336,52 @@
     display: none;
   }
 
-  .lp-hdr .lp-hdr-actions {
+  .lp-na .lp-hdr {
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .lp-na .lp-logo img {
+    height: 34px;
+  }
+
+  .lp-na .lp-logo span {
+    margin-top: 2px;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+  }
+
+  .lp-na .lp-hdr .lp-hdr-actions {
+    display: flex !important;
     margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .lp-na .lp-hdr .lp-hdr-actions .lp-ghost {
+    padding: 7px 12px;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (max-width: 480px) {
+  .lp-na .lp-hdr {
+    padding: 8px 10px;
+  }
+
+  .lp-na .lp-logo img {
+    height: 30px;
+  }
+
+  .lp-na .lp-logo span {
+    font-size: 7px;
+    letter-spacing: 0.1em;
+  }
+
+  .lp-na .lp-hdr .lp-hdr-actions .lp-ghost {
+    padding: 6px 10px;
+    font-size: 0.58rem;
   }
 }
