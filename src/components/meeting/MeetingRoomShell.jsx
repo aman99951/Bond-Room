@@ -84,6 +84,10 @@ const hasTurnIceServers = (servers) =>
 const CLOUDINARY_CLOUD_NAME = String(import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
 const CLOUDINARY_UPLOAD_PRESET = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '').trim();
 const CLOUDINARY_UPLOAD_FOLDER = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_FOLDER || 'bond-room').trim();
+const CLOUDINARY_CHUNK_SIZE_BYTES = Math.max(
+  5 * 1024 * 1024,
+  Number(import.meta.env.VITE_CLOUDINARY_CHUNK_SIZE_BYTES || 20 * 1024 * 1024)
+);
 const SERVERLESS_MAX_UPLOAD_BYTES = Number(import.meta.env.VITE_SERVERLESS_MAX_UPLOAD_BYTES || 4 * 1024 * 1024);
 const ABUSE_TOAST_DEDUP_MS = 6000;
 const ABUSE_SUMMARY_DEDUP_MS = 12000;
@@ -1003,8 +1007,86 @@ const MeetingRoomShell = ({
       bytes: Number(payload?.bytes || 0),
     });
 
+    const nextUploadId = () => {
+      const randomId =
+        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+          ? crypto.randomUUID()
+          : `upl-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      return `recording-${sessionIdValue || 'unknown'}-${randomId}`;
+    };
+
+    const chunkedSignedUpload = async ({
+      uploadUrl,
+      apiKey,
+      timestamp,
+      signature,
+      folder,
+      publicId,
+    }) => {
+      const uploadId = nextUploadId();
+      const totalSize = Number(file.size || 0);
+      if (!totalSize) return null;
+
+      let offset = 0;
+      let lastPayload = null;
+
+      while (offset < totalSize) {
+        const chunkEndExclusive = Math.min(offset + CLOUDINARY_CHUNK_SIZE_BYTES, totalSize);
+        const chunk = file.slice(offset, chunkEndExclusive);
+        const contentRange = `bytes ${offset}-${chunkEndExclusive - 1}/${totalSize}`;
+        const formData = new FormData();
+        formData.append('file', chunk);
+        formData.append('api_key', apiKey);
+        formData.append('timestamp', timestamp);
+        formData.append('signature', signature);
+        if (folder) formData.append('folder', folder);
+        if (publicId) formData.append('public_id', publicId);
+
+        let response = null;
+        let payload = null;
+        let lastErrorMessage = '';
+        for (let attempt = 1; attempt <= 3; attempt += 1) {
+          try {
+            response = await fetch(uploadUrl, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'X-Unique-Upload-Id': uploadId,
+                'Content-Range': contentRange,
+              },
+            });
+            payload = await response.json().catch(() => ({}));
+            if (response.ok) break;
+            lastErrorMessage =
+              String(payload?.error?.message || payload?.message || '').trim() ||
+              `Cloud storage upload failed at chunk ${offset}-${chunkEndExclusive - 1}.`;
+          } catch (err) {
+            lastErrorMessage = String(err?.message || '').trim() || 'Cloud storage upload failed.';
+          }
+          if (attempt < 3) {
+            await new Promise((resolve) => window.setTimeout(resolve, attempt * 500));
+          }
+        }
+
+        if (!response?.ok) {
+          throw new Error(lastErrorMessage || 'Cloud storage upload failed.');
+        }
+        lastPayload = payload;
+        offset = chunkEndExclusive;
+      }
+      return lastPayload;
+    };
+
     if (typeof api.getSessionRecordingUploadSignature === 'function' && sessionIdValue) {
-      const signaturePayload = await api.getSessionRecordingUploadSignature(sessionIdValue, {});
+      let signaturePayload = null;
+      try {
+        signaturePayload = await api.getSessionRecordingUploadSignature(sessionIdValue, {});
+      } catch {
+        signaturePayload = null;
+      }
+      if (!signaturePayload) {
+        throw new Error('Cloudinary signing is not configured on backend.');
+      }
       const uploadUrl = String(signaturePayload?.upload_url || '').trim();
       const apiKey = String(signaturePayload?.api_key || '').trim();
       const timestamp = String(signaturePayload?.timestamp || '').trim();
@@ -1013,25 +1095,14 @@ const MeetingRoomShell = ({
       const publicId = String(signaturePayload?.public_id || '').trim();
 
       if (uploadUrl && apiKey && timestamp && signature) {
-        const signedForm = new FormData();
-        signedForm.append('file', file);
-        signedForm.append('api_key', apiKey);
-        signedForm.append('timestamp', timestamp);
-        signedForm.append('signature', signature);
-        if (folder) signedForm.append('folder', folder);
-        if (publicId) signedForm.append('public_id', publicId);
-
-        const signedResponse = await fetch(uploadUrl, {
-          method: 'POST',
-          body: signedForm,
+        const signedPayload = await chunkedSignedUpload({
+          uploadUrl,
+          apiKey,
+          timestamp,
+          signature,
+          folder,
+          publicId,
         });
-        const signedPayload = await signedResponse.json().catch(() => ({}));
-        if (!signedResponse.ok) {
-          const message =
-            String(signedPayload?.error?.message || signedPayload?.message || '').trim() ||
-            'Cloud storage upload failed.';
-          throw new Error(message);
-        }
         return normalizeUploadResponse(signedPayload);
       }
     }
