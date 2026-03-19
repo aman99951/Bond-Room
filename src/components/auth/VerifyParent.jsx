@@ -8,39 +8,97 @@ import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import {
   clearPendingMenteeRegistration,
   getPendingMenteeRegistration,
+  setPendingMenteeRegistration,
 } from '../../apis/api/storage';
 import '../LandingPage.css';
 import './VerifyParent.css';
+
+const MOBILE_DIGITS_LENGTH = 10;
+const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
+const maskMobile = (value) => {
+  const cleaned = normalizePhone(value);
+  if (!cleaned) return '******0000';
+  if (cleaned.length <= 4) return cleaned;
+  return `${'*'.repeat(Math.max(cleaned.length - 4, 0))}${cleaned.slice(-4)}`;
+};
 
 const VerifyParent = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
   const pendingMentee = useMemo(() => getPendingMenteeRegistration(), []);
+  const [parentMobile, setParentMobile] = useState(() => normalizePhone(pendingMentee?.parentMobile || ''));
+  const [isEditingMobile, setIsEditingMobile] = useState(false);
+  const [mobileDraft, setMobileDraft] = useState(() => normalizePhone(pendingMentee?.parentMobile || ''));
   const [otp, setOtp] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [otpHint, setOtpHint] = useState('');
   const { loading, sendParentOtp, verifyParentOtp, loginWithMobile } = useMenteeAuth();
 
-  const parentMobileMasked =
-    state?.parentMobileMasked ||
-    (pendingMentee?.parentMobile
-      ? `${'*'.repeat(Math.max(pendingMentee.parentMobile.length - 4, 0))}${pendingMentee.parentMobile.slice(-4)}`
-      : '******0000');
+  const parentMobileMasked = parentMobile ? maskMobile(parentMobile) : state?.parentMobileMasked || '******0000';
 
   const handleOtpChange = (event) => {
     const digitsOnly = event.target.value.replace(/\D/g, '').slice(0, 6);
     setOtp(digitsOnly);
   };
 
+  const handleMobileDraftChange = (event) => {
+    const digitsOnly = normalizePhone(event.target.value).slice(0, MOBILE_DIGITS_LENGTH);
+    setMobileDraft(digitsOnly);
+  };
+
+  const handleStartEditMobile = () => {
+    setErrorMessage('');
+    setInfoMessage('');
+    setOtpHint('');
+    setMobileDraft(parentMobile);
+    setIsEditingMobile(true);
+  };
+
+  const handleCancelEditMobile = () => {
+    setMobileDraft(parentMobile);
+    setIsEditingMobile(false);
+  };
+
+  const handleSaveMobile = async () => {
+    setErrorMessage('');
+    setInfoMessage('');
+    setOtpHint('');
+    const mobileDigits = normalizePhone(mobileDraft);
+    if (mobileDigits.length !== MOBILE_DIGITS_LENGTH) {
+      setErrorMessage('Parent mobile number must be exactly 10 digits.');
+      return;
+    }
+    if (!pendingMentee?.menteeId) {
+      setErrorMessage('Registration data not found. Please register again.');
+      return;
+    }
+    try {
+      const response = await sendParentOtp(pendingMentee.menteeId, mobileDigits);
+      const updatedPending = {
+        ...(pendingMentee || {}),
+        parentMobile: mobileDigits,
+      };
+      setPendingMenteeRegistration(updatedPending);
+      setParentMobile(mobileDigits);
+      setIsEditingMobile(false);
+      setInfoMessage('Number updated and OTP sent successfully.');
+      if (response?.otp) {
+        setOtpHint(`Test OTP: ${response.otp}`);
+      }
+    } catch (err) {
+      setErrorMessage(err?.message || 'Unable to update number.');
+    }
+  };
+
   const handleResend = async () => {
     setErrorMessage('');
     setInfoMessage('');
     try {
-      if (!pendingMentee?.menteeId) {
+      if (!pendingMentee?.menteeId || !parentMobile) {
         throw new Error('Registration data not found. Please register again.');
       }
-      const response = await sendParentOtp(pendingMentee.menteeId, pendingMentee.parentMobile);
+      const response = await sendParentOtp(pendingMentee.menteeId, parentMobile);
       setInfoMessage('OTP sent successfully.');
       if (response?.otp) {
         setOtpHint(`Test OTP: ${response.otp}`);
@@ -54,7 +112,7 @@ const VerifyParent = () => {
     setErrorMessage('');
     setInfoMessage('');
 
-    if (!pendingMentee?.menteeId || !pendingMentee?.parentMobile) {
+    if (!pendingMentee?.menteeId || !parentMobile) {
       setErrorMessage('Registration session expired. Please register again.');
       return;
     }
@@ -66,7 +124,7 @@ const VerifyParent = () => {
 
     try {
       await verifyParentOtp(pendingMentee.menteeId, otp);
-      await loginWithMobile(pendingMentee.parentMobile, '123456', 'menties');
+      await loginWithMobile(parentMobile, '123456', 'menties');
       clearPendingMenteeRegistration();
       navigate('/needs-assessment');
     } catch (err) {
@@ -121,6 +179,41 @@ const VerifyParent = () => {
               </div>
               <h2 className="lp-vp-h2">Verify phone number</h2>
               <p className="lp-vp-sub">Enter the 6-digit OTP sent to +91 {parentMobileMasked}</p>
+              <div className="lp-vp-mobile-edit">
+                {!isEditingMobile ? (
+                  <button
+                    type="button"
+                    className="lp-vp-edit-btn"
+                    onClick={handleStartEditMobile}
+                    disabled={loading}
+                  >
+                    Edit number
+                  </button>
+                ) : (
+                  <div className="lp-vp-edit-panel">
+                    <div className="lp-vp-mobile-row">
+                      <span className="lp-vp-country">+91</span>
+                      <input
+                        type="text"
+                        className="lp-input"
+                        placeholder="Parent mobile number"
+                        value={mobileDraft}
+                        onChange={handleMobileDraftChange}
+                        maxLength={MOBILE_DIGITS_LENGTH}
+                        inputMode="numeric"
+                      />
+                    </div>
+                    <div className="lp-vp-edit-actions">
+                      <button type="button" className="lp-vp-inline-btn" onClick={handleSaveMobile} disabled={loading}>
+                        Save & Send OTP
+                      </button>
+                      <button type="button" className="lp-vp-inline-btn lp-vp-inline-btn-ghost" onClick={handleCancelEditMobile} disabled={loading}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="lp-vp-consent-card">
                 <span className="lp-vp-consent-icon">

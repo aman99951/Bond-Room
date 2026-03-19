@@ -115,6 +115,66 @@
   color: var(--mute);
 }
 
+.lp-vp-mobile-edit {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.lp-vp-edit-btn {
+  border: 0;
+  background: transparent;
+  color: var(--acc);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+}
+
+.lp-vp-edit-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lp-vp-mobile-row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.lp-vp-country {
+  border: 1px solid #e7e2f6;
+  border-radius: 12px;
+  background: #f7f2ff;
+  color: var(--mute);
+  padding: 11px 10px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.lp-vp-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lp-vp-inline-btn {
+  border: 0;
+  border-radius: 10px;
+  background: var(--acc);
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+}
+
+.lp-vp-inline-btn.lp-vp-inline-btn-ghost {
+  border: 1px solid #d7d0e2;
+  background: #fff;
+  color: #6b7280;
+}
+
 .lp-vp-consent-card {
   margin-top: 2px;
   border: 1px solid #e3d7f5;
@@ -227,6 +287,10 @@
 
   .lp-vp-sub {
     font-size: 0.86rem;
+  }
+
+  .lp-vp-edit-actions {
+    flex-wrap: wrap;
   }
 
   .lp-vp-otp {
