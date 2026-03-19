@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
+import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import '../LandingPage.css';
 import './NeedsAssessment.css';
 
@@ -19,6 +20,7 @@ const Choice = ({ label, selected, onClick }) => (
 const NeedsAssessmentQ4 = () => {
   const navigate = useNavigate();
   const { draft, saveAnswer } = useMenteeAssessment();
+  const { logout, loading: authLoading } = useMenteeAuth();
   const [selectedComfort, setSelectedComfort] = useState(draft.comfort_level || 'Neutral');
 
   const options = [
@@ -34,6 +36,14 @@ const NeedsAssessmentQ4 = () => {
     navigate('/needs-assessment/q5');
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/login');
+    }
+  };
+
   return (
     <div className="lp lp-na">
       <header className="lp-hdr">
@@ -41,13 +51,10 @@ const NeedsAssessmentQ4 = () => {
           <img src={logo} alt="Bond Room" />
           <span>Bridging Old and New Destinies</span>
         </Link>
-        <nav className="lp-nav">
-          <Link to="/">Home</Link>
-          <a href="/#about">About</a>
-          <a href="/#safety">Safety</a>
-        </nav>
         <div className="lp-hdr-actions">
-          <Link to="/dashboard" className="lp-ghost">Dashboard</Link>
+          <button type="button" className="lp-ghost" onClick={handleLogout} disabled={authLoading}>
+            Logout
+          </button>
         </div>
       </header>
 
@@ -84,9 +91,6 @@ const NeedsAssessmentQ4 = () => {
             <button type="button" onClick={handleNext} className="lp-na-btn-primary">Next Question {'\u2192'}</button>
           </div>
 
-          <div className="lp-na-skip">
-            <button type="button" onClick={handleNext}>Skip this question</button>
-          </div>
         </div>
       </main>
 

@@ -44,6 +44,7 @@ import AdminActivityPage from './admin/AdminActivityPage';
 import LandingPage from './LandingPage';
 import {
   AUTH_LOGOUT_EVENT_NAME,
+  getAssessmentDraft,
   getAuthSession,
   mapAppRoleToUiRole,
 } from '../apis/api/storage';
@@ -178,6 +179,38 @@ const ReturnToPreviousRoute = () => {
   return null;
 };
 
+const normalizeListPayload = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  return [];
+};
+
+const hasValue = (value) => {
+  if (Array.isArray(value)) return value.some((item) => String(item || '').trim());
+  return Boolean(String(value || '').trim());
+};
+
+const ASSESSMENT_REQUIRED_KEYS = ['feeling', 'feeling_cause', 'support_type', 'comfort_level', 'language'];
+
+const isAssessmentRequestComplete = (request) => {
+  if (!request || typeof request !== 'object') return false;
+  return ASSESSMENT_REQUIRED_KEYS.every((key) => hasValue(request[key]));
+};
+
+const draftHasAnyAssessmentValue = (draft) => {
+  if (!draft || typeof draft !== 'object') return false;
+  return (
+    ASSESSMENT_REQUIRED_KEYS.some((key) => hasValue(draft[key])) ||
+    hasValue(draft.feelings) ||
+    hasValue(draft.feeling_causes)
+  );
+};
+
+const isAssessmentDraftComplete = (draft) => {
+  if (!draft || typeof draft !== 'object') return false;
+  return ASSESSMENT_REQUIRED_KEYS.every((key) => hasValue(draft[key]));
+};
+
 const MentorDashboardGuard = ({ children }) => {
   const session = getAuthSession();
   const { mentor, loading: mentorLoading } = useMentorData();
@@ -245,6 +278,89 @@ const MentorDashboardGuard = ({ children }) => {
   );
 };
 
+const MenteeAssessmentGuard = ({ children }) => {
+  const session = getAuthSession();
+  const uiRole = mapAppRoleToUiRole(session?.role);
+  const [checking, setChecking] = useState(true);
+  const [hasAssessment, setHasAssessment] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkAssessment = async () => {
+      if (!session?.accessToken || uiRole !== 'menties') {
+        if (!cancelled) {
+          setHasAssessment(true);
+          setChecking(false);
+        }
+        return;
+      }
+
+      if (!session?.email) {
+        if (!cancelled) {
+          setHasAssessment(false);
+          setChecking(false);
+        }
+        return;
+      }
+
+      const assessmentDraft = getAssessmentDraft();
+      if (draftHasAnyAssessmentValue(assessmentDraft) && !isAssessmentDraftComplete(assessmentDraft)) {
+        if (!cancelled) {
+          setHasAssessment(false);
+          setChecking(false);
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        setChecking(true);
+      }
+
+      try {
+        const menteesResponse = await menteeApi.getMentees({ email: session.email });
+        const mentees = normalizeListPayload(menteesResponse);
+        const currentMentee = mentees[0] || null;
+        if (!currentMentee?.id) {
+          if (!cancelled) setHasAssessment(false);
+          return;
+        }
+
+        const requestsResponse = await menteeApi.listMenteeRequests({ mentee_id: currentMentee.id });
+        const requests = normalizeListPayload(requestsResponse);
+        const latestRequest = requests[0] || null;
+        const hasCompleteAssessment = isAssessmentRequestComplete(latestRequest);
+        if (!cancelled) {
+          setHasAssessment(hasCompleteAssessment);
+        }
+      } catch {
+        if (!cancelled) {
+          setHasAssessment(false);
+        }
+      } finally {
+        if (!cancelled) {
+          setChecking(false);
+        }
+      }
+    };
+
+    checkAssessment();
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.accessToken, session?.email, uiRole]);
+
+  if (checking) {
+    return <div className="mt-3 px-6 text-sm text-[#6b7280]">Checking assessment status...</div>;
+  }
+
+  if (!hasAssessment) {
+    return <Navigate to="/needs-assessment" replace />;
+  }
+
+  return children;
+};
+
 const AppLayout = () => {
   useEffect(() => {
     const setAppHeight = () => {
@@ -292,7 +408,14 @@ const AppLayout = () => {
             </ProtectedApp>
           )}
         >
-        <Route path="dashboard" element={<Dashboard />} />
+        <Route
+          path="dashboard"
+          element={(
+            <MenteeAssessmentGuard>
+              <Dashboard />
+            </MenteeAssessmentGuard>
+          )}
+        />
         <Route path="my-sessions" element={<MySessions />} />
         <Route path="session-requests" element={<SessionRequests />} />
         <Route path="session-records" element={<SessionRecords />} />

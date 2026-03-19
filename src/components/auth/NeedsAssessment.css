@@ -2,6 +2,10 @@
   min-height: 100vh;
 }
 
+.lp-na .lp-hdr-actions {
+  margin-left: auto;
+}
+
 .lp-na-toast {
   position: fixed;
   top: 94px;

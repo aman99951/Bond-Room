@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, X } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
+import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import '../LandingPage.css';
 import './NeedsAssessment.css';
 
@@ -36,6 +37,7 @@ const NeedsAssessment = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { draft, saveAnswer } = useMenteeAssessment();
+  const { logout, loading: authLoading } = useMenteeAuth();
   const [selectedFeelings, setSelectedFeelings] = useState(() => {
     const savedSelections = toArray(draft.feelings);
     if (savedSelections.length) {
@@ -99,9 +101,12 @@ const NeedsAssessment = () => {
     navigate('/needs-assessment/q2');
   };
 
-  const handleSkip = () => {
-    saveFeelingAnswers([], '');
-    navigate('/needs-assessment/q2');
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/login');
+    }
   };
 
   useEffect(() => {
@@ -141,13 +146,10 @@ const NeedsAssessment = () => {
           <img src={logo} alt="Bond Room" />
           <span>Bridging Old and New Destinies</span>
         </Link>
-        <nav className="lp-nav">
-          <Link to="/">Home</Link>
-          <a href="/#about">About</a>
-          <a href="/#safety">Safety</a>
-        </nav>
         <div className="lp-hdr-actions">
-          <Link to="/dashboard" className="lp-ghost">Dashboard</Link>
+          <button type="button" className="lp-ghost" onClick={handleLogout} disabled={authLoading}>
+            Logout
+          </button>
         </div>
       </header>
 
@@ -197,15 +199,10 @@ const NeedsAssessment = () => {
           )}
 
           <div className="lp-na-actions">
-            {!hideBackButton && (
-              <Link to="/verify-parent" className="lp-na-btn-ghost">Back</Link>
-            )}
+          
             <button type="button" onClick={handleNext} className="lp-na-btn-primary">Next Question {'\u2192'}</button>
           </div>
 
-          <div className="lp-na-skip">
-            <button type="button" onClick={handleSkip}>Skip this question</button>
-          </div>
         </div>
       </main>
 

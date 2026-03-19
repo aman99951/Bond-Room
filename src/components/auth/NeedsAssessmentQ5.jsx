@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, X } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
+import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import '../LandingPage.css';
 import './NeedsAssessment.css';
 
@@ -20,6 +21,7 @@ const Choice = ({ label, selected, onClick }) => (
 const NeedsAssessmentQ5 = () => {
   const navigate = useNavigate();
   const { draft, saveAnswer, submitAssessment, loading, error } = useMenteeAssessment();
+  const { logout, loading: authLoading } = useMenteeAuth();
   const [selectedLanguage, setSelectedLanguage] = useState(draft.language || 'Tamil');
   const [localError, setLocalError] = useState('');
   const [toastState, setToastState] = useState({
@@ -38,6 +40,14 @@ const NeedsAssessmentQ5 = () => {
       navigate('/dashboard');
     } catch (err) {
       setLocalError(err?.message || 'Unable to submit assessment.');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/login');
     }
   };
 
@@ -79,13 +89,10 @@ const NeedsAssessmentQ5 = () => {
           <img src={logo} alt="Bond Room" />
           <span>Bridging Old and New Destinies</span>
         </Link>
-        <nav className="lp-nav">
-          <Link to="/">Home</Link>
-          <a href="/#about">About</a>
-          <a href="/#safety">Safety</a>
-        </nav>
         <div className="lp-hdr-actions">
-          <Link to="/dashboard" className="lp-ghost">Dashboard</Link>
+          <button type="button" className="lp-ghost" onClick={handleLogout} disabled={authLoading}>
+            Logout
+          </button>
         </div>
       </header>
 
@@ -129,9 +136,6 @@ const NeedsAssessmentQ5 = () => {
             </button>
           </div>
 
-          <div className="lp-na-skip">
-            <button type="button" onClick={handleFinish} disabled={loading}>Skip this question</button>
-          </div>
         </div>
       </main>
 

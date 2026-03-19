@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, X } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
+import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import '../LandingPage.css';
 import './NeedsAssessment.css';
 
@@ -32,6 +33,7 @@ const Choice = ({ label, selected, onClick }) => (
 const NeedsAssessmentQ2 = () => {
   const navigate = useNavigate();
   const { draft, saveAnswer } = useMenteeAssessment();
+  const { logout, loading: authLoading } = useMenteeAuth();
   const [selectedCauses, setSelectedCauses] = useState(() => {
     const savedSelections = toArray(draft.feeling_causes);
     if (savedSelections.length) {
@@ -93,9 +95,12 @@ const NeedsAssessmentQ2 = () => {
     navigate('/needs-assessment/q3');
   };
 
-  const handleSkip = () => {
-    saveCauseAnswers([], '');
-    navigate('/needs-assessment/q3');
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/login');
+    }
   };
 
   useEffect(() => {
@@ -135,13 +140,10 @@ const NeedsAssessmentQ2 = () => {
           <img src={logo} alt="Bond Room" />
           <span>Bridging Old and New Destinies</span>
         </Link>
-        <nav className="lp-nav">
-          <Link to="/">Home</Link>
-          <a href="/#about">About</a>
-          <a href="/#safety">Safety</a>
-        </nav>
         <div className="lp-hdr-actions">
-          <Link to="/dashboard" className="lp-ghost">Dashboard</Link>
+          <button type="button" className="lp-ghost" onClick={handleLogout} disabled={authLoading}>
+            Logout
+          </button>
         </div>
       </header>
 
@@ -194,9 +196,6 @@ const NeedsAssessmentQ2 = () => {
             <button type="button" onClick={handleNext} className="lp-na-btn-primary">Next Question {'\u2192'}</button>
           </div>
 
-          <div className="lp-na-skip">
-            <button type="button" onClick={handleSkip}>Skip this question</button>
-          </div>
         </div>
       </main>
 
