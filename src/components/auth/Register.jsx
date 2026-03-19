@@ -13,6 +13,7 @@ import './Register.css';
 
 const STUDENT_MIN_AGE = 13;
 const STUDENT_MAX_AGE = 18;
+const MOBILE_DIGITS_LENGTH = 10;
 
 const yearsAgo = (years) => {
   const today = new Date();
@@ -77,10 +78,14 @@ const initialForm = {
   recordConsent: false,
 };
 
+const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
+
 const Register = () => {
   const [gradeOpen, setGradeOpen] = useState(false);
   const [genderOpen, setGenderOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
+  const [touchedFields, setTouchedFields] = useState({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
   const [otpHint, setOtpHint] = useState('');
@@ -96,7 +101,38 @@ const Register = () => {
   const dobBounds = getStudentDobBounds();
 
   const updateField = (key, value) => {
+    setTouchedFields((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+    if (key === 'parentMobile') {
+      const digitsOnly = normalizePhone(value).slice(0, MOBILE_DIGITS_LENGTH);
+      setForm((prev) => ({ ...prev, parentMobile: digitsOnly }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const markFieldTouched = (key) => {
+    setTouchedFields((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+  };
+
+  const hasRequiredFieldError = (key) => {
+    if (!submitAttempted && !touchedFields[key]) {
+      return false;
+    }
+
+    if (key === 'parentConsent') {
+      return !form.parentConsent;
+    }
+
+    if (key === 'recordConsent') {
+      return !form.recordConsent;
+    }
+
+    if (key === 'parentMobile') {
+      const digitsOnly = normalizePhone(form.parentMobile);
+      return !digitsOnly || digitsOnly.length !== MOBILE_DIGITS_LENGTH;
+    }
+
+    return !String(form[key] || '').trim();
   };
 
   const maskMobile = (value) => {
@@ -108,6 +144,7 @@ const Register = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setSubmitAttempted(true);
     setErrorMessage('');
     setInfoMessage('');
     setOtpHint('');
@@ -122,8 +159,18 @@ const Register = () => {
       return;
     }
 
-    if (!form.parentMobile.trim()) {
+    if (!form.recordConsent) {
+      setErrorMessage('Session recording consent is required to continue.');
+      return;
+    }
+
+    const parentMobileDigits = normalizePhone(form.parentMobile);
+    if (!parentMobileDigits) {
       setErrorMessage('Parent mobile number is required for OTP verification.');
+      return;
+    }
+    if (parentMobileDigits.length !== MOBILE_DIGITS_LENGTH) {
+      setErrorMessage('Parent mobile number must be exactly 10 digits.');
       return;
     }
 
@@ -143,11 +190,11 @@ const Register = () => {
         gender: form.gender,
         timezone,
         parent_guardian_consent: form.parentConsent,
-        parent_mobile: form.parentMobile.trim(),
+        parent_mobile: parentMobileDigits,
         record_consent: form.recordConsent,
       });
 
-      const otpResponse = await sendParentOtp(mentee.id, form.parentMobile.trim());
+      const otpResponse = await sendParentOtp(mentee.id, parentMobileDigits);
       if (otpResponse?.otp) {
         setOtpHint(`Test OTP: ${otpResponse.otp}`);
         setInfoMessage('OTP sent successfully.');
@@ -156,13 +203,13 @@ const Register = () => {
       setPendingMenteeRegistration({
         menteeId: mentee.id,
         email: form.email.trim().toLowerCase(),
-        parentMobile: form.parentMobile.trim(),
+        parentMobile: parentMobileDigits,
       });
       setAssessmentDraft({});
 
       navigate('/verify-parent', {
         state: {
-          parentMobileMasked: maskMobile(form.parentMobile.trim()),
+          parentMobileMasked: maskMobile(parentMobileDigits),
         },
       });
     } catch (err) {
@@ -253,20 +300,22 @@ const Register = () => {
                     <label htmlFor="firstName">First Name</label>
                     <input
                       id="firstName"
-                      className="lp-input"
+                      className={`lp-input ${hasRequiredFieldError('firstName') ? 'lp-input-error' : ''}`}
                       placeholder="e.g. Priya"
                       value={form.firstName}
                       onChange={(event) => updateField('firstName', event.target.value)}
+                      onBlur={() => markFieldTouched('firstName')}
                     />
                   </div>
                   <div className="lp-field">
                     <label htmlFor="lastName">Last Name</label>
                     <input
                       id="lastName"
-                      className="lp-input"
+                      className={`lp-input ${hasRequiredFieldError('lastName') ? 'lp-input-error' : ''}`}
                       placeholder="e.g. Sharma"
                       value={form.lastName}
                       onChange={(event) => updateField('lastName', event.target.value)}
+                      onBlur={() => markFieldTouched('lastName')}
                     />
                   </div>
                 </div>
@@ -274,10 +323,17 @@ const Register = () => {
                 <div className="lp-register-row">
                   <div className="lp-field">
                     <label id="registerGradeLabel">Grade</label>
-                    <div className="lp-select-wrap" tabIndex={0} onBlur={() => setGradeOpen(false)}>
+                    <div
+                      className="lp-select-wrap"
+                      tabIndex={0}
+                      onBlur={() => {
+                        setGradeOpen(false);
+                        markFieldTouched('grade');
+                      }}
+                    >
                       <button
                         type="button"
-                        className="lp-input lp-select-trigger"
+                        className={`lp-input lp-select-trigger ${hasRequiredFieldError('grade') ? 'lp-input-error' : ''}`}
                         onClick={() => setGradeOpen((open) => !open)}
                         aria-haspopup="listbox"
                         aria-expanded={gradeOpen}
@@ -312,10 +368,11 @@ const Register = () => {
                     <input
                       id="email"
                       type="email"
-                      className="lp-input"
+                      className={`lp-input ${hasRequiredFieldError('email') ? 'lp-input-error' : ''}`}
                       placeholder="student@example.com"
                       value={form.email}
                       onChange={(event) => updateField('email', event.target.value)}
+                      onBlur={() => markFieldTouched('email')}
                     />
                   </div>
                 </div>
@@ -326,9 +383,10 @@ const Register = () => {
                     <input
                       id="dob"
                       type="date"
-                      className="lp-input"
+                      className={`lp-input ${hasRequiredFieldError('dob') ? 'lp-input-error' : ''}`}
                       value={form.dob}
                       onChange={(event) => updateField('dob', event.target.value)}
+                      onBlur={() => markFieldTouched('dob')}
                       min={dobBounds.min}
                       max={dobBounds.max}
                     />
@@ -337,10 +395,17 @@ const Register = () => {
 
                   <div className="lp-field">
                     <label id="registerGenderLabel">Gender</label>
-                    <div className="lp-select-wrap" tabIndex={0} onBlur={() => setGenderOpen(false)}>
+                    <div
+                      className="lp-select-wrap"
+                      tabIndex={0}
+                      onBlur={() => {
+                        setGenderOpen(false);
+                        markFieldTouched('gender');
+                      }}
+                    >
                       <button
                         type="button"
-                        className="lp-input lp-select-trigger"
+                        className={`lp-input lp-select-trigger ${hasRequiredFieldError('gender') ? 'lp-input-error' : ''}`}
                         onClick={() => setGenderOpen((open) => !open)}
                         aria-haspopup="listbox"
                         aria-expanded={genderOpen}
@@ -371,7 +436,7 @@ const Register = () => {
                   </div>
                 </div>
 
-                <div className="lp-register-consent-box">
+                <div className={`lp-register-consent-box ${hasRequiredFieldError('parentConsent') ? 'lp-input-error-box' : ''}`}>
                   <label className="lp-register-checkline">
                     <input
                       id="parentMobileOpt"
@@ -388,16 +453,17 @@ const Register = () => {
                     <div className="lp-register-country" aria-hidden="true">+91</div>
                     <input
                       id="parentMobile"
-                      className="lp-input"
+                      className={`lp-input ${hasRequiredFieldError('parentMobile') ? 'lp-input-error' : ''}`}
                       placeholder="98765 43210"
                       aria-label="Parent mobile number"
                       value={form.parentMobile}
                       onChange={(event) => updateField('parentMobile', event.target.value)}
+                      onBlur={() => markFieldTouched('parentMobile')}
                     />
                   </div>
                 </div>
 
-                <label className="lp-register-checkline">
+                <label className={`lp-register-checkline ${hasRequiredFieldError('recordConsent') ? 'lp-input-error-check' : ''}`}>
                   <input
                     id="recordConsent"
                     type="checkbox"
