@@ -1,4 +1,4 @@
-// src/layouts/AppLayout.jsx
+﻿// src/layouts/AppLayout.jsx
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
@@ -42,6 +42,7 @@ import AdminPortal from './admin/AdminPortal';
 import AdminMentorReview from './admin/AdminMentorReview';
 import AdminActivityPage from './admin/AdminActivityPage';
 import LandingPage from './LandingPage';
+import VoluntorFlow from './voluntor/VoluntorFlow';
 import {
   AUTH_LOGOUT_EVENT_NAME,
   getAssessmentDraft,
@@ -72,6 +73,8 @@ const ScrollToTop = () => {
 
 const isPublicPath = (pathname) => {
   if (pathname === '/admin' || pathname.startsWith('/admin/')) return true;
+  if (pathname === '/voluntor' || pathname.startsWith('/voluntor/')) return true;
+  if (pathname === '/volunteer' || pathname.startsWith('/volunteer/')) return true;
   const exactPublicPaths = new Set([
     '/',
     '/login',
@@ -400,6 +403,8 @@ const AppLayout = () => {
         <Route path="/needs-assessment/q3" element={<NeedsAssessmentQ3 />} />
         <Route path="/needs-assessment/q4" element={<NeedsAssessmentQ4 />} />
         <Route path="/needs-assessment/q5" element={<NeedsAssessmentQ5 />} />
+        <Route path="/volunteer/*" element={<VoluntorFlow />} />
+        <Route path="/voluntor/*" element={<Navigate to="/volunteer" replace />} />
         <Route
           path="/*"
           element={(
@@ -470,3 +475,7 @@ const AppLayout = () => {
 };
 
 export default AppLayout;
+
+
+
+
