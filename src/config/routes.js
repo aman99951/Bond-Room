@@ -8,13 +8,14 @@ import BookSession from '../components/menties/pages/BookSession';
 import BookingSuccess from '../components/menties/pages/BookingSuccess';
 import Feedback from '../components/menties/pages/Feedback';
 import SessionRequests from '../components/menties/pages/SessionRequests';
+import RegisteredEvents from '../components/menties/pages/RegisteredEvents';
 import MentorImpactDashboard from '../components/mentors/pages/ImpactDashboard';
 import MentorSessions from '../components/mentors/pages/MySessions';
 import MentorSessionRequests from '../components/mentors/pages/SessionRequests';
 import MentorAvailability from '../components/mentors/pages/ManageAvailability';
 import MentorMyprofilePage from '../components/mentors/pages/Myprofile';
 import SessionRecords from '../components/shared/SessionRecords';
-import { Home, Calendar, Users, User, FileText, ClipboardList } from 'lucide-react';
+import { Home, Calendar, Users, User, FileText, ClipboardList, CheckCircle2 } from 'lucide-react';
 
 export const navRoutes = [
   {
@@ -51,6 +52,13 @@ export const navRoutes = [
     path: '/session-records',
     icon: FileText,
     component: SessionRecords,
+    roles: ['menties'],
+  },
+  {
+    label: 'Registered Events',
+    path: '/registered-events',
+    icon: CheckCircle2,
+    component: RegisteredEvents,
     roles: ['menties'],
   },
   {

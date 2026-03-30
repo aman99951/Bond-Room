@@ -178,6 +178,40 @@
   gap: 18px;
 }
 
+.lp-role-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lp-role-btn {
+  border: 1px solid #e7e2f6;
+  background: #f8f6fd;
+  color: #5f6573;
+  border-radius: 12px;
+  min-height: 42px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.lp-role-btn:hover {
+  border-color: #d5c8ef;
+  background: #f2ecff;
+  color: #4b2a7a;
+}
+
+.lp-role-btn.is-active {
+  border-color: #5b2c91;
+  background: #5b2c91;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(91, 44, 145, 0.18);
+}
+
 .lp-field label {
   display: flex;
   align-items: center;

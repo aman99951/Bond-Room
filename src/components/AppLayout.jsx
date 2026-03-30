@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavig
 import Register from './auth/Register';
 import MentorRegister from './auth/MentorRegister';
 import Login from './auth/Login';
-import VerifyParent from './auth/VerifyParent';
 import NeedsAssessment from './auth/NeedsAssessment';
 import NeedsAssessmentQ2 from './auth/NeedsAssessmentQ2';
 import NeedsAssessmentQ3 from './auth/NeedsAssessmentQ3';
@@ -22,6 +21,9 @@ import BookSession from './menties/pages/BookSession';
 import BookingSuccess from './menties/pages/BookingSuccess';
 import Feedback from './menties/pages/Feedback';
 import MentorProfile from './menties/pages/MentorProfile';
+import VolunteerEvents from './menties/pages/VolunteerEvents';
+import VolunteerEventRegister from './menties/pages/VolunteerEventRegister';
+import RegisteredEvents from './menties/pages/RegisteredEvents';
 import MenteeMeetingRoom from './menties/pages/MeetingRoom';
 import MentorVerifyIdentity from './mentors/pages/VerifyIdentity';
 import MentorOnboardingStatus from './mentors/pages/OnboardingStatus';
@@ -42,13 +44,13 @@ import AdminPortal from './admin/AdminPortal';
 import AdminMentorReview from './admin/AdminMentorReview';
 import AdminActivityPage from './admin/AdminActivityPage';
 import LandingPage from './LandingPage';
-import VoluntorFlow from './voluntor/VoluntorFlow';
 import {
   AUTH_LOGOUT_EVENT_NAME,
   getAssessmentDraft,
   getAuthSession,
   mapAppRoleToUiRole,
 } from '../apis/api/storage';
+import { menteeApi } from '../apis/api/menteeApi';
 import { mentorApi } from '../apis/api/mentorApi';
 import { useMentorData } from '../apis/apihook/useMentorData';
 
@@ -73,8 +75,6 @@ const ScrollToTop = () => {
 
 const isPublicPath = (pathname) => {
   if (pathname === '/admin' || pathname.startsWith('/admin/')) return true;
-  if (pathname === '/voluntor' || pathname.startsWith('/voluntor/')) return true;
-  if (pathname === '/volunteer' || pathname.startsWith('/volunteer/')) return true;
   const exactPublicPaths = new Set([
     '/',
     '/login',
@@ -85,7 +85,6 @@ const isPublicPath = (pathname) => {
     '/mentor-training-modules',
     '/mentor-training-boundaries',
     '/mentor-training-modules-quiz',
-    '/verify-parent',
     '/needs-assessment',
   ]);
   if (exactPublicPaths.has(pathname)) return true;
@@ -397,14 +396,11 @@ const AppLayout = () => {
         <Route path="/admin" element={<AdminPortal />} />
         <Route path="/admin/activity" element={<AdminActivityPage />} />
         <Route path="/admin/review/:mentorId" element={<AdminMentorReview />} />
-        <Route path="/verify-parent" element={<VerifyParent />} />
         <Route path="/needs-assessment" element={<NeedsAssessment />} />
         <Route path="/needs-assessment/q2" element={<NeedsAssessmentQ2 />} />
         <Route path="/needs-assessment/q3" element={<NeedsAssessmentQ3 />} />
         <Route path="/needs-assessment/q4" element={<NeedsAssessmentQ4 />} />
         <Route path="/needs-assessment/q5" element={<NeedsAssessmentQ5 />} />
-        <Route path="/volunteer/*" element={<VoluntorFlow />} />
-        <Route path="/voluntor/*" element={<Navigate to="/volunteer" replace />} />
         <Route
           path="/*"
           element={(
@@ -433,6 +429,9 @@ const AppLayout = () => {
         <Route path="mentee-meeting-room" element={<MenteeMeetingRoom />} />
         <Route path="mentee-zoom-meeting" element={<MenteeMeetingRoom />} />
         <Route path="mentor-profile" element={<MentorProfile />} />
+        <Route path="volunteer-events" element={<VolunteerEvents />} />
+        <Route path="volunteer-events/:eventId/register" element={<VolunteerEventRegister />} />
+        <Route path="registered-events" element={<RegisteredEvents />} />
         <Route
           path="mentor-impact-dashboard"
           element={(

@@ -62,4 +62,11 @@ export const menteeApi = {
   getSessionFeedback: (sessionId) => apiClient.get(`/sessions/${sessionId}/feedback/`),
   submitSessionFeedback: (sessionId, payload) => apiClient.post(`/sessions/${sessionId}/feedback/`, payload),
   listSessionFeedback: (params = {}) => apiClient.get(`/session-feedback/${buildQuery(params)}`),
+
+  listVolunteerEvents: (params = {}) => apiClient.get(`/volunteer-events/${buildQuery(params)}`),
+  getVolunteerEventById: (eventId) => apiClient.get(`/volunteer-events/${eventId}/`),
+  listVolunteerEventRegistrations: (params = {}) =>
+    apiClient.get(`/volunteer-event-registrations/${buildQuery(params)}`),
+  createVolunteerEventRegistration: (payload) =>
+    apiClient.post('/volunteer-event-registrations/', payload),
 };

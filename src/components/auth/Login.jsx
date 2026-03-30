@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Phone, Lock, ArrowRight, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { Phone, Lock, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Mail } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import { clearAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
@@ -25,13 +25,23 @@ const canAccessMentorDashboard = (status) => {
 };
 
 const Login = () => {
+  const [selectedRole, setSelectedRole] = useState('mentee');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
   const [otpHint, setOtpHint] = useState('');
   const navigate = useNavigate();
-  const { loading, loginWithMobile } = useMenteeAuth();
+  const { loading, loginWithMobile, login } = useMenteeAuth();
+
+  const handleRoleChange = (role) => {
+    setSelectedRole(role);
+    setErrorMessage('');
+    setInfoMessage('');
+    setOtpHint('');
+  };
 
   const handleGenerateOtp = () => {
     setErrorMessage('');
@@ -44,13 +54,23 @@ const Login = () => {
     setErrorMessage('');
     setInfoMessage('');
 
-    if (!mobile.trim() || otp.length !== 6) {
-      setErrorMessage('Mobile number and valid 6-digit OTP are required.');
-      return;
-    }
-
     try {
-      const session = await loginWithMobile(mobile.trim(), otp);
+      if (selectedRole === 'mentee') {
+        if (!email.trim() || !password.trim()) {
+          setErrorMessage('Email and password are required for mentee login.');
+          return;
+        }
+        await login(email.trim().toLowerCase(), password, 'menties');
+        navigate('/dashboard');
+        return;
+      }
+
+      if (!mobile.trim() || otp.length !== 6) {
+        setErrorMessage('Mobile number and valid 6-digit OTP are required.');
+        return;
+      }
+
+      const session = await loginWithMobile(mobile.trim(), otp, 'mentors');
       const targetRole = mapAppRoleToUiRole(session?.role);
 
       if (targetRole === 'admins') {
@@ -78,9 +98,14 @@ const Login = () => {
         return;
       }
 
-      navigate('/dashboard');
+      setErrorMessage('This account is not a mentor account.');
     } catch (err) {
-      setErrorMessage(err?.message || 'Unable to login with provided mobile and OTP.');
+      setErrorMessage(
+        err?.message ||
+          (selectedRole === 'mentee'
+            ? 'Unable to login with provided email and password.'
+            : 'Unable to login with provided mobile and OTP.')
+      );
     }
   };
 
@@ -172,7 +197,11 @@ const Login = () => {
                   Welcome back
                 </div>
                 <h2 className="lp-login-h2">Login to your account</h2>
-                <p className="lp-login-sub">Enter your registered mobile number to continue.</p>
+                <p className="lp-login-sub">
+                  {selectedRole === 'mentee'
+                    ? 'Select mentee and login using email and password.'
+                    : 'Select mentor and login using mobile and OTP.'}
+                </p>
               </Motion.div>
 
               <Motion.form
@@ -180,47 +209,100 @@ const Login = () => {
                 className="lp-login-form"
                 onSubmit={handleLogin}
               >
-                <div className="lp-field">
-                  <label htmlFor="loginMobile">
-                    <Phone size={16} />
-                    Mobile Number
-                  </label>
-                  <input
-                    id="loginMobile"
-                    type="tel"
-                    className="lp-input"
-                    placeholder="+91 9876543210"
-                    value={mobile}
-                    onChange={(event) => setMobile(event.target.value)}
-                  />
-                  <div className="lp-field-action">
-                    <button
-                      type="button"
-                      className="lp-generate-otp"
-                      onClick={handleGenerateOtp}
-                    >
-                      <Sparkles size={12} />
-                      Generate Mock OTP
-                    </button>
-                  </div>
+                <div className="lp-role-switch" role="tablist" aria-label="Select login role">
+                  <button
+                    type="button"
+                    className={`lp-role-btn ${selectedRole === 'mentee' ? 'is-active' : ''}`}
+                    onClick={() => handleRoleChange('mentee')}
+                  >
+                    Mentee
+                  </button>
+                  <button
+                    type="button"
+                    className={`lp-role-btn ${selectedRole === 'mentor' ? 'is-active' : ''}`}
+                    onClick={() => handleRoleChange('mentor')}
+                  >
+                    Mentor
+                  </button>
                 </div>
 
-                <div className="lp-field">
-                  <label htmlFor="loginOtp">
-                    <Lock size={16} />
-                    OTP Verification
-                  </label>
-                  <input
-                    id="loginOtp"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    className="lp-input lp-input-otp"
-                    placeholder="******"
-                    value={otp}
-                    onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                  />
-                </div>
+                {selectedRole === 'mentee' ? (
+                  <>
+                    <div className="lp-field">
+                      <label htmlFor="loginEmail">
+                        <Mail size={16} />
+                        Email Address
+                      </label>
+                      <input
+                        id="loginEmail"
+                        type="email"
+                        className="lp-input"
+                        placeholder="student@example.com"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                      />
+                    </div>
+
+                    <div className="lp-field">
+                      <label htmlFor="loginPassword">
+                        <Lock size={16} />
+                        Password
+                      </label>
+                      <input
+                        id="loginPassword"
+                        type="password"
+                        className="lp-input"
+                        placeholder="Enter password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="lp-field">
+                      <label htmlFor="loginMobile">
+                        <Phone size={16} />
+                        Mobile Number
+                      </label>
+                      <input
+                        id="loginMobile"
+                        type="tel"
+                        className="lp-input"
+                        placeholder="+91 9876543210"
+                        value={mobile}
+                        onChange={(event) => setMobile(event.target.value)}
+                      />
+                      <div className="lp-field-action">
+                        <button
+                          type="button"
+                          className="lp-generate-otp"
+                          onClick={handleGenerateOtp}
+                        >
+                          <Sparkles size={12} />
+                          Generate Mock OTP
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="lp-field">
+                      <label htmlFor="loginOtp">
+                        <Lock size={16} />
+                        OTP Verification
+                      </label>
+                      <input
+                        id="loginOtp"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        className="lp-input lp-input-otp"
+                        placeholder="******"
+                        value={otp}
+                        onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                      />
+                    </div>
+                  </>
+                )}
 
                 <AnimatePresence mode="wait">
                   {errorMessage && (

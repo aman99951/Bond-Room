@@ -20,6 +20,7 @@ import {
   BookOpen,
   Languages,
   CalendarCheck,
+  CalendarDays,
 } from 'lucide-react';
 import '../../LandingPage.css';
 import './DashboardMentorCarousel.css';
@@ -40,6 +41,14 @@ const normalizeList = (payload) => {
   if (Array.isArray(payload?.results)) return payload.results;
   return [];
 };
+
+const normalizeVolunteerEvent = (event) => ({
+  ...event,
+  image: event?.image || '',
+  date: event?.date || '',
+  time: event?.time || '',
+  completed_on: event?.completed_on || '',
+});
 
 const getMentorName = (mentor) => {
   const fullName = `${mentor?.first_name || ''} ${mentor?.last_name || ''}`.trim();
@@ -63,6 +72,26 @@ const formatDate = (value) => {
   if (Number.isNaN(date.getTime())) return 'Date unavailable';
   return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 };
+
+const toIsoDate = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+const toIsoMonth = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+};
+
+const parseIsoDate = (value) => {
+  const parsed = new Date(`${value}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+};
+
+const calendarWeekLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 const getRelativeStart = (value) => {
   const target = new Date(value);
@@ -111,13 +140,15 @@ const stagger = {
   },
 };
 
-const MentorRingCarousel = ({ items }) => {
+const MentorRingCarousel = ({ items, className = 'dash-mentor-arc', onCardClick = null }) => {
   const stageRef = useRef(null);
   const cardRefs = useRef([]);
   const rafRef = useRef(null);
   const lastTsRef = useRef(null);
   const hoverRef = useRef(false);
   const dragRef = useRef(false);
+  const pointerStartRef = useRef({ x: 0, y: 0 });
+  const movedRef = useRef(false);
   const lastPointerXRef = useRef(0);
   const phaseRef = useRef(0);
   const speedRef = useRef(0.17);
@@ -215,6 +246,8 @@ const MentorRingCarousel = ({ items }) => {
   const handlePointerDown = (event) => {
     dragRef.current = true;
     lastPointerXRef.current = event.clientX;
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    movedRef.current = false;
     targetSpeedRef.current = 0;
     speedRef.current = 0;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -224,6 +257,11 @@ const MentorRingCarousel = ({ items }) => {
     if (!dragRef.current) return;
 
     const dx = event.clientX - lastPointerXRef.current;
+    const travelX = Math.abs(event.clientX - pointerStartRef.current.x);
+    const travelY = Math.abs(event.clientY - pointerStartRef.current.y);
+    if (travelX > 6 || travelY > 6) {
+      movedRef.current = true;
+    }
     lastPointerXRef.current = event.clientX;
 
     phaseRef.current = (phaseRef.current - dx * DRAG_PHASE_MULTIPLIER + items.length) % items.length;
@@ -234,6 +272,16 @@ const MentorRingCarousel = ({ items }) => {
   const handlePointerEnd = (event) => {
     if (!dragRef.current) return;
 
+    if (!movedRef.current && onCardClick) {
+      const target = document.elementFromPoint(event.clientX, event.clientY);
+      const card = target?.closest?.('.lp-arc-card');
+      const index = Number(card?.getAttribute('data-arc-index'));
+      const item = Number.isFinite(index) ? items[index] : null;
+      if (item) {
+        onCardClick(item);
+      }
+    }
+
     dragRef.current = false;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -242,7 +290,7 @@ const MentorRingCarousel = ({ items }) => {
   };
 
   return (
-    <div className="lp-arc-shell dash-mentor-arc">
+    <div className={`lp-arc-shell ${className}`}>
       <div
         ref={stageRef}
         className="lp-arc-stage"
@@ -254,11 +302,12 @@ const MentorRingCarousel = ({ items }) => {
         onPointerCancel={handlePointerEnd}
       >
         <div className="lp-arc-track">
-          {items.map(({ image, name, role }, index) => {
+          {items.map(({ id, image, name, role }, index) => {
             return (
               <div
-                key={`${name}-${index}`}
-                className="lp-arc-card"
+                key={`${id || name}-${index}`}
+                className={`lp-arc-card ${onCardClick ? 'cursor-pointer' : ''}`}
+                data-arc-index={index}
                 ref={(el) => {
                   cardRefs.current[index] = el;
                 }}
@@ -281,6 +330,19 @@ const MentorRingCarousel = ({ items }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+const VolunteerRingCarousel = ({ items, onCardClick }) => {
+  const carouselItems = items.map((event) => ({
+    id: event.id,
+    image: event.image,
+    name: event.title,
+    role: `${event.stream} • ${formatDate(event.date)} • ${event.time || 'Time TBA'}`,
+  }));
+
+  return (
+    <MentorRingCarousel items={carouselItems} className="dash-volunteer-arc" onCardClick={onCardClick} />
   );
 };
 
@@ -462,6 +524,16 @@ const Dashboard = () => {
   const [upcomingSession, setUpcomingSession] = useState(null);
   const [recentSessions, setRecentSessions] = useState([]);
   const [stats, setStats] = useState({ total_sessions: 0, completed_sessions: 0 });
+  const [volunteerEvents, setVolunteerEvents] = useState([]);
+  const [completedVolunteerEvents, setCompletedVolunteerEvents] = useState([]);
+  const [volunteerRange, setVolunteerRange] = useState('year');
+  const [selectedDay, setSelectedDay] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [selectedYear, setSelectedYear] = useState(() => String(new Date().getFullYear()));
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarCursor, setCalendarCursor] = useState(() => parseIsoDate(new Date().toISOString().slice(0, 10)));
+  const [monthPickerYear, setMonthPickerYear] = useState(() => Number(new Date().getFullYear()));
+  const calendarPopoverRef = useRef(null);
 
   const openJoinLink = (url) => {
     if (!url) return false;
@@ -512,6 +584,17 @@ const Dashboard = () => {
       setJoinLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!calendarOpen) return undefined;
+    const handleOutside = (event) => {
+      if (!calendarPopoverRef.current?.contains(event.target)) {
+        setCalendarOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handleOutside);
+    return () => window.removeEventListener('mousedown', handleOutside);
+  }, [calendarOpen]);
 
   useEffect(() => {
     const refreshHandler = () => setRefreshTick((value) => value + 1);
@@ -645,6 +728,30 @@ const Dashboard = () => {
     };
   }, [mentee?.id, menteeLoading, refreshTick]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const loadVolunteerEvents = async () => {
+      try {
+        const [upcomingEventsRes, completedEventsRes] = await Promise.all([
+          menteeApi.listVolunteerEvents({ status: 'upcoming' }),
+          menteeApi.listVolunteerEvents({ status: 'completed' }),
+        ]);
+        if (cancelled) return;
+        setVolunteerEvents(normalizeList(upcomingEventsRes).map(normalizeVolunteerEvent));
+        setCompletedVolunteerEvents(normalizeList(completedEventsRes).map(normalizeVolunteerEvent));
+      } catch {
+        if (!cancelled) {
+          setVolunteerEvents([]);
+          setCompletedVolunteerEvents([]);
+        }
+      }
+    };
+    loadVolunteerEvents();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshTick]);
+
   const displayName = mentee?.first_name || 'there';
   const progressPercent = useMemo(() => {
     const total = Number(stats?.total_sessions || 0);
@@ -653,9 +760,85 @@ const Dashboard = () => {
     return Math.max(0, Math.min(100, Math.round((completed / total) * 100)));
   }, [stats]);
 
+  const filteredVolunteerEvents = useMemo(() => {
+    return volunteerEvents.filter((event) => {
+      const eventDateValue = String(event?.date || '');
+      if (!eventDateValue) return false;
+
+      if (volunteerRange === 'day') {
+        return eventDateValue === selectedDay;
+      }
+
+      if (volunteerRange === 'week') {
+        const start = new Date(`${selectedDay}T00:00:00`);
+        const eventDate = new Date(`${eventDateValue}T00:00:00`);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(eventDate.getTime())) return false;
+        const diffDays = Math.floor((eventDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 7;
+      }
+
+      if (volunteerRange === 'month') {
+        return eventDateValue.slice(0, 7) === selectedMonth;
+      }
+
+      if (volunteerRange === 'year') {
+        return eventDateValue.slice(0, 4) === selectedYear;
+      }
+
+      return true;
+    });
+  }, [selectedDay, selectedMonth, selectedYear, volunteerEvents, volunteerRange]);
+
+  const volunteerYearOptions = useMemo(() => {
+    const fromEvents = [
+      ...volunteerEvents.map((event) => String(event?.date || '').slice(0, 4)),
+      ...completedVolunteerEvents.map((event) => String(event?.completed_on || '').slice(0, 4)),
+    ]
+      .filter((value) => /^\d{4}$/.test(value));
+    if (!fromEvents.length) return [String(new Date().getFullYear())];
+    const set = new Set(fromEvents);
+    return Array.from(set).sort((a, b) => Number(a) - Number(b));
+  }, [completedVolunteerEvents, volunteerEvents]);
+
+  useEffect(() => {
+    if (!volunteerYearOptions.length) return;
+    if (!volunteerYearOptions.includes(selectedYear)) {
+      setSelectedYear(volunteerYearOptions[volunteerYearOptions.length - 1]);
+    }
+  }, [selectedYear, volunteerYearOptions]);
+
+  const calendarDays = useMemo(() => {
+    const first = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
+    const firstWeekday = first.getDay();
+    const start = new Date(first);
+    start.setDate(first.getDate() - firstWeekday);
+    return Array.from({ length: 42 }).map((_, index) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + index);
+      return day;
+    });
+  }, [calendarCursor]);
+
+  const selectedDayLabel = useMemo(() => formatDate(selectedDay), [selectedDay]);
+  const selectedMonthLabel = useMemo(() => {
+    const parsed = parseIsoDate(`${selectedMonth}-01`);
+    return parsed.toLocaleDateString([], { month: 'long', year: 'numeric' });
+  }, [selectedMonth]);
+
+  const toggleCalendar = () => {
+    setCalendarOpen((prev) => !prev);
+    if (!calendarOpen) {
+      if (volunteerRange === 'month') {
+        setMonthPickerYear(Number(selectedMonth.slice(0, 4)) || new Date().getFullYear());
+      } else if (volunteerRange === 'day' || volunteerRange === 'week') {
+        setCalendarCursor(parseIsoDate(selectedDay));
+      }
+    }
+  };
+
   return (
     <motion.div
-      className="relative overflow-hidden bg-transparent p-4 sm:p-6 lg:p-8"
+      className="relative overflow-hidden bg-transparent p-3 sm:p-6 lg:p-8"
       initial="hidden"
       animate="show"
       variants={stagger}
@@ -663,7 +846,7 @@ const Dashboard = () => {
       {/* Welcome Header Card */}
       <motion.div
         variants={fadeUp}
-        className="relative overflow-hidden rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:p-8"
+        className="relative overflow-hidden rounded-[24px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:rounded-[28px] sm:p-8"
       >
         <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#efe6ff] blur-2xl" />
         <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#f4edff] blur-2xl" />
@@ -767,6 +950,221 @@ const Dashboard = () => {
         )}
       </motion.div>
 
+      {/* Volunteer Activities Section */}
+      <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
+              <Calendar className="h-5 w-5 text-[#5D3699]" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[#111827]">Volunteer Activities</h2>
+              <p className="text-xs text-[#6b7280]">Upcoming events you can join</p>
+            </div>
+          </div>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="inline-flex w-full items-center gap-1 overflow-x-auto rounded-full border border-[#e8dcff] bg-white p-1 sm:w-auto">
+              {[
+                { key: 'day', label: 'Day' },
+                { key: 'week', label: 'Week' },
+                { key: 'month', label: 'Month' },
+                { key: 'year', label: 'Year' },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => {
+                    setVolunteerRange(item.key);
+                    setCalendarOpen(false);
+                  }}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
+                    volunteerRange === item.key
+                      ? 'bg-[#5D3699] text-white shadow-sm'
+                      : 'text-[#5D3699] hover:bg-[#f5f3ff]'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <div className="relative" ref={calendarPopoverRef}>
+              <button
+                type="button"
+                onClick={toggleCalendar}
+                className="inline-flex w-full items-center justify-between gap-2 rounded-full border border-[#e8dcff] bg-white px-3 py-2 text-xs font-medium text-[#5D3699] transition-colors hover:bg-[#f8f4ff] sm:w-auto sm:justify-start"
+              >
+                <CalendarDays className="h-3.5 w-3.5" />
+                {volunteerRange === 'day' || volunteerRange === 'week'
+                  ? selectedDayLabel
+                  : volunteerRange === 'month'
+                    ? selectedMonthLabel
+                    : selectedYear}
+                <ChevronRight className={`h-3.5 w-3.5 transition-transform ${calendarOpen ? 'rotate-90' : ''}`} />
+              </button>
+
+              {calendarOpen && (
+                <div className="absolute right-0 z-30 mt-2 w-[min(92vw,320px)] rounded-2xl border border-[#e8dcff] bg-white p-3 shadow-[0_20px_45px_-26px_rgba(93,54,153,0.65)] sm:w-[320px]">
+                  {(volunteerRange === 'day' || volunteerRange === 'week') && (
+                    <>
+                      <div className="mb-2 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
+                          }
+                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
+                          aria-label="Previous month"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                        </button>
+                        <p className="text-sm font-semibold text-[#312049]">
+                          {calendarCursor.toLocaleDateString([], { month: 'long', year: 'numeric' })}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
+                          }
+                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
+                          aria-label="Next month"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-1">
+                        {calendarWeekLabels.map((label) => (
+                          <span key={label} className="text-center text-[10px] font-semibold text-[#7b699d]">
+                            {label}
+                          </span>
+                        ))}
+                        {calendarDays.map((day) => {
+                          const iso = toIsoDate(day);
+                          const inCurrentMonth = day.getMonth() === calendarCursor.getMonth();
+                          const selected = iso === selectedDay;
+                          return (
+                            <button
+                              key={iso}
+                              type="button"
+                              onClick={() => {
+                                setSelectedDay(iso);
+                                setCalendarOpen(false);
+                              }}
+                              className={`h-8 rounded-lg text-xs transition-colors ${
+                                selected
+                                  ? 'bg-[#5D3699] text-white'
+                                  : inCurrentMonth
+                                    ? 'text-[#312049] hover:bg-[#f5f3ff]'
+                                    : 'text-[#b8aecb] hover:bg-[#faf7ff]'
+                              }`}
+                            >
+                              {day.getDate()}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {volunteerRange === 'month' && (
+                    <>
+                      <div className="mb-2 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => setMonthPickerYear((prev) => prev - 1)}
+                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
+                          aria-label="Previous year"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                        </button>
+                        <p className="text-sm font-semibold text-[#312049]">{monthPickerYear}</p>
+                        <button
+                          type="button"
+                          onClick={() => setMonthPickerYear((prev) => prev + 1)}
+                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
+                          aria-label="Next year"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {Array.from({ length: 12 }).map((_, index) => {
+                          const date = new Date(monthPickerYear, index, 1);
+                          const monthValue = toIsoMonth(date);
+                          const selected = monthValue === selectedMonth;
+                          return (
+                            <button
+                              key={monthValue}
+                              type="button"
+                              onClick={() => {
+                                setSelectedMonth(monthValue);
+                                setCalendarOpen(false);
+                              }}
+                              className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
+                                selected
+                                  ? 'bg-[#5D3699] text-white'
+                                  : 'text-[#312049] hover:bg-[#f5f3ff]'
+                              }`}
+                            >
+                              {date.toLocaleDateString([], { month: 'short' })}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {volunteerRange === 'year' && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {volunteerYearOptions.map((year) => {
+                        const selected = year === selectedYear;
+                        return (
+                          <button
+                            key={year}
+                            type="button"
+                            onClick={() => {
+                              setSelectedYear(year);
+                              setCalendarOpen(false);
+                            }}
+                            className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
+                              selected ? 'bg-[#5D3699] text-white' : 'text-[#312049] hover:bg-[#f5f3ff]'
+                            }`}
+                          >
+                            {year}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <Link
+              to="/volunteer-events"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
+            >
+              View All
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {filteredVolunteerEvents.length > 0 ? (
+          <VolunteerRingCarousel
+            items={filteredVolunteerEvents}
+            onCardClick={(item) => {
+              if (!item?.id) return;
+              navigate(`/volunteer-events/${item.id}/register`);
+            }}
+          />
+        ) : (
+          <div className="rounded-xl border border-[#e5e7eb] border-dashed bg-white p-8 text-center">
+            <p className="text-sm text-[#6b7280]">No volunteer activities found for this filter.</p>
+          </div>
+        )}
+      </motion.div>
+
       {/* Quick Actions Grid */}
       <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
         <div className="flex items-center gap-2 mb-4">
@@ -774,7 +1172,7 @@ const Dashboard = () => {
           <h2 className="text-sm font-semibold text-[#111827]">Quick Actions</h2>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {quickActions.map((item) => {
             const Icon = item.icon;
             const isClickable = Boolean(item.to);
@@ -986,6 +1384,58 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
+      {/* Completed Volunteer Events */}
+      <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eefcf5] ring-1 ring-[#c7f0da]">
+            <CheckCircle2 className="h-5 w-5 text-[#15803d]" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-[#111827]">Completed Volunteer Events</h2>
+            <p className="text-xs text-[#6b7280]">Impact stories from already completed activities</p>
+          </div>
+        </div>
+
+        <div className="flex gap-4 overflow-x-auto pb-2 [scrollbar-width:thin] [scrollbar-color:#c4b5fd_transparent]">
+          {completedVolunteerEvents.map((event) => (
+            <article
+              key={event.id}
+              className="group min-w-[260px] max-w-[260px] overflow-hidden rounded-2xl border border-[#e9ddff] bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] transition-transform duration-200 hover:-translate-y-1 sm:min-w-[300px] sm:max-w-[300px]"
+            >
+              <div className="relative h-40 overflow-hidden">
+                <img
+                  src={event.image}
+                  alt={event.title}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#120a2c]/75 via-[#120a2c]/30 to-transparent" />
+                <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold text-[#14532d] ring-1 ring-[#bbf7d0]">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Completed
+                </div>
+                <div className="absolute bottom-3 left-3 right-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#d8cff1]">{event.stream}</p>
+                  <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-white">{event.title}</h3>
+                </div>
+              </div>
+
+              <div className="space-y-3 p-4">
+                <p className="line-clamp-2 text-xs leading-5 text-[#6b7280]">{event.summary}</p>
+                <div className="inline-flex items-center gap-1 rounded-full bg-[#f5f3ff] px-2.5 py-1 text-[10px] font-medium text-[#5D3699]">
+                  <Calendar className="h-3 w-3" />
+                  {formatDate(event.completed_on)}
+                </div>
+                <div className="rounded-xl border border-[#dcfce7] bg-[#f0fdf4] p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#166534]">Impact</p>
+                  <p className="mt-1 text-xs font-medium text-[#166534]">{event.impact}</p>
+                  <p className="mt-1 text-[11px] text-[#15803d]">{event.location}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </motion.div>
+
 
 
       {/* Loading/Error States */}
@@ -1005,3 +1455,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
