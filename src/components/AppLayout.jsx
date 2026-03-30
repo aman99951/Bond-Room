@@ -44,6 +44,8 @@ import AdminPortal from './admin/AdminPortal';
 import AdminMentorReview from './admin/AdminMentorReview';
 import AdminActivityPage from './admin/AdminActivityPage';
 import LandingPage from './LandingPage';
+import AboutUs from './AboutUs';
+import DonationPage from './DonationPage';
 import {
   AUTH_LOGOUT_EVENT_NAME,
   getAssessmentDraft,
@@ -86,6 +88,8 @@ const isPublicPath = (pathname) => {
     '/mentor-training-boundaries',
     '/mentor-training-modules-quiz',
     '/needs-assessment',
+    '/about',
+    '/donate',
   ]);
   if (exactPublicPaths.has(pathname)) return true;
   return pathname.startsWith('/needs-assessment/');
@@ -383,6 +387,8 @@ const AppLayout = () => {
       <AuthExpiryWatcher />
       <Routes>
         <Route path="/" element={<RootRoute />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/donate" element={<DonationPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/mentor-register" element={<MentorRegister />} />

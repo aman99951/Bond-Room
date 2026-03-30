@@ -17,9 +17,11 @@ import {
   Inbox,
   Shield,
   Eye,
+  Settings,
 } from 'lucide-react';
 import { authApi } from '../../apis/api/authApi';
 import { mentorApi } from '../../apis/api/mentorApi';
+import { settingsApi } from '../../apis/api/settingsApi';
 import {
   clearAuthSession,
   decodeJwtPayload,
@@ -82,6 +84,10 @@ const AdminPortal = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState('newest');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [donateLinkEnabled, setDonateLinkEnabledState] = useState(false);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsError, setSettingsError] = useState('');
 
   const isAdmin = session?.role === 'admin';
   const isOtherRoleLoggedIn = Boolean(
@@ -157,6 +163,37 @@ const AdminPortal = () => {
   const handleLogout = () => {
     clearAuthSession();
     setSession(null);
+  };
+
+  const loadDonateSetting = useCallback(async () => {
+    setSettingsError('');
+    try {
+      const payload = await settingsApi.getPublicDonateLinkSetting();
+      setDonateLinkEnabledState(Boolean(payload?.enabled));
+    } catch (err) {
+      setDonateLinkEnabledState(false);
+      setSettingsError(err?.message || 'Unable to load donate link setting.');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    loadDonateSetting();
+  }, [isAdmin, loadDonateSetting]);
+
+  const handleToggleDonateLink = async () => {
+    if (settingsSaving) return;
+    const next = !donateLinkEnabled;
+    setSettingsSaving(true);
+    setSettingsError('');
+    try {
+      const payload = await settingsApi.updateAdminDonateLinkSetting(next);
+      setDonateLinkEnabledState(Boolean(payload?.enabled));
+    } catch (err) {
+      setSettingsError(err?.message || 'Unable to update donate link setting.');
+    } finally {
+      setSettingsSaving(false);
+    }
   };
 
   const filteredAndSortedMentors = useMemo(() => {
@@ -401,6 +438,14 @@ const AdminPortal = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(true)}
+                className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm font-semibold text-slate-300 shadow-sm transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </button>
               <button
                 type="button"
                 onClick={loadMentorRows}
@@ -776,6 +821,58 @@ const AdminPortal = () => {
           )}
         </div>
       </div>
+
+      {settingsOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-white">Portal Settings</h3>
+                <p className="mt-1 text-sm text-slate-400">Control public landing page links.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(false)}
+                className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 hover:bg-slate-700"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-slate-700 bg-slate-800/60 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-200">Enable Donate Link</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Show or hide Donate in landing page topbar.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleDonateLink}
+                  disabled={settingsSaving}
+                  className={`inline-flex h-7 w-14 items-center rounded-full p-1 transition-colors ${
+                    donateLinkEnabled ? 'bg-emerald-500' : 'bg-slate-600'
+                  }`}
+                  aria-label="Toggle donate link visibility"
+                >
+                  <span
+                    className={`h-5 w-5 rounded-full bg-white transition-transform ${
+                      donateLinkEnabled ? 'translate-x-7' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+              <p className={`mt-3 text-xs font-semibold ${donateLinkEnabled ? 'text-emerald-400' : 'text-slate-400'}`}>
+                Current status: {donateLinkEnabled ? 'Enabled' : 'Disabled'}
+              </p>
+              {settingsError ? (
+                <p className="mt-2 text-xs font-semibold text-rose-400">{settingsError}</p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── animations ── */}
       <style>{`

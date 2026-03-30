@@ -8,6 +8,8 @@ const SELECTED_SESSION_KEY = 'bondroom_selected_session_id';
 const ACTIVE_MEETING_KEY = 'bondroom_active_meeting';
 const ACTIVE_MEETING_EVENT = 'meeting:change';
 const AUTH_LOGOUT_EVENT = 'auth:logout';
+const DONATE_LINK_ENABLED_KEY = 'bondroom_donate_link_enabled';
+const DONATE_LINK_EVENT = 'donate-link:change';
 
 export const mapAppRoleToUiRole = (appRole) => {
   const normalizedRole = String(appRole || '').trim().toLowerCase();
@@ -251,3 +253,32 @@ export const clearActiveMeeting = () => {
 };
 
 export const ACTIVE_MEETING_EVENT_NAME = ACTIVE_MEETING_EVENT;
+
+export const getDonateLinkEnabled = () => {
+  try {
+    const raw = String(localStorage.getItem(DONATE_LINK_ENABLED_KEY) || '').trim().toLowerCase();
+    if (!raw) return true;
+    return raw === 'true' || raw === '1' || raw === 'yes' || raw === 'on';
+  } catch {
+    return true;
+  }
+};
+
+export const setDonateLinkEnabled = (enabled) => {
+  const next = Boolean(enabled);
+  try {
+    localStorage.setItem(DONATE_LINK_ENABLED_KEY, next ? 'true' : 'false');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent(DONATE_LINK_EVENT, {
+          detail: { enabled: next },
+        })
+      );
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return next;
+};
+
+export const DONATE_LINK_EVENT_NAME = DONATE_LINK_EVENT;

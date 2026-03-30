@@ -14,6 +14,7 @@ import {
   Ear, Brain, Handshake, ArrowUpRight,
 } from 'lucide-react';
 import { menteeApi } from '../apis/api/menteeApi';
+import { settingsApi } from '../apis/api/settingsApi';
 import './LandingPage.css';
 
 /* ══════════════════════════════════════════
@@ -656,8 +657,10 @@ export default function LandingPage() {
   const [activeStory, setActiveStory] = useState(0);
   const [mentorCards, setMentorCards] = useState([]);
   const [selectedMentor, setSelectedMentor] = useState(null);
+  const [donateLinkEnabled, setDonateLinkEnabled] = useState(false);
   const { scrollY } = useScroll();
   const parallax    = useTransform(scrollY, [0, 600], [0, -50]);
+  const navLinks = [['/about', 'About'], ['#safety', 'Safety'], ['#stories', 'Stories']];
 
   useEffect(() => {
     const id = setInterval(() => setActiveStory(s => (s + 1) % stories.length), 4200);
@@ -667,6 +670,26 @@ export default function LandingPage() {
   useEffect(() => {
     document.body.style.background = '#f7f4ff';
     return () => { document.body.style.background = ''; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadDonationToggle = async () => {
+      try {
+        const payload = await settingsApi.getPublicDonateLinkSetting();
+        if (!cancelled) {
+          setDonateLinkEnabled(Boolean(payload?.enabled));
+        }
+      } catch {
+        if (!cancelled) {
+          setDonateLinkEnabled(false);
+        }
+      }
+    };
+    loadDonationToggle();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -709,7 +732,7 @@ export default function LandingPage() {
         </a>
 
         <nav className="lp-nav">
-          {[['#about','About'], ['#safety','Safety'], ['#stories','Stories']].map(([href, label], i) => (
+          {navLinks.map(([href, label], i) => (
             <motion.a key={href} href={href}
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -720,6 +743,7 @@ export default function LandingPage() {
         </nav>
 
         <div className="lp-hdr-actions">
+          {donateLinkEnabled ? <a href="/donate" className="lp-ghost">Donate</a> : null}
           <a href="/login"    className="lp-ghost">Log in</a>
           <a href="/register" className="lp-solid">Student Sign Up</a>
         </div>
@@ -735,7 +759,12 @@ export default function LandingPage() {
           <motion.div className="lp-drawer"
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}>
-            {[['#about','About'], ['#safety','Safety'], ['#stories','Stories'], ['/login','Log in'], ['/register','Student Sign Up']].map(([href, label]) => (
+            {[
+              ...navLinks,
+              ...(donateLinkEnabled ? [['/donate', 'Donate']] : []),
+              ['/login','Log in'],
+              ['/register','Student Sign Up'],
+            ].map(([href, label]) => (
               <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</a>
             ))}
           </motion.div>
@@ -1203,7 +1232,15 @@ export default function LandingPage() {
             <span>Bridging Old and New Destinies</span>
           </a>
           <nav className="lp-fnav">
-            {[['#about','About'], ['#safety','Safety'], ['#stories','Stories'], ['/terms','Terms'], ['/privacy','Privacy'], ['/support','Help']].map(([href, label]) => (
+            {[
+              ['/about','About'],
+              ...(donateLinkEnabled ? [['/donate', 'Donate']] : []),
+              ['#safety','Safety'],
+              ['#stories','Stories'],
+              ['/terms','Terms'],
+              ['/privacy','Privacy'],
+              ['/support','Help'],
+            ].map(([href, label]) => (
               <a key={href} href={href}>{label}</a>
             ))}
           </nav>
