@@ -660,7 +660,7 @@ export default function LandingPage() {
   const [donateLinkEnabled, setDonateLinkEnabled] = useState(false);
   const { scrollY } = useScroll();
   const parallax    = useTransform(scrollY, [0, 600], [0, -50]);
-  const navLinks = [['/about', 'About'], ['#safety', 'Safety'], ['#stories', 'Stories']];
+  const navLinks = [['/about', 'About'], ['/volunteer', 'Volunteer'], ['#safety', 'Safety'], ['#stories', 'Stories']];
 
   useEffect(() => {
     const id = setInterval(() => setActiveStory(s => (s + 1) % stories.length), 4200);
@@ -1234,6 +1234,7 @@ export default function LandingPage() {
           <nav className="lp-fnav">
             {[
               ['/about','About'],
+              ['/volunteer', 'Volunteer'],
               ...(donateLinkEnabled ? [['/donate', 'Donate']] : []),
               ['#safety','Safety'],
               ['#stories','Stories'],

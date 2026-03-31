@@ -130,11 +130,11 @@ const RegisteredEvents = () => {
       <div className="mb-6">
         <button
           type="button"
-          onClick={() => navigate('/volunteer-events')}
+          onClick={() => navigate('/dashboard')}
           className="inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Volunteer Events
+          Back to Dashboard
         </button>
       </div>
 
@@ -207,15 +207,31 @@ const RegisteredEvents = () => {
           {filteredItems.map((item) => {
             const event = eventById.get(item?.volunteer_event);
             const status = getEventStatus(item, eventById);
+            const isCompleted = status === 'completed';
             const statusStyles =
-              status === 'completed'
+              isCompleted
                 ? 'bg-[#f0fdf4] text-[#166534] ring-[#bbf7d0]'
                 : 'bg-[#f5f3ff] text-[#5D3699] ring-[#ddd6fe]';
 
             return (
               <article
                 key={item.id}
-                className="overflow-hidden rounded-2xl border border-[#e9ddff] bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)]"
+                className={`overflow-hidden rounded-2xl border border-[#e9ddff] bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] ${
+                  isCompleted ? 'cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_48px_-34px_rgba(21,128,61,0.6)]' : ''
+                }`}
+                onClick={isCompleted ? () => navigate(`/event-certificate/${item.id}`) : undefined}
+                role={isCompleted ? 'button' : undefined}
+                tabIndex={isCompleted ? 0 : undefined}
+                onKeyDown={
+                  isCompleted
+                    ? (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          navigate(`/event-certificate/${item.id}`);
+                        }
+                      }
+                    : undefined
+                }
               >
                 <div className="flex flex-col sm:flex-row">
                   <div className="relative h-40 w-full overflow-hidden bg-[#f5f3ff] sm:h-auto sm:w-44 sm:shrink-0">

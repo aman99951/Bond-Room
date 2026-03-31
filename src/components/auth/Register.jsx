@@ -13,6 +13,21 @@ import './Register.css';
 const STUDENT_MIN_AGE = 13;
 const STUDENT_MAX_AGE = 18;
 const MOBILE_DIGITS_LENGTH = 10;
+const COUNTRY_OPTIONS = ['India', 'USA'];
+const LOCATION_OPTIONS = {
+  India: {
+    states: ['Tamilnadu'],
+    citiesByState: {
+      Tamilnadu: ['Chennai'],
+    },
+  },
+  USA: {
+    states: ['Texas'],
+    citiesByState: {
+      Texas: ['Houston'],
+    },
+  },
+};
 
 const yearsAgo = (years) => {
   const today = new Date();
@@ -61,6 +76,12 @@ const initialForm = {
   parentConsent: false,
   parentMobile: '',
   menteeMobile: '',
+  menteeSameAsParent: true,
+  schoolOrCollege: '',
+  country: 'India',
+  state: 'Tamilnadu',
+  city: 'Chennai',
+  postalCode: '',
   recordConsent: false,
 };
 
@@ -115,13 +136,42 @@ const Register = () => {
 
   const updateField = (key, value) => {
     setTouchedFields((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+    if (key === 'country') {
+      const nextCountry = value;
+      const nextStates = LOCATION_OPTIONS[nextCountry]?.states || [];
+      const nextState = nextStates[0] || '';
+      const nextCities = LOCATION_OPTIONS[nextCountry]?.citiesByState?.[nextState] || [];
+      const nextCity = nextCities[0] || '';
+      setForm((prev) => ({
+        ...prev,
+        country: nextCountry,
+        state: nextState,
+        city: nextCity,
+        postalCode: '',
+      }));
+      return;
+    }
+    if (key === 'state') {
+      const nextState = value;
+      const nextCities = LOCATION_OPTIONS[form.country]?.citiesByState?.[nextState] || [];
+      const nextCity = nextCities[0] || '';
+      setForm((prev) => ({ ...prev, state: nextState, city: nextCity }));
+      return;
+    }
     if (key === 'parentMobile' || key === 'menteeMobile') {
       const digitsOnly = normalizePhone(value).slice(0, MOBILE_DIGITS_LENGTH);
-      setForm((prev) => ({ ...prev, [key]: digitsOnly }));
+      if (key === 'parentMobile') {
+        setForm((prev) => ({
+          ...prev,
+          parentMobile: digitsOnly,
+          menteeMobile: prev.menteeSameAsParent ? digitsOnly : prev.menteeMobile,
+        }));
+      } else {
+        setForm((prev) => ({ ...prev, [key]: digitsOnly }));
+      }
       if (key === 'parentMobile') {
         setParentMobileVerified(false);
-        setMenteeMobileVerified(false);
-        setForm((prev) => ({ ...prev, menteeMobile: '' }));
+        setMenteeMobileVerified(form.menteeSameAsParent ? false : menteeMobileVerified);
         setOtpHint((prev) => ({ ...prev, parentMobile: '', menteeMobile: '' }));
       }
       if (key === 'menteeMobile') {
@@ -133,10 +183,21 @@ const Register = () => {
     if (key === 'email') {
       setEmailVerified(false);
     }
+    if (key === 'menteeSameAsParent') {
+      const enabled = Boolean(value);
+      setForm((prev) => ({
+        ...prev,
+        menteeSameAsParent: enabled,
+        menteeMobile: enabled ? normalizePhone(prev.parentMobile).slice(0, MOBILE_DIGITS_LENGTH) : '',
+      }));
+      setMenteeMobileVerified(enabled ? parentMobileVerified : false);
+      setOtpHint((prev) => ({ ...prev, menteeMobile: '' }));
+      return;
+    }
     if (key === 'parentConsent' && !value) {
       setParentMobileVerified(false);
       setMenteeMobileVerified(false);
-      setForm((prev) => ({ ...prev, parentMobile: '', menteeMobile: '' }));
+      setForm((prev) => ({ ...prev, parentMobile: '', menteeMobile: '', menteeSameAsParent: true }));
       setOtpHint((prev) => ({ ...prev, parentMobile: '', menteeMobile: '' }));
     }
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -156,6 +217,7 @@ const Register = () => {
     }
     if (key === 'menteeMobile') {
       const digitsOnly = normalizePhone(form.menteeMobile);
+      if (!form.menteeSameAsParent && !digitsOnly) return true;
       return Boolean(digitsOnly && digitsOnly.length !== MOBILE_DIGITS_LENGTH);
     }
     return !String(form[key] || '').trim();
@@ -269,7 +331,20 @@ const Register = () => {
     setErrorMessage('');
     setInfoMessage('');
 
-    if (!form.firstName || !form.lastName || !form.grade || !form.email || !form.password || !form.dob || !form.gender) {
+    if (
+      !form.firstName ||
+      !form.lastName ||
+      !form.grade ||
+      !form.email ||
+      !form.password ||
+      !form.dob ||
+      !form.gender ||
+      !form.schoolOrCollege ||
+      !form.country ||
+      !form.state ||
+      !form.city ||
+      !form.postalCode
+    ) {
       notifyError('Please fill all required fields to continue.');
       return;
     }
@@ -300,14 +375,18 @@ const Register = () => {
       return;
     }
 
-    const menteeMobileDigits = normalizePhone(form.menteeMobile);
-    if (menteeMobileDigits && menteeMobileDigits.length !== MOBILE_DIGITS_LENGTH) {
-      notifyError('Mentee mobile number must be exactly 10 digits when provided.');
-      return;
-    }
-    if (menteeMobileDigits && !menteeMobileVerified) {
-      notifyError('Please verify mentee mobile before continuing.');
-      return;
+    const menteeMobileDigits = form.menteeSameAsParent
+      ? parentMobileDigits
+      : normalizePhone(form.menteeMobile);
+    if (!form.menteeSameAsParent) {
+      if (!menteeMobileDigits || menteeMobileDigits.length !== MOBILE_DIGITS_LENGTH) {
+        notifyError('Mentee mobile number must be exactly 10 digits.');
+        return;
+      }
+      if (!menteeMobileVerified) {
+        notifyError('Please verify mentee mobile before continuing.');
+        return;
+      }
     }
 
     if (form.dob < dobBounds.min || form.dob > dobBounds.max) {
@@ -325,6 +404,12 @@ const Register = () => {
         password: form.password,
         dob: form.dob,
         gender: form.gender,
+        school_or_college: form.schoolOrCollege.trim(),
+        country: form.country.trim(),
+        state: form.state.trim(),
+        city: form.city.trim(),
+        postal_code: form.postalCode.trim(),
+        city_state: `${form.city}, ${form.state}, ${form.country} (${form.postalCode})`,
         timezone,
         mobile: menteeMobileDigits,
         parent_guardian_consent: true,
@@ -589,6 +674,79 @@ const Register = () => {
                   </div>
                 </div>
 
+                <div className="lp-register-row">
+                  <div className="lp-field">
+                    <label htmlFor="schoolOrCollege">School / College *</label>
+                    <input
+                      id="schoolOrCollege"
+                      className={`lp-input ${hasRequiredFieldError('schoolOrCollege') ? 'lp-input-error' : ''}`}
+                      placeholder="Enter school or college"
+                      value={form.schoolOrCollege}
+                      onChange={(event) => updateField('schoolOrCollege', event.target.value)}
+                      onBlur={() => markFieldTouched('schoolOrCollege')}
+                    />
+                  </div>
+                </div>
+
+                <div className="lp-register-row">
+                  <div className="lp-field">
+                    <label htmlFor="country">Country *</label>
+                    <select
+                      id="country"
+                      className={`lp-input ${hasRequiredFieldError('country') ? 'lp-input-error' : ''}`}
+                      value={form.country}
+                      onChange={(event) => updateField('country', event.target.value)}
+                      onBlur={() => markFieldTouched('country')}
+                    >
+                      {COUNTRY_OPTIONS.map((country) => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="lp-field">
+                    <label htmlFor="state">State *</label>
+                    <select
+                      id="state"
+                      className={`lp-input ${hasRequiredFieldError('state') ? 'lp-input-error' : ''}`}
+                      value={form.state}
+                      onChange={(event) => updateField('state', event.target.value)}
+                      onBlur={() => markFieldTouched('state')}
+                    >
+                      {(LOCATION_OPTIONS[form.country]?.states || []).map((stateName) => (
+                        <option key={stateName} value={stateName}>{stateName}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="lp-register-row">
+                  <div className="lp-field">
+                    <label htmlFor="city">City *</label>
+                    <select
+                      id="city"
+                      className={`lp-input ${hasRequiredFieldError('city') ? 'lp-input-error' : ''}`}
+                      value={form.city}
+                      onChange={(event) => updateField('city', event.target.value)}
+                      onBlur={() => markFieldTouched('city')}
+                    >
+                      {(LOCATION_OPTIONS[form.country]?.citiesByState?.[form.state] || []).map((cityName) => (
+                        <option key={cityName} value={cityName}>{cityName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="lp-field">
+                    <label htmlFor="postalCode">Pincode *</label>
+                    <input
+                      id="postalCode"
+                      className={`lp-input ${hasRequiredFieldError('postalCode') ? 'lp-input-error' : ''}`}
+                      placeholder={form.country === 'USA' ? 'e.g. 77001' : 'e.g. 600001'}
+                      value={form.postalCode}
+                      onChange={(event) => updateField('postalCode', event.target.value)}
+                      onBlur={() => markFieldTouched('postalCode')}
+                    />
+                  </div>
+                </div>
+
                 <div className={`lp-register-consent-box ${hasRequiredFieldError('parentConsent') ? 'lp-input-error-box' : ''}`}>
                   <label className="lp-register-checkline">
                     <input
@@ -624,27 +782,38 @@ const Register = () => {
 
                 {parentMobileVerified ? (
                   <div className="lp-register-consent-box lp-register-secondary-box">
-                    <p className="lp-register-note lp-register-secondary-title">Mentee mobile number (optional)</p>
-                    <div className="lp-register-mobile-row lp-register-mobile-row-action">
-                      <div className="lp-register-country" aria-hidden="true">+91</div>
+                    <label className="lp-register-checkline">
                       <input
-                        id="menteeMobile"
-                        className={`lp-input ${hasRequiredFieldError('menteeMobile') ? 'lp-input-error' : ''}`}
-                        placeholder="Mentee mobile number (optional)"
-                        aria-label="Mentee mobile number optional"
-                        value={form.menteeMobile}
-                        onChange={(event) => updateField('menteeMobile', event.target.value)}
-                        onBlur={() => markFieldTouched('menteeMobile')}
+                        id="menteeSameAsParent"
+                        type="checkbox"
+                        checked={form.menteeSameAsParent}
+                        onChange={(event) => updateField('menteeSameAsParent', event.target.checked)}
                       />
-                      <button
-                        type="button"
-                        className={`lp-vp-inline-btn ${menteeMobileVerified ? 'is-verified' : ''}`}
-                        onClick={() => openOtpModal('menteeMobile')}
-                        disabled={!form.menteeMobile}
-                      >
-                        {menteeMobileVerified ? 'Verified' : 'Verify'}
-                      </button>
-                    </div>
+                      <span>Mentee number same as parent: +91 {form.parentMobile || '----------'}</span>
+                    </label>
+
+                    {!form.menteeSameAsParent ? (
+                      <div className="lp-register-mobile-row lp-register-mobile-row-action">
+                        <div className="lp-register-country" aria-hidden="true">+91</div>
+                        <input
+                          id="menteeMobile"
+                          className={`lp-input ${hasRequiredFieldError('menteeMobile') ? 'lp-input-error' : ''}`}
+                          placeholder="Mentee mobile number"
+                          aria-label="Mentee mobile number"
+                          value={form.menteeMobile}
+                          onChange={(event) => updateField('menteeMobile', event.target.value)}
+                          onBlur={() => markFieldTouched('menteeMobile')}
+                        />
+                        <button
+                          type="button"
+                          className={`lp-vp-inline-btn ${menteeMobileVerified ? 'is-verified' : ''}`}
+                          onClick={() => openOtpModal('menteeMobile')}
+                          disabled={!form.menteeMobile}
+                        >
+                          {menteeMobileVerified ? 'Verified' : 'Verify'}
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
 

@@ -4,8 +4,39 @@ import studentsImage from './assets/teach2.png';
 import mentorImage from './assets/mentor2.png';
 import supportImage from './assets/student2.png';
 import communityImage from './assets/teach1.png';
+import founderImage from './assets/avatar-1.jpg';
+import coFounderImage from './assets/avatar-2.jpg';
+import ceoImage from './assets/mentor-left.png';
+import headMentorshipImage from './assets/mentor2.png';
 
 const AboutUs = () => {
+  const leadershipTeam = [
+    {
+      name: 'Aarav Mehta',
+      role: 'Founder & CEO',
+      bio: 'Former student mentor focused on building safe, outcome-driven guidance programs.',
+      image: founderImage,
+    },
+    {
+      name: 'Riya Kapoor',
+      role: 'Co-Founder & COO',
+      bio: 'Leads operations, mentor quality systems, and onboarding experiences at scale.',
+      image: coFounderImage,
+    },
+    {
+      name: 'Kabir Shah',
+      role: 'Chief Technology Officer',
+      bio: 'Designs trust-first technology for matching, session quality, and platform reliability.',
+      image: ceoImage,
+    },
+    {
+      name: 'Naina Verma',
+      role: 'Head of Mentorship',
+      bio: 'Builds mentor training frameworks that improve empathy, structure, and consistency.',
+      image: headMentorshipImage,
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 sm:p-8">
       <div className="mx-auto max-w-6xl">
@@ -145,6 +176,43 @@ const AboutUs = () => {
               This ensures a safer and more reliable experience for students, mentors, and families.
             </p>
           </article>
+        </section>
+
+        <section className="relative mt-6 overflow-hidden rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
+          <div className="pointer-events-none absolute -left-12 -top-12 h-40 w-40 rounded-full bg-[#eadbff] opacity-70 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-[#e8ddff] opacity-70 blur-2xl" />
+
+          <div className="relative">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Leadership Team</p>
+            <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">Meet the People Behind Bond Room</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5f6472]">
+              Our mock leadership team combines student support, technology, and operations experience to deliver a trusted
+              mentorship ecosystem.
+            </p>
+          </div>
+
+          <div className="relative mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {leadershipTeam.map((member) => (
+              <article
+                key={member.name}
+                className="group overflow-hidden rounded-2xl border border-[#e5d8fb] bg-white shadow-[0_22px_40px_-30px_rgba(93,54,153,0.78)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_44px_-26px_rgba(93,54,153,0.85)]"
+              >
+                <div className="relative h-52 overflow-hidden bg-[#f6f0ff]">
+                  <img
+                    src={member.image}
+                    alt={`${member.name} - ${member.role}`}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#28123f]/50 via-transparent to-transparent" />
+                </div>
+                <div className="p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">{member.role}</p>
+                  <h3 className="mt-1 text-lg font-semibold text-[#111827]">{member.name}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#5f6472]">{member.bio}</p>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="mt-6 rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">

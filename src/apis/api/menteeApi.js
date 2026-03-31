@@ -64,9 +64,16 @@ export const menteeApi = {
   listSessionFeedback: (params = {}) => apiClient.get(`/session-feedback/${buildQuery(params)}`),
 
   listVolunteerEvents: (params = {}) => apiClient.get(`/volunteer-events/${buildQuery(params)}`),
+  listPublicVolunteerEvents: (params = {}) =>
+    apiClient.get(`/volunteer-events/${buildQuery(params)}`, { auth: false }),
   getVolunteerEventById: (eventId) => apiClient.get(`/volunteer-events/${eventId}/`),
+  getPublicVolunteerEventById: (eventId) => apiClient.get(`/volunteer-events/${eventId}/`, { auth: false }),
   listVolunteerEventRegistrations: (params = {}) =>
     apiClient.get(`/volunteer-event-registrations/${buildQuery(params)}`),
+  getVolunteerEventRegistrationById: (registrationId) =>
+    apiClient.get(`/volunteer-event-registrations/${registrationId}/`),
   createVolunteerEventRegistration: (payload) =>
     apiClient.post('/volunteer-event-registrations/', payload),
+  createPublicVolunteerEventRegistration: (payload) =>
+    apiClient.post('/volunteer-event-registrations/', payload, { auth: false }),
 };

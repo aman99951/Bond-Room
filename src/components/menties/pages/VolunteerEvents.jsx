@@ -90,8 +90,8 @@ const VolunteerEvents = () => {
       setEventsError('');
       try {
         const [upcomingRes, completedRes] = await Promise.all([
-          menteeApi.listVolunteerEvents({ status: 'upcoming' }),
-          menteeApi.listVolunteerEvents({ status: 'completed' }),
+          menteeApi.listPublicVolunteerEvents({ status: 'upcoming' }),
+          menteeApi.listPublicVolunteerEvents({ status: 'completed' }),
         ]);
         if (cancelled) return;
         setUpcomingEvents(normalizeList(upcomingRes).map(normalizeVolunteerEvent));
@@ -221,11 +221,11 @@ const VolunteerEvents = () => {
       <div className="mb-6 flex items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/volunteer')}
           className="inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Dashboard
+          Back to Volunteer
         </button>
       </div>
 

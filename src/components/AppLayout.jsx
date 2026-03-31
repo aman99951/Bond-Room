@@ -24,6 +24,7 @@ import MentorProfile from './menties/pages/MentorProfile';
 import VolunteerEvents from './menties/pages/VolunteerEvents';
 import VolunteerEventRegister from './menties/pages/VolunteerEventRegister';
 import RegisteredEvents from './menties/pages/RegisteredEvents';
+import EventCertificate from './menties/pages/EventCertificate';
 import MenteeMeetingRoom from './menties/pages/MeetingRoom';
 import MentorVerifyIdentity from './mentors/pages/VerifyIdentity';
 import MentorOnboardingStatus from './mentors/pages/OnboardingStatus';
@@ -46,6 +47,7 @@ import AdminActivityPage from './admin/AdminActivityPage';
 import LandingPage from './LandingPage';
 import AboutUs from './AboutUs';
 import DonationPage from './DonationPage';
+import VolunteerPage from './VolunteerPage';
 import {
   AUTH_LOGOUT_EVENT_NAME,
   getAssessmentDraft,
@@ -89,9 +91,12 @@ const isPublicPath = (pathname) => {
     '/mentor-training-modules-quiz',
     '/needs-assessment',
     '/about',
+    '/volunteer',
+    '/volunteer-events',
     '/donate',
   ]);
   if (exactPublicPaths.has(pathname)) return true;
+  if (pathname.startsWith('/volunteer-events/')) return true;
   return pathname.startsWith('/needs-assessment/');
 };
 
@@ -388,6 +393,9 @@ const AppLayout = () => {
       <Routes>
         <Route path="/" element={<RootRoute />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/volunteer" element={<VolunteerPage />} />
+        <Route path="/volunteer-events" element={<VolunteerEvents />} />
+        <Route path="/volunteer-events/:eventId/register" element={<VolunteerEventRegister />} />
         <Route path="/donate" element={<DonationPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -435,9 +443,8 @@ const AppLayout = () => {
         <Route path="mentee-meeting-room" element={<MenteeMeetingRoom />} />
         <Route path="mentee-zoom-meeting" element={<MenteeMeetingRoom />} />
         <Route path="mentor-profile" element={<MentorProfile />} />
-        <Route path="volunteer-events" element={<VolunteerEvents />} />
-        <Route path="volunteer-events/:eventId/register" element={<VolunteerEventRegister />} />
         <Route path="registered-events" element={<RegisteredEvents />} />
+        <Route path="event-certificate/:registrationId" element={<EventCertificate />} />
         <Route
           path="mentor-impact-dashboard"
           element={(

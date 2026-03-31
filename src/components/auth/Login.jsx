@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Phone, Lock, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Mail } from 'lucide-react';
 import logo from '../assets/logo.png';
@@ -34,7 +34,10 @@ const Login = () => {
   const [infoMessage, setInfoMessage] = useState('');
   const [otpHint, setOtpHint] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { loading, loginWithMobile, login } = useMenteeAuth();
+  const nextParam = new URLSearchParams(location.search).get('next') || '';
+  const nextPath = nextParam.startsWith('/') ? nextParam : '';
 
   const handleRoleChange = (role) => {
     setSelectedRole(role);
@@ -61,7 +64,7 @@ const Login = () => {
           return;
         }
         await login(email.trim().toLowerCase(), password, 'menties');
-        navigate('/dashboard');
+        navigate(nextPath || '/dashboard', { replace: true });
         return;
       }
 

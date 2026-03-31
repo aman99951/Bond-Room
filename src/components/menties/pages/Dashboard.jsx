@@ -20,7 +20,6 @@ import {
   BookOpen,
   Languages,
   CalendarCheck,
-  CalendarDays,
 } from 'lucide-react';
 import '../../LandingPage.css';
 import './DashboardMentorCarousel.css';
@@ -41,14 +40,6 @@ const normalizeList = (payload) => {
   if (Array.isArray(payload?.results)) return payload.results;
   return [];
 };
-
-const normalizeVolunteerEvent = (event) => ({
-  ...event,
-  image: event?.image || '',
-  date: event?.date || '',
-  time: event?.time || '',
-  completed_on: event?.completed_on || '',
-});
 
 const getMentorName = (mentor) => {
   const fullName = `${mentor?.first_name || ''} ${mentor?.last_name || ''}`.trim();
@@ -73,25 +64,12 @@ const formatDate = (value) => {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-const toIsoDate = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+const getEventStatus = (registration, eventById) => {
+  const event = eventById.get(registration?.volunteer_event);
+  if (event?.status === 'completed') return 'completed';
+  if (event?.status === 'upcoming') return 'upcoming';
+  return 'unknown';
 };
-
-const toIsoMonth = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  return `${y}-${m}`;
-};
-
-const parseIsoDate = (value) => {
-  const parsed = new Date(`${value}T00:00:00`);
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-};
-
-const calendarWeekLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 const getRelativeStart = (value) => {
   const target = new Date(value);
@@ -333,19 +311,6 @@ const MentorRingCarousel = ({ items, className = 'dash-mentor-arc', onCardClick 
   );
 };
 
-const VolunteerRingCarousel = ({ items, onCardClick }) => {
-  const carouselItems = items.map((event) => ({
-    id: event.id,
-    image: event.image,
-    name: event.title,
-    role: `${event.stream} • ${formatDate(event.date)} • ${event.time || 'Time TBA'}`,
-  }));
-
-  return (
-    <MentorRingCarousel items={carouselItems} className="dash-volunteer-arc" onCardClick={onCardClick} />
-  );
-};
-
 const RecommendationCard = ({ mentor }) => {
   const [expanded, setExpanded] = useState(false);
   const [showReadMore, setShowReadMore] = useState(false);
@@ -523,17 +488,10 @@ const Dashboard = () => {
   const [recommended, setRecommended] = useState([]);
   const [upcomingSession, setUpcomingSession] = useState(null);
   const [recentSessions, setRecentSessions] = useState([]);
+  const [registeredEvents, setRegisteredEvents] = useState([]);
+  const [registeredEventsLoading, setRegisteredEventsLoading] = useState(true);
+  const [registeredEventsError, setRegisteredEventsError] = useState('');
   const [stats, setStats] = useState({ total_sessions: 0, completed_sessions: 0 });
-  const [volunteerEvents, setVolunteerEvents] = useState([]);
-  const [completedVolunteerEvents, setCompletedVolunteerEvents] = useState([]);
-  const [volunteerRange, setVolunteerRange] = useState('year');
-  const [selectedDay, setSelectedDay] = useState(() => new Date().toISOString().slice(0, 10));
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
-  const [selectedYear, setSelectedYear] = useState(() => String(new Date().getFullYear()));
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [calendarCursor, setCalendarCursor] = useState(() => parseIsoDate(new Date().toISOString().slice(0, 10)));
-  const [monthPickerYear, setMonthPickerYear] = useState(() => Number(new Date().getFullYear()));
-  const calendarPopoverRef = useRef(null);
 
   const openJoinLink = (url) => {
     if (!url) return false;
@@ -584,19 +542,7 @@ const Dashboard = () => {
       setJoinLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!calendarOpen) return undefined;
-    const handleOutside = (event) => {
-      if (!calendarPopoverRef.current?.contains(event.target)) {
-        setCalendarOpen(false);
-      }
-    };
-    window.addEventListener('mousedown', handleOutside);
-    return () => window.removeEventListener('mousedown', handleOutside);
-  }, [calendarOpen]);
-
-  useEffect(() => {
+useEffect(() => {
     const refreshHandler = () => setRefreshTick((value) => value + 1);
     window.addEventListener('mentee:recommendations-updated', refreshHandler);
     return () => {
@@ -710,12 +656,65 @@ const Dashboard = () => {
         setUpcomingSession(upcomingCard);
         setRecentSessions(recentCards.slice(0, 4));
         setStats(dashboardRes?.stats || { total_sessions: 0, completed_sessions: 0 });
+
+        setRegisteredEventsLoading(true);
+        setRegisteredEventsError('');
+        try {
+          const [registrationsRes, eventsRes] = await Promise.all([
+            menteeApi.listVolunteerEventRegistrations(),
+            menteeApi.listVolunteerEvents(),
+          ]);
+          if (cancelled) return;
+
+          const registrationItems = normalizeList(registrationsRes);
+          const events = normalizeList(eventsRes);
+          const eventById = new Map(events.map((event) => [event.id, event]));
+          const registrationCards = registrationItems
+            .map((registration, index) => {
+              const event = eventById.get(registration?.volunteer_event);
+              const status = getEventStatus(registration, eventById);
+              const dateValue = registration?.volunteer_event_date || event?.date || '';
+              const timeValue = registration?.volunteer_event_time || event?.time || 'Time TBA';
+              const statusLabel = status === 'completed' ? 'Completed' : status === 'upcoming' ? 'Upcoming' : 'Registered';
+              const dateLabel = dateValue ? formatDate(dateValue) : 'Date unavailable';
+              return {
+                id: registration?.id || `${registration?.volunteer_event || 'event'}-${registration?.created_at || index}`,
+                registrationId: registration?.id || null,
+                image: resolveMediaUrl(event?.image || ''),
+                name: registration?.volunteer_event_title || event?.title || `Event #${registration?.volunteer_event}`,
+                role: `${statusLabel} - ${dateLabel} - ${timeValue}`,
+                title: registration?.volunteer_event_title || event?.title || `Event #${registration?.volunteer_event}`,
+                dateLabel,
+                timeLabel: timeValue,
+                location: event?.location || `${registration?.city || '-'}, ${registration?.state || '-'}`,
+                status,
+                statusLabel,
+                statusSort: status === 'upcoming' ? 0 : status === 'completed' ? 1 : 2,
+                dateSort: dateValue ? new Date(dateValue).getTime() : Number.POSITIVE_INFINITY,
+              };
+            })
+            .sort((a, b) => {
+              if (a.statusSort !== b.statusSort) return a.statusSort - b.statusSort;
+              return a.dateSort - b.dateSort;
+            });
+
+          setRegisteredEvents(registrationCards);
+        } catch (registrationError) {
+          if (!cancelled) {
+            setRegisteredEvents([]);
+            setRegisteredEventsError(registrationError?.message || 'Unable to load your registered events.');
+          }
+        } finally {
+          if (!cancelled) setRegisteredEventsLoading(false);
+        }
       } catch (err) {
         if (!cancelled) {
           setDashboardError(err?.message || 'Unable to load dashboard data.');
           setRecommended([]);
           setUpcomingSession(null);
           setRecentSessions([]);
+          setRegisteredEvents([]);
+          setRegisteredEventsLoading(false);
         }
       } finally {
         if (!cancelled) setDashboardLoading(false);
@@ -727,116 +726,27 @@ const Dashboard = () => {
       cancelled = true;
     };
   }, [mentee?.id, menteeLoading, refreshTick]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadVolunteerEvents = async () => {
-      try {
-        const [upcomingEventsRes, completedEventsRes] = await Promise.all([
-          menteeApi.listVolunteerEvents({ status: 'upcoming' }),
-          menteeApi.listVolunteerEvents({ status: 'completed' }),
-        ]);
-        if (cancelled) return;
-        setVolunteerEvents(normalizeList(upcomingEventsRes).map(normalizeVolunteerEvent));
-        setCompletedVolunteerEvents(normalizeList(completedEventsRes).map(normalizeVolunteerEvent));
-      } catch {
-        if (!cancelled) {
-          setVolunteerEvents([]);
-          setCompletedVolunteerEvents([]);
-        }
-      }
-    };
-    loadVolunteerEvents();
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshTick]);
-
-  const displayName = mentee?.first_name || 'there';
+const displayName = mentee?.first_name || 'there';
+  const registeredEventCarouselItems = useMemo(() => {
+    if (!registeredEvents.length) return [];
+    if (registeredEvents.length >= 5) return registeredEvents;
+    const repeated = [];
+    for (let i = 0; i < 5; i += 1) {
+      repeated.push(registeredEvents[i % registeredEvents.length]);
+    }
+    return repeated;
+  }, [registeredEvents]);
+  const completedRegisteredEvents = useMemo(
+    () => registeredEvents.filter((event) => event.status === 'completed' && event.registrationId),
+    [registeredEvents]
+  );
   const progressPercent = useMemo(() => {
     const total = Number(stats?.total_sessions || 0);
     const completed = Number(stats?.completed_sessions || 0);
     if (!total) return 0;
     return Math.max(0, Math.min(100, Math.round((completed / total) * 100)));
   }, [stats]);
-
-  const filteredVolunteerEvents = useMemo(() => {
-    return volunteerEvents.filter((event) => {
-      const eventDateValue = String(event?.date || '');
-      if (!eventDateValue) return false;
-
-      if (volunteerRange === 'day') {
-        return eventDateValue === selectedDay;
-      }
-
-      if (volunteerRange === 'week') {
-        const start = new Date(`${selectedDay}T00:00:00`);
-        const eventDate = new Date(`${eventDateValue}T00:00:00`);
-        if (Number.isNaN(start.getTime()) || Number.isNaN(eventDate.getTime())) return false;
-        const diffDays = Math.floor((eventDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-        return diffDays >= 0 && diffDays <= 7;
-      }
-
-      if (volunteerRange === 'month') {
-        return eventDateValue.slice(0, 7) === selectedMonth;
-      }
-
-      if (volunteerRange === 'year') {
-        return eventDateValue.slice(0, 4) === selectedYear;
-      }
-
-      return true;
-    });
-  }, [selectedDay, selectedMonth, selectedYear, volunteerEvents, volunteerRange]);
-
-  const volunteerYearOptions = useMemo(() => {
-    const fromEvents = [
-      ...volunteerEvents.map((event) => String(event?.date || '').slice(0, 4)),
-      ...completedVolunteerEvents.map((event) => String(event?.completed_on || '').slice(0, 4)),
-    ]
-      .filter((value) => /^\d{4}$/.test(value));
-    if (!fromEvents.length) return [String(new Date().getFullYear())];
-    const set = new Set(fromEvents);
-    return Array.from(set).sort((a, b) => Number(a) - Number(b));
-  }, [completedVolunteerEvents, volunteerEvents]);
-
-  useEffect(() => {
-    if (!volunteerYearOptions.length) return;
-    if (!volunteerYearOptions.includes(selectedYear)) {
-      setSelectedYear(volunteerYearOptions[volunteerYearOptions.length - 1]);
-    }
-  }, [selectedYear, volunteerYearOptions]);
-
-  const calendarDays = useMemo(() => {
-    const first = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
-    const firstWeekday = first.getDay();
-    const start = new Date(first);
-    start.setDate(first.getDate() - firstWeekday);
-    return Array.from({ length: 42 }).map((_, index) => {
-      const day = new Date(start);
-      day.setDate(start.getDate() + index);
-      return day;
-    });
-  }, [calendarCursor]);
-
-  const selectedDayLabel = useMemo(() => formatDate(selectedDay), [selectedDay]);
-  const selectedMonthLabel = useMemo(() => {
-    const parsed = parseIsoDate(`${selectedMonth}-01`);
-    return parsed.toLocaleDateString([], { month: 'long', year: 'numeric' });
-  }, [selectedMonth]);
-
-  const toggleCalendar = () => {
-    setCalendarOpen((prev) => !prev);
-    if (!calendarOpen) {
-      if (volunteerRange === 'month') {
-        setMonthPickerYear(Number(selectedMonth.slice(0, 4)) || new Date().getFullYear());
-      } else if (volunteerRange === 'day' || volunteerRange === 'week') {
-        setCalendarCursor(parseIsoDate(selectedDay));
-      }
-    }
-  };
-
-  return (
+return (
     <motion.div
       className="relative overflow-hidden bg-transparent p-3 sm:p-6 lg:p-8"
       initial="hidden"
@@ -950,221 +860,119 @@ const Dashboard = () => {
         )}
       </motion.div>
 
-      {/* Volunteer Activities Section */}
+      {/* Registered Events Section */}
       <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-              <Calendar className="h-5 w-5 text-[#5D3699]" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff] ring-1 ring-[#e9ddff]">
+              <CalendarCheck className="h-5 w-5 text-[#5D3699]" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[#111827]">Volunteer Activities</h2>
-              <p className="text-xs text-[#6b7280]">Upcoming events you can join</p>
+              <h2 className="text-base font-semibold text-[#111827]">Registered Events</h2>
+              <p className="text-xs text-[#6b7280]">All events you have registered for</p>
             </div>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
-            <div className="inline-flex w-full items-center gap-1 overflow-x-auto rounded-full border border-[#e8dcff] bg-white p-1 sm:w-auto">
-              {[
-                { key: 'day', label: 'Day' },
-                { key: 'week', label: 'Week' },
-                { key: 'month', label: 'Month' },
-                { key: 'year', label: 'Year' },
-              ].map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => {
-                    setVolunteerRange(item.key);
-                    setCalendarOpen(false);
-                  }}
-                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
-                    volunteerRange === item.key
-                      ? 'bg-[#5D3699] text-white shadow-sm'
-                      : 'text-[#5D3699] hover:bg-[#f5f3ff]'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-            <div className="relative" ref={calendarPopoverRef}>
-              <button
-                type="button"
-                onClick={toggleCalendar}
-                className="inline-flex w-full items-center justify-between gap-2 rounded-full border border-[#e8dcff] bg-white px-3 py-2 text-xs font-medium text-[#5D3699] transition-colors hover:bg-[#f8f4ff] sm:w-auto sm:justify-start"
-              >
-                <CalendarDays className="h-3.5 w-3.5" />
-                {volunteerRange === 'day' || volunteerRange === 'week'
-                  ? selectedDayLabel
-                  : volunteerRange === 'month'
-                    ? selectedMonthLabel
-                    : selectedYear}
-                <ChevronRight className={`h-3.5 w-3.5 transition-transform ${calendarOpen ? 'rotate-90' : ''}`} />
-              </button>
-
-              {calendarOpen && (
-                <div className="absolute right-0 z-30 mt-2 w-[min(92vw,320px)] rounded-2xl border border-[#e8dcff] bg-white p-3 shadow-[0_20px_45px_-26px_rgba(93,54,153,0.65)] sm:w-[320px]">
-                  {(volunteerRange === 'day' || volunteerRange === 'week') && (
-                    <>
-                      <div className="mb-2 flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
-                          }
-                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
-                          aria-label="Previous month"
-                        >
-                          <ChevronRight className="h-4 w-4 rotate-180" />
-                        </button>
-                        <p className="text-sm font-semibold text-[#312049]">
-                          {calendarCursor.toLocaleDateString([], { month: 'long', year: 'numeric' })}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
-                          }
-                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
-                          aria-label="Next month"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-7 gap-1">
-                        {calendarWeekLabels.map((label) => (
-                          <span key={label} className="text-center text-[10px] font-semibold text-[#7b699d]">
-                            {label}
-                          </span>
-                        ))}
-                        {calendarDays.map((day) => {
-                          const iso = toIsoDate(day);
-                          const inCurrentMonth = day.getMonth() === calendarCursor.getMonth();
-                          const selected = iso === selectedDay;
-                          return (
-                            <button
-                              key={iso}
-                              type="button"
-                              onClick={() => {
-                                setSelectedDay(iso);
-                                setCalendarOpen(false);
-                              }}
-                              className={`h-8 rounded-lg text-xs transition-colors ${
-                                selected
-                                  ? 'bg-[#5D3699] text-white'
-                                  : inCurrentMonth
-                                    ? 'text-[#312049] hover:bg-[#f5f3ff]'
-                                    : 'text-[#b8aecb] hover:bg-[#faf7ff]'
-                              }`}
-                            >
-                              {day.getDate()}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
-
-                  {volunteerRange === 'month' && (
-                    <>
-                      <div className="mb-2 flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() => setMonthPickerYear((prev) => prev - 1)}
-                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
-                          aria-label="Previous year"
-                        >
-                          <ChevronRight className="h-4 w-4 rotate-180" />
-                        </button>
-                        <p className="text-sm font-semibold text-[#312049]">{monthPickerYear}</p>
-                        <button
-                          type="button"
-                          onClick={() => setMonthPickerYear((prev) => prev + 1)}
-                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
-                          aria-label="Next year"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2">
-                        {Array.from({ length: 12 }).map((_, index) => {
-                          const date = new Date(monthPickerYear, index, 1);
-                          const monthValue = toIsoMonth(date);
-                          const selected = monthValue === selectedMonth;
-                          return (
-                            <button
-                              key={monthValue}
-                              type="button"
-                              onClick={() => {
-                                setSelectedMonth(monthValue);
-                                setCalendarOpen(false);
-                              }}
-                              className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
-                                selected
-                                  ? 'bg-[#5D3699] text-white'
-                                  : 'text-[#312049] hover:bg-[#f5f3ff]'
-                              }`}
-                            >
-                              {date.toLocaleDateString([], { month: 'short' })}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
-
-                  {volunteerRange === 'year' && (
-                    <div className="grid grid-cols-3 gap-2">
-                      {volunteerYearOptions.map((year) => {
-                        const selected = year === selectedYear;
-                        return (
-                          <button
-                            key={year}
-                            type="button"
-                            onClick={() => {
-                              setSelectedYear(year);
-                              setCalendarOpen(false);
-                            }}
-                            className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
-                              selected ? 'bg-[#5D3699] text-white' : 'text-[#312049] hover:bg-[#f5f3ff]'
-                            }`}
-                          >
-                            {year}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            <Link
-              to="/volunteer-events"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
-            >
-              View All
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/registered-events')}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
+          >
+            View All
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </div>
 
-        {filteredVolunteerEvents.length > 0 ? (
-          <VolunteerRingCarousel
-            items={filteredVolunteerEvents}
-            onCardClick={(item) => {
-              if (!item?.id) return;
-              navigate(`/volunteer-events/${item.id}/register`);
-            }}
-          />
+        {registeredEventsLoading ? (
+          <div className="rounded-2xl border border-[#e9ddff] bg-white p-8 text-center shadow-[0_22px_45px_-38px_rgba(93,54,153,0.7)]">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#e7d8ff] border-t-[#5D3699]" />
+            <p className="mt-3 text-sm text-[#6b7280]">Loading your registered events...</p>
+          </div>
+        ) : registeredEventCarouselItems.length > 0 ? (
+          <div className="rounded-2xl border border-[#e9ddff] bg-white/60 p-3 shadow-[0_22px_45px_-38px_rgba(93,54,153,0.7)] sm:p-4">
+            <MentorRingCarousel
+              items={registeredEventCarouselItems}
+              className="dash-volunteer-arc"
+              onCardClick={() => navigate('/registered-events')}
+            />
+          </div>
         ) : (
-          <div className="rounded-xl border border-[#e5e7eb] border-dashed bg-white p-8 text-center">
-            <p className="text-sm text-[#6b7280]">No volunteer activities found for this filter.</p>
+          <div className="rounded-2xl border border-dashed border-[#e2d4fb] bg-white p-8 text-center">
+            <p className="text-sm text-[#6b7280]">No registered events yet.</p>
+            <button
+              type="button"
+              onClick={() => navigate('/volunteer-events')}
+              className="mt-3 inline-flex items-center rounded-xl bg-[#5D3699] px-4 py-2 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
+            >
+              Explore Volunteer Events
+            </button>
+          </div>
+        )}
+
+        {registeredEventsError && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {registeredEventsError}
           </div>
         )}
       </motion.div>
 
+      {/* Completed Certificates Section */}
+      <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f0fdf4] ring-1 ring-[#bbf7d0]">
+              <CheckCircle2 className="h-5 w-5 text-[#15803d]" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[#111827]">Completed Event Certificates</h2>
+              <p className="text-xs text-[#6b7280]">Tap any completed event to open and download your certificate PDF</p>
+            </div>
+          </div>
+        </div>
+
+        {registeredEventsLoading ? (
+          <div className="rounded-2xl border border-[#e9ddff] bg-white p-6 text-sm text-[#6b7280]">
+            Loading completed events...
+          </div>
+        ) : completedRegisteredEvents.length > 0 ? (
+          <div className="overflow-x-auto pb-2">
+            <div className="flex min-w-full gap-4">
+              {completedRegisteredEvents.map((event) => (
+                <button
+                  key={`completed-${event.registrationId}`}
+                  type="button"
+                  onClick={() => navigate(`/event-certificate/${event.registrationId}`)}
+                  className="group min-w-[300px] max-w-[360px] flex-1 overflow-hidden rounded-2xl border border-[#d9f9e6] bg-white text-left shadow-[0_18px_40px_-30px_rgba(21,128,61,0.45)] transition-all hover:-translate-y-0.5 hover:shadow-[0_22px_44px_-30px_rgba(21,128,61,0.55)]"
+                >
+                  <div className="relative h-36 w-full overflow-hidden bg-[#f0fdf4]">
+                    {event.image ? (
+                      <img src={event.image} alt={event.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#dcfce7] to-[#f0fdf4] text-[#166534]">
+                        <CheckCircle2 className="h-8 w-8" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#052e16]/65 via-[#052e16]/20 to-transparent" />
+                    <span className="absolute right-3 top-3 inline-flex items-center rounded-full bg-[#166534] px-2.5 py-1 text-[10px] font-semibold text-white">
+                      Completed
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 p-4">
+                    <h3 className="line-clamp-2 text-sm font-semibold text-[#111827]">{event.title}</h3>
+                    <p className="text-xs text-[#4b5563]">{event.dateLabel} • {event.timeLabel}</p>
+                    <p className="line-clamp-1 text-xs text-[#6b7280]">{event.location}</p>
+                    <p className="pt-1 text-xs font-semibold text-[#15803d]">Open Certificate</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-[#d1fae5] bg-white p-6 text-center">
+            <p className="text-sm text-[#4b5563]">No completed registered events yet.</p>
+            <p className="mt-1 text-xs text-[#6b7280]">Certificates will appear here after completion.</p>
+          </div>
+        )}
+      </motion.div>
       {/* Quick Actions Grid */}
       <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
         <div className="flex items-center gap-2 mb-4">
@@ -1383,61 +1191,6 @@ const Dashboard = () => {
           </div>
         </div>
       </motion.div>
-
-      {/* Completed Volunteer Events */}
-      <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eefcf5] ring-1 ring-[#c7f0da]">
-            <CheckCircle2 className="h-5 w-5 text-[#15803d]" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-[#111827]">Completed Volunteer Events</h2>
-            <p className="text-xs text-[#6b7280]">Impact stories from already completed activities</p>
-          </div>
-        </div>
-
-        <div className="flex gap-4 overflow-x-auto pb-2 [scrollbar-width:thin] [scrollbar-color:#c4b5fd_transparent]">
-          {completedVolunteerEvents.map((event) => (
-            <article
-              key={event.id}
-              className="group min-w-[260px] max-w-[260px] overflow-hidden rounded-2xl border border-[#e9ddff] bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] transition-transform duration-200 hover:-translate-y-1 sm:min-w-[300px] sm:max-w-[300px]"
-            >
-              <div className="relative h-40 overflow-hidden">
-                <img
-                  src={event.image}
-                  alt={event.title}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#120a2c]/75 via-[#120a2c]/30 to-transparent" />
-                <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold text-[#14532d] ring-1 ring-[#bbf7d0]">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Completed
-                </div>
-                <div className="absolute bottom-3 left-3 right-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#d8cff1]">{event.stream}</p>
-                  <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-white">{event.title}</h3>
-                </div>
-              </div>
-
-              <div className="space-y-3 p-4">
-                <p className="line-clamp-2 text-xs leading-5 text-[#6b7280]">{event.summary}</p>
-                <div className="inline-flex items-center gap-1 rounded-full bg-[#f5f3ff] px-2.5 py-1 text-[10px] font-medium text-[#5D3699]">
-                  <Calendar className="h-3 w-3" />
-                  {formatDate(event.completed_on)}
-                </div>
-                <div className="rounded-xl border border-[#dcfce7] bg-[#f0fdf4] p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#166534]">Impact</p>
-                  <p className="mt-1 text-xs font-medium text-[#166534]">{event.impact}</p>
-                  <p className="mt-1 text-[11px] text-[#15803d]">{event.location}</p>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </motion.div>
-
-
-
       {/* Loading/Error States */}
       {(dashboardLoading || dashboardError || menteeError) && (
         <div className={`mt-6 flex items-center justify-center gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 ${dashboardError || menteeError ? 'border-red-200' : ''
@@ -1455,4 +1208,8 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
+
+
 

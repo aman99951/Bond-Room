@@ -48,13 +48,37 @@ const getMenteePhone = (mentee) => {
   if (menteePhone) return menteePhone;
   return String(mentee?.parent_mobile || '').trim();
 };
+const normalizeCountry = (value) => (COUNTRY_OPTIONS.includes(value) ? value : 'India');
+const normalizeState = (country, value) => {
+  const states = LOCATION_OPTIONS[country]?.states || [];
+  if (states.includes(value)) return value;
+  return states[0] || '';
+};
+const normalizeCity = (country, state, value) => {
+  const cities = LOCATION_OPTIONS[country]?.citiesByState?.[state] || [];
+  if (cities.includes(value)) return value;
+  return cities[0] || '';
+};
+const parseLegacyCityState = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return {};
+  const match = raw.match(/^([^,]+),\s*([^,]+),\s*([^(]+?)(?:\s*\(([^)]+)\))?$/);
+  if (!match) return {};
+  return {
+    city: String(match[1] || '').trim(),
+    state: String(match[2] || '').trim(),
+    country: String(match[3] || '').trim(),
+    postalCode: String(match[4] || '').trim(),
+  };
+};
 
 const VolunteerEventRegister = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
-  const { mentee } = useMenteeData();
+  const { authSession, mentee, loadCurrentMentee } = useMenteeData({ autoLoad: false });
+  const isLoggedIn = Boolean(authSession?.accessToken);
   const defaultFullName = getMenteeFullName(mentee);
-  const defaultEmail = String(mentee?.email || '').trim();
+  const defaultEmail = String(mentee?.email || authSession?.email || '').trim();
   const defaultPhone = getMenteePhone(mentee);
   const [eventItem, setEventItem] = useState(null);
   const [eventLoading, setEventLoading] = useState(true);
@@ -77,14 +101,58 @@ const VolunteerEventRegister = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!errorMessage && !successMessage) return undefined;
+    const timer = window.setTimeout(() => {
+      setErrorMessage('');
+      setSuccessMessage('');
+    }, 7000);
+    return () => window.clearTimeout(timer);
+  }, [errorMessage, successMessage]);
+
+  const clearIdentityFields = () => {
+    setForm((prev) => ({
+      ...prev,
+      fullName: '',
+      email: '',
+      phone: '',
+    }));
+  };
+
+  useEffect(() => {
+    setShowLoginPrompt(!isLoggedIn);
+    if (!isLoggedIn) {
+      clearIdentityFields();
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    loadCurrentMentee();
+  }, [isLoggedIn, loadCurrentMentee]);
 
   useEffect(() => {
     if (!mentee) return;
+    const legacy = parseLegacyCityState(mentee?.city_state);
+    const countrySource = String(mentee?.country || legacy.country || '').trim();
+    const stateSource = String(mentee?.state || legacy.state || '').trim();
+    const citySource = String(mentee?.city || legacy.city || '').trim();
+    const postalSource = String(mentee?.postal_code || legacy.postalCode || '').trim();
+    const nextCountry = normalizeCountry(countrySource);
+    const nextState = normalizeState(nextCountry, stateSource);
+    const nextCity = normalizeCity(nextCountry, nextState, citySource);
     setForm((prev) => ({
       ...prev,
       fullName: prev.fullName.trim() ? prev.fullName : defaultFullName,
       email: prev.email.trim() ? prev.email : defaultEmail,
       phone: prev.phone.trim() ? prev.phone : defaultPhone,
+      schoolOrCollege: prev.schoolOrCollege.trim() ? prev.schoolOrCollege : String(mentee?.school_or_college || '').trim(),
+      country: prev.country.trim() ? prev.country : nextCountry,
+      state: prev.state.trim() ? prev.state : nextState,
+      city: prev.city.trim() ? prev.city : nextCity,
+      postalCode: prev.postalCode.trim() ? prev.postalCode : postalSource,
     }));
   }, [mentee, defaultEmail, defaultFullName, defaultPhone]);
 
@@ -94,7 +162,7 @@ const VolunteerEventRegister = () => {
       setEventLoading(true);
       setErrorMessage('');
       try {
-        const response = await menteeApi.getVolunteerEventById(eventId);
+        const response = await menteeApi.getPublicVolunteerEventById(eventId);
         if (cancelled) return;
         setEventItem(response || null);
       } catch {
@@ -173,7 +241,7 @@ const VolunteerEventRegister = () => {
 
     setLoading(true);
     try {
-      await menteeApi.createVolunteerEventRegistration({
+      const payload = {
         volunteer_event: eventItem.id,
         full_name: form.fullName.trim(),
         email: form.email.trim().toLowerCase(),
@@ -188,7 +256,12 @@ const VolunteerEventRegister = () => {
         emergency_contact: form.emergencyContact.trim(),
         notes: form.notes.trim(),
         consent: form.consent,
-      });
+      };
+      if (isLoggedIn) {
+        await menteeApi.createVolunteerEventRegistration(payload);
+      } else {
+        await menteeApi.createPublicVolunteerEventRegistration(payload);
+      }
       setSuccessMessage('Registration submitted successfully.');
       setForm((prev) => ({
         ...prev,
@@ -242,6 +315,49 @@ const VolunteerEventRegister = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
     >
+      {(errorMessage || successMessage) && (
+        <div className="fixed right-4 top-4 z-[70] w-full max-w-sm">
+          <div
+            className={`rounded-xl border px-4 py-3 text-sm shadow-lg ${
+              errorMessage
+                ? 'border-red-200 bg-red-50 text-red-600'
+                : 'border-green-200 bg-green-50 text-green-700'
+            }`}
+          >
+            {errorMessage || successMessage}
+          </div>
+        </div>
+      )}
+
+      {showLoginPrompt ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-[#e8dcff] bg-white p-6 shadow-[0_24px_54px_-26px_rgba(0,0,0,0.5)]">
+            <h3 className="text-lg font-semibold text-[#111827]">Login for Quick Registration</h3>
+            <p className="mt-2 text-sm text-[#6b7280]">
+              Login to auto-fill your name, email, and phone. You can also continue without login.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                to={`/login?next=/volunteer-events/${eventId}/register`}
+                className="inline-flex items-center rounded-lg bg-[#5D3699] px-4 py-2 text-sm font-semibold text-white hover:bg-[#4a2b7a]"
+              >
+                Login
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  clearIdentityFields();
+                  setShowLoginPrompt(false);
+                }}
+                className="inline-flex items-center rounded-lg border border-[#ddd6fe] bg-white px-4 py-2 text-sm font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
+              >
+                Continue as Guest
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="mb-6">
         <button
           type="button"
@@ -284,11 +400,27 @@ const VolunteerEventRegister = () => {
             </div>
           </div>
 
-          {errorMessage && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{errorMessage}</div>
-          )}
-          {successMessage && (
-            <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{successMessage}</div>
+          {!isLoggedIn ? (
+            <div className="mb-4 rounded-lg border border-[#e8dcff] bg-[#f8f4ff] px-4 py-3">
+              <p className="text-sm font-medium text-[#312049]">
+                Log in to auto-fill your name, email, and phone.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Link
+                  to={`/login?next=/volunteer-events/${eventId}/register`}
+                  className="inline-flex items-center rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
+                >
+                  Login for Auto-Fill
+                </Link>
+                <span className="inline-flex items-center text-xs text-[#6b7280]">
+                  You can continue as guest as well.
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+              Logged in. Name, email, and phone are auto-filled when available.
+            </div>
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -305,10 +437,6 @@ const VolunteerEventRegister = () => {
               <input value={form.phone} onChange={onChange('phone')} required className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
             </div>
             <div className="space-y-1.5">
-              <label className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#7b699d]"><Users className="h-3.5 w-3.5" />Team Name *</label>
-              <input value={form.teamName} onChange={onChange('teamName')} required className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
               <label className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#7b699d]"><Building className="h-3.5 w-3.5" />School / College *</label>
               <input value={form.schoolOrCollege} onChange={onChange('schoolOrCollege')} required className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
             </div>
@@ -348,7 +476,11 @@ const VolunteerEventRegister = () => {
                 className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]"
               />
             </div>
-            <div className="space-y-1.5 sm:col-span-2">
+            <div className="space-y-1.5">
+              <label className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#7b699d]"><Users className="h-3.5 w-3.5" />Team Name *</label>
+              <input value={form.teamName} onChange={onChange('teamName')} required className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
+            </div>
+            <div className="space-y-1.5">
               <label className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#7b699d]"><User className="h-3.5 w-3.5" />Preferred Role</label>
               <input value={form.preferredRole} onChange={onChange('preferredRole')} className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
             </div>
