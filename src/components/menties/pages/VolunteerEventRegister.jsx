@@ -88,7 +88,6 @@ const VolunteerEventRegister = () => {
     fullName: '',
     email: '',
     phone: '',
-    teamName: '',
     schoolOrCollege: '',
     country: 'India',
     state: 'Tamilnadu',
@@ -217,7 +216,6 @@ const VolunteerEventRegister = () => {
       !form.fullName.trim() ||
       !form.email.trim() ||
       !form.phone.trim() ||
-      !form.teamName.trim() ||
       !form.schoolOrCollege.trim() ||
       !form.country.trim() ||
       !form.state.trim() ||
@@ -240,7 +238,6 @@ const VolunteerEventRegister = () => {
         full_name: form.fullName.trim(),
         email: form.email.trim().toLowerCase(),
         phone: form.phone.trim(),
-        team_name: form.teamName.trim(),
         school_or_college: form.schoolOrCollege.trim(),
         country: form.country.trim(),
         state: form.state.trim(),
@@ -256,7 +253,6 @@ const VolunteerEventRegister = () => {
       setForm((prev) => ({
         ...prev,
         phone: defaultPhone,
-        teamName: '',
         schoolOrCollege: '',
         postalCode: '',
         preferredRole: '',
@@ -466,10 +462,6 @@ const VolunteerEventRegister = () => {
                 placeholder={form.country === 'USA' ? 'e.g. 77001' : 'e.g. 600001'}
                 className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]"
               />
-            </div>
-            <div className="space-y-1.5">
-              <label className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#7b699d]"><Users className="h-3.5 w-3.5" />Team Name *</label>
-              <input value={form.teamName} onChange={onChange('teamName')} required className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
             </div>
             <div className="space-y-1.5">
               <label className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#7b699d]"><User className="h-3.5 w-3.5" />Preferred Role</label>
