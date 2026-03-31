@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, X } from 'lucide-react';
 import logo from '../assets/logo.png';
+import { menteeApi } from '../../apis/api/menteeApi';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
+import { useMenteeData } from '../../apis/apihook/useMenteeData';
 import '../LandingPage.css';
 import './NeedsAssessment.css';
 
@@ -20,8 +22,10 @@ const Choice = ({ label, selected, onClick }) => (
 
 const NeedsAssessmentQ5 = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { draft, saveAnswer, submitAssessment, loading, error } = useMenteeAssessment();
   const { logout, loading: authLoading } = useMenteeAuth();
+  const { mentee, loadCurrentMentee } = useMenteeData({ autoLoad: false });
   const [selectedLanguage, setSelectedLanguage] = useState(draft.language || 'Tamil');
   const [localError, setLocalError] = useState('');
   const [toastState, setToastState] = useState({
@@ -29,6 +33,13 @@ const NeedsAssessmentQ5 = () => {
     message: '',
     type: 'error',
   });
+  const assessmentSearch = location.search || '';
+  const isEventFlowAssessment = new URLSearchParams(location.search).get('from') === 'event-flow';
+
+  useEffect(() => {
+    if (!isEventFlowAssessment) return;
+    loadCurrentMentee();
+  }, [isEventFlowAssessment, loadCurrentMentee]);
 
   const options = ['Tamil', 'English', 'Telugu', 'Malayalam', 'Kannada', 'Hindi'];
 
@@ -37,6 +48,14 @@ const NeedsAssessmentQ5 = () => {
     try {
       saveAnswer('language', selectedLanguage);
       await submitAssessment();
+      if (isEventFlowAssessment) {
+        const currentMentee = mentee?.id ? mentee : await loadCurrentMentee();
+        if (currentMentee?.id) {
+          await menteeApi.updateMentee(currentMentee.id, {
+            mentee_program_enabled: true,
+          });
+        }
+      }
       navigate('/dashboard');
     } catch (err) {
       setLocalError(err?.message || 'Unable to submit assessment.');
@@ -125,7 +144,7 @@ const NeedsAssessmentQ5 = () => {
           </div>
 
           <div className="lp-na-actions">
-            <Link to="/needs-assessment/q4" className="lp-na-btn-ghost">Back</Link>
+            <Link to={`/needs-assessment/q4${assessmentSearch}`} className="lp-na-btn-ghost">Back</Link>
             <button
               type="button"
               onClick={handleFinish}

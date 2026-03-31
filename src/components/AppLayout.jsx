@@ -44,6 +44,7 @@ import SessionRecords from './shared/SessionRecords';
 import AdminPortal from './admin/AdminPortal';
 import AdminMentorReview from './admin/AdminMentorReview';
 import AdminActivityPage from './admin/AdminActivityPage';
+import AdminVolunteerEventsPage from './admin/AdminVolunteerEventsPage';
 import LandingPage from './LandingPage';
 import AboutUs from './AboutUs';
 import DonationPage from './DonationPage';
@@ -336,6 +337,12 @@ const MenteeAssessmentGuard = ({ children }) => {
           if (!cancelled) setHasAssessment(false);
           return;
         }
+        const eventFlowOnly =
+          currentMentee?.signup_source === 'event_flow' && !currentMentee?.mentee_program_enabled;
+        if (eventFlowOnly) {
+          if (!cancelled) setHasAssessment(true);
+          return;
+        }
 
         const requestsResponse = await menteeApi.listMenteeRequests({ mentee_id: currentMentee.id });
         const requests = normalizeListPayload(requestsResponse);
@@ -409,6 +416,7 @@ const AppLayout = () => {
         <Route path="/mentor-training-quiz" element={<Navigate to="/mentor-training-modules-quiz" replace />} />
         <Route path="/admin" element={<AdminPortal />} />
         <Route path="/admin/activity" element={<AdminActivityPage />} />
+        <Route path="/admin/volunteer-events" element={<AdminVolunteerEventsPage />} />
         <Route path="/admin/review/:mentorId" element={<AdminMentorReview />} />
         <Route path="/needs-assessment" element={<NeedsAssessment />} />
         <Route path="/needs-assessment/q2" element={<NeedsAssessmentQ2 />} />

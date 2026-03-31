@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
@@ -101,6 +101,7 @@ const isStrongPassword = (value) => {
 };
 
 const Register = () => {
+  const location = useLocation();
   const [gradeOpen, setGradeOpen] = useState(false);
   const [genderOpen, setGenderOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
@@ -128,6 +129,10 @@ const Register = () => {
   const gradeOptions = ['10th Grade', '11th Grade', '12th Grade'];
   const genderOptions = ['Female', 'Male'];
   const dobBounds = getStudentDobBounds();
+  const searchParams = new URLSearchParams(location.search);
+  const signupSource = searchParams.get('source') === 'event-flow' ? 'event_flow' : 'regular';
+  const nextAfterRegister = searchParams.get('next') || '';
+  const safeNextAfterRegister = nextAfterRegister.startsWith('/') ? nextAfterRegister : '';
 
   const notifyError = (message) => {
     setErrorMessage(String(message || '').trim());
@@ -414,12 +419,19 @@ const Register = () => {
         mobile: menteeMobileDigits,
         parent_guardian_consent: true,
         parent_mobile: parentMobileDigits,
+        volunteer_access: true,
+        signup_source: signupSource,
+        mentee_program_enabled: signupSource !== 'event_flow',
         record_consent: form.recordConsent,
       });
 
       await login(form.email.trim().toLowerCase(), form.password, 'menties');
       setAssessmentDraft({});
-      navigate('/needs-assessment');
+      if (signupSource === 'event_flow') {
+        navigate(safeNextAfterRegister || '/dashboard');
+      } else {
+        navigate('/needs-assessment');
+      }
     } catch (err) {
       notifyError(getFriendlyErrorMessage(err));
     }
@@ -492,15 +504,29 @@ const Register = () => {
             <section className="lp-register-form-wrap">
               <div className="lp-login-pill">
                 <span className="lp-login-pill-dot" />
-                Student registration
+                Mentee / Volunteer Registration
               </div>
-              <h2 className="lp-register-h2">Create your Bond Room account</h2>
-              <p className="lp-register-sub">Register and verify details in one step.</p>
+              <h2 className="lp-register-h2">Register your Mentee / Volunteer account</h2>
+              <p className="lp-register-sub">Create your account and verify details in one step.</p>
+              <div className="lp-register-role-tabs" role="tablist" aria-label="Select registration role">
+                <Link to="/register" className="lp-register-role-tab is-active" aria-current="page">
+                  Mentee / Volunteer
+                </Link>
+                <Link to="/mentor-register" className="lp-register-role-tab">
+                  Mentor
+                </Link>
+              </div>
 
               <form className="lp-register-form" onSubmit={handleSubmit}>
-                <div className="lp-register-row">
+                <section className="lp-register-form-card">
+                  <div className="lp-register-form-card-head">
+                    <h3>Personal & Contact</h3>
+                    <span>Section 1</span>
+                  </div>
+
+                  <div className="lp-register-row">
                   <div className="lp-field">
-                    <label htmlFor="firstName">First Name</label>
+                    <label className="lp-register-field-label" htmlFor="firstName">First Name</label>
                     <input
                       id="firstName"
                       className={`lp-input ${hasRequiredFieldError('firstName') ? 'lp-input-error' : ''}`}
@@ -511,7 +537,7 @@ const Register = () => {
                     />
                   </div>
                   <div className="lp-field">
-                    <label htmlFor="lastName">Last Name</label>
+                    <label className="lp-register-field-label" htmlFor="lastName">Last Name</label>
                     <input
                       id="lastName"
                       className={`lp-input ${hasRequiredFieldError('lastName') ? 'lp-input-error' : ''}`}
@@ -521,11 +547,11 @@ const Register = () => {
                       onBlur={() => markFieldTouched('lastName')}
                     />
                   </div>
-                </div>
+                  </div>
 
-                <div className="lp-register-row">
+                  <div className="lp-register-row">
                   <div className="lp-field">
-                    <label id="registerGradeLabel">Grade</label>
+                    <label className="lp-register-field-label" id="registerGradeLabel">Grade</label>
                     <div
                       className="lp-select-wrap"
                       tabIndex={0}
@@ -567,7 +593,7 @@ const Register = () => {
                   </div>
 
                   <div className="lp-field">
-                    <label htmlFor="dob">Date of Birth</label>
+                    <label className="lp-register-field-label" htmlFor="dob">Date of Birth</label>
                     <input
                       id="dob"
                       type="date"
@@ -580,11 +606,11 @@ const Register = () => {
                     />
                     <p className="lp-register-note">Allowed age: {STUDENT_MIN_AGE} to {STUDENT_MAX_AGE} years</p>
                   </div>
-                </div>
+                  </div>
 
-                <div className="lp-register-row">
+                  <div className="lp-register-row">
                   <div className="lp-field">
-                    <label htmlFor="email">Email Address</label>
+                    <label className="lp-register-field-label" htmlFor="email">Email Address</label>
                     <div className="lp-register-inline-verify">
                       <input
                         id="email"
@@ -606,7 +632,7 @@ const Register = () => {
                   </div>
 
                   <div className="lp-field">
-                    <label htmlFor="password">Password</label>
+                    <label className="lp-register-field-label" htmlFor="password">Password</label>
                     <div className="lp-password-wrap">
                       <input
                         id="password"
@@ -628,11 +654,11 @@ const Register = () => {
                       </button>
                     </div>
                   </div>
-                </div>
+                  </div>
 
-                <div className="lp-register-row">
+                  <div className="lp-register-row">
                   <div className="lp-field">
-                    <label id="registerGenderLabel">Gender</label>
+                    <label className="lp-register-field-label" id="registerGenderLabel">Gender</label>
                     <div
                       className="lp-select-wrap"
                       tabIndex={0}
@@ -672,11 +698,18 @@ const Register = () => {
                       )}
                     </div>
                   </div>
-                </div>
+                  </div>
+                </section>
 
-                <div className="lp-register-row">
+                <section className="lp-register-form-card">
+                  <div className="lp-register-form-card-head">
+                    <h3>School & Location</h3>
+                    <span>Section 2</span>
+                  </div>
+
+                  <div className="lp-register-row">
                   <div className="lp-field">
-                    <label htmlFor="schoolOrCollege">School / College *</label>
+                    <label className="lp-register-field-label" htmlFor="schoolOrCollege">School / College *</label>
                     <input
                       id="schoolOrCollege"
                       className={`lp-input ${hasRequiredFieldError('schoolOrCollege') ? 'lp-input-error' : ''}`}
@@ -686,11 +719,11 @@ const Register = () => {
                       onBlur={() => markFieldTouched('schoolOrCollege')}
                     />
                   </div>
-                </div>
+                  </div>
 
-                <div className="lp-register-row">
+                  <div className="lp-register-row">
                   <div className="lp-field">
-                    <label htmlFor="country">Country *</label>
+                    <label className="lp-register-field-label" htmlFor="country">Country *</label>
                     <select
                       id="country"
                       className={`lp-input ${hasRequiredFieldError('country') ? 'lp-input-error' : ''}`}
@@ -704,7 +737,7 @@ const Register = () => {
                     </select>
                   </div>
                   <div className="lp-field">
-                    <label htmlFor="state">State *</label>
+                    <label className="lp-register-field-label" htmlFor="state">State *</label>
                     <select
                       id="state"
                       className={`lp-input ${hasRequiredFieldError('state') ? 'lp-input-error' : ''}`}
@@ -717,11 +750,11 @@ const Register = () => {
                       ))}
                     </select>
                   </div>
-                </div>
+                  </div>
 
-                <div className="lp-register-row">
+                  <div className="lp-register-row">
                   <div className="lp-field">
-                    <label htmlFor="city">City *</label>
+                    <label className="lp-register-field-label" htmlFor="city">City *</label>
                     <select
                       id="city"
                       className={`lp-input ${hasRequiredFieldError('city') ? 'lp-input-error' : ''}`}
@@ -735,7 +768,7 @@ const Register = () => {
                     </select>
                   </div>
                   <div className="lp-field">
-                    <label htmlFor="postalCode">Pincode *</label>
+                    <label className="lp-register-field-label" htmlFor="postalCode">Pincode *</label>
                     <input
                       id="postalCode"
                       className={`lp-input ${hasRequiredFieldError('postalCode') ? 'lp-input-error' : ''}`}
@@ -745,9 +778,16 @@ const Register = () => {
                       onBlur={() => markFieldTouched('postalCode')}
                     />
                   </div>
-                </div>
+                  </div>
+                </section>
 
-                <div className={`lp-register-consent-box ${hasRequiredFieldError('parentConsent') ? 'lp-input-error-box' : ''}`}>
+                <section className="lp-register-form-card">
+                  <div className="lp-register-form-card-head">
+                    <h3>Consent & Verification</h3>
+                    <span>Section 3</span>
+                  </div>
+
+                  <div className={`lp-register-consent-box ${hasRequiredFieldError('parentConsent') ? 'lp-input-error-box' : ''}`}>
                   <label className="lp-register-checkline">
                     <input
                       id="parentMobileOpt"
@@ -817,20 +857,21 @@ const Register = () => {
                   </div>
                 ) : null}
 
-                <label className={`lp-register-checkline ${hasRequiredFieldError('recordConsent') ? 'lp-input-error-check' : ''}`}>
-                  <input
-                    id="recordConsent"
-                    type="checkbox"
-                    checked={form.recordConsent}
-                    onChange={(event) => updateField('recordConsent', event.target.checked)}
-                  />
-                  <span>
-                    I Agree to Session Recording for Safety
-                    <span className="lp-register-note lp-register-note-block">
-                      All sessions are recorded to ensure student safety and quality of mentorship.
+                  <label className={`lp-register-checkline ${hasRequiredFieldError('recordConsent') ? 'lp-input-error-check' : ''}`}>
+                    <input
+                      id="recordConsent"
+                      type="checkbox"
+                      checked={form.recordConsent}
+                      onChange={(event) => updateField('recordConsent', event.target.checked)}
+                    />
+                    <span>
+                      I Agree to Session Recording for Safety
+                      <span className="lp-register-note lp-register-note-block">
+                        All sessions are recorded to ensure student safety and quality of mentorship.
+                      </span>
                     </span>
-                  </span>
-                </label>
+                  </label>
+                </section>
 
                 <button type="submit" className="lp-login-submit" disabled={loading}>
                   {loading ? 'Please wait...' : 'Verify & Continue'}

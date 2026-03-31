@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import mentorLeft from '../assets/teach1.png';
 import mentorBottom from '../assets/teach2.png';
 import imageContainer from '../assets/Image Container.png';
@@ -840,14 +840,29 @@ const MentorRegister = () => {
                 <div className="max-w-2xl mx-auto md:max-w-none md:mx-0 animate-slideUp">
                   <div className="inline-flex items-center rounded-full bg-gradient-to-r from-[#e9ddff] to-[#f3ecff] text-xs text-[#5b2c91] px-3 py-1 font-medium shadow-sm">
                     <span className="inline-block w-2 h-2 bg-[#5b2c91] rounded-full mr-2 animate-pulse"></span>
-                    Step 1 of 3
+                    Mentor Registration
                   </div>
                   <h2 className="mt-3 text-xl sm:text-2xl font-semibold text-[#1f2937] bg-gradient-to-r from-[#5b2c91] to-[#4a2374] bg-clip-text text-transparent">
-                    Apply as a Mentor
+                    Register your Mentor account
                   </h2>
                   <p className="mt-1 text-sm text-[#6b7280]">
-                    Share your experience and guide students with care.
+                    Create your mentor profile and verify details in one flow.
                   </p>
+                  <div className="mt-3 inline-flex items-center gap-1 rounded-xl border border-[#e7e2f6] bg-[#f7f2ff] p-1">
+                    <Link
+                      to="/register"
+                      className="rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#5b4a78] hover:text-[#4a2a7a]"
+                    >
+                      Mentee / Volunteer
+                    </Link>
+                    <Link
+                      to="/mentor-register"
+                      aria-current="page"
+                      className="rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#4a2a7a] shadow-sm"
+                    >
+                      Mentor
+                    </Link>
+                  </div>
                   <p className="mt-4 text-xs sm:text-sm text-[#6b7280]">
                     Bond Room connects students with trusted mentors who listen without judgment.
                     Tell us about yourself so we can match you thoughtfully.

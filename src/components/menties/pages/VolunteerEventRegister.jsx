@@ -77,6 +77,7 @@ const VolunteerEventRegister = () => {
   const navigate = useNavigate();
   const { authSession, mentee, loadCurrentMentee } = useMenteeData({ autoLoad: false });
   const isLoggedIn = Boolean(authSession?.accessToken);
+  const isMenteeLoggedIn = isLoggedIn && authSession?.role === 'mentee';
   const defaultFullName = getMenteeFullName(mentee);
   const defaultEmail = String(mentee?.email || authSession?.email || '').trim();
   const defaultPhone = getMenteePhone(mentee);
@@ -112,26 +113,14 @@ const VolunteerEventRegister = () => {
     return () => window.clearTimeout(timer);
   }, [errorMessage, successMessage]);
 
-  const clearIdentityFields = () => {
-    setForm((prev) => ({
-      ...prev,
-      fullName: '',
-      email: '',
-      phone: '',
-    }));
-  };
+  useEffect(() => {
+    setShowLoginPrompt(!isMenteeLoggedIn);
+  }, [isMenteeLoggedIn]);
 
   useEffect(() => {
-    setShowLoginPrompt(!isLoggedIn);
-    if (!isLoggedIn) {
-      clearIdentityFields();
-    }
-  }, [isLoggedIn]);
-
-  useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isMenteeLoggedIn) return;
     loadCurrentMentee();
-  }, [isLoggedIn, loadCurrentMentee]);
+  }, [isMenteeLoggedIn, loadCurrentMentee]);
 
   useEffect(() => {
     if (!mentee) return;
@@ -219,6 +208,11 @@ const VolunteerEventRegister = () => {
     setSuccessMessage('');
 
     if (!eventItem?.id) return;
+    if (!isMenteeLoggedIn) {
+      setErrorMessage('Please login with a mentee account to register for this event.');
+      setShowLoginPrompt(true);
+      return;
+    }
     if (
       !form.fullName.trim() ||
       !form.email.trim() ||
@@ -257,11 +251,7 @@ const VolunteerEventRegister = () => {
         notes: form.notes.trim(),
         consent: form.consent,
       };
-      if (isLoggedIn) {
-        await menteeApi.createVolunteerEventRegistration(payload);
-      } else {
-        await menteeApi.createPublicVolunteerEventRegistration(payload);
-      }
+      await menteeApi.createVolunteerEventRegistration(payload);
       setSuccessMessage('Registration submitted successfully.');
       setForm((prev) => ({
         ...prev,
@@ -332,27 +322,25 @@ const VolunteerEventRegister = () => {
       {showLoginPrompt ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
           <div className="w-full max-w-md rounded-2xl border border-[#e8dcff] bg-white p-6 shadow-[0_24px_54px_-26px_rgba(0,0,0,0.5)]">
-            <h3 className="text-lg font-semibold text-[#111827]">Login for Quick Registration</h3>
+            <h3 className="text-lg font-semibold text-[#111827]">Do you already have a mentee account?</h3>
             <p className="mt-2 text-sm text-[#6b7280]">
-              Login to auto-fill your name, email, and phone. You can also continue without login.
+              {isLoggedIn && !isMenteeLoggedIn
+                ? 'You are currently logged in with a non-mentee account. Please login with your mentee account to continue event registration.'
+                : 'If yes, login as mentee. After login, we will ask only additional details for this event.'}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
                 to={`/login?next=/volunteer-events/${eventId}/register`}
                 className="inline-flex items-center rounded-lg bg-[#5D3699] px-4 py-2 text-sm font-semibold text-white hover:bg-[#4a2b7a]"
               >
-                Login
+                Yes, Login as Mentee
               </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  clearIdentityFields();
-                  setShowLoginPrompt(false);
-                }}
+              <Link
+                to={`/register?source=event-flow&next=/volunteer-events/${eventId}/register`}
                 className="inline-flex items-center rounded-lg border border-[#ddd6fe] bg-white px-4 py-2 text-sm font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
               >
-                Continue as Guest
-              </button>
+                No, Create Mentee Account
+              </Link>
             </div>
           </div>
         </div>
@@ -400,21 +388,24 @@ const VolunteerEventRegister = () => {
             </div>
           </div>
 
-          {!isLoggedIn ? (
+          {!isMenteeLoggedIn ? (
             <div className="mb-4 rounded-lg border border-[#e8dcff] bg-[#f8f4ff] px-4 py-3">
               <p className="text-sm font-medium text-[#312049]">
-                Log in to auto-fill your name, email, and phone.
+                Do you already have a mentee account?
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Link
                   to={`/login?next=/volunteer-events/${eventId}/register`}
                   className="inline-flex items-center rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
                 >
-                  Login for Auto-Fill
+                  Yes, Login as Mentee
                 </Link>
-                <span className="inline-flex items-center text-xs text-[#6b7280]">
-                  You can continue as guest as well.
-                </span>
+                <Link
+                  to={`/register?source=event-flow&next=/volunteer-events/${eventId}/register`}
+                  className="inline-flex items-center rounded-lg border border-[#ddd6fe] bg-white px-3 py-1.5 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
+                >
+                  No, Create Mentee Account
+                </Link>
               </div>
             </div>
           ) : (

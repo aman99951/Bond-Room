@@ -53,6 +53,7 @@ const NeedsAssessment = () => {
     type: 'error',
   });
   const hideBackButton = new URLSearchParams(location.search).get('from') === 'dashboard';
+  const assessmentSearch = location.search || '';
 
   const options = ['Burnt Out', 'Anxious', 'Confused', 'Lonely', 'Hopeful', 'Other'];
 
@@ -98,7 +99,7 @@ const NeedsAssessment = () => {
       return;
     }
     saveFeelingAnswers(selectedFeelings, otherFeelingText);
-    navigate('/needs-assessment/q2');
+    navigate(`/needs-assessment/q2${assessmentSearch}`);
   };
 
   const handleLogout = async () => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
@@ -19,9 +19,11 @@ const Choice = ({ label, selected, onClick }) => (
 
 const NeedsAssessmentQ4 = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { draft, saveAnswer } = useMenteeAssessment();
   const { logout, loading: authLoading } = useMenteeAuth();
   const [selectedComfort, setSelectedComfort] = useState(draft.comfort_level || 'Neutral');
+  const assessmentSearch = location.search || '';
 
   const options = [
     'Very Uncomfortable',
@@ -33,7 +35,7 @@ const NeedsAssessmentQ4 = () => {
 
   const handleNext = () => {
     saveAnswer('comfort_level', selectedComfort);
-    navigate('/needs-assessment/q5');
+    navigate(`/needs-assessment/q5${assessmentSearch}`);
   };
 
   const handleLogout = async () => {
@@ -87,7 +89,7 @@ const NeedsAssessmentQ4 = () => {
           </div>
 
           <div className="lp-na-actions">
-            <Link to="/needs-assessment/q3" className="lp-na-btn-ghost">Back</Link>
+            <Link to={`/needs-assessment/q3${assessmentSearch}`} className="lp-na-btn-ghost">Back</Link>
             <button type="button" onClick={handleNext} className="lp-na-btn-primary">Next Question {'\u2192'}</button>
           </div>
 

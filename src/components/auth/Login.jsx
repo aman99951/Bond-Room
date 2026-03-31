@@ -199,7 +199,7 @@ const Login = () => {
                   <span className="lp-login-pill-dot" />
                   Welcome back
                 </div>
-                <h2 className="lp-login-h2">Login to your account</h2>
+                <h2 className="lp-login-h2">Login to your Mentee / Volunteer Or Mentor Account</h2>
                 <p className="lp-login-sub">
                   {selectedRole === 'mentee'
                     ? 'Select mentee and login using email and password.'
@@ -218,7 +218,7 @@ const Login = () => {
                     className={`lp-role-btn ${selectedRole === 'mentee' ? 'is-active' : ''}`}
                     onClick={() => handleRoleChange('mentee')}
                   >
-                    Mentee
+                    Mentee / Volunteer
                   </button>
                   <button
                     type="button"

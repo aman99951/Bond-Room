@@ -65,6 +65,7 @@ const getStatusChipClass = (status) => {
 const inputClass =
   'mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200';
 
+
 /* ───────── component ───────── */
 
 const AdminPortal = () => {
@@ -445,6 +446,14 @@ const AdminPortal = () => {
               >
                 <Settings className="h-4 w-4" />
                 Settings
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/admin/volunteer-events')}
+                className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-300 shadow-sm transition-all hover:border-emerald-400/50 hover:bg-emerald-500/20 hover:text-emerald-200"
+              >
+                <ArrowRight className="h-4 w-4" />
+                Volunteer Events
               </button>
               <button
                 type="button"
@@ -908,3 +917,11 @@ const AdminPortal = () => {
 };
 
 export default AdminPortal;
+
+
+
+
+
+
+
+

@@ -563,99 +563,109 @@ useEffect(() => {
       setDashboardError('');
 
       try {
-        const [dashboardRes, mentorsRes] = await Promise.all([
-          menteeApi.getDashboard(mentee.id),
-          menteeApi.listMentors(),
-        ]);
+        const eventOnlyMode =
+          mentee?.signup_source === 'event_flow' && !mentee?.mentee_program_enabled;
 
-        if (cancelled) return;
+        if (!eventOnlyMode) {
+          const [dashboardRes, mentorsRes] = await Promise.all([
+            menteeApi.getDashboard(mentee.id),
+            menteeApi.listMentors(),
+          ]);
 
-        const mentorList = normalizeList(mentorsRes);
-        const mentorMap = mentorList.reduce((acc, mentor) => {
-          acc[String(mentor.id)] = mentor;
-          return acc;
-        }, {});
+          if (cancelled) return;
 
-        let recommendations = normalizeList(dashboardRes?.recommendations);
-        if (!recommendations.length) {
-          try {
-            const recommendedRes = await menteeApi.getRecommendedMentors({ mentee_id: mentee.id });
-            recommendations = normalizeList(recommendedRes);
-          } catch {
-            recommendations = [];
+          const mentorList = normalizeList(mentorsRes);
+          const mentorMap = mentorList.reduce((acc, mentor) => {
+            acc[String(mentor.id)] = mentor;
+            return acc;
+          }, {});
+
+          let recommendations = normalizeList(dashboardRes?.recommendations);
+          if (!recommendations.length) {
+            try {
+              const recommendedRes = await menteeApi.getRecommendedMentors({ mentee_id: mentee.id });
+              recommendations = normalizeList(recommendedRes);
+            } catch {
+              recommendations = [];
+            }
           }
+
+          const recommendationCards = recommendations.map((entry, index) => {
+            const mentor = entry?.mentor || entry;
+            const tags =
+              Array.isArray(mentor?.care_areas) && mentor.care_areas.length
+                ? mentor.care_areas
+                : Array.isArray(entry?.matched_topics)
+                  ? entry.matched_topics
+                  : [];
+            const languageList = Array.isArray(mentor?.languages)
+              ? mentor.languages
+              : Array.isArray(mentor?.language_preferences)
+                ? mentor.language_preferences
+                : mentor?.language
+                  ? [mentor.language]
+                  : [];
+            const languageText = languageList.filter(Boolean).join(', ');
+            const availabilityText =
+              mentor?.availability_status ||
+              (typeof mentor?.is_available === 'boolean'
+                ? mentor.is_available ? 'Available for sessions' : 'Not currently available'
+                : '');
+            return {
+              id: mentor?.id ?? null,
+              name: getMentorName(mentor),
+              location: mentor?.city_state || '',
+              tags,
+              blurb: entry?.explanation || mentor?.bio || '',
+              topMatch: index === 0,
+              avatar: resolveMediaUrl(mentor?.avatar || mentor?.profile_photo || mentor?.user?.avatar || ''),
+              rating: toNumberOrNull(mentor?.average_rating ?? mentor?.rating ?? entry?.average_rating),
+              reviews: mentor?.reviews_count ?? entry?.total_reviews ?? null,
+              language: languageText ? `Mentor speaks ${languageText}` : '',
+              availability: availabilityText,
+            };
+          });
+
+          const upcomingList = normalizeList(dashboardRes?.upcoming_sessions);
+          const recentList = normalizeList(dashboardRes?.recent_sessions);
+
+          const upcoming = upcomingList[0] || null;
+          const upcomingMentor = upcoming ? mentorMap[String(upcoming.mentor)] : null;
+          const upcomingCard = upcoming
+            ? {
+              ...upcoming,
+              mentorName: getMentorName(upcomingMentor || {}),
+              mentorAvatar: resolveMediaUrl(upcomingMentor?.avatar || upcomingMentor?.profile_photo || ''),
+            }
+            : null;
+
+          const recentCards = recentList.map((session) => {
+            const mentor = mentorMap[String(session.mentor)] || {};
+            const status =
+              session?.status === 'completed'
+                ? 'Done'
+                : session?.status === 'requested'
+                  ? 'Feedback'
+                  : session?.status || 'Session';
+            return {
+              id: session.id,
+              name: getMentorName(mentor),
+              date: formatDate(session.scheduled_start),
+              status,
+              avatar: resolveMediaUrl(mentor?.avatar || mentor?.profile_photo || ''),
+            };
+          });
+
+          setRecommended(recommendationCards);
+          setUpcomingSession(upcomingCard);
+          setRecentSessions(recentCards.slice(0, 4));
+          setStats(dashboardRes?.stats || { total_sessions: 0, completed_sessions: 0 });
+        } else {
+          setRecommended([]);
+          setUpcomingSession(null);
+          setRecentSessions([]);
+          setStats({ total_sessions: 0, completed_sessions: 0 });
         }
-
-        const recommendationCards = recommendations.map((entry, index) => {
-          const mentor = entry?.mentor || entry;
-          const tags =
-            Array.isArray(mentor?.care_areas) && mentor.care_areas.length
-              ? mentor.care_areas
-              : Array.isArray(entry?.matched_topics)
-                ? entry.matched_topics
-                : [];
-          const languageList = Array.isArray(mentor?.languages)
-            ? mentor.languages
-            : Array.isArray(mentor?.language_preferences)
-              ? mentor.language_preferences
-              : mentor?.language
-                ? [mentor.language]
-                : [];
-          const languageText = languageList.filter(Boolean).join(', ');
-          const availabilityText =
-            mentor?.availability_status ||
-            (typeof mentor?.is_available === 'boolean'
-              ? mentor.is_available ? 'Available for sessions' : 'Not currently available'
-              : '');
-          return {
-            id: mentor?.id ?? null,
-            name: getMentorName(mentor),
-            location: mentor?.city_state || '',
-            tags,
-            blurb: entry?.explanation || mentor?.bio || '',
-            topMatch: index === 0,
-            avatar: resolveMediaUrl(mentor?.avatar || mentor?.profile_photo || mentor?.user?.avatar || ''),
-            rating: toNumberOrNull(mentor?.average_rating ?? mentor?.rating ?? entry?.average_rating),
-            reviews: mentor?.reviews_count ?? entry?.total_reviews ?? null,
-            language: languageText ? `Mentor speaks ${languageText}` : '',
-            availability: availabilityText,
-          };
-        });
-
-        const upcomingList = normalizeList(dashboardRes?.upcoming_sessions);
-        const recentList = normalizeList(dashboardRes?.recent_sessions);
-
-        const upcoming = upcomingList[0] || null;
-        const upcomingMentor = upcoming ? mentorMap[String(upcoming.mentor)] : null;
-        const upcomingCard = upcoming
-          ? {
-            ...upcoming,
-            mentorName: getMentorName(upcomingMentor || {}),
-            mentorAvatar: resolveMediaUrl(upcomingMentor?.avatar || upcomingMentor?.profile_photo || ''),
-          }
-          : null;
-
-        const recentCards = recentList.map((session) => {
-          const mentor = mentorMap[String(session.mentor)] || {};
-          const status =
-            session?.status === 'completed'
-              ? 'Done'
-              : session?.status === 'requested'
-                ? 'Feedback'
-                : session?.status || 'Session';
-          return {
-            id: session.id,
-            name: getMentorName(mentor),
-            date: formatDate(session.scheduled_start),
-            status,
-            avatar: resolveMediaUrl(mentor?.avatar || mentor?.profile_photo || ''),
-          };
-        });
-
-        setRecommended(recommendationCards);
-        setUpcomingSession(upcomingCard);
-        setRecentSessions(recentCards.slice(0, 4));
-        setStats(dashboardRes?.stats || { total_sessions: 0, completed_sessions: 0 });
 
         setRegisteredEventsLoading(true);
         setRegisteredEventsError('');
@@ -726,7 +736,8 @@ useEffect(() => {
       cancelled = true;
     };
   }, [mentee?.id, menteeLoading, refreshTick]);
-const displayName = mentee?.first_name || 'there';
+  const displayName = mentee?.first_name || 'there';
+  const isEventFlowOnly = mentee?.signup_source === 'event_flow' && !mentee?.mentee_program_enabled;
   const registeredEventCarouselItems = useMemo(() => {
     if (!registeredEvents.length) return [];
     if (registeredEvents.length >= 5) return registeredEvents;
@@ -802,7 +813,7 @@ return (
         </div>
       </motion.div>
 
-      {/* Recommended Mentors Section */}
+      {!isEventFlowOnly ? (
       <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
@@ -859,6 +870,23 @@ return (
           </div>
         )}
       </motion.div>
+      ) : (
+      <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
+        <div className="rounded-2xl border border-[#e9ddff] bg-white p-5 shadow-[0_20px_40px_-30px_rgba(93,54,153,0.5)]">
+          <h2 className="text-base font-semibold text-[#111827]">Join BondRoom Mentee Program</h2>
+          <p className="mt-1 text-sm text-[#6b7280]">
+            You are currently using event-only access. Want full mentee support, mentor matching, and sessions?
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/needs-assessment?from=event-flow')}
+            className="mt-4 inline-flex items-center rounded-xl bg-[#5D3699] px-4 py-2 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
+          >
+            Yes, I Want to Join
+          </button>
+        </div>
+      </motion.div>
+      )}
 
       {/* Registered Events Section */}
       <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
@@ -973,6 +1001,8 @@ return (
           </div>
         )}
       </motion.div>
+      {!isEventFlowOnly ? (
+      <>
       {/* Quick Actions Grid */}
       <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
         <div className="flex items-center gap-2 mb-4">
@@ -1191,6 +1221,8 @@ return (
           </div>
         </div>
       </motion.div>
+      </>
+      ) : null}
       {/* Loading/Error States */}
       {(dashboardLoading || dashboardError || menteeError) && (
         <div className={`mt-6 flex items-center justify-center gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 ${dashboardError || menteeError ? 'border-red-200' : ''

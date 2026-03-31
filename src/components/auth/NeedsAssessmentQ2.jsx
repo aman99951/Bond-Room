@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, X } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
@@ -32,6 +32,7 @@ const Choice = ({ label, selected, onClick }) => (
 
 const NeedsAssessmentQ2 = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { draft, saveAnswer } = useMenteeAssessment();
   const { logout, loading: authLoading } = useMenteeAuth();
   const [selectedCauses, setSelectedCauses] = useState(() => {
@@ -48,6 +49,7 @@ const NeedsAssessmentQ2 = () => {
     message: '',
     type: 'error',
   });
+  const assessmentSearch = location.search || '';
 
   const options = [
     'Exam Pressure',
@@ -92,7 +94,7 @@ const NeedsAssessmentQ2 = () => {
       return;
     }
     saveCauseAnswers(selectedCauses, otherCauseText);
-    navigate('/needs-assessment/q3');
+    navigate(`/needs-assessment/q3${assessmentSearch}`);
   };
 
   const handleLogout = async () => {
@@ -192,7 +194,7 @@ const NeedsAssessmentQ2 = () => {
           )}
 
           <div className="lp-na-actions">
-            <Link to="/needs-assessment" className="lp-na-btn-ghost">Back</Link>
+            <Link to={`/needs-assessment${assessmentSearch}`} className="lp-na-btn-ghost">Back</Link>
             <button type="button" onClick={handleNext} className="lp-na-btn-primary">Next Question {'\u2192'}</button>
           </div>
 
