@@ -61,6 +61,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const [menteeAvatar, setMenteeAvatar] = useState('');
   const [mentorAvatar, setMentorAvatar] = useState('');
   const [menteeId, setMenteeId] = useState(null);
+  const [isEventFlowOnlyMentee, setIsEventFlowOnlyMentee] = useState(false);
   const [latestRequest, setLatestRequest] = useState(null);
   const [matchLanguage, setMatchLanguage] = useState('Not provided');
   const [matchAvailability, setMatchAvailability] = useState('Not provided');
@@ -84,6 +85,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     return 'menties';
   })();
   const navRoutes = getRoutesForLayout(role, { sidebarOnly: true });
+  const filteredNavRoutes = role !== 'mentors' && isEventFlowOnlyMentee
+    ? navRoutes.filter((item) => item.path === '/dashboard' || item.path === '/registered-events')
+    : navRoutes;
   const displayName = role === 'mentors' ? mentorName || 'Mentor' : menteeName || 'User';
   const displayAvatar = role === 'mentors' ? mentorAvatar : menteeAvatar;
 
@@ -99,8 +103,12 @@ const Sidebar = ({ isOpen, onClose }) => {
       setMenteeName(currentMentee?.first_name || '');
       setMenteeAvatar(resolveMediaUrl(currentMentee?.avatar || currentMentee?.profile_photo || ''));
       setMenteeId(currentMentee?.id ?? null);
+      setIsEventFlowOnlyMentee(
+        currentMentee?.signup_source === 'event_flow' && !currentMentee?.mentee_program_enabled
+      );
 
       if (!currentMentee?.id) {
+        setIsEventFlowOnlyMentee(false);
         setLatestRequest(null);
         setMatchLanguage('Not provided');
         setMatchAvailability('Not provided');
@@ -116,6 +124,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       setMatchLanguage(latest?.language || 'Not provided');
       setMatchAvailability(summarizeAvailability(latest?.preferred_times));
     } catch {
+      setIsEventFlowOnlyMentee(false);
       setMenteeAvatar('');
       setLatestRequest(null);
       setMatchLanguage('Not provided');
@@ -272,7 +281,7 @@ return (
       {/* Navigation */}
       <nav className="no-scrollbar flex-1 overflow-y-auto px-3 py-2">
         <ul className="space-y-1">
-          {navRoutes.map((item) => {
+          {filteredNavRoutes.map((item) => {
             const Icon = item.icon;
             return (
               <li key={item.path}>
