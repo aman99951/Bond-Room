@@ -482,8 +482,7 @@ const Register = () => {
 
         <nav className="lp-nav">
           <Link to="/">Home</Link>
-          <a href="/#about">About</a>
-          <a href="/#safety">Safety</a>
+          
         </nav>
 
         <div className="lp-hdr-actions">
