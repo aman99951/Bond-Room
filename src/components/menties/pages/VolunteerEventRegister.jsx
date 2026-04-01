@@ -59,6 +59,7 @@ const normalizeCity = (country, state, value) => {
   if (cities.includes(value)) return value;
   return cities[0] || '';
 };
+const getCountryCode = (country) => (country === 'USA' ? '+1' : '+91');
 const parseLegacyCityState = (value) => {
   const raw = String(value || '').trim();
   if (!raw) return {};
@@ -102,6 +103,11 @@ const VolunteerEventRegister = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const availableRoleOptions = Array.isArray(eventItem?.available_roles)
+    ? eventItem.available_roles
+        .map((role) => String(role || '').trim())
+        .filter((role, index, roles) => role && roles.indexOf(role) === index)
+    : [];
 
   useEffect(() => {
     if (!errorMessage && !successMessage) return undefined;
@@ -174,6 +180,17 @@ const VolunteerEventRegister = () => {
     };
   }, [eventId]);
 
+  useEffect(() => {
+    if (!availableRoleOptions.length) {
+      setForm((prev) => (prev.preferredRole ? { ...prev, preferredRole: '' } : prev));
+      return;
+    }
+    setForm((prev) => {
+      if (availableRoleOptions.includes(prev.preferredRole)) return prev;
+      return { ...prev, preferredRole: availableRoleOptions[0] };
+    });
+  }, [availableRoleOptions]);
+
   const onChange = (key) => (event) => {
     const nextValue = key === 'consent' ? event.target.checked : event.target.value;
     if (key === 'country') {
@@ -224,6 +241,14 @@ const VolunteerEventRegister = () => {
       !form.emergencyContact.trim()
     ) {
       setErrorMessage('Please fill all required fields.');
+      return;
+    }
+    if (!availableRoleOptions.length) {
+      setErrorMessage('No volunteer roles are configured for this event yet.');
+      return;
+    }
+    if (!form.preferredRole.trim()) {
+      setErrorMessage('Please select a role for this event.');
       return;
     }
     if (!form.consent) {
@@ -318,24 +343,24 @@ const VolunteerEventRegister = () => {
       {showLoginPrompt ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
           <div className="w-full max-w-md rounded-2xl border border-[#e8dcff] bg-white p-6 shadow-[0_24px_54px_-26px_rgba(0,0,0,0.5)]">
-            <h3 className="text-lg font-semibold text-[#111827]">Do you already have a mentee account?</h3>
-            <p className="mt-2 text-sm text-[#6b7280]">
-              {isLoggedIn && !isMenteeLoggedIn
-                ? 'You are currently logged in with a non-mentee account. Please login with your mentee account to continue event registration.'
-                : 'If yes, login as mentee. After login, we will ask only additional details for this event.'}
-            </p>
+            <h3 className="text-lg font-semibold text-[#111827]">Do you already have a Mentee account?</h3>
+            {isLoggedIn && !isMenteeLoggedIn ? (
+              <p className="mt-2 text-sm text-[#6b7280]">
+                You are currently logged in with a non-mentee account. Please login with your mentee account to continue event registration.
+              </p>
+            ) : null}
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
                 to={`/login?next=/volunteer-events/${eventId}/register`}
-                className="inline-flex items-center rounded-lg bg-[#5D3699] px-4 py-2 text-sm font-semibold text-white hover:bg-[#4a2b7a]"
+                className="inline-flex items-center rounded-lg border border-[#5D3699] bg-white px-4 py-2 text-sm font-semibold text-[#5D3699] transition-colors hover:bg-[#5D3699] hover:text-white"
               >
                 Yes, Login as Mentee
               </Link>
               <Link
                 to={`/register?source=event-flow&next=/volunteer-events/${eventId}/register`}
-                className="inline-flex items-center rounded-lg border border-[#ddd6fe] bg-white px-4 py-2 text-sm font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
+                className="inline-flex items-center rounded-lg border border-[#5D3699] bg-white px-4 py-2 text-sm font-semibold text-[#5D3699] transition-colors hover:bg-[#5D3699] hover:text-white"
               >
-                No, Create Mentee Account
+                No, Create Account
               </Link>
             </div>
           </div>
@@ -392,15 +417,15 @@ const VolunteerEventRegister = () => {
               <div className="mt-2 flex flex-wrap gap-2">
                 <Link
                   to={`/login?next=/volunteer-events/${eventId}/register`}
-                  className="inline-flex items-center rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
+                  className="inline-flex items-center rounded-lg border border-[#5D3699] bg-white px-3 py-1.5 text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#5D3699] hover:text-white"
                 >
                   Yes, Login as Mentee
                 </Link>
                 <Link
                   to={`/register?source=event-flow&next=/volunteer-events/${eventId}/register`}
-                  className="inline-flex items-center rounded-lg border border-[#ddd6fe] bg-white px-3 py-1.5 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
+                  className="inline-flex items-center rounded-lg border border-[#5D3699] bg-white px-3 py-1.5 text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#5D3699] hover:text-white"
                 >
-                  No, Create Mentee Account
+                  No, Create Account
                 </Link>
               </div>
             </div>
@@ -464,15 +489,37 @@ const VolunteerEventRegister = () => {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#7b699d]"><User className="h-3.5 w-3.5" />Preferred Role</label>
-              <input value={form.preferredRole} onChange={onChange('preferredRole')} className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
+              <label className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#7b699d]"><User className="h-3.5 w-3.5" />Preferred Role *</label>
+              <select
+                value={form.preferredRole}
+                onChange={onChange('preferredRole')}
+                required
+                disabled={!availableRoleOptions.length}
+                className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd] disabled:bg-[#f9fafb] disabled:text-[#9ca3af]"
+              >
+                {availableRoleOptions.length ? (
+                  availableRoleOptions.map((role) => (
+                    <option key={role} value={role}>{role}</option>
+                  ))
+                ) : (
+                  <option value="">No roles available</option>
+                )}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Country Code</label>
+              <input
+                value={getCountryCode(form.country)}
+                readOnly
+                className="w-full rounded-xl border border-[#e7e2f6] bg-[#f9fafb] px-4 py-2.5 text-sm text-[#111827] outline-none"
+              />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Emergency Contact *</label>
               <input value={form.emergencyContact} onChange={onChange('emergencyContact')} required className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Notes</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Notes to Organiser</label>
               <textarea rows={4} value={form.notes} onChange={onChange('notes')} className="w-full resize-none rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
             </div>
             <div className="sm:col-span-2">

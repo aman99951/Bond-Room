@@ -751,6 +751,9 @@ useEffect(() => {
     () => registeredEvents.filter((event) => event.status === 'completed' && event.registrationId),
     [registeredEvents]
   );
+  const showRegisteredEventsSection =
+    registeredEventsLoading || registeredEventCarouselItems.length > 0 || Boolean(registeredEventsError);
+  const showCompletedCertificatesSection = registeredEventsLoading || completedRegisteredEvents.length > 0;
   const progressPercent = useMemo(() => {
     const total = Number(stats?.total_sessions || 0);
     const completed = Number(stats?.completed_sessions || 0);
@@ -889,6 +892,7 @@ return (
       )}
 
       {/* Registered Events Section */}
+      {showRegisteredEventsSection && (
       <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
         <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
@@ -923,18 +927,7 @@ return (
               onCardClick={() => navigate('/registered-events')}
             />
           </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-[#e2d4fb] bg-white p-8 text-center">
-            <p className="text-sm text-[#6b7280]">No registered events yet.</p>
-            <button
-              type="button"
-              onClick={() => navigate('/volunteer-events')}
-              className="mt-3 inline-flex items-center rounded-xl bg-[#5D3699] px-4 py-2 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
-            >
-              Explore Volunteer Events
-            </button>
-          </div>
-        )}
+        ) : null}
 
         {registeredEventsError && (
           <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -942,8 +935,10 @@ return (
           </div>
         )}
       </motion.div>
+      )}
 
       {/* Completed Certificates Section */}
+      {showCompletedCertificatesSection && (
       <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -994,13 +989,9 @@ return (
               ))}
             </div>
           </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-[#d1fae5] bg-white p-6 text-center">
-            <p className="text-sm text-[#4b5563]">No completed registered events yet.</p>
-            <p className="mt-1 text-xs text-[#6b7280]">Certificates will appear here after completion.</p>
-          </div>
-        )}
+        ) : null}
       </motion.div>
+      )}
       {!isEventFlowOnly ? (
       <>
       {/* Quick Actions Grid */}

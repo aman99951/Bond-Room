@@ -13,6 +13,39 @@ const normalizeList = (payload) => {
 const inputClass =
   'mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all duration-200';
 
+const VOLUNTEER_ROLE_OPTIONS = [
+  'Program Coordinators',
+  'Outreach Volunteers',
+  'Mentor Engagement Volunteers',
+  'Event Organizers',
+  'Content & Communication Volunteers',
+  'Data & Research Volunteers',
+  'Tech Support Volunteers',
+  'Fundraising & Partnerships Volunteers',
+  'Admin & Documentation Volunteers',
+  'Registration Desk Volunteers',
+  'Check-in Support Volunteers',
+  'Guest Welcome Volunteers',
+  'Venue Setup Volunteers',
+  'Venue Cleanup Volunteers',
+  'Stage Management Volunteers',
+  'Session Coordination Volunteers',
+  'Speaker Support Volunteers',
+  'Hospitality Volunteers',
+  'Refreshments Coordination Volunteers',
+  'Crowd Management Volunteers',
+  'Help Desk Volunteers',
+  'Information Desk Volunteers',
+  'Logistics Support Volunteers',
+  'Transport Coordination Volunteers',
+  'Photography Volunteers',
+  'Videography Volunteers',
+  'Social Media Coverage Volunteers',
+  'Certificate & Documentation Volunteers',
+  'Feedback Collection Volunteers',
+  'Safety & Emergency Support Volunteers',
+];
+
 const defaultEventForm = {
   title: '',
   stream: '',
@@ -26,6 +59,7 @@ const defaultEventForm = {
   organizer: '',
   seats: '0',
   impact: '',
+  availableRoles: [],
   image: '',
   imageFile: null,
   is_active: true,
@@ -83,6 +117,18 @@ const AdminVolunteerEventsPage = () => {
     setEventForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const toggleRoleSelection = (role) => {
+    setEventForm((prev) => {
+      const alreadySelected = prev.availableRoles.includes(role);
+      return {
+        ...prev,
+        availableRoles: alreadySelected
+          ? prev.availableRoles.filter((item) => item !== role)
+          : [...prev.availableRoles, role],
+      };
+    });
+  };
+
   const handleCreateEvent = async (event) => {
     event.preventDefault();
     setEventError('');
@@ -113,6 +159,7 @@ const AdminVolunteerEventsPage = () => {
     formData.append('organizer', eventForm.organizer.trim());
     formData.append('seats', String(Number(eventForm.seats || 0)));
     formData.append('impact', eventForm.impact.trim());
+    eventForm.availableRoles.forEach((role) => formData.append('available_roles', role));
     formData.append('image', eventForm.image.trim());
     formData.append('is_active', eventForm.is_active ? 'true' : 'false');
     if (eventForm.imageFile) formData.append('image_file', eventForm.imageFile);
@@ -195,6 +242,27 @@ const AdminVolunteerEventsPage = () => {
               <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Upload Image</label><label className="mt-1.5 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-800/60 px-4 py-3 text-sm text-slate-300"><ImagePlus className="h-4 w-4 text-violet-400" /><span>{eventForm.imageFile ? eventForm.imageFile.name : 'Choose image file'}</span><input type="file" accept="image/*" className="hidden" onChange={(e) => updateEventForm('imageFile', e.target.files?.[0] || null)} /></label></div>
               <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Description</label><textarea rows={3} className={inputClass} value={eventForm.description} onChange={(e) => updateEventForm('description', e.target.value)} /></div>
               <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Summary</label><textarea rows={2} className={inputClass} value={eventForm.summary} onChange={(e) => updateEventForm('summary', e.target.value)} /></div>
+              <div className="md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Available Roles for Registration</label>
+                  <span className="text-[11px] font-semibold text-violet-300">{eventForm.availableRoles.length} selected</span>
+                </div>
+                <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-slate-700 bg-slate-800/50 p-3">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {VOLUNTEER_ROLE_OPTIONS.map((role) => (
+                      <label key={role} className="inline-flex items-start gap-2 rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2 text-xs text-slate-200">
+                        <input
+                          type="checkbox"
+                          checked={eventForm.availableRoles.includes(role)}
+                          onChange={() => toggleRoleSelection(role)}
+                          className="mt-0.5 h-3.5 w-3.5 accent-violet-500"
+                        />
+                        <span>{role}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
               <div className="md:col-span-2 flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3">
                 <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-300"><input type="checkbox" checked={eventForm.is_active} onChange={(e) => updateEventForm('is_active', e.target.checked)} />Active Event</label>
                 <button type="submit" disabled={eventSaving} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-bold text-white">{eventSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />}{eventSaving ? 'Creating...' : 'Create Event'}</button>
@@ -252,6 +320,9 @@ const AdminVolunteerEventsPage = () => {
                             <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${item.status === 'completed' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-violet-500/20 text-violet-300'}`}>{item.status || 'upcoming'}</span>
                           </div>
                           <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400"><span>{item.date || '-'}</span><span>-</span><span>{item.time || 'Time TBA'}</span><span>-</span><span>Seats: {item.seats ?? 0}</span></div>
+                          <p className="mt-1 text-[11px] text-slate-400">
+                            Roles: {Array.isArray(item.available_roles) ? item.available_roles.length : 0}
+                          </p>
                         </div>
                       </div>
                     </div>

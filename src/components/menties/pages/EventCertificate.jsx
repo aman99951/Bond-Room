@@ -104,11 +104,24 @@ const EventCertificate = () => {
   }
 
   return (
-    <div className="relative overflow-hidden p-4 sm:p-8">
+    <div className="print-only-root relative overflow-hidden p-4 sm:p-8">
       <style>
         {`
           @media print {
+            @page {
+              size: A4;
+              margin: 10mm;
+            }
             .no-print { display: none !important; }
+            body * { visibility: hidden !important; }
+            .print-only-root, .print-only-root * { visibility: visible !important; }
+            .print-only-root {
+              position: absolute !important;
+              inset: 0 !important;
+              width: 100% !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
             body { background: #fff !important; }
             .print-shell {
               box-shadow: none !important;
@@ -142,8 +155,8 @@ const EventCertificate = () => {
       <div className="print-shell relative mx-auto w-full max-w-5xl overflow-hidden rounded-[28px] border border-[#d6c8f2] bg-[linear-gradient(145deg,#ffffff_0%,#f9f4ff_45%,#eefcf2_100%)] shadow-[0_30px_80px_-40px_rgba(60,16,120,0.5)]">
         <div className="absolute left-8 top-8 h-20 w-20 rounded-full bg-[#f3e8ff] blur-2xl" />
         <div className="absolute bottom-8 right-8 h-20 w-20 rounded-full bg-[#dcfce7] blur-2xl" />
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.05]">
-          <img src={logo} alt="" className="h-72 w-72 object-contain" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-[0.1]">
+          <img src={logo} alt="" className="h-96 w-96 object-contain" />
         </div>
 
         <div className="relative p-6 sm:p-12">
@@ -154,6 +167,7 @@ const EventCertificate = () => {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6f4ca6]">Bond Room</p>
+                <p className="text-[11px] text-[#6b7280]">Bridging Old and New Destinies</p>
                 <h1 className="text-lg font-semibold text-[#111827] sm:text-xl">Certificate of Participation</h1>
               </div>
             </div>
@@ -204,6 +218,7 @@ const EventCertificate = () => {
             </div>
             <div className="text-right">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6f4ca6]">Bond Room</p>
+              <p className="text-[11px] text-[#6b7280]">Bridging Old and New Destinies</p>
               <p className="text-[11px] text-[#6b7280]">Empowering through mentorship and service</p>
             </div>
           </div>

@@ -525,7 +525,7 @@ const Register = () => {
 
                   <div className="lp-register-row">
                   <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="firstName">First Name</label>
+                    <label className="lp-register-field-label" htmlFor="firstName">First Name *</label>
                     <input
                       id="firstName"
                       className={`lp-input ${hasRequiredFieldError('firstName') ? 'lp-input-error' : ''}`}
@@ -536,7 +536,7 @@ const Register = () => {
                     />
                   </div>
                   <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="lastName">Last Name</label>
+                    <label className="lp-register-field-label" htmlFor="lastName">Last Name *</label>
                     <input
                       id="lastName"
                       className={`lp-input ${hasRequiredFieldError('lastName') ? 'lp-input-error' : ''}`}
@@ -550,7 +550,7 @@ const Register = () => {
 
                   <div className="lp-register-row">
                   <div className="lp-field">
-                    <label className="lp-register-field-label" id="registerGradeLabel">Grade</label>
+                    <label className="lp-register-field-label" id="registerGradeLabel">Grade *</label>
                     <div
                       className="lp-select-wrap"
                       tabIndex={0}
@@ -592,7 +592,7 @@ const Register = () => {
                   </div>
 
                   <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="dob">Date of Birth</label>
+                    <label className="lp-register-field-label" htmlFor="dob">Date of Birth *</label>
                     <input
                       id="dob"
                       type="date"
@@ -609,7 +609,7 @@ const Register = () => {
 
                   <div className="lp-register-row">
                   <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="email">Email Address</label>
+                    <label className="lp-register-field-label" htmlFor="email">Email Address *</label>
                     <div className="lp-register-inline-verify">
                       <input
                         id="email"
@@ -631,7 +631,7 @@ const Register = () => {
                   </div>
 
                   <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="password">Password</label>
+                    <label className="lp-register-field-label" htmlFor="password">Password *</label>
                     <div className="lp-password-wrap">
                       <input
                         id="password"
@@ -657,7 +657,7 @@ const Register = () => {
 
                   <div className="lp-register-row">
                   <div className="lp-field">
-                    <label className="lp-register-field-label" id="registerGenderLabel">Gender</label>
+                    <label className="lp-register-field-label" id="registerGenderLabel">Gender *</label>
                     <div
                       className="lp-select-wrap"
                       tabIndex={0}
@@ -794,7 +794,7 @@ const Register = () => {
                       checked={form.parentConsent}
                       onChange={(event) => updateField('parentConsent', event.target.checked)}
                     />
-                    <span>Parent / Guardian Consent</span>
+                    <span>Parent / Guardian Consent *</span>
                   </label>
                   <p className="lp-register-note">Verify parent mobile before creating the student account.</p>
 
@@ -864,7 +864,7 @@ const Register = () => {
                       onChange={(event) => updateField('recordConsent', event.target.checked)}
                     />
                     <span>
-                      I Agree to Session Recording for Safety
+                      I Agree to Session Recording for Safety *
                       <span className="lp-register-note lp-register-note-block">
                         All sessions are recorded to ensure student safety and quality of mentorship.
                       </span>

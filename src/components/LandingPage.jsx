@@ -3,7 +3,7 @@ import {
   motion, AnimatePresence,
   useScroll, useTransform,
 } from 'framer-motion';
-import logo       from './assets/logo.png';
+import logo       from './assets/Logo.svg';
 import heroLeft   from './assets/left.png';
 import heroRight  from './assets/right.png';
 import avatarOne  from './assets/avatar-1.jpg';
@@ -718,7 +718,6 @@ export default function LandingPage() {
 
   return (
     <div className="lp">
-      <Cursor />
 
       {/* ═══ HEADER ═══ */}
       <motion.header className="lp-hdr"
@@ -772,6 +771,7 @@ export default function LandingPage() {
       </AnimatePresence>
 
       {/* ═══ HERO ═══ */}
+      <Cursor />
       <section className="lp-hero">
         <div className="lp-orb lp-orb-a" />
         <div className="lp-orb lp-orb-b" />
