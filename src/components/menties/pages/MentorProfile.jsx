@@ -209,7 +209,7 @@ const MentorProfile = () => {
       <div className="mx-auto max-w-6xl">
         {/* Back Link */}
         <Link
-          to="/mentors"
+          to="/dashboard"
           className="mb-6 inline-flex items-center gap-2 text-sm text-[#6b7280] transition-colors hover:text-[#5D3699]"
         >
           <ArrowLeft className="h-4 w-4" />

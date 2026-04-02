@@ -14,7 +14,6 @@ import MainLayout from './MainLayout';
 import Dashboard from './menties/pages/Dashboard';
 import MySessions from './menties/pages/MySessions';
 import SessionRequests from './menties/pages/SessionRequests';
-import Mentors from './menties/pages/Mentors';
 import Profile from './menties/pages/Profile';
 import MentorDetails from './menties/pages/MentorDetails';
 import BookSession from './menties/pages/BookSession';
@@ -442,7 +441,7 @@ const AppLayout = () => {
         <Route path="my-sessions" element={<MySessions />} />
         <Route path="session-requests" element={<SessionRequests />} />
         <Route path="session-records" element={<SessionRecords />} />
-        <Route path="mentors" element={<Mentors />} />
+        <Route path="mentors" element={<Navigate to="/dashboard" replace />} />
         <Route path="profile" element={<Profile />} />
         <Route path="mentor-details" element={<MentorDetails />} />
         <Route path="book-session" element={<BookSession />} />
@@ -452,6 +451,7 @@ const AppLayout = () => {
         <Route path="mentee-zoom-meeting" element={<MenteeMeetingRoom />} />
         <Route path="mentor-profile" element={<MentorProfile />} />
         <Route path="registered-events" element={<RegisteredEvents />} />
+        <Route path="event-register/:eventId" element={<VolunteerEventRegister menteeOnly />} />
         <Route path="event-certificate/:registrationId" element={<EventCertificate />} />
         <Route
           path="mentor-impact-dashboard"

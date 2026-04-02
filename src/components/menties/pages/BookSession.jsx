@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { getSelectedMentorId, setLastBooking, setSelectedMentorId } from '../../../apis/api/storage';
+import './BookSession.css';
 import {
   INDIA_TIMEZONE,
   buildDateKey,
@@ -80,15 +81,34 @@ const formatDateLabel = (value) => {
 };
 
 const mapAvailabilitySlots = (payload) =>
-  normalizeList(payload)
-    .filter((slot) => slot?.is_available !== false)
-    .map((slot) => ({
-      ...slot,
-      dateKey: toDateKey(slot.start_time),
-      label: formatTimeRangeInZone(slot.start_time, slot.end_time),
-    }))
-    .filter((slot) => slot.dateKey && slot.label)
-    .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+  {
+    const nowMs = Date.now();
+    const todayDateKey = formatIndiaDateKey(new Date());
+
+    return normalizeList(payload)
+      .filter((slot) => slot?.is_available !== false)
+      .map((slot) => {
+        const start = slot?.start_time;
+        const end = slot?.end_time || start;
+        const dateKey = toDateKey(start);
+        if (!start || !dateKey) return null;
+        if (dateKey < todayDateKey) return null;
+
+        const startMs = new Date(start).getTime();
+        if (dateKey === todayDateKey && Number.isFinite(startMs) && startMs <= nowMs) return null;
+
+        const label = formatTimeRangeInZone(start, end);
+        if (!label) return null;
+
+        return {
+          ...slot,
+          dateKey,
+          label,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+  };
 
 const getMonthGrid = (monthDate) => {
   const year = monthDate.getFullYear();
@@ -311,11 +331,11 @@ const BookSession = () => {
   const currentSelectedTimeLabel = selectedSlot?.label || 'Select time';
 
   return (
-    <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-full">
+    <div className="book-session-page min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
+      <div className="book-session-shell mx-auto w-full">
         {/* Back Link */}
         <Link
-          to="/mentors"
+          to="/dashboard"
           className="mb-6 inline-flex items-center gap-2 text-sm text-[#6b7280] transition-colors hover:text-[#5D3699]"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -329,7 +349,7 @@ const BookSession = () => {
               <Calendar className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
+              <h1 className="book-session-title text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
                 {mentor?.name ? `Book with ${mentor.name}` : 'Book Session'}
               </h1>
               <p className="mt-0.5 text-sm text-[#6b7280]">
@@ -350,8 +370,8 @@ const BookSession = () => {
         </div>
 
         {/* Main Card */}
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
-          <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+        <div className="book-session-main overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="book-session-layout flex flex-col lg:grid lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
             {/* Left Sidebar - Mentor Info */}
             <aside className="border-b border-[#e5e7eb] bg-[#f8fafc] lg:border-b-0 lg:border-r">
               {/* ——— Mobile: Compact Mentor Card ——— */}
@@ -541,9 +561,9 @@ const BookSession = () => {
 
             {/* Right Section - Calendar & Time Slots */}
             <div className="p-6 lg:p-8">
-              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-8">
+              <div className="book-session-calendar-layout grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-8">
                 {/* Calendar */}
-                <section>
+                <section className="book-session-calendar-section">
                   {/* Month Navigation */}
                   <div className="mb-6 flex items-center justify-between">
                     <button
@@ -566,7 +586,7 @@ const BookSession = () => {
                   </div>
 
                   {/* Calendar Grid */}
-                  <div className="rounded-xl bg-[#f8fafc] p-4 ring-1 ring-[#e5e7eb]">
+                  <div className="book-session-calendar-grid rounded-xl bg-[#f8fafc] p-4 ring-1 ring-[#e5e7eb]">
                     {/* Days Header */}
                     <div className="mb-3 grid grid-cols-7 gap-2">
                       {days.map((d) => (

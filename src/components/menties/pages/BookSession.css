@@ -1,0 +1,68 @@
+.book-session-shell {
+  max-width: 1760px;
+}
+
+@media (min-width: 2560px) {
+  .book-session-page {
+    padding-left: clamp(24px, 2.1vw, 56px);
+    padding-right: clamp(24px, 2.1vw, 56px);
+  }
+
+  .book-session-shell {
+    max-width: 1880px;
+  }
+
+  .book-session-main {
+    border-radius: 22px;
+  }
+
+  .book-session-layout {
+    grid-template-columns: minmax(0, 440px) minmax(0, 1fr) !important;
+  }
+
+  .book-session-calendar-layout {
+    grid-template-columns: minmax(0, 860px) 320px !important;
+    justify-content: center;
+    gap: 2rem !important;
+  }
+
+  .book-session-calendar-section {
+    width: 100%;
+    max-width: 860px;
+    margin-inline: auto;
+  }
+
+  .book-session-calendar-grid {
+    max-width: 820px;
+    margin-inline: auto;
+  }
+
+  .book-session-title {
+    font-size: 2rem;
+    line-height: 1.15;
+  }
+}
+
+@media (min-width: 3200px) {
+  .book-session-shell {
+    max-width: 2040px;
+  }
+
+  .book-session-layout {
+    grid-template-columns: minmax(0, 480px) minmax(0, 1fr) !important;
+  }
+
+  .book-session-calendar-layout {
+    grid-template-columns: minmax(0, 900px) 360px !important;
+    justify-content: center;
+    gap: 2.4rem !important;
+  }
+
+  .book-session-calendar-section {
+    max-width: 900px;
+  }
+
+  .book-session-calendar-grid {
+    max-width: 860px;
+  }
+}

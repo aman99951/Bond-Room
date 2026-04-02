@@ -1,7 +1,7 @@
 .dash-mentor-arc .lp-arc-stage {
-  --card-w: clamp(150px, 13vw, 220px);
-  --card-h: clamp(220px, 24vw, 300px);
-  height: clamp(300px, 32vw, 400px);
+  --card-w: clamp(190px, 16vw, 270px);
+  --card-h: clamp(286px, 24vw, 370px);
+  height: clamp(360px, 32vw, 490px);
 }
 
 .dash-mentor-arc .lp-arc-stage::before {
@@ -13,16 +13,19 @@
 }
 
 .dash-mentor-arc .lp-arc-card-inner {
-  border: 1px solid rgba(229, 231, 235, 0.95);
+  border: 1px solid rgba(203, 183, 237, 0.9);
+  background:
+    linear-gradient(180deg, rgba(7, 11, 22, 0.1), rgba(7, 11, 22, 0.76)),
+    radial-gradient(circle at 16% 14%, rgba(242, 231, 255, 0.36), transparent 48%);
   box-shadow:
-    0 16px 28px rgba(17, 24, 39, 0.12),
-    0 0 0 1px rgba(255, 255, 255, 0.65) inset;
+    0 20px 36px rgba(43, 21, 76, 0.42),
+    0 0 0 1px rgba(248, 238, 255, 0.33) inset;
 }
 
 .dash-mentor-arc .lp-arc-overlay {
   background:
-    linear-gradient(180deg, rgba(18, 10, 44, 0) 34%, rgba(18, 10, 44, 0.58) 100%),
-    radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.23), transparent 45%);
+    linear-gradient(180deg, rgba(9, 6, 25, 0) 18%, rgba(12, 8, 33, 0.74) 72%, rgba(12, 8, 33, 0.92) 100%),
+    linear-gradient(100deg, rgba(11, 8, 26, 0.4) 0%, rgba(11, 8, 26, 0) 46%, rgba(11, 8, 26, 0.35) 100%);
 }
 
 .dash-mentor-arc .lp-arc-info strong {
@@ -37,11 +40,166 @@
   background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
 }
 
+.dash-mentor-arc .dash-mentor-top-badge {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 35;
+  border: 1px solid rgba(241, 221, 142, 0.6);
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, rgba(255, 235, 170, 0.95), rgba(232, 194, 88, 0.95));
+  color: #3c2c06;
+  font-size: 0.57rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 16px rgba(30, 18, 58, 0.28);
+}
+
+.dash-mentor-arc .dash-mentor-card-meta {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-mentor-arc .dash-mentor-card-head strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.dash-mentor-arc .dash-mentor-card-head span {
+  display: block;
+  margin-top: 2px;
+  color: rgba(229, 231, 235, 0.95);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+}
+
+.dash-mentor-arc .dash-mentor-why-box {
+  border: 1px solid rgba(226, 214, 255, 0.5);
+  border-radius: 12px;
+  padding: 7px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.06));
+  backdrop-filter: blur(4px);
+}
+
+.dash-mentor-arc .dash-mentor-why-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+}
+
+.dash-mentor-arc .dash-mentor-why-row em {
+  font-style: normal;
+  color: rgba(236, 227, 255, 0.95);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.dash-mentor-arc .dash-mentor-why-box p {
+  margin-top: 3px;
+  color: #f8f5ff;
+  font-size: 0.66rem;
+  line-height: 1.32;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.dash-mentor-arc .dash-mentor-tags-row {
+  margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.dash-mentor-arc .dash-mentor-tags-row span {
+  border: 1px solid rgba(218, 199, 247, 0.72);
+  border-radius: 999px;
+  padding: 2px 7px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #efe6ff;
+  font-size: 0.54rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.dash-mentor-arc .dash-mentor-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.dash-mentor-arc .dash-mentor-btn {
+  flex: 1;
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+}
+
+.dash-mentor-arc .dash-mentor-btn-light {
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.92);
+  color: #4a2b7a;
+}
+
+.dash-mentor-arc .dash-mentor-btn-light:hover {
+  background: #ffffff;
+}
+
+.dash-mentor-arc .dash-mentor-btn-primary {
+  border: 1px solid rgba(196, 164, 247, 0.7);
+  background: linear-gradient(135deg, #6f45b3, #4a2b7a);
+  color: #ffffff;
+}
+
+.dash-mentor-arc .dash-mentor-btn-primary:hover {
+  background: linear-gradient(135deg, #5e38a2, #3d1f69);
+}
+
 @media (max-width: 768px) {
   .dash-mentor-arc .lp-arc-stage {
-    --card-w: clamp(112px, 22vw, 156px);
-    --card-h: clamp(168px, 33vw, 224px);
-    height: clamp(250px, 46vw, 330px);
+    --card-w: clamp(168px, 35vw, 220px);
+    --card-h: clamp(258px, 52vw, 320px);
+    height: clamp(332px, 62vw, 430px);
+  }
+
+  .dash-mentor-arc .dash-mentor-card-meta {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    gap: 6px;
+  }
+
+  .dash-mentor-arc .dash-mentor-why-box {
+    padding: 7px;
+  }
+
+  .dash-mentor-arc .dash-mentor-why-box p {
+    font-size: 0.64rem;
+    min-height: 0;
+  }
+
+  .dash-mentor-arc .dash-mentor-btn {
+    padding: 5px 6px;
+    font-size: 0.6rem;
   }
 }
 

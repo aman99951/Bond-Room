@@ -5,7 +5,7 @@ import { getRoutesForLayout } from '../../config/routes';
 import { menteeApi } from '../../apis/api/menteeApi';
 import { mentorApi } from '../../apis/api/mentorApi';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
-import { getAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
+import { getAuthSession, getStoredUiRole, mapAppRoleToUiRole } from '../../apis/api/storage';
 import { getIndiaGreeting } from '../../utils/indiaTime';
 import {
   X,
@@ -73,12 +73,8 @@ const Sidebar = ({ isOpen, onClose }) => {
   const role = (() => {
     const authRole = mapAppRoleToUiRole(getAuthSession()?.role);
     if (authRole) return authRole;
-    try {
-      const storedRole = localStorage.getItem('userRole');
-      if (storedRole) return storedRole;
-    } catch {
-      // ignore storage errors
-    }
+    const storedRole = getStoredUiRole();
+    if (storedRole) return storedRole;
     const matchedRoute = getRoutesForLayout().find((route) => route.path === pathname);
     if (matchedRoute?.roles?.[0]) return matchedRoute.roles[0];
     if (pathname.startsWith('/mentor-')) return 'mentors';

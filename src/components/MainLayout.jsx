@@ -7,7 +7,7 @@ import logo from '../assets/logo.png';
 import { subscribeToApiLoading } from '../apis/api/requestLoading';
 import MenteeMeetingInviteBanner from './meeting/MenteeMeetingInviteBanner';
 import MeetingHost from './meeting/MeetingHost';
-import { getAuthSession, mapAppRoleToUiRole } from '../apis/api/storage';
+import { getAuthSession, getStoredUiRole, mapAppRoleToUiRole } from '../apis/api/storage';
 import { Sparkles } from 'lucide-react';
 
 const MENTOR_TOUR_DONE_KEY = 'bondroom_mentor_tour_done_v1';
@@ -69,7 +69,7 @@ const MainLayout = () => {
 
   useEffect(() => {
     const session = getAuthSession();
-    const storedRole = localStorage.getItem('userRole');
+    const storedRole = getStoredUiRole();
     const uiRole = session?.role ? mapAppRoleToUiRole(session.role) : storedRole;
     if (uiRole !== 'mentors' || !session?.accessToken) return;
     const mentorTourKey = `${MENTOR_TOUR_DONE_KEY}:${session?.email || 'mentor'}`;

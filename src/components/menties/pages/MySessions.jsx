@@ -376,6 +376,14 @@ return (
             <p className="mt-1 text-sm text-[#6b7280]">
               View and manage your mentoring sessions
             </p>
+            <button
+              type="button"
+              onClick={() => navigate('/session-requests')}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#5D3699] transition-colors hover:text-[#4a2b7a]"
+            >
+              Session Requested
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
 

@@ -1,5 +1,7 @@
 .lp-register {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .lp-toast {
@@ -57,6 +59,8 @@
 
 .lp-register-main {
   position: relative;
+  flex: 1 0 auto;
+  width: 100%;
   padding: 130px 20px 56px;
   max-width: 1480px;
   margin: 0 auto;
@@ -191,7 +195,7 @@
 .lp-register-h2 {
   margin-top: 12px;
   font-family: inherit;
-  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-size: clamp(1.25rem, 1.6vw, 1.5rem);
   font-weight: 600;
   letter-spacing: 0;
   line-height: 1.25;
@@ -221,13 +225,13 @@
   justify-content: center;
   border-radius: 8px;
   padding: 7px 12px;
-  font-size: 0.72rem;
-  font-family: 'DM Mono', monospace;
-  font-weight: 700;
+  font-size: 0.69rem;
+  font-family: inherit;
+  font-weight: 600;
   color: #5b4a78;
   text-decoration: none;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .lp-register-role-tab:hover {
@@ -268,6 +272,27 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: #1f2937;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lp-register-section-icon {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  color: #5b2c91;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-register-section-icon::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  display: block;
 }
 
 .lp-register-form-card-head span {
@@ -275,9 +300,10 @@
   background: #f3ecff;
   color: #5b2c91;
   padding: 3px 8px;
-  font-size: 0.62rem;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: 0.08em;
+  font-size: 0.66rem;
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -369,12 +395,70 @@
   color: #3b4453;
 }
 
+.lp-password-guide {
+  margin-top: 8px;
+  border: 1px solid #e7e2f6;
+  border-radius: 10px;
+  background: #fbf9ff;
+  padding: 8px 10px;
+}
+
+.lp-password-guide p {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #5f6677;
+}
+
+.lp-password-guide ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.lp-password-guide li {
+  font-size: 0.72rem;
+  color: #7a5a1f;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lp-password-guide li.is-ok {
+  color: #166534;
+}
+
+.lp-password-guide-icon {
+  display: inline-flex;
+  width: 14px;
+  justify-content: center;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
 .lp-select-wrap {
   position: relative;
 }
 
 .lp-select-trigger {
   text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lp-select-chevron {
+  width: 16px;
+  height: 16px;
+  color: #5b2c91;
+  flex-shrink: 0;
+  transition: transform .2s ease;
+}
+
+.lp-select-chevron.is-open {
+  transform: rotate(180deg);
 }
 
 .lp-select-options {
@@ -453,7 +537,7 @@
 
 .lp-register-note {
   margin-top: 6px;
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   color: var(--mute);
 }
 
@@ -485,9 +569,9 @@
   min-width: 88px;
   background: #f7f2ff;
   color: #4a2a7a;
-  font-size: 0.76rem;
-  font-weight: 700;
-  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
   padding: 0 12px;
   cursor: pointer;
   white-space: nowrap;
@@ -699,9 +783,10 @@
   gap: 8px;
   background: var(--acc);
   color: #fff;
-  font-family: 'DM Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-family: inherit;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.01em;
   box-shadow: 0 12px 24px rgba(91, 44, 199, 0.2);
   transition: background .2s, opacity .2s;
 }
@@ -718,7 +803,7 @@
 .lp-register-terms {
   text-align: center;
   color: var(--mute);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
 }
 
 .lp-register-terms span {
@@ -729,6 +814,7 @@
 .lp-login-footer {
   border-top: 1px solid var(--line);
   padding-top: 18px;
+  margin-top: auto;
 }
 
 .lp-login-footer-links {
@@ -793,5 +879,19 @@
 
   .lp-hdr .lp-hdr-actions {
     margin-left: auto;
+  }
+}
+
+@media (min-width: 1920px) {
+  .lp-register-main {
+    max-width: min(96vw, 2400px);
+    padding-inline: clamp(16px, 1.8vw, 42px);
+  }
+}
+
+@media (min-width: 2560px) {
+  .lp-register-main {
+    max-width: min(97vw, 3000px);
+    padding-inline: clamp(14px, 1.2vw, 36px);
   }
 }

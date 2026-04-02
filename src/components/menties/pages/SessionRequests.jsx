@@ -126,14 +126,7 @@ const SessionRequests = () => {
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/book-session')}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#5D3699] px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#4a2b7a]"
-          >
-            <Clock className="h-4 w-4" />
-            Book mentor
-          </button>
+          
         </div>
       </div>
 

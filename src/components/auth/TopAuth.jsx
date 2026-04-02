@@ -15,38 +15,32 @@ const TopAuth = () => {
   };
 
   return (
-    <header className="border-b border-gray-100 bg-white">
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4 lg:px-10 xl:px-14">
-        <Link to="/" className="flex shrink-0 flex-col items-start" aria-label="Go to landing page">
-          <img
-            src={logo}
-            alt="Bond Room"
-            className="h-11 w-auto object-contain sm:h-12 lg:h-14"
-          />
-          <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em] text-gray-500 sm:text-[11px]">
-            Bridging Old and New Destinies
-          </p>
+    <header className="lp-hdr">
+      <div className="mx-auto flex w-full max-w-[1400px] 2xl:max-w-[min(97vw,3000px)] items-center gap-5 px-4 sm:px-6 lg:px-10 xl:px-14 2xl:px-6">
+        <Link to="/" className="lp-logo" aria-label="Go to landing page">
+          <img src={logo} alt="Bond Room" />
+          <span>Bridging Old and New Destinies</span>
         </Link>
-        <div className="flex w-full flex-wrap items-center justify-between gap-3 text-[13px] text-[#36323D] sm:w-auto sm:justify-end sm:gap-4">
-          <nav className="hidden items-center gap-4 md:flex lg:gap-6">
-            <a href="#" className="hover:text-primary">About</a>
-            <a href="#" className="hover:text-primary">Contact</a>
-            <a href="#" className="hover:text-primary">Help</a>
-          </nav>
+
+        <nav className="lp-nav">
+          <Link to="/">Home</Link>
+        </nav>
+
+        <div className="lp-hdr-actions">
           {isLoggedIn ? (
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex min-w-[96px] justify-center rounded-md bg-accent px-4 py-2 text-[13px] text-on-accent"
+              className="lp-solid"
             >
               Logout
             </button>
           ) : isLogin ? (
-            <Link to="/register" className="inline-flex min-w-[96px] justify-center rounded-md bg-accent px-4 py-2 text-[13px] text-on-accent">
-              Register
+            <Link to="/register" className="lp-solid">
+              Student Sign Up
             </Link>
           ) : (
-            <Link to="/login" className="inline-flex min-w-[96px] justify-center rounded-md bg-accent px-4 py-2 text-[13px] text-on-accent">
+            <Link to="/login" className="lp-solid">
               Login
             </Link>
           )}

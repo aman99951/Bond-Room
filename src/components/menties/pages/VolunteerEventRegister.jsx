@@ -73,12 +73,13 @@ const parseLegacyCityState = (value) => {
   };
 };
 
-const VolunteerEventRegister = () => {
+const VolunteerEventRegister = ({ menteeOnly = false }) => {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const { authSession, mentee, loadCurrentMentee } = useMenteeData({ autoLoad: false });
   const isLoggedIn = Boolean(authSession?.accessToken);
   const isMenteeLoggedIn = isLoggedIn && authSession?.role === 'mentee';
+  const backPath = menteeOnly ? '/registered-events' : '/volunteer-events';
   const defaultFullName = getMenteeFullName(mentee);
   const defaultEmail = String(mentee?.email || authSession?.email || '').trim();
   const defaultPhone = getMenteePhone(mentee);
@@ -119,8 +120,8 @@ const VolunteerEventRegister = () => {
   }, [errorMessage, successMessage]);
 
   useEffect(() => {
-    setShowLoginPrompt(!isMenteeLoggedIn);
-  }, [isMenteeLoggedIn]);
+    setShowLoginPrompt(!menteeOnly && !isMenteeLoggedIn);
+  }, [isMenteeLoggedIn, menteeOnly]);
 
   useEffect(() => {
     if (!isMenteeLoggedIn) return;
@@ -156,7 +157,9 @@ const VolunteerEventRegister = () => {
       setEventLoading(true);
       setErrorMessage('');
       try {
-        const response = await menteeApi.getPublicVolunteerEventById(eventId);
+        const response = menteeOnly
+          ? await menteeApi.getVolunteerEventById(eventId)
+          : await menteeApi.getPublicVolunteerEventById(eventId);
         if (cancelled) return;
         setEventItem(response || null);
       } catch {
@@ -178,7 +181,7 @@ const VolunteerEventRegister = () => {
     return () => {
       cancelled = true;
     };
-  }, [eventId]);
+  }, [eventId, menteeOnly]);
 
   useEffect(() => {
     if (!availableRoleOptions.length) {
@@ -226,7 +229,9 @@ const VolunteerEventRegister = () => {
     if (!eventItem?.id) return;
     if (!isMenteeLoggedIn) {
       setErrorMessage('Please login with a mentee account to register for this event.');
-      setShowLoginPrompt(true);
+      if (!menteeOnly) {
+        setShowLoginPrompt(true);
+      }
       return;
     }
     if (
@@ -308,11 +313,11 @@ const VolunteerEventRegister = () => {
             {eventLoading ? 'Fetching volunteer event details...' : 'The selected volunteer event does not exist.'}
           </p>
           <Link
-            to="/volunteer-events"
+            to={backPath}
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#5D3699] px-4 py-2 text-sm font-semibold text-white"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Events
+            Back
           </Link>
         </div>
       </div>
@@ -370,11 +375,11 @@ const VolunteerEventRegister = () => {
       <div className="mb-6">
         <button
           type="button"
-          onClick={() => navigate('/volunteer-events')}
+          onClick={() => navigate(backPath)}
           className="inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Events
+          Back
         </button>
       </div>
 
@@ -409,7 +414,7 @@ const VolunteerEventRegister = () => {
             </div>
           </div>
 
-          {!isMenteeLoggedIn ? (
+          {!isMenteeLoggedIn && !menteeOnly ? (
             <div className="mb-4 rounded-lg border border-[#e8dcff] bg-[#f8f4ff] px-4 py-3">
               <p className="text-sm font-medium text-[#312049]">
                 Do you already have a mentee account?
@@ -429,9 +434,13 @@ const VolunteerEventRegister = () => {
                 </Link>
               </div>
             </div>
-          ) : (
+          ) : isMenteeLoggedIn ? (
             <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
               Logged in. Name, email, and phone are auto-filled when available.
+            </div>
+          ) : (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              Please login with a mentee account to register for this event.
             </div>
           )}
 
@@ -531,7 +540,7 @@ const VolunteerEventRegister = () => {
             <div className="sm:col-span-2">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !isMenteeLoggedIn}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-5 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-[#4a2b7a] disabled:opacity-60"
               >
                 <HeartHandshake className="h-4 w-4" />

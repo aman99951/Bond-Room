@@ -258,7 +258,7 @@ const trustItems = [
 const howItems = [
   { Icon: Ear,       n: '01', title: 'Listen',    body: 'Students share concerns in a private, judgment-free space.' },
   { Icon: Brain,     n: '02', title: 'Understand', body: 'Intelligent matching finds the mentor who truly relates.' },
-  { Icon: Handshake, n: '03', title: 'Guide',      body: 'Meaningful 1-on-1 sessions that provide perspective and direction.' },
+  { Icon: Handshake, n: '03', title: 'Guide',      body: 'Meaningful 1-on-1 free sessions that provide perspective and direction.' },
 ];
 
 const normalizeList = (payload) => {
@@ -934,7 +934,7 @@ export default function LandingPage() {
 
         <div className="lp-how-grid">
           {howItems.map(({ Icon, n, title, body }, i) => (
-            <motion.div key={title} className="lp-how-card"
+            <motion.div key={title} className={`lp-how-card${title === 'Guide' ? ' lp-how-card--featured' : ''}`}
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
@@ -1246,8 +1246,8 @@ export default function LandingPage() {
             ))}
           </nav>
           <div className="lp-fsocial">
-            <motion.a href="#" whileHover={{ y: -3 }} aria-label="Twitter"><Twitter  size={16} /></motion.a>
-            <motion.a href="#" whileHover={{ y: -3 }} aria-label="LinkedIn"><Linkedin size={16} /></motion.a>
+            <motion.a href="https://www.instagram.com/bondroomofficial" target="_blank" rel="noopener noreferrer" whileHover={{ y: -3 }} aria-label="Instagram"><Twitter  size={16} /></motion.a>
+            <motion.a href="https://www.linkedin.com/in/bond-room-374aaa393/" target="_blank" rel="noopener noreferrer" whileHover={{ y: -3 }} aria-label="LinkedIn"><Linkedin size={16} /></motion.a>
           </div>
         </div>
         <div className="lp-footer-btm">

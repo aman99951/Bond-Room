@@ -56,18 +56,95 @@ const notifyLogout = () => {
   }
 };
 
+const safeLocalGet = (key) => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const safeLocalSet = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const safeLocalRemove = (key) => {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+};
+
+const safeSessionGet = (key) => {
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const safeSessionSet = (key, value) => {
+  try {
+    window.sessionStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const safeSessionRemove = (key) => {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+};
+
+const getAuthSessionRaw = () => {
+  const sessionValue = safeSessionGet(AUTH_STORAGE_KEY);
+  if (sessionValue) return sessionValue;
+
+  const legacyLocalValue = safeLocalGet(AUTH_STORAGE_KEY);
+  if (legacyLocalValue) {
+    safeSessionSet(AUTH_STORAGE_KEY, legacyLocalValue);
+    safeLocalRemove(AUTH_STORAGE_KEY);
+    return legacyLocalValue;
+  }
+  return null;
+};
+
+export const getStoredUiRole = () => {
+  const sessionRole = safeSessionGet('userRole');
+  if (sessionRole) return sessionRole;
+  const legacyLocalRole = safeLocalGet('userRole');
+  if (legacyLocalRole) {
+    safeSessionSet('userRole', legacyLocalRole);
+    safeLocalRemove('userRole');
+    return legacyLocalRole;
+  }
+  return '';
+};
+
 const purgeAuthSession = () => {
-  localStorage.removeItem(AUTH_STORAGE_KEY);
-  localStorage.removeItem('userRole');
-  localStorage.removeItem('bookingComplete');
-  localStorage.removeItem(SELECTED_MENTOR_KEY);
-  localStorage.removeItem(LAST_BOOKING_KEY);
-  localStorage.removeItem(SELECTED_SESSION_KEY);
+  safeSessionRemove(AUTH_STORAGE_KEY);
+  safeLocalRemove(AUTH_STORAGE_KEY);
+  safeSessionRemove('userRole');
+  safeLocalRemove('userRole');
+  safeLocalRemove('bookingComplete');
+  safeLocalRemove(SELECTED_MENTOR_KEY);
+  safeLocalRemove(LAST_BOOKING_KEY);
+  safeLocalRemove(SELECTED_SESSION_KEY);
 };
 
 export const getAuthSession = () => {
   try {
-    const parsed = safeJsonParse(localStorage.getItem(AUTH_STORAGE_KEY), null);
+    const parsed = safeJsonParse(getAuthSessionRaw(), null);
     if (!parsed?.accessToken) return null;
     const payload = decodeJwtPayload(parsed.accessToken) || {};
     const expiresAt = Number(parsed?.expiresAt || getTokenExpiryMs(parsed.accessToken) || 0);
@@ -89,7 +166,8 @@ export const getAuthSession = () => {
       normalized.role !== parsed?.role ||
       normalized.expiresAt !== parsed?.expiresAt
     ) {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(normalized));
+      safeSessionSet(AUTH_STORAGE_KEY, JSON.stringify(normalized));
+      safeLocalRemove(AUTH_STORAGE_KEY);
     }
 
     return normalized;
@@ -108,8 +186,10 @@ export const setAuthSession = ({ accessToken, refreshToken, role, email }) => {
     expiresAt: getTokenExpiryMs(accessToken),
     updatedAt: new Date().toISOString(),
   };
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-  localStorage.setItem('userRole', mapAppRoleToUiRole(session.role));
+  safeSessionSet(AUTH_STORAGE_KEY, JSON.stringify(session));
+  safeSessionSet('userRole', mapAppRoleToUiRole(session.role));
+  safeLocalRemove(AUTH_STORAGE_KEY);
+  safeLocalRemove('userRole');
   return session;
 };
 
@@ -196,31 +276,6 @@ export const getSelectedSessionId = () => localStorage.getItem(SELECTED_SESSION_
 
 export const clearSelectedSessionId = () => {
   localStorage.removeItem(SELECTED_SESSION_KEY);
-};
-
-const safeSessionGet = (key) => {
-  try {
-    return window.sessionStorage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-const safeSessionSet = (key, value) => {
-  try {
-    window.sessionStorage.setItem(key, value);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const safeSessionRemove = (key) => {
-  try {
-    window.sessionStorage.removeItem(key);
-  } catch {
-    // ignore
-  }
 };
 
 const notifyMeetingChange = () => {

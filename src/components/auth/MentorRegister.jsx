@@ -8,6 +8,7 @@ import imageContainer from '../assets/Image Container.png';
 import { useMentorAuth } from '../../apis/apihook/useMentorAuth';
 import { authApi } from '../../apis/api/authApi';
 import { setPendingMentorRegistration } from '../../apis/api/storage';
+import { UserRound, Briefcase } from 'lucide-react';
 
 const MENTOR_MIN_AGE = 45;
 const MENTOR_MAX_AGE = 60;
@@ -34,6 +35,29 @@ const getMentorDobBounds = () => ({
 const REQUIRED_FIELDS_MESSAGE = 'Please fill all required fields to continue.';
 const MOBILE_DIGITS_LENGTH = 10;
 const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
+const MENTOR_REGISTER_DRAFT_KEY = 'bondroom:mentor-register-draft:v1';
+
+const readMentorRegisterDraft = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(MENTOR_REGISTER_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const clearMentorRegisterDraft = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(MENTOR_REGISTER_DRAFT_KEY);
+  } catch {
+    // ignore storage errors
+  }
+};
 
 // Custom Select Component
 const CustomSelect = ({ id, value, onChange, options, placeholder, disabled, error = false, className = '' }) => {
@@ -195,6 +219,7 @@ const MentorRegister = () => {
     email: 0,
     phone: 0,
   });
+  const [draftReady, setDraftReady] = useState(false);
   const isDev = Boolean(import.meta?.env?.DEV);
   const dobBounds = getMentorDobBounds();
   const sectionOneFieldKeys = new Set([
@@ -207,6 +232,85 @@ const MentorRegister = () => {
     'stateName',
     'cityName',
     'languages',
+  ]);
+
+  useEffect(() => {
+    const draft = readMentorRegisterDraft();
+    if (!draft) {
+      setDraftReady(true);
+      return;
+    }
+
+    if (draft.form && typeof draft.form === 'object') {
+      setForm((prev) => ({ ...prev, ...draft.form }));
+    }
+    if (Array.isArray(draft.selectedLanguages)) {
+      setSelectedLanguages(draft.selectedLanguages);
+    }
+    if (Array.isArray(draft.selectedCareAreas)) {
+      setSelectedCareAreas(draft.selectedCareAreas);
+    }
+    if (typeof draft.emailVerified === 'boolean') {
+      setEmailVerified(draft.emailVerified);
+    }
+    if (typeof draft.phoneVerified === 'boolean') {
+      setPhoneVerified(draft.phoneVerified);
+    }
+    if (typeof draft.mentorId === 'number' || draft.mentorId === null) {
+      setMentorId(draft.mentorId);
+    }
+    if (typeof draft.formSection === 'number' && (draft.formSection === 1 || draft.formSection === 2)) {
+      setFormSection(draft.formSection);
+    }
+    if (draft.touchedFields && typeof draft.touchedFields === 'object') {
+      setTouchedFields(draft.touchedFields);
+    }
+    if (draft.validationState && typeof draft.validationState === 'object') {
+      setValidationState((prev) => ({ ...prev, ...draft.validationState }));
+    }
+    if (typeof draft.emailHint === 'string') {
+      setEmailHint(draft.emailHint);
+    }
+    if (typeof draft.phoneHint === 'string') {
+      setPhoneHint(draft.phoneHint);
+    }
+    setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    if (typeof window === 'undefined') return;
+    const payload = {
+      form,
+      selectedLanguages,
+      selectedCareAreas,
+      emailVerified,
+      phoneVerified,
+      mentorId,
+      formSection,
+    touchedFields,
+    validationState,
+    emailHint,
+    phoneHint,
+  };
+    try {
+      window.localStorage.setItem(MENTOR_REGISTER_DRAFT_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
+  }, [
+    form,
+    selectedLanguages,
+    selectedCareAreas,
+    emailVerified,
+    phoneVerified,
+    mentorId,
+    formSection,
+    touchedFields,
+    validationState,
+    emailHint,
+    phoneHint,
+    draftReady,
   ]);
 
   const toggleMultiCheckbox = (value, setter) => {
@@ -611,6 +715,7 @@ const MentorRegister = () => {
     try {
       const mentor = await ensureMentorRegistered();
       setMentorId(mentor?.id || null);
+      clearMentorRegisterDraft();
       navigate('/mentor-verify-identity');
     } catch (err) {
       setErrorMessage(err?.message || 'Unable to submit mentor application right now.');
@@ -781,8 +886,8 @@ const MentorRegister = () => {
       <TopAuth />
 
       <main className="bg-transparent flex-1">
-        <div className="flex w-full justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-10">
-          <div className="w-full max-w-[1266px] overflow-hidden rounded-xl bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] animate-scaleIn">
+        <div className="flex w-full justify-center px-3 py-4 sm:px-4 sm:py-8 lg:px-6 lg:py-10">
+          <div className="w-full max-w-[min(96vw,2400px)] 2xl:max-w-[min(97vw,3000px)] overflow-hidden rounded-xl bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] animate-scaleIn">
             <div className="grid grid-cols-1 items-stretch xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
               {/* Left Panel */}
               <div className="relative hidden h-full min-h-0 overflow-hidden bg-transparent xl:grid xl:grid-rows-2">
@@ -872,8 +977,12 @@ const MentorRegister = () => {
                     <section className="rounded-xl border border-[#e6e2f1] p-4 sm:p-5 space-y-4 bg-gradient-to-br from-white to-[#fafafa] shadow-sm hover:shadow-md transition-shadow duration-300">
                       <div className="flex items-center justify-between gap-3">
                         <h3 className="text-sm font-semibold text-[#1f2937] flex items-center gap-2">
-                          <span className="inline-block w-1 h-5 bg-gradient-to-b from-[#5b2c91] to-[#4a2374] rounded-full"></span>
-                          {formSection === 1 ? 'Personal & Contact' : 'Mentor Profile'}
+                          {formSection === 1 ? (
+                            <UserRound size={14} className="text-[#5b2c91]" aria-hidden="true" />
+                          ) : (
+                            <Briefcase size={14} className="text-[#5b2c91]" aria-hidden="true" />
+                          )}
+                          {formSection === 1 ? 'Personal Info' : 'Mentor Profile'}
                         </h3>
                         <span className="rounded-full bg-gradient-to-r from-[#f3ecff] to-[#e9ddff] px-2.5 py-1 text-[11px] font-medium text-[#5b2c91] shadow-sm">
                           Section {formSection} of 2

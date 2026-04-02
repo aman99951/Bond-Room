@@ -14,11 +14,6 @@ import {
   Settings,
   ClipboardCheck,
   HelpCircle,
-  Crown,
-  MapPin,
-  Brain,
-  BookOpen,
-  Languages,
   CalendarCheck,
 } from 'lucide-react';
 import '../../LandingPage.css';
@@ -29,17 +24,37 @@ import { setSelectedMentorId, setSelectedSessionId } from '../../../apis/api/sto
 import { useMenteeData } from '../../../apis/apihook/useMenteeData';
 
 const quickActions = [
-  { title: 'Update Preferences', subtitle: 'Refine your goals', icon: Settings },
   { title: 'Retake Assessment', subtitle: 'Check your progress', icon: ClipboardCheck, to: '/needs-assessment?from=dashboard' },
   { title: 'Edit Profile', subtitle: 'Keep info current', icon: User, to: '/profile' },
-  { title: 'Get Help', subtitle: 'Contact support', icon: HelpCircle },
-];
+  { title: 'View Sessions', subtitle: 'See your history', icon: CalendarCheck, to: '/sessions' },
+  {title: "session Requests", subtitle: "View or manage your sessions", icon: Calendar, to: "/session-requests"},
+ ];
 
 const normalizeList = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.results)) return payload.results;
   return [];
 };
+
+const buildRecommendationFingerprint = (cards) =>
+  (Array.isArray(cards) ? cards : [])
+    .map((card) => ({
+      id: card?.id ?? null,
+      name: card?.name || '',
+      location: card?.location || '',
+      blurb: card?.blurb || '',
+      reason: card?.reason || '',
+      tags: Array.isArray(card?.tags) ? [...card.tags].sort().join(',') : '',
+      avatar: card?.avatar || '',
+      rating: card?.rating ?? null,
+      reviews: card?.reviews ?? null,
+      language: card?.language || '',
+      availability: card?.availability || '',
+      matchLabel: card?.matchLabel || '',
+    }))
+    .sort((a, b) => String(a.id ?? '').localeCompare(String(b.id ?? '')))
+    .map((item) => JSON.stringify(item))
+    .join('|');
 
 const getMentorName = (mentor) => {
   const fullName = `${mentor?.first_name || ''} ${mentor?.last_name || ''}`.trim();
@@ -64,8 +79,18 @@ const formatDate = (value) => {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const getRegistrationEventId = (registration) => {
+  const eventRef = registration?.volunteer_event;
+  if (eventRef && typeof eventRef === 'object') {
+    if (eventRef.id !== undefined && eventRef.id !== null) return String(eventRef.id);
+    return '';
+  }
+  if (eventRef === undefined || eventRef === null || eventRef === '') return '';
+  return String(eventRef);
+};
+
 const getEventStatus = (registration, eventById) => {
-  const event = eventById.get(registration?.volunteer_event);
+  const event = eventById.get(getRegistrationEventId(registration));
   if (event?.status === 'completed') return 'completed';
   if (event?.status === 'upcoming') return 'upcoming';
   return 'unknown';
@@ -90,6 +115,13 @@ const toNumberOrNull = (value) => {
   if (value === null || value === undefined || value === '') return null;
   const num = Number(value);
   return Number.isFinite(num) ? num : null;
+};
+
+const summarizeReason = (value) => {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!text) return 'Aligned with your goals and preferences.';
+  if (text.length <= 110) return text;
+  return `${text.slice(0, 107).trim()}...`;
 };
 
 const resolveMediaUrl = (value) => {
@@ -118,7 +150,14 @@ const stagger = {
   },
 };
 
-const MentorRingCarousel = ({ items, className = 'dash-mentor-arc', onCardClick = null }) => {
+const MentorRingCarousel = ({
+  items,
+  className = 'dash-mentor-arc',
+  onCardClick = null,
+  showMentorActions = false,
+  onProfileView = null,
+  onSchedule = null,
+}) => {
   const stageRef = useRef(null);
   const cardRefs = useRef([]);
   const rafRef = useRef(null);
@@ -133,7 +172,7 @@ const MentorRingCarousel = ({ items, className = 'dash-mentor-arc', onCardClick 
   const targetSpeedRef = useRef(0.17);
 
   const BASE_SPEED = 0.17;
-  const HOVER_SPEED = 0.35;
+  const HOVER_SPEED = 0;
   const DRAG_PHASE_MULTIPLIER = 0.0033;
   const DRAG_MOMENTUM_MULTIPLIER = 0.0019;
 
@@ -280,7 +319,7 @@ const MentorRingCarousel = ({ items, className = 'dash-mentor-arc', onCardClick 
         onPointerCancel={handlePointerEnd}
       >
         <div className="lp-arc-track">
-          {items.map(({ id, image, name, role }, index) => {
+          {items.map(({ id, image, name, role, reason, tags = [], matchLabel, topMatch }, index) => {
             return (
               <div
                 key={`${id || name}-${index}`}
@@ -291,187 +330,70 @@ const MentorRingCarousel = ({ items, className = 'dash-mentor-arc', onCardClick 
                 }}
               >
                 <div className="lp-arc-card-inner">
+                  {showMentorActions && topMatch && (
+                    <div className="dash-mentor-top-badge">Top Match</div>
+                  )}
                   {image ? (
                     <img src={image} alt={name} className="lp-arc-img" draggable={false} />
                   ) : (
                     <div className="lp-arc-img dash-arc-empty" aria-hidden="true" />
                   )}
                   <div className="lp-arc-overlay" />
-                  <div className="lp-arc-info">
-                    <strong>{name}</strong>
-                    <span>{role}</span>
-                  </div>
+                  {showMentorActions ? (
+                    <div className="dash-mentor-card-meta">
+                      <div className="dash-mentor-card-head">
+                        <strong>{name}</strong>
+                        <span>{role}</span>
+                      </div>
+                      <div className="dash-mentor-why-box">
+                        <div className="dash-mentor-why-row">
+                          <em>Why recommended</em>
+                        </div>
+                        <p>{reason || 'Aligned with your goals and preferences.'}</p>
+                        {tags.length > 0 && (
+                          <div className="dash-mentor-tags-row">
+                            {tags.slice(0, 2).map((tag) => (
+                              <span key={`${id}-${tag}`}>{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="dash-mentor-actions">
+                        <button
+                          type="button"
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (onProfileView) onProfileView({ id, name, role, image });
+                          }}
+                          className="dash-mentor-btn dash-mentor-btn-light"
+                        >
+                          Profile View
+                        </button>
+                        <button
+                          type="button"
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (onSchedule) onSchedule({ id, name, role, image });
+                          }}
+                          className="dash-mentor-btn dash-mentor-btn-primary"
+                        >
+                          Schedule
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="lp-arc-info">
+                      <strong>{name}</strong>
+                      <span>{role}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
-      </div>
-    </div>
-  );
-};
-
-const RecommendationCard = ({ mentor }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [showReadMore, setShowReadMore] = useState(false);
-  const [tagsExpanded, setTagsExpanded] = useState(false);
-  const [showTagsToggle, setShowTagsToggle] = useState(false);
-  const blurbRef = useRef(null);
-  const tagsRef = useRef(null);
-  const initials = (mentor.name || 'M')
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-  const primaryTag = mentor.tags?.[0] || '';
-  const secondaryTag = mentor.tags?.[1] || '';
-
-  useEffect(() => {
-    if (expanded) return undefined;
-    const checkOverflow = () => {
-      const element = blurbRef.current;
-      if (!element) {
-        setShowReadMore(false);
-        return;
-      }
-      setShowReadMore(element.scrollHeight > element.clientHeight + 1);
-    };
-    checkOverflow();
-    window.addEventListener('resize', checkOverflow);
-    return () => window.removeEventListener('resize', checkOverflow);
-  }, [mentor.blurb, expanded]);
-
-  useEffect(() => {
-    if (tagsExpanded) return undefined;
-    const checkTagsOverflow = () => {
-      const element = tagsRef.current;
-      if (!element) {
-        setShowTagsToggle(false);
-        return;
-      }
-      setShowTagsToggle(element.scrollWidth > element.clientWidth + 1);
-    };
-    checkTagsOverflow();
-    window.addEventListener('resize', checkTagsOverflow);
-    return () => window.removeEventListener('resize', checkTagsOverflow);
-  }, [mentor.tags, tagsExpanded]);
-
-  return (
-    <div className="dm-card-3d relative h-full w-full min-w-0 rounded-3xl ">
-      <div className="dm-gradient-border absolute -inset-[1px] rounded-3xl opacity-60" />
-      <div className="dm-glass-card relative flex h-full min-h-[252px] flex-col rounded-3xl border border-white/70 p-4 shadow-xl sm:p-5">
-        {mentor.topMatch && (
-          <div className="dm-badge-animate absolute -top-3 left-4">
-            <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-3 py-1 text-[10px] font-bold text-white">
-              <Crown className="h-3 w-3" />
-              Top Match
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-start gap-3">
-          <div className="relative flex-shrink-0">
-            <div className="dm-avatar-ring absolute -inset-1 rounded-full" />
-            <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[#5D3699] text-sm font-bold text-white">
-              {mentor.avatar ? <img src={mentor.avatar} alt={mentor.name} className="h-full w-full object-cover" /> : initials}
-            </div>
-            <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border border-white bg-emerald-400" />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate text-base font-bold text-[#111827]">{mentor.name}</h3>
-            <div className="mt-1 flex items-center gap-1 text-[11px] text-[#6b7280]">
-              <MapPin className="h-3 w-3" />
-              <span className="truncate">{mentor.location || 'Location unavailable'}</span>
-            </div>
-            {mentor.rating != null ? (
-              <div className="mt-2 flex items-center gap-1.5">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <Star
-                    key={i}
-                    className={`h-3.5 w-3.5 ${i < Math.floor(mentor.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-white/35'}`}
-                  />
-                ))}
-                <span className="ml-1 text-xs font-semibold text-[#111827]">{Number(mentor.rating).toFixed(1)}</span>
-                {mentor.reviews != null && <span className="text-[10px] text-[#6b7280]">({mentor.reviews})</span>}
-              </div>
-            ) : (
-              <div className="mt-2 text-[11px] text-[#6b7280]">No ratings yet</div>
-            )}
-          </div>
-        </div>
-
-        {(primaryTag || secondaryTag) && (
-          <div className="mt-3 flex items-center gap-2">
-            {primaryTag && (
-              <div className="dm-specialty-tag flex items-center gap-1 rounded-lg px-2.5 py-1">
-                <Brain className="h-3 w-3 text-purple-300" />
-                <span className="text-[11px] text-[#4c1d95]">{primaryTag}</span>
-              </div>
-            )}
-            {secondaryTag && (
-              <div className="dm-specialty-tag flex items-center gap-1 rounded-lg px-2.5 py-1">
-                <BookOpen className="h-3 w-3 text-pink-300" />
-                <span className="text-[11px] text-[#4c1d95]">{secondaryTag}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {(mentor.language || mentor.availability) && (
-          <div className="mt-2 flex items-center gap-1 text-[11px] text-[#6b7280]">
-            <Languages className="h-3 w-3" />
-            <span>{mentor.language || mentor.availability}</span>
-          </div>
-        )}
-
-        <p
-          ref={blurbRef}
-          className={`mt-2 flex-1 text-xs leading-5 text-[#4b5563] ${expanded ? '' : 'line-clamp-3 min-h-[60px]'}`}
-        >
-          {mentor.blurb || 'No description available.'}
-        </p>
-
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div ref={tagsRef} className={`min-w-0 flex-1 ${tagsExpanded ? '' : 'overflow-hidden'}`}>
-            <div className={`flex gap-1.5 ${tagsExpanded ? 'flex-wrap' : 'whitespace-nowrap'}`}>
-              {(mentor.tags || []).slice(0, 4).map((tag) => (
-                <span key={tag} className="rounded-full border border-[#e7d8ff] bg-[#f7f0ff] px-2 py-0.5 text-[10px] text-[#5D3699]">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-          {showTagsToggle && (
-            <button
-              type="button"
-              className="shrink-0 text-[10px] font-medium text-[#5D3699] underline"
-              onClick={() => setTagsExpanded((prev) => !prev)}
-            >
-              {tagsExpanded ? 'Less' : 'More'}
-            </button>
-          )}
-        </div>
-
-        {showReadMore && (
-          <button
-            type="button"
-            className="mt-1 text-left text-[11px] font-medium text-[#5D3699] underline"
-            onClick={() => setExpanded((prev) => !prev)}
-          >
-            {expanded ? 'Read less' : 'Read more'}
-          </button>
-        )}
-
-        <Link
-          to={mentor.id ? `/mentor-profile?mentorId=${mentor.id}` : '/mentor-profile'}
-          onClick={() => setSelectedMentorId(mentor.id)}
-          className="dm-book-btn mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white"
-        >
-          <CalendarCheck className="h-4 w-4" />
-          View Profile
-        </Link>
       </div>
     </div>
   );
@@ -492,6 +414,7 @@ const Dashboard = () => {
   const [registeredEventsLoading, setRegisteredEventsLoading] = useState(true);
   const [registeredEventsError, setRegisteredEventsError] = useState('');
   const [stats, setStats] = useState({ total_sessions: 0, completed_sessions: 0 });
+  const recommendationFingerprintRef = useRef('');
 
   const openJoinLink = (url) => {
     if (!url) return false;
@@ -590,8 +513,8 @@ useEffect(() => {
             }
           }
 
-          const recommendationCards = recommendations.map((entry, index) => {
-            const mentor = entry?.mentor || entry;
+            const recommendationCards = recommendations.map((entry, index) => {
+              const mentor = entry?.mentor || entry;
             const tags =
               Array.isArray(mentor?.care_areas) && mentor.care_areas.length
                 ? mentor.care_areas
@@ -606,25 +529,39 @@ useEffect(() => {
                   ? [mentor.language]
                   : [];
             const languageText = languageList.filter(Boolean).join(', ');
-            const availabilityText =
-              mentor?.availability_status ||
-              (typeof mentor?.is_available === 'boolean'
-                ? mentor.is_available ? 'Available for sessions' : 'Not currently available'
-                : '');
-            return {
-              id: mentor?.id ?? null,
-              name: getMentorName(mentor),
-              location: mentor?.city_state || '',
-              tags,
-              blurb: entry?.explanation || mentor?.bio || '',
-              topMatch: index === 0,
-              avatar: resolveMediaUrl(mentor?.avatar || mentor?.profile_photo || mentor?.user?.avatar || ''),
-              rating: toNumberOrNull(mentor?.average_rating ?? mentor?.rating ?? entry?.average_rating),
-              reviews: mentor?.reviews_count ?? entry?.total_reviews ?? null,
-              language: languageText ? `Mentor speaks ${languageText}` : '',
-              availability: availabilityText,
-            };
-          });
+              const availabilityText =
+                mentor?.availability_status ||
+                (typeof mentor?.is_available === 'boolean'
+                  ? mentor.is_available ? 'Available for sessions' : 'Not currently available'
+                  : '');
+              const matchRaw =
+                entry?.match_score ??
+                entry?.score ??
+                mentor?.match_score ??
+                mentor?.score ??
+                null;
+              const parsedMatch = Number(matchRaw);
+              const matchLabel = Number.isFinite(parsedMatch)
+                ? `${Math.max(0, Math.min(100, Math.round(parsedMatch)))}% Match`
+                : index === 0
+                  ? 'Top Match'
+                  : 'Strong Match';
+              return {
+                id: mentor?.id ?? null,
+                name: getMentorName(mentor),
+                location: mentor?.city_state || '',
+                tags,
+                blurb: entry?.explanation || mentor?.bio || '',
+                reason: summarizeReason(entry?.explanation || mentor?.bio || ''),
+                topMatch: index === 0,
+                avatar: resolveMediaUrl(mentor?.avatar || mentor?.profile_photo || mentor?.user?.avatar || ''),
+                rating: toNumberOrNull(mentor?.average_rating ?? mentor?.rating ?? entry?.average_rating),
+                reviews: mentor?.reviews_count ?? entry?.total_reviews ?? null,
+                language: languageText ? `Mentor speaks ${languageText}` : '',
+                availability: availabilityText,
+                matchLabel,
+              };
+            });
 
           const upcomingList = normalizeList(dashboardRes?.upcoming_sessions);
           const recentList = normalizeList(dashboardRes?.recent_sessions);
@@ -656,7 +593,11 @@ useEffect(() => {
             };
           });
 
-          setRecommended(recommendationCards);
+          const nextFingerprint = buildRecommendationFingerprint(recommendationCards);
+          if (nextFingerprint !== recommendationFingerprintRef.current) {
+            setRecommended(recommendationCards);
+            recommendationFingerprintRef.current = nextFingerprint;
+          }
           setUpcomingSession(upcomingCard);
           setRecentSessions(recentCards.slice(0, 4));
           setStats(dashboardRes?.stats || { total_sessions: 0, completed_sessions: 0 });
@@ -672,16 +613,20 @@ useEffect(() => {
         try {
           const [registrationsRes, eventsRes] = await Promise.all([
             menteeApi.listVolunteerEventRegistrations(),
-            menteeApi.listVolunteerEvents(),
+            menteeApi.listVolunteerEvents({ page_size: 200 }),
           ]);
           if (cancelled) return;
 
           const registrationItems = normalizeList(registrationsRes);
           const events = normalizeList(eventsRes);
-          const eventById = new Map(events.map((event) => [event.id, event]));
+          const eventById = new Map(
+            events
+              .filter((event) => event?.id !== undefined && event?.id !== null)
+              .map((event) => [String(event.id), event]),
+          );
           const registrationCards = registrationItems
             .map((registration, index) => {
-              const event = eventById.get(registration?.volunteer_event);
+              const event = eventById.get(getRegistrationEventId(registration));
               const status = getEventStatus(registration, eventById);
               const dateValue = registration?.volunteer_event_date || event?.date || '';
               const timeValue = registration?.volunteer_event_time || event?.time || 'Time TBA';
@@ -818,7 +763,7 @@ return (
 
       {!isEventFlowOnly ? (
       <motion.div variants={fadeUp} className="mt-8 sm:mt-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
               <Star className="h-5 w-5 text-[#5D3699]" />
@@ -828,22 +773,20 @@ return (
               <p className="text-xs text-[#6b7280]">Based on your mood and assessment responses</p>
             </div>
           </div>
-          <Link
-            to="/mentors"
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
-          >
-            See All
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
         </div>
 
-        {recommended.length > 0 && (
+        {recommended.length > 0 ? (
           <MentorRingCarousel
             items={(() => {
               const baseItems = recommended.map((mentor) => ({
+                id: mentor.id,
                 image: mentor.avatar,
                 name: mentor.name,
                 role: mentor.location || 'Mentor',
+                reason: mentor.reason || mentor.blurb,
+                tags: mentor.tags || [],
+                matchLabel: mentor.matchLabel || '',
+                topMatch: mentor.topMatch,
               }));
               if (baseItems.length >= 5) return baseItems;
               const expanded = [];
@@ -852,15 +795,16 @@ return (
               }
               return expanded;
             })()}
+            showMentorActions
+            onProfileView={(mentor) => {
+              if (mentor?.id) setSelectedMentorId(mentor.id);
+              navigate(mentor?.id ? `/mentor-profile?mentorId=${mentor.id}` : '/mentor-profile');
+            }}
+            onSchedule={(mentor) => {
+              if (mentor?.id) setSelectedMentorId(mentor.id);
+              navigate('/book-session');
+            }}
           />
-        )}
-
-        {recommended.length > 0 ? (
-          <div className="mt-6 grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:gap-5 xl:grid-cols-3">
-            {recommended.map((m) => (
-              <RecommendationCard key={m.id || m.name} mentor={m} />
-            ))}
-          </div>
         ) : (
           <div className="rounded-xl border border-[#e5e7eb] border-dashed bg-white p-8 text-center">
             <div className="flex justify-center mb-3">
@@ -1129,7 +1073,7 @@ return (
                 <p className="mt-1 text-xs text-[#6b7280]">Book a session with a mentor to get started</p>
                 <button
                   type="button"
-                  onClick={() => navigate('/mentors')}
+                  onClick={() => navigate('/dashboard')}
                   className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-4 py-2 text-xs font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-[#4a2b7a]"
                 >
                   Find a Mentor
@@ -1231,7 +1175,6 @@ return (
 };
 
 export default Dashboard;
-
 
 
 

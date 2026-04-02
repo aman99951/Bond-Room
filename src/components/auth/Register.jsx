@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, X, UserRound, MapPin, ShieldCheck } from 'lucide-react';
 import { Eye, EyeOff } from 'lucide-react';
-import logo from '../assets/logo.png';
-import leftside from '../assets/Leftside.png';
+import TopAuth from './TopAuth';
+import BottomAuth from './BottomAuth';
+import mentorLeft from '../assets/teach1.png';
+import mentorBottom from '../assets/teach2.png';
+import imageContainer from '../assets/Image Container.png';
 import { authApi } from '../../apis/api/authApi';
 import { setAssessmentDraft } from '../../apis/api/storage';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
@@ -14,6 +17,10 @@ const STUDENT_MIN_AGE = 13;
 const STUDENT_MAX_AGE = 18;
 const MOBILE_DIGITS_LENGTH = 10;
 const COUNTRY_OPTIONS = ['India', 'USA'];
+const COUNTRY_DIAL_CODE = {
+  India: '+91',
+  USA: '+1',
+};
 const LOCATION_OPTIONS = {
   India: {
     states: ['Tamilnadu'],
@@ -86,6 +93,29 @@ const initialForm = {
 };
 
 const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
+const MENTEE_REGISTER_DRAFT_KEY = 'bondroom:mentee-register-draft:v1';
+
+const readMenteeRegisterDraft = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(MENTEE_REGISTER_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const clearMenteeRegisterDraft = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(MENTEE_REGISTER_DRAFT_KEY);
+  } catch {
+    // ignore storage errors
+  }
+};
 
 const PASSWORD_REQUIREMENT_MESSAGE =
   'Password must be at least 10 characters and include uppercase, lowercase, number, and special character.';
@@ -98,6 +128,17 @@ const isStrongPassword = (value) => {
   if (!/[0-9]/.test(password)) return false;
   if (!/[^A-Za-z0-9]/.test(password)) return false;
   return true;
+};
+
+const getPasswordChecks = (value) => {
+  const password = String(value || '');
+  return [
+    { key: 'length', label: 'At least 10 characters', ok: password.length >= 10 },
+    { key: 'upper', label: 'One uppercase letter (A-Z)', ok: /[A-Z]/.test(password) },
+    { key: 'lower', label: 'One lowercase letter (a-z)', ok: /[a-z]/.test(password) },
+    { key: 'number', label: 'One number (0-9)', ok: /[0-9]/.test(password) },
+    { key: 'special', label: 'One special character', ok: /[^A-Za-z0-9]/.test(password) },
+  ];
 };
 
 const Register = () => {
@@ -123,6 +164,8 @@ const Register = () => {
   const [otpHint, setOtpHint] = useState({ email: '', parentMobile: '', menteeMobile: '' });
   const [otpBusy, setOtpBusy] = useState({ sending: false, verifying: false });
   const [showPassword, setShowPassword] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
+  const dialCode = COUNTRY_DIAL_CODE[form.country] || '+91';
 
   const navigate = useNavigate();
   const { loading, registerMentee, login } = useMenteeAuth();
@@ -133,6 +176,72 @@ const Register = () => {
   const signupSource = searchParams.get('source') === 'event-flow' ? 'event_flow' : 'regular';
   const nextAfterRegister = searchParams.get('next') || '';
   const safeNextAfterRegister = nextAfterRegister.startsWith('/') ? nextAfterRegister : '';
+
+  useEffect(() => {
+    const draft = readMenteeRegisterDraft();
+    if (!draft) return;
+    if (draft.form && typeof draft.form === 'object') {
+      setForm((prev) => ({ ...prev, ...draft.form }));
+    }
+    if (draft.touchedFields && typeof draft.touchedFields === 'object') {
+      setTouchedFields(draft.touchedFields);
+    }
+    if (typeof draft.submitAttempted === 'boolean') {
+      setSubmitAttempted(draft.submitAttempted);
+    }
+    if (typeof draft.emailVerified === 'boolean') {
+      setEmailVerified(draft.emailVerified);
+    }
+    if (typeof draft.parentMobileVerified === 'boolean') {
+      setParentMobileVerified(draft.parentMobileVerified);
+    }
+    if (typeof draft.menteeMobileVerified === 'boolean') {
+      setMenteeMobileVerified(draft.menteeMobileVerified);
+    }
+    if (draft.otpHint && typeof draft.otpHint === 'object') {
+      setOtpHint((prev) => ({ ...prev, ...draft.otpHint }));
+    }
+    setDraftReady(true);
+    return undefined;
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) {
+      setDraftReady(true);
+    }
+  }, [draftReady]);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    if (typeof window === 'undefined') return;
+    const payload = {
+      form,
+      touchedFields,
+      submitAttempted,
+      emailVerified,
+      parentMobileVerified,
+      menteeMobileVerified,
+      otpHint,
+      signupSource,
+      safeNextAfterRegister,
+    };
+    try {
+      window.localStorage.setItem(MENTEE_REGISTER_DRAFT_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
+  }, [
+    form,
+    touchedFields,
+    submitAttempted,
+    emailVerified,
+    parentMobileVerified,
+    menteeMobileVerified,
+    otpHint,
+    signupSource,
+    safeNextAfterRegister,
+    draftReady,
+  ]);
 
   const notifyError = (message) => {
     setErrorMessage(String(message || '').trim());
@@ -427,6 +536,7 @@ const Register = () => {
 
       await login(form.email.trim().toLowerCase(), form.password, 'menties');
       setAssessmentDraft({});
+      clearMenteeRegisterDraft();
       if (signupSource === 'event_flow') {
         navigate(safeNextAfterRegister || '/dashboard');
       } else {
@@ -474,21 +584,7 @@ const Register = () => {
         </div>
       )}
 
-      <header className="lp-hdr">
-        <Link to="/" className="lp-logo" aria-label="Go to landing page">
-          <img src={logo} alt="Bond Room" />
-          <span>Bridging Old and New Destinies</span>
-        </Link>
-
-        <nav className="lp-nav">
-          <Link to="/">Home</Link>
-          
-        </nav>
-
-        <div className="lp-hdr-actions">
-          <Link to="/login" className="lp-ghost">Log in</Link>
-        </div>
-      </header>
+      <TopAuth />
 
       <main className="lp-register-main">
         <div className="lp-register-orb lp-register-orb-a" />
@@ -497,7 +593,52 @@ const Register = () => {
         <div className="lp-register-shell">
           <div className="lp-register-grid">
             <aside className="lp-register-side lp-register-side-clean" aria-hidden="true">
-              <img src={leftside} alt="" className="lp-register-side-image" />
+              <img
+                src={imageContainer}
+                alt=""
+                className="absolute left-1/2 top-1/2 z-20 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 animate-pulse-slow md:h-[380px] md:w-[380px] lg:h-[500px] lg:w-[500px]"
+              />
+              <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
+                <div className="min-h-0 overflow-hidden">
+                  <img
+                    src={mentorLeft}
+                    alt="Mentor guidance"
+                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                  />
+                </div>
+                <div className="relative flex min-h-0 flex-col justify-between bg-[#5b2c91] p-6 text-white">
+                  <div className="animate-fadeIn">
+                    <h3 className="font-sans text-[37px] font-bold leading-[36.5px]">
+                      Join a
+                      <br />
+                      community
+                      <br />
+                      built on trust
+                      <br />
+                      and care.
+                    </h3>
+                    <p className="mt-3 font-sans text-[16px] font-normal leading-[22.5px] text-white/90">
+                      Your guidance can help a student feel seen -- beyond marks, ranks, and expectations.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
+                <div className="flex min-h-0 items-center justify-center bg-[#f2c94c] p-6 text-[#1f2937]">
+                  <ul className="list-disc space-y-3 pl-4 text-sm animate-fadeIn">
+                    <li>Bond Room exists to restore human connection in an exam-driven system.</li>
+                    <li>You are not expected to teach.</li>
+                    <li>Your presence and perspective are enough.</li>
+                  </ul>
+                </div>
+                <div className="min-h-0 overflow-hidden bg-black">
+                  <img
+                    src={mentorBottom}
+                    alt="Students"
+                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                  />
+                </div>
+              </div>
             </aside>
 
             <section className="lp-register-form-wrap">
@@ -519,8 +660,10 @@ const Register = () => {
               <form className="lp-register-form" onSubmit={handleSubmit}>
                 <section className="lp-register-form-card">
                   <div className="lp-register-form-card-head">
-                    <h3>Personal & Contact</h3>
-                    <span>Section 1</span>
+                    <h3>
+                      <UserRound size={14} className="text-[#5b2c91]" aria-hidden="true" />
+                      Personal Info
+                    </h3>
                   </div>
 
                   <div className="lp-register-row">
@@ -567,7 +710,14 @@ const Register = () => {
                         aria-expanded={gradeOpen}
                         aria-labelledby="registerGradeLabel"
                       >
-                        {form.grade || 'Select Grade'}
+                        <span>{form.grade || 'Select Grade'}</span>
+                        <svg
+                          className={`lp-select-chevron ${gradeOpen ? 'is-open' : ''}`}
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </button>
                       {gradeOpen && (
                         <ul className="lp-select-options" role="listbox">
@@ -652,6 +802,18 @@ const Register = () => {
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
+                    {form.password ? (
+                      <div className="lp-password-guide" aria-live="polite">
+                        <p>{PASSWORD_REQUIREMENT_MESSAGE}</p>
+                        <ul>
+                          {getPasswordChecks(form.password).map((check) => (
+                            <li key={check.key} className={check.ok ? 'is-ok' : ''}>
+                              <span aria-hidden="true" className="lp-password-guide-icon">{check.ok ? '✔' : '○'}</span> {check.label}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
                   </div>
                   </div>
 
@@ -674,7 +836,14 @@ const Register = () => {
                         aria-expanded={genderOpen}
                         aria-labelledby="registerGenderLabel"
                       >
-                        {form.gender || 'Select Gender'}
+                        <span>{form.gender || 'Select Gender'}</span>
+                        <svg
+                          className={`lp-select-chevron ${genderOpen ? 'is-open' : ''}`}
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </button>
                       {genderOpen && (
                         <ul className="lp-select-options" role="listbox">
@@ -702,8 +871,10 @@ const Register = () => {
 
                 <section className="lp-register-form-card">
                   <div className="lp-register-form-card-head">
-                    <h3>School & Location</h3>
-                    <span>Section 2</span>
+                    <h3>
+                      <MapPin size={14} className="text-[#5b2c91]" aria-hidden="true" />
+                      School & Location
+                    </h3>
                   </div>
 
                   <div className="lp-register-row">
@@ -782,8 +953,10 @@ const Register = () => {
 
                 <section className="lp-register-form-card">
                   <div className="lp-register-form-card-head">
-                    <h3>Consent & Verification</h3>
-                    <span>Section 3</span>
+                    <h3>
+                      <ShieldCheck size={14} className="text-[#5b2c91]" aria-hidden="true" />
+                      Consent & Verification
+                    </h3>
                   </div>
 
                   <div className={`lp-register-consent-box ${hasRequiredFieldError('parentConsent') ? 'lp-input-error-box' : ''}`}>
@@ -799,7 +972,7 @@ const Register = () => {
                   <p className="lp-register-note">Verify parent mobile before creating the student account.</p>
 
                   <div className="lp-register-mobile-row lp-register-mobile-row-action">
-                    <div className="lp-register-country" aria-hidden="true">+91</div>
+                    <div className="lp-register-country" aria-hidden="true">{dialCode}</div>
                     <input
                       id="parentMobile"
                       className={`lp-input ${hasRequiredFieldError('parentMobile') ? 'lp-input-error' : ''}`}
@@ -828,21 +1001,22 @@ const Register = () => {
                         checked={form.menteeSameAsParent}
                         onChange={(event) => updateField('menteeSameAsParent', event.target.checked)}
                       />
-                      <span>Mentee number same as parent: +91 {form.parentMobile || '----------'}</span>
+                      <span>Mentee number same as parent</span>
                     </label>
 
-                    {!form.menteeSameAsParent ? (
-                      <div className="lp-register-mobile-row lp-register-mobile-row-action">
-                        <div className="lp-register-country" aria-hidden="true">+91</div>
-                        <input
-                          id="menteeMobile"
-                          className={`lp-input ${hasRequiredFieldError('menteeMobile') ? 'lp-input-error' : ''}`}
-                          placeholder="Mentee mobile number"
-                          aria-label="Mentee mobile number"
-                          value={form.menteeMobile}
-                          onChange={(event) => updateField('menteeMobile', event.target.value)}
-                          onBlur={() => markFieldTouched('menteeMobile')}
-                        />
+                    <div className={`lp-register-mobile-row ${form.menteeSameAsParent ? '' : 'lp-register-mobile-row-action'}`}>
+                      <div className="lp-register-country" aria-hidden="true">{dialCode}</div>
+                      <input
+                        id="menteeMobile"
+                        className={`lp-input ${hasRequiredFieldError('menteeMobile') ? 'lp-input-error' : ''}`}
+                        placeholder="Mentee mobile number"
+                        aria-label="Mentee mobile number"
+                        value={form.menteeSameAsParent ? form.parentMobile : form.menteeMobile}
+                        onChange={(event) => updateField('menteeMobile', event.target.value)}
+                        onBlur={() => markFieldTouched('menteeMobile')}
+                        disabled={form.menteeSameAsParent}
+                      />
+                      {!form.menteeSameAsParent ? (
                         <button
                           type="button"
                           className={`lp-vp-inline-btn ${menteeMobileVerified ? 'is-verified' : ''}`}
@@ -851,8 +1025,8 @@ const Register = () => {
                         >
                           {menteeMobileVerified ? 'Verified' : 'Verify'}
                         </button>
-                      </div>
-                    ) : null}
+                      ) : null}
+                    </div>
                   </div>
                 ) : null}
 
@@ -885,16 +1059,7 @@ const Register = () => {
         </div>
       </main>
 
-      <footer className="lp-footer lp-login-footer">
-        <div className="lp-footer-btm">
-          <span>(c) 2026 Bond Room Platform. All rights reserved.</span>
-          <span className="lp-login-footer-links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Support</a>
-          </span>
-        </div>
-      </footer>
+      <BottomAuth />
 
       {otpModal.open && (
         <div className="lp-register-otp-overlay" onClick={closeOtpModal}>

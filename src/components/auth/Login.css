@@ -1,9 +1,13 @@
 .lp-login {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .lp-login-main {
   position: relative;
+  flex: 1 0 auto;
+  width: 100%;
   padding: 130px 20px 56px;
   max-width: 1260px;
   margin: 0 auto;
@@ -359,6 +363,7 @@
 .lp-login-footer {
   border-top: 1px solid var(--line);
   padding-top: 18px;
+  margin-top: auto;
 }
 
 .lp-login-footer-links {

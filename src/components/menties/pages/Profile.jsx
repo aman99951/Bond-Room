@@ -22,6 +22,67 @@ import {
   RefreshCw
 } from 'lucide-react';
 
+
+const COUNTRY_OPTIONS = ['India', 'USA'];
+const LOCATION_OPTIONS = {
+  India: {
+    states: ['Tamilnadu'],
+    citiesByState: {
+      Tamilnadu: ['Chennai'],
+    },
+  },
+  USA: {
+    states: ['Texas'],
+    citiesByState: {
+      Texas: ['Houston'],
+    },
+  },
+};
+
+const gradeOptions = ['10th Grade', '11th Grade', '12th Grade'];
+const genderOptions = ['Female', 'Male'];
+
+const normalizePhone = (value) => String(value || '').replace(/\D/g, '').slice(0, 10);
+
+const parseCityState = (cityState) => {
+  const text = String(cityState || '').trim();
+  if (!text) return { city: '', state: '', country: '', postalCode: '' };
+
+  const postalMatch = text.match(/\(([^)]+)\)\s*$/);
+  const postalCode = postalMatch ? String(postalMatch[1] || '').trim() : '';
+  const withoutPostal = postalMatch ? text.slice(0, postalMatch.index).trim() : text;
+  const parts = withoutPostal.split(',').map((part) => part.trim()).filter(Boolean);
+
+  return {
+    city: parts[0] || '',
+    state: parts[1] || '',
+    country: parts[2] || '',
+    postalCode,
+  };
+};
+
+const buildProfileFieldsFromMentee = (mentee) => {
+  const parsed = parseCityState(mentee?.city_state || '');
+  const country = mentee?.country || parsed.country || 'India';
+  const stateList = LOCATION_OPTIONS[country]?.states || [];
+  const state = mentee?.state || parsed.state || stateList[0] || '';
+  const cityList = LOCATION_OPTIONS[country]?.citiesByState?.[state] || [];
+  const city = mentee?.city || parsed.city || cityList[0] || '';
+
+  return {
+    schoolOrCollege: mentee?.school_or_college || '',
+    country,
+    state,
+    city,
+    postalCode: mentee?.postal_code || parsed.postalCode || '',
+    gender: mentee?.gender || '',
+    dob: mentee?.dob || '',
+    grade: mentee?.grade || '',
+    parentMobile: normalizePhone(mentee?.parent_mobile || ''),
+    mobile: normalizePhone(mentee?.mobile || ''),
+  };
+};
+
 const DropdownSelect = ({ value, options, placeholder, disabled = false, onChange }) => {
   const [open, setOpen] = useState(false);
   const selectedLabel = useMemo(() => {
@@ -104,7 +165,7 @@ const comfortOptions = [
   'Very Comfortable',
 ];
 
-const sessionLengthOptions = [30, 45, 60, 90];
+const sessionLengthOptions = [30];
 
 const normalizeList = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -147,6 +208,22 @@ const Profile = () => {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [profileFields, setProfileFields] = useState({
+    schoolOrCollege: '',
+    country: 'India',
+    state: 'Tamilnadu',
+    city: 'Chennai',
+    postalCode: '',
+    gender: '',
+    dob: '',
+    grade: '',
+    parentMobile: '',
+    mobile: '',
+  });
+
+  useEffect(() => {
+    if (mentee) setProfileFields(buildProfileFieldsFromMentee(mentee));
+  }, [mentee]);
 
   useEffect(() => {
     let cancelled = false;
@@ -170,8 +247,7 @@ const Profile = () => {
 
         const nextPreferences = {
           comfort_level: preferencesResponse?.comfort_level || '',
-          preferred_session_minutes:
-            preferencesResponse?.preferred_session_minutes ?? '',
+          preferred_session_minutes: 30,
           preferred_mentor_types: Array.isArray(preferencesResponse?.preferred_mentor_types)
             ? preferencesResponse.preferred_mentor_types
             : [],
@@ -251,6 +327,39 @@ const Profile = () => {
     }));
   };
 
+  const handleProfileFieldChange = (key, value) => {
+    if (key === 'country') {
+      const nextCountry = value;
+      const nextStates = LOCATION_OPTIONS[nextCountry]?.states || [];
+      const nextState = nextStates[0] || '';
+      const nextCities = LOCATION_OPTIONS[nextCountry]?.citiesByState?.[nextState] || [];
+      const nextCity = nextCities[0] || '';
+      setProfileFields((prev) => ({
+        ...prev,
+        country: nextCountry,
+        state: nextState,
+        city: nextCity,
+        postalCode: '',
+      }));
+      return;
+    }
+
+    if (key === 'state') {
+      const nextState = value;
+      const nextCities = LOCATION_OPTIONS[profileFields.country]?.citiesByState?.[nextState] || [];
+      const nextCity = nextCities[0] || '';
+      setProfileFields((prev) => ({ ...prev, state: nextState, city: nextCity }));
+      return;
+    }
+
+    if (key === 'parentMobile' || key === 'mobile') {
+      setProfileFields((prev) => ({ ...prev, [key]: normalizePhone(value) }));
+      return;
+    }
+
+    setProfileFields((prev) => ({ ...prev, [key]: value }));
+  };
+
   const handleCancel = async () => {
     if (!mentee?.id) return;
     setError('');
@@ -258,10 +367,10 @@ const Profile = () => {
     setLoading(true);
     try {
       const latestPreferences = await menteeApi.getMenteePreferences(mentee.id);
+      setProfileFields(buildProfileFieldsFromMentee(mentee));
       setPreferences({
         comfort_level: latestPreferences?.comfort_level || '',
-        preferred_session_minutes:
-          latestPreferences?.preferred_session_minutes ?? '',
+        preferred_session_minutes: 30,
         preferred_mentor_types: Array.isArray(latestPreferences?.preferred_mentor_types)
           ? latestPreferences.preferred_mentor_types
           : [],
@@ -284,20 +393,23 @@ const Profile = () => {
         menteeApi.updateMentee(mentee.id, {
           first_name: mentee.first_name,
           last_name: mentee.last_name,
-          grade: mentee.grade,
+          grade: profileFields.grade || '',
           email: mentee.email,
-          dob: mentee.dob,
-          gender: mentee.gender,
-          city_state: mentee.city_state || '',
+          dob: profileFields.dob || '',
+          gender: profileFields.gender || '',
+          school_or_college: profileFields.schoolOrCollege || '',
+          country: profileFields.country || '',
+          state: profileFields.state || '',
+          city: profileFields.city || '',
+          postal_code: profileFields.postalCode || '',
+          city_state: ([profileFields.city, profileFields.state, profileFields.country].filter(Boolean).join(', ') + (profileFields.postalCode ? ` (${profileFields.postalCode})` : '')).trim(),
           timezone: mentee.timezone || '',
-          parent_mobile: mentee.parent_mobile || '',
+          parent_mobile: profileFields.parentMobile || '',
+          mobile: profileFields.mobile || '',
         }),
         menteeApi.updateMenteePreferences(mentee.id, {
           comfort_level: preferences.comfort_level || '',
-          preferred_session_minutes:
-            preferences.preferred_session_minutes === ''
-              ? null
-              : Number(preferences.preferred_session_minutes),
+          preferred_session_minutes: 30,
           preferred_mentor_types: preferences.preferred_mentor_types,
         }),
       ]);
@@ -483,6 +595,66 @@ const Profile = () => {
               {/* Divider */}
               <div className="border-t border-[#e5e7eb]" />
 
+              {/* Registration Details */}
+              <div>
+                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-[#9ca3af]">
+                  <Settings className="h-4 w-4" />
+                  Registration Details
+                </h2>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">School / College</label>
+                    <input type="text" value={profileFields.schoolOrCollege} onChange={(event) => handleProfileFieldChange('schoolOrCollege', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Mentee Mobile</label>
+                    <input type="tel" value={profileFields.mobile} onChange={(event) => handleProfileFieldChange('mobile', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Country</label>
+                    <select value={profileFields.country} onChange={(event) => handleProfileFieldChange('country', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]">
+                      {COUNTRY_OPTIONS.map((country) => (<option key={country} value={country}>{country}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">State</label>
+                    <select value={profileFields.state} onChange={(event) => handleProfileFieldChange('state', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]">
+                      {(LOCATION_OPTIONS[profileFields.country]?.states || []).map((stateName) => (<option key={stateName} value={stateName}>{stateName}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">City</label>
+                    <select value={profileFields.city} onChange={(event) => handleProfileFieldChange('city', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]">
+                      {(LOCATION_OPTIONS[profileFields.country]?.citiesByState?.[profileFields.state] || []).map((cityName) => (<option key={cityName} value={cityName}>{cityName}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Postal Code</label>
+                    <input type="text" value={profileFields.postalCode} onChange={(event) => handleProfileFieldChange('postalCode', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Gender</label>
+                    <DropdownSelect value={profileFields.gender} options={genderOptions.map((opt) => ({ label: opt, value: opt }))} placeholder="Select Gender" onChange={(value) => handleProfileFieldChange('gender', value)} />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Date of Birth</label>
+                    <input type="date" value={profileFields.dob} onChange={(event) => handleProfileFieldChange('dob', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Grade</label>
+                    <DropdownSelect value={profileFields.grade} options={gradeOptions.map((opt) => ({ label: opt, value: opt }))} placeholder="Select Grade" onChange={(value) => handleProfileFieldChange('grade', value)} />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Parent Mobile</label>
+                    <input type="tel" value={profileFields.parentMobile} onChange={(event) => handleProfileFieldChange('parentMobile', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-[#e5e7eb]" />
+
               {/* Assessment Card */}
               <div className="rounded-2xl bg-[#f5f3ff] p-5 ring-1 ring-[#5D3699]/10">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -499,7 +671,7 @@ const Profile = () => {
                           Last taken on{' '}
                           <span className="font-medium text-[#111827]">{assessmentSummary.lastTaken}</span>
                           <br className="sm:hidden" />
-                          <span className="hidden sm:inline">{' · '}</span>
+                          <span className="hidden sm:inline">{' ï¿½ '}</span>
                           Focus:{' '}
                           <span className="font-medium text-[#5D3699]">{assessmentSummary.focus}</span>
                         </p>
@@ -596,25 +768,14 @@ const Profile = () => {
                     </p>
 
                     <div className="mt-3">
-                      <DropdownSelect
-                        value={
-                          preferences.preferred_session_minutes === ''
-                            ? ''
-                            : String(preferences.preferred_session_minutes)
-                        }
-                        placeholder="Select session length"
-                        options={sessionLengthOptions.map((minutes) => ({
-                          label: `${minutes} minutes`,
-                          value: String(minutes),
-                        }))}
-                        onChange={handleSessionLengthChange}
-                      />
+                      <div className="flex h-10 w-full items-center justify-between rounded-xl bg-white px-3 text-sm text-[#111827] shadow-sm ring-1 ring-[#e5e7eb]">
+                        <span>30 minutes</span>
+                        <span className="text-[11px] font-semibold text-[#9ca3af]">Fixed</span>
+                      </div>
                     </div>
 
                     <div className="mt-4 flex h-12 items-center justify-center rounded-xl bg-white text-lg font-semibold text-[#5D3699] ring-1 ring-[#e5e7eb]">
-                      {preferences.preferred_session_minutes
-                        ? `${preferences.preferred_session_minutes} min`
-                        : 'Not set'}
+                      30 min
                     </div>
                   </div>
                 </div>
@@ -732,13 +893,7 @@ const Profile = () => {
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#f5f3ff] px-4 py-2 text-sm font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
-            >
-              Contact Support
-              <ChevronRight className="h-4 w-4" />
-            </button>
+           
           </div>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import Dashboard from '../components/menties/pages/Dashboard';
 import MySessions from '../components/menties/pages/MySessions';
-import Mentors from '../components/menties/pages/Mentors';
 import Profile from '../components/menties/pages/Profile';
 import MentorDetails from '../components/menties/pages/MentorDetails';
 import MentorProfile from '../components/menties/pages/MentorProfile';
@@ -15,7 +14,7 @@ import MentorSessionRequests from '../components/mentors/pages/SessionRequests';
 import MentorAvailability from '../components/mentors/pages/ManageAvailability';
 import MentorMyprofilePage from '../components/mentors/pages/Myprofile';
 import SessionRecords from '../components/shared/SessionRecords';
-import { Home, Calendar, Users, User, FileText, ClipboardList, CheckCircle2 } from 'lucide-react';
+import { Home, Calendar, User, FileText, ClipboardList, CheckCircle2 } from 'lucide-react';
 
 export const navRoutes = [
   {
@@ -38,13 +37,6 @@ export const navRoutes = [
     path: '/session-requests',
     icon: ClipboardList,
     component: SessionRequests,
-    roles: ['menties'],
-  },
-  {
-    label: 'Mentors',
-    path: '/mentors',
-    icon: Users,
-    component: Mentors,
     roles: ['menties'],
   },
   {
