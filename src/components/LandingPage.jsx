@@ -744,7 +744,6 @@ export default function LandingPage() {
         <div className="lp-hdr-actions">
           {donateLinkEnabled ? <a href="/donate" className="lp-ghost">Donate</a> : null}
           <a href="/login"    className="lp-ghost">Log in</a>
-          <a href="/register" className="lp-solid">Student Sign Up</a>
         </div>
 
         <button className="lp-burger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
