@@ -885,7 +885,7 @@ const MentorRegister = () => {
 
       <TopAuth />
 
-      <main className="bg-transparent flex-1">
+      <main className="bg-transparent flex-1 pt-[104px] sm:pt-[112px]">
         <div className="flex w-full justify-center px-3 py-4 sm:px-4 sm:py-8 lg:px-6 lg:py-10">
           <div className="w-full max-w-[min(96vw,2400px)] 2xl:max-w-[min(97vw,3000px)] overflow-hidden rounded-xl bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] animate-scaleIn">
             <div className="grid grid-cols-1 items-stretch xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
