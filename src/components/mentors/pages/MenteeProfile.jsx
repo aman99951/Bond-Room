@@ -131,7 +131,7 @@ const MenteeProfile = () => {
 
   return (
     <div className="p-4 sm:p-6 bg-transparent">
-      <div className="max-w-[1100px]">
+      <div className="w-full">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <button

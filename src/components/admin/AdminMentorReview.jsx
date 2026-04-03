@@ -106,18 +106,21 @@ const DOCUMENT_LABELS = {
   id_back: 'ID Proof Back',
   address_front: 'Address Proof Front',
   address_back: 'Address Proof Back',
+  professional_certificate: 'Professional Certificate',
 };
 const INITIAL_DOCUMENT_DECISIONS = {
   id_front: 'pending',
   id_back: 'pending',
   address_front: 'pending',
   address_back: 'pending',
+  professional_certificate: 'pending',
 };
 const INITIAL_DOCUMENT_COMMENTS = {
   id_front: '',
   id_back: '',
   address_front: '',
   address_back: '',
+  professional_certificate: '',
 };
 const INITIAL_REJECT_DIALOG = {
   open: false,
@@ -148,7 +151,13 @@ const normalizeDocumentDecisions = (rawValue, identityStatus = '') => {
     });
   }
   if (!hasExplicit && String(identityStatus).toLowerCase() === 'verified') {
-    return { id_front: 'approved', id_back: 'approved', address_front: 'approved', address_back: 'approved' };
+    return {
+      id_front: 'approved',
+      id_back: 'approved',
+      address_front: 'approved',
+      address_back: 'approved',
+      professional_certificate: 'approved',
+    };
   }
   return normalized;
 };
@@ -327,6 +336,13 @@ const AdminMentorReview = () => {
       url: resolveMediaUrl(identity.aadhaar_back),
       proofType: identity.address_proof_type,
       proofNumber: identity.address_proof_number,
+    },
+    {
+      key: 'professional_certificate',
+      label: 'Professional Certificate',
+      url: resolveMediaUrl(identity.professional_certificate_document),
+      proofType: 'Professional Qualification',
+      proofNumber: '-',
     },
   ];
 

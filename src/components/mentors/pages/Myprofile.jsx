@@ -40,6 +40,113 @@ const withCacheBuster = (url, versionToken) => {
   return `${url}${separator}v=${encodeURIComponent(versionToken)}`;
 };
 
+const COUNTRY_OPTIONS = ['India', 'USA'];
+const COUNTRY_DIAL_CODE = {
+  India: '+91',
+  USA: '+1',
+};
+const LOCATION_OPTIONS = {
+  India: {
+    states: ['Tamil Nadu'],
+    citiesByState: {
+      'Tamil Nadu': [
+        'Arcot',
+        'Chengalpattu',
+        'Chennai',
+        'Chidambaram',
+        'Coimbatore',
+        'Cuddalore',
+        'Dharmapuri',
+        'Dindigul',
+        'Erode',
+        'Kanchipuram',
+        'Kanniyakumari',
+        'Kodaikanal',
+        'Kumbakonam',
+        'Madurai',
+        'Mamallapuram',
+        'Nagappattinam',
+        'Nagercoil',
+        'Palayamkottai',
+        'Pudukkottai',
+        'Rajapalayam',
+        'Ramanathapuram',
+        'Salem',
+        'Thanjavur',
+        'Tiruchchirappalli',
+        'Tirunelveli',
+        'Tiruppur',
+        'Thoothukudi',
+        'Udhagamandalam',
+        'Vellore',
+      ],
+    },
+  },
+  USA: {
+    states: ['Texas'],
+    citiesByState: {
+      Texas: ['Houston'],
+    },
+  },
+};
+const CARE_AREA_OPTIONS = [
+  'Anxiety',
+  'Relationships',
+  'Academic Stress',
+  'Exam Pressure',
+  'Parent Expectations',
+  'Friend Issues',
+  'Future Anxiety (Career/College)',
+  'Concentration Struggles',
+  'Study Struggles',
+  'Motivation',
+  'Stress Relief Strategies',
+  'Life Advice / Perspective',
+  'Someone to Listen',
+];
+const BIO_MAX_WORDS = 1000;
+const CONTINUOUS_TEXT_WORD_CHUNK = 8;
+const countWords = (value) => {
+  const text = String(value || '').trim();
+  if (!text) return 0;
+  const tokens = text.split(/\s+/).filter(Boolean);
+  return tokens.reduce((count, token) => (
+    count + Math.max(1, Math.ceil(token.length / CONTINUOUS_TEXT_WORD_CHUNK))
+  ), 0);
+};
+const truncateToWordLimit = (value, maxWords) => {
+  const text = String(value || '');
+  if (!text.trim()) return text;
+
+  const parts = text.split(/(\s+)/);
+  const output = [];
+  let words = 0;
+
+  for (const part of parts) {
+    if (!part) continue;
+    if (/^\s+$/.test(part)) {
+      output.push(part);
+      continue;
+    }
+    const tokenWords = Math.max(1, Math.ceil(part.length / CONTINUOUS_TEXT_WORD_CHUNK));
+    const remaining = maxWords - words;
+    if (remaining <= 0) break;
+    if (tokenWords <= remaining) {
+      output.push(part);
+      words += tokenWords;
+      continue;
+    }
+    const allowedChars = remaining * CONTINUOUS_TEXT_WORD_CHUNK;
+    if (allowedChars > 0) {
+      output.push(part.slice(0, allowedChars));
+    }
+    words = maxWords;
+    break;
+  }
+
+  return output.join('').trimEnd();
+};
+
 const Myprofile = () => {
   const { mentor, error: mentorError, setMentor } = useMentorData();
   const [profile, setProfile] = useState(null);
@@ -49,7 +156,12 @@ const Myprofile = () => {
     fullName: '',
     email: '',
     phone: '',
-    city: '',
+    countryCode: '+91',
+    country: 'India',
+    stateName: 'Tamil Nadu',
+    city: 'Chennai',
+    postalCode: '',
+    careAreas: [],
     specialization: '',
     experience: '',
     bio: '',
@@ -60,6 +172,7 @@ const Myprofile = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fileInputRef = useRef(null);
+  const bioTextareaRef = useRef(null);
 
   const initials = useMemo(() => {
     const parts = (form.fullName || '').split(' ').filter(Boolean);
@@ -68,13 +181,47 @@ const Myprofile = () => {
     return `${first}${second}`.toUpperCase() || 'MN';
   }, [form.fullName]);
 
+  const stateOptions = useMemo(
+    () => LOCATION_OPTIONS[form.country]?.states || [],
+    [form.country]
+  );
+
+  const cityOptions = useMemo(
+    () => LOCATION_OPTIONS[form.country]?.citiesByState?.[form.stateName] || [],
+    [form.country, form.stateName]
+  );
+
+  const locationLabel = useMemo(() => {
+    const tokens = [form.city, form.stateName, form.country]
+      .map((item) => String(item || '').trim())
+      .filter(Boolean);
+    return tokens.join(', ');
+  }, [form.city, form.stateName, form.country]);
+  const bioWordCount = useMemo(() => countWords(form.bio), [form.bio]);
+
   const syncForm = (mentorData, profileData) => {
     const fullName = `${mentorData?.first_name || ''} ${mentorData?.last_name || ''}`.trim();
+    const nextCountry = COUNTRY_OPTIONS.includes(mentorData?.country)
+      ? mentorData.country
+      : 'India';
+    const nextStates = LOCATION_OPTIONS[nextCountry]?.states || [];
+    const nextState = nextStates.includes(mentorData?.state)
+      ? mentorData.state
+      : (nextStates[0] || '');
+    const nextCities = LOCATION_OPTIONS[nextCountry]?.citiesByState?.[nextState] || [];
+    const nextCity = nextCities.includes(mentorData?.city)
+      ? mentorData.city
+      : (nextCities[0] || mentorData?.city_state || '');
     setForm({
       fullName: fullName || '',
       email: mentorData?.email || '',
       phone: mentorData?.mobile || '',
-      city: mentorData?.city_state || '',
+      countryCode: mentorData?.country_code || COUNTRY_DIAL_CODE[nextCountry] || '+91',
+      country: nextCountry,
+      stateName: nextState,
+      city: nextCity,
+      postalCode: mentorData?.postal_code || '',
+      careAreas: Array.isArray(mentorData?.care_areas) ? mentorData.care_areas : [],
       specialization: profileData?.specialization || '',
       experience: profileData?.years_experience ? String(profileData.years_experience) : '',
       bio: mentorData?.bio || '',
@@ -137,6 +284,39 @@ const Myprofile = () => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  useEffect(() => {
+    const availableStates = LOCATION_OPTIONS[form.country]?.states || [];
+    if (!availableStates.length) return;
+    if (!availableStates.includes(form.stateName)) {
+      setForm((prev) => ({ ...prev, stateName: availableStates[0] }));
+      return;
+    }
+    const availableCities = LOCATION_OPTIONS[form.country]?.citiesByState?.[form.stateName] || [];
+    if (availableCities.length && !availableCities.includes(form.city)) {
+      setForm((prev) => ({ ...prev, city: availableCities[0] }));
+    }
+    const expectedCountryCode = COUNTRY_DIAL_CODE[form.country] || '+91';
+    if (!form.countryCode || form.countryCode !== expectedCountryCode) {
+      setForm((prev) => ({ ...prev, countryCode: expectedCountryCode }));
+    }
+  }, [form.country, form.stateName, form.city, form.countryCode]);
+
+  const toggleCareArea = (value) => {
+    setForm((prev) => {
+      const current = Array.isArray(prev.careAreas) ? prev.careAreas : [];
+      const exists = current.includes(value);
+      if (exists) {
+        return { ...prev, careAreas: current.filter((item) => item !== value) };
+      }
+      return { ...prev, careAreas: [...current, value] };
+    });
+  };
+
+  const handleBioInput = (value) => {
+    const limited = truncateToWordLimit(value, BIO_MAX_WORDS);
+    updateField('bio', limited);
+  };
+
   const handleCancel = () => {
     setError('');
     setSuccess('');
@@ -145,6 +325,10 @@ const Myprofile = () => {
 
   const handleSave = async () => {
     if (!mentor?.id) return;
+    if (!Array.isArray(form.careAreas) || form.careAreas.length === 0) {
+      setError('Please select at least one care area.');
+      return;
+    }
     setSaving(true);
     setError('');
     setSuccess('');
@@ -159,7 +343,13 @@ const Myprofile = () => {
           first_name: firstName,
           last_name: lastName,
           mobile: form.phone.trim(),
+          country_code: form.countryCode.trim(),
+          country: form.country.trim(),
+          state: form.stateName.trim(),
+          city: form.city.trim(),
+          postal_code: form.postalCode.trim(),
           city_state: form.city.trim(),
+          care_areas: form.careAreas,
           qualification: mentor.qualification || '',
           bio: form.bio.trim(),
         }),
@@ -215,7 +405,7 @@ const Myprofile = () => {
   };
 return (
   <div className="min-h-screen p-3 sm:p-6 lg:p-8">
-    <div className="mx-auto max-w-6xl">
+    <div className="w-full">
       {/* Header Section */}
       <div className="relative mb-8 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
         <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
@@ -300,7 +490,7 @@ return (
               </h2>
               <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
                 <MapPin className="h-3.5 w-3.5" />
-                <span>{form.city || 'Location not set'}</span>
+                <span>{locationLabel || 'Location not set'}</span>
               </div>
 
               {/* Status Badge */}
@@ -458,15 +648,82 @@ return (
                 {/* City */}
                 <div className="group">
                   <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <Globe className="h-4 w-4 text-gray-400" />
+                    Country
+                  </label>
+                  <select
+                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    value={form.country}
+                    onChange={(event) => updateField('country', event.target.value)}
+                  >
+                    {COUNTRY_OPTIONS.map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="group">
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    Country Code
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    value={form.countryCode}
+                    onChange={(event) => updateField('countryCode', event.target.value)}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    State
+                  </label>
+                  <select
+                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    value={form.stateName}
+                    onChange={(event) => updateField('stateName', event.target.value)}
+                  >
+                    {stateOptions.map((stateItem) => (
+                      <option key={stateItem} value={stateItem}>
+                        {stateItem}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="group">
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
                     <MapPin className="h-4 w-4 text-gray-400" />
                     City
+                  </label>
+                  <select
+                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    value={form.city}
+                    onChange={(event) => updateField('city', event.target.value)}
+                  >
+                    {cityOptions.map((cityItem) => (
+                      <option key={cityItem} value={cityItem}>
+                        {cityItem}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="group">
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    Pincode
                   </label>
                   <input
                     type="text"
                     className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
-                    placeholder="Enter your city"
-                    value={form.city}
-                    onChange={(event) => updateField('city', event.target.value)}
+                    placeholder={form.country === 'USA' ? 'e.g. 77001' : 'e.g. 600001'}
+                    value={form.postalCode}
+                    onChange={(event) => updateField('postalCode', event.target.value)}
                   />
                 </div>
               </div>
@@ -511,6 +768,30 @@ return (
                   />
                 </div>
               </div>
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Care Areas
+                </label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {CARE_AREA_OPTIONS.map((area) => {
+                    const selected = Array.isArray(form.careAreas) && form.careAreas.includes(area);
+                    return (
+                      <button
+                        key={area}
+                        type="button"
+                        onClick={() => toggleCareArea(area)}
+                        className={`rounded-lg px-3 py-2 text-left text-xs font-medium transition-all ${
+                          selected
+                            ? 'bg-[#f3ecff] text-[#5D3699] ring-1 ring-[#cdb8f4]'
+                            : 'bg-gray-50 text-gray-700 ring-1 ring-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {area}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* Divider */}
@@ -524,17 +805,23 @@ return (
               <div className="group">
                 <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
                   <Edit3 className="h-4 w-4 text-gray-400" />
-                  Bio
+                  Brief Bio
                 </label>
                 <textarea
+                  ref={bioTextareaRef}
                   rows={5}
-                  className="w-full resize-none rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                  className="w-full resize-y overflow-hidden rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
                   placeholder="Tell mentees about yourself, your experience, and what you can help them with..."
                   value={form.bio}
-                  onChange={(event) => updateField('bio', event.target.value)}
+                  onChange={(event) => handleBioInput(event.target.value)}
+                  onInput={(event) => {
+                    const element = event.currentTarget;
+                    element.style.height = 'auto';
+                    element.style.height = `${Math.max(140, element.scrollHeight)}px`;
+                  }}
                 />
                 <p className="mt-2 text-xs text-gray-400">
-                  Write a brief description about yourself. This will be visible to mentees.
+                  Maximum {BIO_MAX_WORDS} words. Current: {bioWordCount}.
                 </p>
               </div>
             </div>

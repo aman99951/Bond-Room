@@ -465,6 +465,9 @@ const VerifyIdentity = () => {
   const [addressProofBackUrl, setAddressProofBackUrl] = useState('');
   const [addressProofFrontPreviewUrl, setAddressProofFrontPreviewUrl] = useState('');
   const [addressProofBackPreviewUrl, setAddressProofBackPreviewUrl] = useState('');
+  const [professionalCertificateFile, setProfessionalCertificateFile] = useState(null);
+  const [professionalCertificateUrl, setProfessionalCertificateUrl] = useState('');
+  const [professionalCertificatePreviewUrl, setProfessionalCertificatePreviewUrl] = useState('');
 
   const [notes, setNotes] = useState('');
   const [verificationId, setVerificationId] = useState(null);
@@ -484,6 +487,7 @@ const VerifyIdentity = () => {
     addressProofNumber: false,
     addressProofFrontFile: false,
     addressProofBackFile: false,
+    professionalCertificateFile: false,
   });
   const [authReady, setAuthReady] = useState(Boolean(getAuthSession()?.accessToken));
 
@@ -492,14 +496,20 @@ const VerifyIdentity = () => {
   const idProofBackViewUrl = idProofBackPreviewUrl || idProofBackUrl;
   const addressProofFrontViewUrl = addressProofFrontPreviewUrl || addressProofFrontUrl;
   const addressProofBackViewUrl = addressProofBackPreviewUrl || addressProofBackUrl;
+  const professionalCertificateViewUrl = professionalCertificatePreviewUrl || professionalCertificateUrl;
   const idProofFrontKind = resolveDocumentKind({ file: idProofFrontFile, url: idProofFrontViewUrl });
   const idProofBackKind = resolveDocumentKind({ file: idProofBackFile, url: idProofBackViewUrl });
   const addressProofFrontKind = resolveDocumentKind({ file: addressProofFrontFile, url: addressProofFrontViewUrl });
   const addressProofBackKind = resolveDocumentKind({ file: addressProofBackFile, url: addressProofBackViewUrl });
+  const professionalCertificateKind = resolveDocumentKind({
+    file: professionalCertificateFile,
+    url: professionalCertificateViewUrl,
+  });
   const idProofFrontUploaded = Boolean(idProofFrontFile || idProofFrontUrl);
   const idProofBackUploaded = Boolean(idProofBackFile || idProofBackUrl);
   const addressProofFrontUploaded = Boolean(addressProofFrontFile || addressProofFrontUrl);
   const addressProofBackUploaded = Boolean(addressProofBackFile || addressProofBackUrl);
+  const professionalCertificateUploaded = Boolean(professionalCertificateFile || professionalCertificateUrl);
 
   const idProofNumberError = idProofNumber ? validateProofNumber(idProofType, idProofNumber) : '';
   const addressProofNumberError = addressProofNumber ? validateProofNumber(addressProofType, addressProofNumber) : '';
@@ -518,6 +528,8 @@ const VerifyIdentity = () => {
   const showIdProofBackError = (hasTriedSubmit || touched.idProofBackFile) && !idProofBackUploaded;
   const showAddressProofFrontError = (hasTriedSubmit || touched.addressProofFrontFile) && !addressProofFrontUploaded;
   const showAddressProofBackError = (hasTriedSubmit || touched.addressProofBackFile) && !addressProofBackUploaded;
+  const showProfessionalCertificateError =
+    (hasTriedSubmit || touched.professionalCertificateFile) && !professionalCertificateUploaded;
 
   const clearDocumentReviewFor = (key) => {
     setDocumentReviewStatus((prev) => {
@@ -582,6 +594,16 @@ const VerifyIdentity = () => {
   }, [addressProofBackFile]);
 
   useEffect(() => {
+    if (!professionalCertificateFile) {
+      setProfessionalCertificatePreviewUrl('');
+      return undefined;
+    }
+    const objectUrl = URL.createObjectURL(professionalCertificateFile);
+    setProfessionalCertificatePreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [professionalCertificateFile]);
+
+  useEffect(() => {
     window.history.pushState(null, '', window.location.href);
     const handleBackButton = () => {
       window.history.pushState(null, '', window.location.href);
@@ -634,6 +656,7 @@ const VerifyIdentity = () => {
           setAddressProofNumber(sanitizeProofNumber(existing.address_proof_type, existing.address_proof_number || ''));
           setAddressProofFrontUrl(resolveMediaUrl(existing.address_proof_document || existing.aadhaar_front));
           setAddressProofBackUrl(resolveMediaUrl(existing.aadhaar_back));
+          setProfessionalCertificateUrl(resolveMediaUrl(existing.professional_certificate_document));
           setNotes(existing.additional_notes || '');
           setDocumentReviewStatus(normalizeReviewMap(existing.document_review_status));
           setDocumentReviewComments(normalizeReviewMap(existing.document_review_comments));
@@ -672,6 +695,7 @@ const VerifyIdentity = () => {
     if (!idProofBackUploaded) errors.push('Please upload ID Proof Back image.');
     if (!addressProofFrontUploaded) errors.push('Please upload Address Proof Front image.');
     if (!addressProofBackUploaded) errors.push('Please upload Address Proof Back image.');
+    if (!professionalCertificateUploaded) errors.push('Please upload Professional Certificate document.');
     return errors;
   };
 
@@ -686,6 +710,7 @@ const VerifyIdentity = () => {
       addressProofNumber: true,
       addressProofFrontFile: true,
       addressProofBackFile: true,
+      professionalCertificateFile: true,
     });
     setErrorMessage('');
     setInfoMessage('');
@@ -717,6 +742,9 @@ const VerifyIdentity = () => {
         payload.append('aadhaar_front', addressProofFrontFile);
       }
       if (addressProofBackFile) payload.append('aadhaar_back', addressProofBackFile);
+      if (professionalCertificateFile) {
+        payload.append('professional_certificate_document', professionalCertificateFile);
+      }
       if (notes) payload.append('additional_notes', notes);
       if (verificationId) await mentorApi.updateIdentityVerification(verificationId, payload);
       else await mentorApi.createIdentityVerification(payload);
@@ -735,9 +763,9 @@ const VerifyIdentity = () => {
     <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
       <TopAuth />
 
-      <main className="flex-1">
+      <main className="flex-1 pt-20 sm:pt-24">
         <div className="flex w-full justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-10">
-          <div className="w-full max-w-[1580px] overflow-hidden rounded-xl border border-[#e6e2f1] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+          <div className="w-full overflow-hidden rounded-xl border border-[#e6e2f1] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.7fr)]">
               <div className="relative hidden h-full grid-rows-2 bg-transparent xl:grid">
                 <img
@@ -984,6 +1012,29 @@ const VerifyIdentity = () => {
                       </div>
                     </div>
 
+                    <div className="mx-auto w-full sm:max-w-[420px] rounded-xl border border-[#e5def2] bg-white p-4 space-y-3">
+                      <h3 className="text-sm font-semibold text-[#1f2937]">Professional Certificate</h3>
+                      
+                      <div className="grid grid-cols-1 gap-3">
+                        <UploadCard
+                          title="Professional Certificate"
+                          file={professionalCertificateFile}
+                          uploaded={professionalCertificateUploaded}
+                          viewUrl={professionalCertificateViewUrl}
+                          kind={professionalCertificateKind}
+                          onFileChange={(event) => {
+                            const file = event.target.files?.[0] || null;
+                            setProfessionalCertificateFile(file);
+                            if (file) clearDocumentReviewFor('professional_certificate');
+                            setTouched((prev) => ({ ...prev, professionalCertificateFile: true }));
+                          }}
+                          error={showProfessionalCertificateError ? 'Professional Certificate is required.' : ''}
+                          reviewStatus={documentReviewStatus.professional_certificate}
+                          reviewComment={documentReviewComments.professional_certificate}
+                        />
+                      </div>
+                    </div>
+
                     {hasTriedSubmit && proofTypeConflict && (
                       <p className="text-xs text-red-600">ID Proof and Address Proof must use different document types.</p>
                     )}
@@ -995,7 +1046,7 @@ const VerifyIdentity = () => {
                       <textarea
                         id="mentorAdditionalNotes"
                         rows={4}
-                        className="mt-2 w-full rounded-md border border-[#d7d0e2] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent"
+                        className="mt-2 w-full rounded-md border border-[#d7d0e2] px-3 py-2 text-sm bg-white resize-y min-h-[120px] max-h-[380px] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent"
                         placeholder="Add any context for verification..."
                         value={notes}
                         onChange={(event) => setNotes(event.target.value)}

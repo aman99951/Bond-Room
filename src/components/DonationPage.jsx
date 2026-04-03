@@ -29,6 +29,7 @@ const loadRazorpayScript = () =>
 
 const DonationPage = () => {
   const [selectedAmount, setSelectedAmount] = useState(quickAmounts[1]);
+  const [customAmount, setCustomAmount] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -43,7 +44,7 @@ const DonationPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!selectedAmount || !name.trim() || !email.trim()) return;
+    if (!selectedAmount || Number(selectedAmount) <= 0 || !name.trim() || !email.trim()) return;
 
     setProcessing(true);
     setError('');
@@ -180,7 +181,10 @@ const DonationPage = () => {
                     <button
                       key={amount}
                       type="button"
-                      onClick={() => setSelectedAmount(amount)}
+                      onClick={() => {
+                        setSelectedAmount(amount);
+                        setCustomAmount(String(amount));
+                      }}
                       className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
                         selectedAmount === amount
                           ? 'border-[#5D3699] bg-[#5D3699] text-white'
@@ -191,6 +195,28 @@ const DonationPage = () => {
                     </button>
                   ))}
                 </div>
+
+                <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-[#7b699d]">
+                  Custom Amount (INR)
+                </label>
+                <div className="mt-1 flex items-center rounded-xl border border-[#e7e2f6] bg-white px-3 focus-within:border-[#c4b5fd]">
+                  <span className="text-sm font-semibold text-[#5D3699]">Rs</span>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    inputMode="numeric"
+                    placeholder="Enter amount"
+                    value={customAmount}
+                    onChange={(event) => {
+                      const digitsOnly = event.target.value.replace(/[^\d]/g, '');
+                      setCustomAmount(digitsOnly);
+                      setSelectedAmount(digitsOnly ? Number(digitsOnly) : 0);
+                    }}
+                    className="w-full border-0 bg-transparent px-2 py-2.5 text-sm text-[#111827] outline-none"
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-[#6b7280]">You can enter any amount above Rs 1.</p>
 
                 <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Name</label>
                 <input
@@ -225,7 +251,7 @@ const DonationPage = () => {
 
                 <button
                   type="submit"
-                  disabled={processing}
+                  disabled={processing || !selectedAmount || Number(selectedAmount) <= 0}
                   className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-5 py-3 text-sm font-semibold text-white hover:bg-[#4a2b7a] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   <Heart className="h-4 w-4" />

@@ -115,6 +115,7 @@ export const navRoutes = [
     icon: Calendar,
     component: MentorSessionRequests,
     roles: ['mentors'],
+    sidebar: false,
   },
   {
     label: 'Availability',

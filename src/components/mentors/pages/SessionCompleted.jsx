@@ -95,7 +95,7 @@ const SessionCompleted = () => {
 
   return (
     <div className="min-h-screen bg-transparent p-6 sm:p-10">
-      <div className="max-w-[896px] w-full mx-auto rounded-[16px] bg-white shadow-[0_20px_40px_rgba(0,0,0,0.12)] border border-[#ece7f6] p-10">
+      <div className="w-full rounded-[16px] bg-white shadow-[0_20px_40px_rgba(0,0,0,0.12)] border border-[#ece7f6] p-10">
         <div className="flex flex-col items-center text-center">
           <div className="h-16 w-16 rounded-full bg-[#dcfce7] flex items-center justify-center">
             <Check className="h-6 w-6 text-[#22c55e]" aria-hidden="true" />

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, AlertCircle, X, UserRound, MapPin, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, AlertCircle, X, UserRound, MapPin, ShieldCheck, Camera } from 'lucide-react';
 import { Eye, EyeOff } from 'lucide-react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
@@ -10,6 +10,7 @@ import imageContainer from '../assets/Image Container.png';
 import { authApi } from '../../apis/api/authApi';
 import { setAssessmentDraft } from '../../apis/api/storage';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
+import BoundedDatePicker from '../shared/BoundedDatePicker';
 import '../LandingPage.css';
 import './Register.css';
 
@@ -80,7 +81,7 @@ const initialForm = {
   password: '',
   dob: '',
   gender: '',
-  parentConsent: false,
+  parentConsent: true,
   parentMobile: '',
   menteeMobile: '',
   menteeSameAsParent: true,
@@ -164,6 +165,9 @@ const Register = () => {
   const [otpHint, setOtpHint] = useState({ email: '', parentMobile: '', menteeMobile: '' });
   const [otpBusy, setOtpBusy] = useState({ sending: false, verifying: false });
   const [showPassword, setShowPassword] = useState(false);
+  const profileImageInputRef = useRef(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState('');
   const [draftReady, setDraftReady] = useState(false);
   const dialCode = COUNTRY_DIAL_CODE[form.country] || '+91';
 
@@ -176,6 +180,8 @@ const Register = () => {
   const signupSource = searchParams.get('source') === 'event-flow' ? 'event_flow' : 'regular';
   const nextAfterRegister = searchParams.get('next') || '';
   const safeNextAfterRegister = nextAfterRegister.startsWith('/') ? nextAfterRegister : '';
+  const isEventFlowLock = signupSource === 'event_flow';
+  const [showVolunteerFlowLockModal, setShowVolunteerFlowLockModal] = useState(false);
 
   useEffect(() => {
     const draft = readMenteeRegisterDraft();
@@ -308,12 +314,6 @@ const Register = () => {
       setOtpHint((prev) => ({ ...prev, menteeMobile: '' }));
       return;
     }
-    if (key === 'parentConsent' && !value) {
-      setParentMobileVerified(false);
-      setMenteeMobileVerified(false);
-      setForm((prev) => ({ ...prev, parentMobile: '', menteeMobile: '', menteeSameAsParent: true }));
-      setOtpHint((prev) => ({ ...prev, parentMobile: '', menteeMobile: '' }));
-    }
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -323,7 +323,6 @@ const Register = () => {
 
   const hasRequiredFieldError = (key) => {
     if (!submitAttempted && !touchedFields[key]) return false;
-    if (key === 'parentConsent') return !form.parentConsent;
     if (key === 'recordConsent') return !form.recordConsent;
     if (key === 'parentMobile') {
       const digitsOnly = normalizePhone(form.parentMobile);
@@ -470,10 +469,6 @@ const Register = () => {
       notifyError('Please verify email before continuing.');
       return;
     }
-    if (!form.parentConsent) {
-      notifyError('Parent / Guardian consent is required to continue.');
-      return;
-    }
     if (!form.recordConsent) {
       notifyError('Session recording consent is required to continue.');
       return;
@@ -510,7 +505,7 @@ const Register = () => {
 
     try {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-      await registerMentee({
+      const registrationPayload = {
         first_name: form.firstName.trim(),
         last_name: form.lastName.trim(),
         grade: form.grade,
@@ -532,7 +527,25 @@ const Register = () => {
         signup_source: signupSource,
         mentee_program_enabled: signupSource !== 'event_flow',
         record_consent: form.recordConsent,
-      });
+      };
+
+      const payloadToSubmit = profileImageFile
+        ? (() => {
+            const formData = new FormData();
+            Object.entries(registrationPayload).forEach(([key, value]) => {
+              if (value === null || value === undefined) return;
+              if (typeof value === 'boolean') {
+                formData.append(key, value ? 'true' : 'false');
+                return;
+              }
+              formData.append(key, String(value));
+            });
+            formData.append('avatar', profileImageFile);
+            return formData;
+          })()
+        : registrationPayload;
+
+      await registerMentee(payloadToSubmit);
 
       await login(form.email.trim().toLowerCase(), form.password, 'menties');
       setAssessmentDraft({});
@@ -565,8 +578,73 @@ const Register = () => {
     return () => window.clearTimeout(timer);
   }, [toastState.open, toastState.message]);
 
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(profileImagePreview);
+      }
+    };
+  }, [profileImagePreview]);
+
+  const handleProfileImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      notifyError('Please select a valid image file.');
+      return;
+    }
+    if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(profileImagePreview);
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setProfileImageFile(file);
+    setProfileImagePreview(objectUrl);
+  };
+
+  const handleCancelEventFlowRegistration = () => {
+    setShowVolunteerFlowLockModal(false);
+    clearMenteeRegisterDraft();
+    navigate(safeNextAfterRegister || '/volunteer-events', { replace: true });
+  };
+
   return (
     <div className="lp lp-register">
+      {showVolunteerFlowLockModal ? (
+        <div className="lp-register-lock-overlay">
+          <div className="lp-register-lock-card" role="dialog" aria-modal="true" aria-labelledby="volunteer-flow-lock-title">
+            <div className="lp-register-lock-head">
+              <div className="lp-register-lock-head-row">
+                <div className="lp-register-lock-icon">
+                  <AlertCircle size={20} />
+                </div>
+                <div className="lp-register-lock-copy">
+                  <h3 id="volunteer-flow-lock-title" className="lp-register-lock-title">Complete Volunteer Sign-Up First</h3>
+                  <p className="lp-register-lock-text">
+                    You started registration from a volunteer event. If you leave this flow now, you may not be able to complete volunteer registration for that event.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="lp-register-lock-actions">
+              <button
+                type="button"
+                onClick={handleCancelEventFlowRegistration}
+                className="lp-register-lock-btn lp-register-lock-btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowVolunteerFlowLockModal(false)}
+                className="lp-register-lock-btn lp-register-lock-btn-primary"
+              >
+                Continue Registration
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {toastState.open && (
         <div className={`lp-toast lp-toast-${toastState.type}`} role="status" aria-live="polite">
           <div className="lp-toast-icon">
@@ -584,7 +662,10 @@ const Register = () => {
         </div>
       )}
 
-      <TopAuth />
+      <TopAuth
+        lockNavigation={isEventFlowLock}
+        onBlockedNavigate={() => setShowVolunteerFlowLockModal(true)}
+      />
 
       <main className="lp-register-main">
         <div className="lp-register-orb lp-register-orb-a" />
@@ -592,10 +673,11 @@ const Register = () => {
 
         <div className="lp-register-shell">
           <div className="lp-register-grid">
-            <aside className="lp-register-side lp-register-side-clean" aria-hidden="true">
+            <aside className="relative hidden h-full min-h-0 overflow-hidden bg-transparent xl:grid xl:grid-rows-2" aria-hidden="true">
               <img
                 src={imageContainer}
                 alt=""
+                aria-hidden="true"
                 className="absolute left-1/2 top-1/2 z-20 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 animate-pulse-slow md:h-[380px] md:w-[380px] lg:h-[500px] lg:w-[500px]"
               />
               <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
@@ -606,8 +688,8 @@ const Register = () => {
                     className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                   />
                 </div>
-                <div className="relative flex min-h-0 flex-col justify-between bg-[#5b2c91] p-6 text-white">
-                  <div className="animate-fadeIn">
+                <div className="relative flex min-h-0 flex-col items-center justify-start bg-[#5b2c91] px-10 pb-8 pt-24 lg:px-12 lg:pt-28 text-white">
+                  <div className="max-w-[280px] text-left animate-fadeIn" style={{ paddingTop: '100px',paddingLeft:'24px',paddingRight:'24px' }}>
                     <h3 className="font-sans text-[37px] font-bold leading-[36.5px]">
                       Join a
                       <br />
@@ -617,7 +699,7 @@ const Register = () => {
                       <br />
                       and care.
                     </h3>
-                    <p className="mt-3 font-sans text-[16px] font-normal leading-[22.5px] text-white/90">
+                    <p className="font-sans text-[16px] font-normal leading-[22.5px] text-white/90" style={{marginTop: '14px'}}>
                       Your guidance can help a student feel seen -- beyond marks, ranks, and expectations.
                     </p>
                   </div>
@@ -652,7 +734,15 @@ const Register = () => {
                 <Link to="/register" className="lp-register-role-tab is-active" aria-current="page">
                   Mentee / Volunteer
                 </Link>
-                <Link to="/mentor-register" className="lp-register-role-tab">
+                <Link
+                  to="/mentor-register"
+                  className={`lp-register-role-tab ${isEventFlowLock ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  onClick={(event) => {
+                    if (!isEventFlowLock) return;
+                    event.preventDefault();
+                    setShowVolunteerFlowLockModal(true);
+                  }}
+                >
                   Mentor
                 </Link>
               </div>
@@ -689,6 +779,64 @@ const Register = () => {
                       onBlur={() => markFieldTouched('lastName')}
                     />
                   </div>
+                  </div>
+
+                  <div className="lp-field">
+                    <label className="lp-register-field-label">Profile Image (Optional)</label>
+                    <div className="lp-profile-upload-card">
+                      <div className="lp-profile-upload-main">
+                        <div className="lp-profile-upload-avatar">
+                          {profileImagePreview ? (
+                            <img src={profileImagePreview} alt="Profile preview" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="lp-profile-upload-avatar-fallback">
+                              {form.firstName?.[0] ? String(form.firstName[0]).toUpperCase() : 'U'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="lp-profile-upload-copy">
+                          <p className="lp-profile-upload-title">Add a profile photo for your mentee account.</p>
+                          <p className="lp-profile-upload-file">
+                            {profileImageFile ? profileImageFile.name : 'No file selected'}
+                          </p>
+                        </div>
+                        <div className="lp-profile-upload-actions">
+                          <button
+                            type="button"
+                            className="lp-profile-upload-btn-primary"
+                            onClick={() => profileImageInputRef.current?.click()}
+                          >
+                            <Camera className="h-3.5 w-3.5" />
+                            {profileImageFile ? 'Change' : 'Upload'}
+                          </button>
+                          {profileImageFile ? (
+                            <button
+                              type="button"
+                              className="lp-profile-upload-btn-secondary"
+                              onClick={() => {
+                                if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+                                  URL.revokeObjectURL(profileImagePreview);
+                                }
+                                setProfileImageFile(null);
+                                setProfileImagePreview('');
+                                if (profileImageInputRef.current) {
+                                  profileImageInputRef.current.value = '';
+                                }
+                              }}
+                            >
+                              Remove
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                      <input
+                        ref={profileImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleProfileImageChange}
+                      />
+                    </div>
                   </div>
 
                   <div className="lp-register-row">
@@ -743,15 +891,15 @@ const Register = () => {
 
                   <div className="lp-field">
                     <label className="lp-register-field-label" htmlFor="dob">Date of Birth *</label>
-                    <input
+                    <BoundedDatePicker
                       id="dob"
-                      type="date"
-                      className={`lp-input ${hasRequiredFieldError('dob') ? 'lp-input-error' : ''}`}
+                      inputClassName={`lp-input ${hasRequiredFieldError('dob') ? 'lp-input-error' : ''}`}
                       value={form.dob}
-                      onChange={(event) => updateField('dob', event.target.value)}
+                      onChange={(nextValue) => updateField('dob', nextValue)}
                       onBlur={() => markFieldTouched('dob')}
-                      min={dobBounds.min}
-                      max={dobBounds.max}
+                      minDate={dobBounds.min}
+                      maxDate={dobBounds.max}
+                      placeholder="Select date of birth"
                     />
                     <p className="lp-register-note">Allowed age: {STUDENT_MIN_AGE} to {STUDENT_MAX_AGE} years</p>
                   </div>
@@ -959,16 +1107,7 @@ const Register = () => {
                     </h3>
                   </div>
 
-                  <div className={`lp-register-consent-box ${hasRequiredFieldError('parentConsent') ? 'lp-input-error-box' : ''}`}>
-                  <label className="lp-register-checkline">
-                    <input
-                      id="parentMobileOpt"
-                      type="checkbox"
-                      checked={form.parentConsent}
-                      onChange={(event) => updateField('parentConsent', event.target.checked)}
-                    />
-                    <span>Parent / Guardian Consent *</span>
-                  </label>
+                  <div className="lp-register-consent-box">
                   <p className="lp-register-note">Verify parent mobile before creating the student account.</p>
 
                   <div className="lp-register-mobile-row lp-register-mobile-row-action">

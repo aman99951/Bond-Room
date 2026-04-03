@@ -92,7 +92,7 @@ const TrainingModules = () => {
       <TopAuth />
 
       <main className="flex-1">
-        <div className="max-w-[1180px] mx-auto px-4 sm:px-8 lg:px-10 py-8 sm:py-10">
+        <div className="w-full px-4 sm:px-8 lg:px-10 py-8 sm:py-10">
           <button
             type="button"
             className="inline-flex items-center gap-2 text-sm text-[#6b7280] hover:text-[#1f2937] mb-4"

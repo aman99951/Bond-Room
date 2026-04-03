@@ -124,6 +124,21 @@ const SessionRecords = () => {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchValue, setSearchValue] = useState('');
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(7);
+  const [totalCount, setTotalCount] = useState(0);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchValue(searchValue.trim());
+    }, 350);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchValue]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, debouncedSearchValue]);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,15 +149,28 @@ const SessionRecords = () => {
       try {
         const sessionApi = isMentorRole ? mentorApi : menteeApi;
         let sessionItems = [];
+        const sessionParams = {
+          page,
+          page_size: pageSize,
+          ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+          ...(debouncedSearchValue ? { search: debouncedSearchValue } : {}),
+        };
+
         if (isMentorRole) {
-          const response = await mentorApi.listSessions();
+          const response = await mentorApi.listSessions(sessionParams);
           sessionItems = normalizeList(response);
+          if (!cancelled) {
+            setTotalCount(Number(response?.count || 0));
+          }
         } else {
           const [sessionResponse, mentorResponse] = await Promise.all([
-            menteeApi.listSessions(),
+            menteeApi.listSessions(sessionParams),
             menteeApi.listMentors(),
           ]);
           sessionItems = normalizeList(sessionResponse);
+          if (!cancelled) {
+            setTotalCount(Number(sessionResponse?.count || 0));
+          }
           const mentorItems = normalizeList(mentorResponse);
           const nextMentorMap = {};
           mentorItems.forEach((item) => {
@@ -187,6 +215,7 @@ const SessionRecords = () => {
           setSessions([]);
           setRecordingsBySession({});
           setIncidentsBySession({});
+          setTotalCount(0);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -197,16 +226,17 @@ const SessionRecords = () => {
     return () => {
       cancelled = true;
     };
-  }, [isMentorRole]);
+  }, [debouncedSearchValue, isMentorRole, page, pageSize, statusFilter]);
 
-  const statuses = useMemo(() => {
-    const unique = new Set();
-    sessions.forEach((session) => {
-      const statusValue = String(session?.status || '').toLowerCase();
-      if (statusValue) unique.add(statusValue);
-    });
-    return ['all', ...Array.from(unique)];
-  }, [sessions]);
+  const statuses = useMemo(
+    () => ['all', 'requested', 'approved', 'scheduled', 'completed', 'canceled', 'no_show'],
+    []
+  );
+
+  const totalPages = useMemo(() => {
+    if (!totalCount) return 1;
+    return Math.max(1, Math.ceil(totalCount / pageSize));
+  }, [pageSize, totalCount]);
 
   const rows = useMemo(() => {
     return sessions
@@ -258,22 +288,8 @@ const SessionRecords = () => {
           mentorWarnings,
         };
       })
-      .filter((item) => {
-        if (statusFilter !== 'all') {
-          if (String(item.session?.status || '').toLowerCase() !== statusFilter) return false;
-        }
-        if (searchValue.trim()) {
-          const query = searchValue.trim().toLowerCase();
-          const participantName = String(item.participant?.name || '').toLowerCase();
-          const topic = (Array.isArray(item.session?.topic_tags) ? item.session.topic_tags.join(' ') : '').toLowerCase();
-          if (!participantName.includes(query) && !topic.includes(query) && !String(item.session?.id).includes(query)) {
-            return false;
-          }
-        }
-        return true;
-      })
       .sort((left, right) => getSessionSortTime(right.session) - getSessionSortTime(left.session));
-  }, [incidentsBySession, isMentorRole, mentorMap, recordingsBySession, searchValue, sessions, statusFilter]);
+  }, [incidentsBySession, isMentorRole, mentorMap, recordingsBySession, sessions]);
 
   return (
     <div className="min-h-screen bg-transparent p-2 sm:p-4 lg:p-6">
@@ -445,6 +461,32 @@ const SessionRecords = () => {
           );
         })}
       </div>
+
+      {!loading && totalPages > 1 ? (
+        <div className="mt-6 flex flex-col items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-[#e5e7eb] sm:flex-row">
+          <p className="text-xs text-[#6b7280]">
+            Showing page {page} of {totalPages} ({totalCount} total records)
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              disabled={page <= 1}
+              className="rounded-lg border border-[#d1d5db] bg-white px-3 py-1.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={page >= totalPages}
+              className="rounded-lg border border-[#d1d5db] bg-white px-3 py-1.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

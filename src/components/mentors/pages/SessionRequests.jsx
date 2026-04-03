@@ -10,10 +10,12 @@ import {
   CheckCircle2, 
   XCircle, 
   Inbox,
+  ArrowLeft,
   User,
   Monitor,
   Phone
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
 
@@ -59,6 +61,7 @@ const normalizeList = (payload) => {
 };
 
 const SessionRequests = () => {
+  const navigate = useNavigate();
   const { mentor } = useMentorData();
   const [sessions, setSessions] = useState([]);
   const [stats, setStats] = useState({ approvedToday: 0, approvedThisWeek: 0 });
@@ -139,6 +142,14 @@ return (
             <Inbox className="h-6 w-6 text-[#5D3699]" />
           </div>
           <div>
+            <button
+              type="button"
+              onClick={() => navigate('/mentor-sessions')}
+              className="mb-2 inline-flex items-center gap-1 rounded-lg border border-[#ded2f5] bg-white px-3 py-1.5 text-xs font-medium text-[#5D3699] transition-colors hover:bg-[#f8f4ff]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to My Sessions
+            </button>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
               Session Requests
             </h1>

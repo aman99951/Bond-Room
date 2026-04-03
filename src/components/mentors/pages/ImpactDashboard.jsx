@@ -317,6 +317,64 @@ const ImpactDashboard = () => {
       ? normalizedTopics
       : [{ label: 'No data', value: 0, count: 0 }];
 
+  const topicChartData = useMemo(() => {
+    if (isInitialLoading) {
+      return loadingTopicPlaceholders.map((item, index) => ({
+        ...item,
+        color: ['#5b2c91', '#7b4cbc', '#a27be0'][index % 3],
+      }));
+    }
+
+    if (!normalizedTopics.length) {
+      return [{ label: 'No topics yet', value: 100, count: 0, color: '#d9c8f8' }];
+    }
+
+    const sorted = [...normalizedTopics].sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
+    const top = sorted.slice(0, 5);
+    const remaining = sorted.slice(5);
+    const remainingCount = remaining.reduce((acc, item) => acc + Number(item.count || 0), 0);
+    const merged = remainingCount > 0 ? [...top, { label: 'Other Topics', count: remainingCount }] : top;
+    const totalCount = merged.reduce((acc, item) => acc + Number(item.count || 0), 0) || 1;
+    const palette = ['#5b2c91', '#7b4cbc', '#9b7bdc', '#b99ae9', '#d2bbf4', '#e8dcfb'];
+
+    let used = 0;
+    return merged.map((item, index) => {
+      const isLast = index === merged.length - 1;
+      const rawPercent = (Number(item.count || 0) / totalCount) * 100;
+      const value = isLast ? Math.max(0, 100 - used) : Math.round(rawPercent);
+      used += value;
+      return {
+        label: item.label || 'Other',
+        value,
+        count: Number(item.count || 0),
+        color: palette[index % palette.length],
+      };
+    });
+  }, [isInitialLoading, loadingTopicPlaceholders, normalizedTopics]);
+
+  const topicTotalCount = useMemo(
+    () => topicChartData.reduce((acc, item) => acc + Number(item.count || 0), 0),
+    [topicChartData]
+  );
+
+  const topicConicGradient = useMemo(() => {
+    let cursor = 0;
+    const segments = topicChartData.map((item, index) => {
+      const remaining = Math.max(0, 100 - cursor);
+      const slice = index === topicChartData.length - 1
+        ? remaining
+        : Math.min(remaining, Math.max(0, Number(item.value || 0)));
+      const start = cursor;
+      const end = cursor + slice;
+      cursor = end;
+      return `${item.color} ${start}% ${end}%`;
+    });
+    if (cursor < 100) {
+      segments.push(`#ede5ff ${cursor}% 100%`);
+    }
+    return `conic-gradient(${segments.join(', ')})`;
+  }, [topicChartData]);
+
   const sessionDetailRows = useMemo(
     () =>
       sessions.map((item) => ({
@@ -349,7 +407,7 @@ const ImpactDashboard = () => {
 
   return (
     <div className="min-h-screen bg-transparent p-4 text-[#111827] sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-[1400px]">
+      <div className="w-full">
         <div className="relative overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
           <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
           <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
@@ -481,18 +539,29 @@ const ImpactDashboard = () => {
             >
               Topics Addressed
             </h3>
-            <div className="mt-4 space-y-3">
-              {topicRows.map((item, index) => (
-                <div key={`${item.label}-${index}`}>
-                  <div className="flex items-center justify-between text-[11px] text-[#475467]">
-                    <span>{item.label}</span>
-                    <span>{item.value}%</span>
-                  </div>
-                  <div className="mt-2 h-2 w-full rounded-full bg-[#efe7ff]">
-                    <div className="h-2 rounded-full bg-[linear-gradient(90deg,#7b4cbc,#5b2c91)]" style={{ width: `${Math.min(item.value, 100)}%` }} />
+            <div className="mt-4 flex h-[calc(100%-28px)] flex-col justify-between gap-4">
+              <div className="grid place-items-center">
+                <div
+                  className="relative flex h-40 w-40 items-center justify-center rounded-full ring-1 ring-[#e4d8fb]"
+                  style={{ background: topicConicGradient }}
+                >
+                  <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-[linear-gradient(145deg,#ffffff,#f7f2ff)] ring-1 ring-[#e6def8]">
+                    <span className="text-[20px] font-semibold text-[#5b2c91]">{topicTotalCount}</span>
+                    <span className="text-[11px] text-[#6b5f84]">total logs</span>
                   </div>
                 </div>
-              ))}
+              </div>
+              <div className="space-y-2">
+                {topicChartData.map((item, index) => (
+                  <div key={`${item.label}-${index}`} className="flex items-center justify-between text-[11px] text-[#475467]">
+                    <span className="inline-flex min-w-0 items-center gap-2">
+                      <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span className="truncate">{item.label}</span>
+                    </span>
+                    <span className="ml-2 whitespace-nowrap">{item.value}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

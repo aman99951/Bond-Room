@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, X } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { useMenteeAssessment } from '../../apis/apihook/useMenteeAssessment';
@@ -52,7 +52,6 @@ const NeedsAssessment = () => {
     message: '',
     type: 'error',
   });
-  const hideBackButton = new URLSearchParams(location.search).get('from') === 'dashboard';
   const assessmentSearch = location.search || '';
 
   const options = ['Burnt Out', 'Anxious', 'Confused', 'Lonely', 'Hopeful', 'Other'];
@@ -143,10 +142,10 @@ const NeedsAssessment = () => {
       )}
 
       <header className="lp-hdr">
-        <Link to="/" className="lp-logo" aria-label="Go to landing page">
+        <div  className="lp-logo" aria-label="Go to landing page">
           <img src={logo} alt="Bond Room" />
           <span>Bridging Old and New Destinies</span>
-        </Link>
+        </div>
         <div className="lp-hdr-actions">
           <button type="button" className="lp-ghost" onClick={handleLogout} disabled={authLoading}>
             Logout
@@ -200,7 +199,9 @@ const NeedsAssessment = () => {
           )}
 
           <div className="lp-na-actions">
-          
+            <button type="button" onClick={() => navigate('/dashboard')} className="lp-na-btn-ghost">
+              Back to Dashboard
+            </button>
             <button type="button" onClick={handleNext} className="lp-na-btn-primary">Next Question {'\u2192'}</button>
           </div>
 

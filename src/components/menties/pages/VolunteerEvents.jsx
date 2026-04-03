@@ -55,6 +55,8 @@ const normalizeVolunteerEvent = (event) => ({
   completed_on: event?.completed_on || '',
 });
 
+const getCompletedEventDate = (event) => String(event?.completed_on || event?.date || '');
+
 const VolunteerEvents = () => {
   const navigate = useNavigate();
   const [upcomingEvents, setUpcomingEvents] = useState([]);
@@ -63,25 +65,32 @@ const VolunteerEvents = () => {
   const [eventsError, setEventsError] = useState('');
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
-  const [eventRange, setEventRange] = useState('year');
-  const [selectedDay, setSelectedDay] = useState(() => new Date().toISOString().slice(0, 10));
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
-  const [selectedYear, setSelectedYear] = useState(() => String(new Date().getFullYear()));
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [calendarCursor, setCalendarCursor] = useState(() => parseIsoDate(new Date().toISOString().slice(0, 10)));
-  const [monthPickerYear, setMonthPickerYear] = useState(() => Number(new Date().getFullYear()));
+  const [upcomingRange, setUpcomingRange] = useState('year');
+  const [upcomingSelectedDay, setUpcomingSelectedDay] = useState(() => new Date().toISOString().slice(0, 10));
+  const [upcomingSelectedMonth, setUpcomingSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [upcomingSelectedYear, setUpcomingSelectedYear] = useState(() => String(new Date().getFullYear()));
+  const [upcomingCalendarOpen, setUpcomingCalendarOpen] = useState(false);
+  const [upcomingCalendarCursor, setUpcomingCalendarCursor] = useState(() => parseIsoDate(new Date().toISOString().slice(0, 10)));
+  const [upcomingMonthPickerYear, setUpcomingMonthPickerYear] = useState(() => Number(new Date().getFullYear()));
+  const [completedRange, setCompletedRange] = useState('year');
+  const [completedSelectedDay, setCompletedSelectedDay] = useState(() => new Date().toISOString().slice(0, 10));
+  const [completedSelectedMonth, setCompletedSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [completedSelectedYear, setCompletedSelectedYear] = useState(() => String(new Date().getFullYear()));
+  const [completedCalendarOpen, setCompletedCalendarOpen] = useState(false);
+  const [completedCalendarCursor, setCompletedCalendarCursor] = useState(() => parseIsoDate(new Date().toISOString().slice(0, 10)));
+  const [completedMonthPickerYear, setCompletedMonthPickerYear] = useState(() => Number(new Date().getFullYear()));
   const calendarPopoverRef = useRef(null);
+  const completedCalendarPopoverRef = useRef(null);
 
   useEffect(() => {
-    if (!calendarOpen) return undefined;
+    if (!upcomingCalendarOpen && !completedCalendarOpen) return undefined;
     const handleOutside = (event) => {
-      if (!calendarPopoverRef.current?.contains(event.target)) {
-        setCalendarOpen(false);
-      }
+      if (upcomingCalendarOpen && !calendarPopoverRef.current?.contains(event.target)) setUpcomingCalendarOpen(false);
+      if (completedCalendarOpen && !completedCalendarPopoverRef.current?.contains(event.target)) setCompletedCalendarOpen(false);
     };
     window.addEventListener('mousedown', handleOutside);
     return () => window.removeEventListener('mousedown', handleOutside);
-  }, [calendarOpen]);
+  }, [upcomingCalendarOpen, completedCalendarOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,25 +121,40 @@ const VolunteerEvents = () => {
     };
   }, []);
 
-  const yearOptions = useMemo(() => {
-    const values = [
-      ...upcomingEvents.map((event) => String(event?.date || '').slice(0, 4)),
-      ...completedEvents.map((event) => String(event?.completed_on || '').slice(0, 4)),
-    ].filter((value) => /^\d{4}$/.test(value));
+  const upcomingYearOptions = useMemo(() => {
+    const values = upcomingEvents
+      .map((event) => String(event?.date || '').slice(0, 4))
+      .filter((value) => /^\d{4}$/.test(value));
     if (!values.length) return [String(new Date().getFullYear())];
     const set = new Set(values);
     return Array.from(set).sort((a, b) => Number(a) - Number(b));
-  }, [completedEvents, upcomingEvents]);
+  }, [upcomingEvents]);
+
+  const completedYearOptions = useMemo(() => {
+    const values = completedEvents
+      .map((event) => getCompletedEventDate(event).slice(0, 4))
+      .filter((value) => /^\d{4}$/.test(value));
+    if (!values.length) return [String(new Date().getFullYear())];
+    const set = new Set(values);
+    return Array.from(set).sort((a, b) => Number(a) - Number(b));
+  }, [completedEvents]);
 
   useEffect(() => {
-    if (!yearOptions.length) return;
-    if (!yearOptions.includes(selectedYear)) {
-      setSelectedYear(yearOptions[yearOptions.length - 1]);
+    if (!upcomingYearOptions.length) return;
+    if (!upcomingYearOptions.includes(upcomingSelectedYear)) {
+      setUpcomingSelectedYear(upcomingYearOptions[upcomingYearOptions.length - 1]);
     }
-  }, [selectedYear, yearOptions]);
+  }, [upcomingSelectedYear, upcomingYearOptions]);
 
-  const calendarDays = useMemo(() => {
-    const first = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
+  useEffect(() => {
+    if (!completedYearOptions.length) return;
+    if (!completedYearOptions.includes(completedSelectedYear)) {
+      setCompletedSelectedYear(completedYearOptions[completedYearOptions.length - 1]);
+    }
+  }, [completedSelectedYear, completedYearOptions]);
+
+  const upcomingCalendarDays = useMemo(() => {
+    const first = new Date(upcomingCalendarCursor.getFullYear(), upcomingCalendarCursor.getMonth(), 1);
     const firstWeekday = first.getDay();
     const start = new Date(first);
     start.setDate(first.getDate() - firstWeekday);
@@ -139,39 +163,71 @@ const VolunteerEvents = () => {
       day.setDate(start.getDate() + index);
       return day;
     });
-  }, [calendarCursor]);
+  }, [upcomingCalendarCursor]);
 
-  const matchesRange = (dateValue) => {
+  const completedCalendarDays = useMemo(() => {
+    const first = new Date(completedCalendarCursor.getFullYear(), completedCalendarCursor.getMonth(), 1);
+    const firstWeekday = first.getDay();
+    const start = new Date(first);
+    start.setDate(first.getDate() - firstWeekday);
+    return Array.from({ length: 42 }).map((_, index) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + index);
+      return day;
+    });
+  }, [completedCalendarCursor]);
+
+  const matchesUpcomingRange = (dateValue) => {
     const normalized = String(dateValue || '');
     if (!normalized) return false;
 
-    if (eventRange === 'day') return normalized === selectedDay;
-    if (eventRange === 'week') {
-      const start = new Date(`${selectedDay}T00:00:00`);
+    if (upcomingRange === 'day') return normalized === upcomingSelectedDay;
+    if (upcomingRange === 'week') {
+      const start = new Date(`${upcomingSelectedDay}T00:00:00`);
       const eventDate = new Date(`${normalized}T00:00:00`);
       if (Number.isNaN(start.getTime()) || Number.isNaN(eventDate.getTime())) return false;
       const diffDays = Math.floor((eventDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
       return diffDays >= 0 && diffDays <= 7;
     }
-    if (eventRange === 'month') return normalized.slice(0, 7) === selectedMonth;
-    if (eventRange === 'year') return normalized.slice(0, 4) === selectedYear;
+    if (upcomingRange === 'month') return normalized.slice(0, 7) === upcomingSelectedMonth;
+    if (upcomingRange === 'year') return normalized.slice(0, 4) === upcomingSelectedYear;
+    return true;
+  };
+
+  const matchesCompletedRange = (dateValue) => {
+    const normalized = String(dateValue || '');
+    if (!normalized) return false;
+
+    if (completedRange === 'day') return normalized === completedSelectedDay;
+    if (completedRange === 'week') {
+      const start = new Date(`${completedSelectedDay}T00:00:00`);
+      const eventDate = new Date(`${normalized}T00:00:00`);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(eventDate.getTime())) return false;
+      const diffDays = Math.floor((eventDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays <= 7;
+    }
+    if (completedRange === 'month') return normalized.slice(0, 7) === completedSelectedMonth;
+    if (completedRange === 'year') return normalized.slice(0, 4) === completedSelectedYear;
     return true;
   };
 
   const filteredUpcoming = useMemo(
-    () => upcomingEvents.filter((event) => matchesRange(event.date)),
-    [eventRange, selectedDay, selectedMonth, selectedYear, upcomingEvents]
+    () => upcomingEvents.filter((event) => matchesUpcomingRange(event.date)),
+    [upcomingEvents, upcomingRange, upcomingSelectedDay, upcomingSelectedMonth, upcomingSelectedYear]
   );
 
   const filteredCompleted = useMemo(
-    () => completedEvents.filter((event) => matchesRange(event.completed_on)),
-    [completedEvents, eventRange, selectedDay, selectedMonth, selectedYear]
+    () => completedEvents.filter((event) => matchesCompletedRange(getCompletedEventDate(event))),
+    [completedEvents, completedRange, completedSelectedDay, completedSelectedMonth, completedSelectedYear]
   );
 
   useEffect(() => {
     setUpcomingPage(1);
+  }, [upcomingRange, upcomingSelectedDay, upcomingSelectedMonth, upcomingSelectedYear]);
+
+  useEffect(() => {
     setCompletedPage(1);
-  }, [eventRange, selectedDay, selectedMonth, selectedYear]);
+  }, [completedRange, completedSelectedDay, completedSelectedMonth, completedSelectedYear]);
 
   const upcomingTotalPages = Math.max(1, Math.ceil(filteredUpcoming.length / EVENTS_PER_PAGE));
   const completedTotalPages = Math.max(1, Math.ceil(filteredCompleted.length / EVENTS_PER_PAGE));
@@ -194,19 +250,35 @@ const VolunteerEvents = () => {
     return filteredCompleted.slice(start, start + EVENTS_PER_PAGE);
   }, [completedPage, filteredCompleted]);
 
-  const selectedDayLabel = useMemo(() => formatDate(selectedDay), [selectedDay]);
-  const selectedMonthLabel = useMemo(() => {
-    const parsed = parseIsoDate(`${selectedMonth}-01`);
+  const upcomingSelectedDayLabel = useMemo(() => formatDate(upcomingSelectedDay), [upcomingSelectedDay]);
+  const upcomingSelectedMonthLabel = useMemo(() => {
+    const parsed = parseIsoDate(`${upcomingSelectedMonth}-01`);
     return parsed.toLocaleDateString([], { month: 'long', year: 'numeric' });
-  }, [selectedMonth]);
+  }, [upcomingSelectedMonth]);
+  const completedSelectedDayLabel = useMemo(() => formatDate(completedSelectedDay), [completedSelectedDay]);
+  const completedSelectedMonthLabel = useMemo(() => {
+    const parsed = parseIsoDate(`${completedSelectedMonth}-01`);
+    return parsed.toLocaleDateString([], { month: 'long', year: 'numeric' });
+  }, [completedSelectedMonth]);
 
-  const toggleCalendar = () => {
-    setCalendarOpen((prev) => !prev);
-    if (!calendarOpen) {
-      if (eventRange === 'month') {
-        setMonthPickerYear(Number(selectedMonth.slice(0, 4)) || new Date().getFullYear());
-      } else if (eventRange === 'day' || eventRange === 'week') {
-        setCalendarCursor(parseIsoDate(selectedDay));
+  const toggleUpcomingCalendar = () => {
+    setUpcomingCalendarOpen((prev) => !prev);
+    if (!upcomingCalendarOpen) {
+      if (upcomingRange === 'month') {
+        setUpcomingMonthPickerYear(Number(upcomingSelectedMonth.slice(0, 4)) || new Date().getFullYear());
+      } else if (upcomingRange === 'day' || upcomingRange === 'week') {
+        setUpcomingCalendarCursor(parseIsoDate(upcomingSelectedDay));
+      }
+    }
+  };
+
+  const toggleCompletedCalendar = () => {
+    setCompletedCalendarOpen((prev) => !prev);
+    if (!completedCalendarOpen) {
+      if (completedRange === 'month') {
+        setCompletedMonthPickerYear(Number(completedSelectedMonth.slice(0, 4)) || new Date().getFullYear());
+      } else if (completedRange === 'day' || completedRange === 'week') {
+        setCompletedCalendarCursor(parseIsoDate(completedSelectedDay));
       }
     }
   };
@@ -246,188 +318,193 @@ const VolunteerEvents = () => {
         </div>
       </div>
 
-      <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <div className="inline-flex w-full items-center gap-1 overflow-x-auto rounded-full border border-[#e8dcff] bg-white p-1 sm:w-auto">
-          {[
-            { key: 'day', label: 'Day' },
-            { key: 'week', label: 'Week' },
-            { key: 'month', label: 'Month' },
-            { key: 'year', label: 'Year' },
-          ].map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => {
-                setEventRange(item.key);
-                setCalendarOpen(false);
-              }}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
-                eventRange === item.key
-                  ? 'bg-[#5D3699] text-white shadow-sm'
-                  : 'text-[#5D3699] hover:bg-[#f5f3ff]'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+      <section className="mt-8">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff] ring-1 ring-[#e9ddff]">
+              <Calendar className="h-5 w-5 text-[#5D3699]" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[#111827]">Upcoming Activities</h2>
+              <p className="text-xs text-[#6b7280]">Join and participate with your community</p>
+            </div>
+          </div>
 
-        <div className="relative" ref={calendarPopoverRef}>
-          <button
-            type="button"
-            onClick={toggleCalendar}
-            className="inline-flex w-full items-center justify-between gap-2 rounded-full border border-[#e8dcff] bg-white px-3 py-2 text-xs font-medium text-[#5D3699] transition-colors hover:bg-[#f8f4ff] sm:w-auto sm:justify-start"
-          >
-            <CalendarDays className="h-3.5 w-3.5" />
-            {eventRange === 'day' || eventRange === 'week'
-              ? selectedDayLabel
-              : eventRange === 'month'
-                ? selectedMonthLabel
-                : selectedYear}
-            <ChevronRight className={`h-3.5 w-3.5 transition-transform ${calendarOpen ? 'rotate-90' : ''}`} />
-          </button>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+            <div className="inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-[#e8dcff] bg-white p-1">
+              {[
+                { key: 'day', label: 'Day' },
+                { key: 'week', label: 'Week' },
+                { key: 'month', label: 'Month' },
+                { key: 'year', label: 'Year' },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => {
+                    setUpcomingRange(item.key);
+                    setUpcomingCalendarOpen(false);
+                  }}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
+                    upcomingRange === item.key
+                      ? 'bg-[#5D3699] text-white shadow-sm'
+                      : 'text-[#5D3699] hover:bg-[#f5f3ff]'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
 
-          {calendarOpen && (
-            <div className="absolute right-0 z-30 mt-2 w-[min(92vw,320px)] rounded-2xl border border-[#e8dcff] bg-white p-3 shadow-[0_20px_45px_-26px_rgba(93,54,153,0.65)] sm:left-0 sm:right-auto sm:w-[320px]">
-              {(eventRange === 'day' || eventRange === 'week') && (
-                <>
-                  <div className="mb-2 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                      className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
-                      aria-label="Previous month"
-                    >
-                      <ChevronRight className="h-4 w-4 rotate-180" />
-                    </button>
-                    <p className="text-sm font-semibold text-[#312049]">
-                      {calendarCursor.toLocaleDateString([], { month: 'long', year: 'numeric' })}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                      className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
-                      aria-label="Next month"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
+            <div className="relative" ref={calendarPopoverRef}>
+              <button
+                type="button"
+                onClick={toggleUpcomingCalendar}
+                className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#e8dcff] bg-white px-3 py-2 text-xs font-medium text-[#5D3699] transition-colors hover:bg-[#f8f4ff]"
+              >
+                <CalendarDays className="h-3.5 w-3.5" />
+                <span className="max-w-[130px] truncate sm:max-w-none">
+                  {upcomingRange === 'day' || upcomingRange === 'week'
+                    ? upcomingSelectedDayLabel
+                    : upcomingRange === 'month'
+                      ? upcomingSelectedMonthLabel
+                      : upcomingSelectedYear}
+                </span>
+                <ChevronRight className={`h-3.5 w-3.5 transition-transform ${upcomingCalendarOpen ? 'rotate-90' : ''}`} />
+              </button>
 
-                  <div className="grid grid-cols-7 gap-1">
-                    {calendarWeekLabels.map((label) => (
-                      <span key={label} className="text-center text-[10px] font-semibold text-[#7b699d]">
-                        {label}
-                      </span>
-                    ))}
-                    {calendarDays.map((day) => {
-                      const iso = toIsoDate(day);
-                      const inCurrentMonth = day.getMonth() === calendarCursor.getMonth();
-                      const selected = iso === selectedDay;
-                      return (
+              {upcomingCalendarOpen && (
+                <div className="absolute right-0 z-30 mt-2 w-[min(92vw,320px)] rounded-2xl border border-[#e8dcff] bg-white p-3 shadow-[0_20px_45px_-26px_rgba(93,54,153,0.65)] sm:w-[320px]">
+                  {(upcomingRange === 'day' || upcomingRange === 'week') && (
+                    <>
+                      <div className="mb-2 flex items-center justify-between">
                         <button
-                          key={iso}
                           type="button"
-                          onClick={() => {
-                            setSelectedDay(iso);
-                            setCalendarOpen(false);
-                          }}
-                          className={`h-8 rounded-lg text-xs transition-colors ${
-                            selected
-                              ? 'bg-[#5D3699] text-white'
-                              : inCurrentMonth
-                                ? 'text-[#312049] hover:bg-[#f5f3ff]'
-                                : 'text-[#b8aecb] hover:bg-[#faf7ff]'
-                          }`}
+                          onClick={() => setUpcomingCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
+                          aria-label="Previous month"
                         >
-                          {day.getDate()}
+                          <ChevronRight className="h-4 w-4 rotate-180" />
                         </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-
-              {eventRange === 'month' && (
-                <>
-                  <div className="mb-2 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setMonthPickerYear((prev) => prev - 1)}
-                      className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
-                      aria-label="Previous year"
-                    >
-                      <ChevronRight className="h-4 w-4 rotate-180" />
-                    </button>
-                    <p className="text-sm font-semibold text-[#312049]">{monthPickerYear}</p>
-                    <button
-                      type="button"
-                      onClick={() => setMonthPickerYear((prev) => prev + 1)}
-                      className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
-                      aria-label="Next year"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {Array.from({ length: 12 }).map((_, index) => {
-                      const date = new Date(monthPickerYear, index, 1);
-                      const monthValue = toIsoMonth(date);
-                      const selected = monthValue === selectedMonth;
-                      return (
+                        <p className="text-sm font-semibold text-[#312049]">
+                          {upcomingCalendarCursor.toLocaleDateString([], { month: 'long', year: 'numeric' })}
+                        </p>
                         <button
-                          key={monthValue}
                           type="button"
-                          onClick={() => {
-                            setSelectedMonth(monthValue);
-                            setCalendarOpen(false);
-                          }}
-                          className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
-                            selected ? 'bg-[#5D3699] text-white' : 'text-[#312049] hover:bg-[#f5f3ff]'
-                          }`}
+                          onClick={() => setUpcomingCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
+                          aria-label="Next month"
                         >
-                          {date.toLocaleDateString([], { month: 'short' })}
+                          <ChevronRight className="h-4 w-4" />
                         </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+                      </div>
 
-              {eventRange === 'year' && (
-                <div className="grid grid-cols-3 gap-2">
-                  {yearOptions.map((year) => {
-                    const selected = year === selectedYear;
-                    return (
-                      <button
-                        key={year}
-                        type="button"
-                        onClick={() => {
-                          setSelectedYear(year);
-                          setCalendarOpen(false);
-                        }}
-                        className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
-                          selected ? 'bg-[#5D3699] text-white' : 'text-[#312049] hover:bg-[#f5f3ff]'
-                        }`}
-                      >
-                        {year}
-                      </button>
-                    );
-                  })}
+                      <div className="grid grid-cols-7 gap-1">
+                        {calendarWeekLabels.map((label) => (
+                          <span key={label} className="text-center text-[10px] font-semibold text-[#7b699d]">
+                            {label}
+                          </span>
+                        ))}
+                        {upcomingCalendarDays.map((day) => {
+                          const iso = toIsoDate(day);
+                          const inCurrentMonth = day.getMonth() === upcomingCalendarCursor.getMonth();
+                          const selected = iso === upcomingSelectedDay;
+                          return (
+                            <button
+                              key={iso}
+                              type="button"
+                              onClick={() => {
+                                setUpcomingSelectedDay(iso);
+                                setUpcomingCalendarOpen(false);
+                              }}
+                              className={`h-8 rounded-lg text-xs transition-colors ${
+                                selected
+                                  ? 'bg-[#5D3699] text-white'
+                                  : inCurrentMonth
+                                    ? 'text-[#312049] hover:bg-[#f5f3ff]'
+                                    : 'text-[#b8aecb] hover:bg-[#faf7ff]'
+                              }`}
+                            >
+                              {day.getDate()}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {upcomingRange === 'month' && (
+                    <>
+                      <div className="mb-2 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => setUpcomingMonthPickerYear((prev) => prev - 1)}
+                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
+                          aria-label="Previous year"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                        </button>
+                        <p className="text-sm font-semibold text-[#312049]">{upcomingMonthPickerYear}</p>
+                        <button
+                          type="button"
+                          onClick={() => setUpcomingMonthPickerYear((prev) => prev + 1)}
+                          className="rounded-lg p-1 text-[#5D3699] hover:bg-[#f5f3ff]"
+                          aria-label="Next year"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {Array.from({ length: 12 }).map((_, index) => {
+                          const date = new Date(upcomingMonthPickerYear, index, 1);
+                          const monthValue = toIsoMonth(date);
+                          const selected = monthValue === upcomingSelectedMonth;
+                          return (
+                            <button
+                              key={monthValue}
+                              type="button"
+                              onClick={() => {
+                                setUpcomingSelectedMonth(monthValue);
+                                setUpcomingCalendarOpen(false);
+                              }}
+                              className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
+                                selected ? 'bg-[#5D3699] text-white' : 'text-[#312049] hover:bg-[#f5f3ff]'
+                              }`}
+                            >
+                              {date.toLocaleDateString([], { month: 'short' })}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {upcomingRange === 'year' && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {upcomingYearOptions.map((year) => {
+                        const selected = year === upcomingSelectedYear;
+                        return (
+                          <button
+                            key={year}
+                            type="button"
+                            onClick={() => {
+                              setUpcomingSelectedYear(year);
+                              setUpcomingCalendarOpen(false);
+                            }}
+                            className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
+                              selected ? 'bg-[#5D3699] text-white' : 'text-[#312049] hover:bg-[#f5f3ff]'
+                            }`}
+                          >
+                            {year}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
-      </div>
-
-      <section className="mt-8">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff] ring-1 ring-[#e9ddff]">
-            <Calendar className="h-5 w-5 text-[#5D3699]" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-[#111827]">Upcoming Activities</h2>
-            <p className="text-xs text-[#6b7280]">Join and participate with your community</p>
           </div>
         </div>
 
@@ -502,13 +579,194 @@ const VolunteerEvents = () => {
       </section>
 
       <section className="mt-10">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eefcf5] ring-1 ring-[#c7f0da]">
-            <CheckCircle2 className="h-5 w-5 text-[#15803d]" />
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eefcf5] ring-1 ring-[#c7f0da]">
+              <CheckCircle2 className="h-5 w-5 text-[#15803d]" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[#111827]">Completed Activities</h2>
+              <p className="text-xs text-[#6b7280]">Finished events and impact highlights</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-semibold text-[#111827]">Completed Activities</h2>
-            <p className="text-xs text-[#6b7280]">Finished events and impact highlights</p>
+
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+            <div className="inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-[#dcfce7] bg-white p-1">
+              {[
+                { key: 'day', label: 'Day' },
+                { key: 'week', label: 'Week' },
+                { key: 'month', label: 'Month' },
+                { key: 'year', label: 'Year' },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => {
+                    setCompletedRange(item.key);
+                    setCompletedCalendarOpen(false);
+                  }}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
+                    completedRange === item.key
+                      ? 'bg-[#15803d] text-white shadow-sm'
+                      : 'text-[#166534] hover:bg-[#f0fdf4]'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative" ref={completedCalendarPopoverRef}>
+              <button
+                type="button"
+                onClick={toggleCompletedCalendar}
+                className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#dcfce7] bg-white px-3 py-2 text-xs font-medium text-[#166534] transition-colors hover:bg-[#f0fdf4]"
+              >
+                <CalendarDays className="h-3.5 w-3.5" />
+                <span className="max-w-[130px] truncate sm:max-w-none">
+                  {completedRange === 'day' || completedRange === 'week'
+                    ? completedSelectedDayLabel
+                    : completedRange === 'month'
+                      ? completedSelectedMonthLabel
+                      : completedSelectedYear}
+                </span>
+                <ChevronRight className={`h-3.5 w-3.5 transition-transform ${completedCalendarOpen ? 'rotate-90' : ''}`} />
+              </button>
+
+              {completedCalendarOpen && (
+                <div className="absolute right-0 z-30 mt-2 w-[min(92vw,320px)] rounded-2xl border border-[#dcfce7] bg-white p-3 shadow-[0_20px_45px_-26px_rgba(21,128,61,0.4)] sm:w-[320px]">
+                  {(completedRange === 'day' || completedRange === 'week') && (
+                    <>
+                      <div className="mb-2 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => setCompletedCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                          className="rounded-lg p-1 text-[#166534] hover:bg-[#f0fdf4]"
+                          aria-label="Previous month"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                        </button>
+                        <p className="text-sm font-semibold text-[#14532d]">
+                          {completedCalendarCursor.toLocaleDateString([], { month: 'long', year: 'numeric' })}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setCompletedCalendarCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                          className="rounded-lg p-1 text-[#166534] hover:bg-[#f0fdf4]"
+                          aria-label="Next month"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-1">
+                        {calendarWeekLabels.map((label) => (
+                          <span key={label} className="text-center text-[10px] font-semibold text-[#4b7a57]">
+                            {label}
+                          </span>
+                        ))}
+                        {completedCalendarDays.map((day) => {
+                          const iso = toIsoDate(day);
+                          const inCurrentMonth = day.getMonth() === completedCalendarCursor.getMonth();
+                          const selected = iso === completedSelectedDay;
+                          return (
+                            <button
+                              key={iso}
+                              type="button"
+                              onClick={() => {
+                                setCompletedSelectedDay(iso);
+                                setCompletedCalendarOpen(false);
+                              }}
+                              className={`h-8 rounded-lg text-xs transition-colors ${
+                                selected
+                                  ? 'bg-[#15803d] text-white'
+                                  : inCurrentMonth
+                                    ? 'text-[#14532d] hover:bg-[#f0fdf4]'
+                                    : 'text-[#a7bcae] hover:bg-[#f8faf8]'
+                              }`}
+                            >
+                              {day.getDate()}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {completedRange === 'month' && (
+                    <>
+                      <div className="mb-2 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => setCompletedMonthPickerYear((prev) => prev - 1)}
+                          className="rounded-lg p-1 text-[#166534] hover:bg-[#f0fdf4]"
+                          aria-label="Previous year"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                        </button>
+                        <p className="text-sm font-semibold text-[#14532d]">{completedMonthPickerYear}</p>
+                        <button
+                          type="button"
+                          onClick={() => setCompletedMonthPickerYear((prev) => prev + 1)}
+                          className="rounded-lg p-1 text-[#166534] hover:bg-[#f0fdf4]"
+                          aria-label="Next year"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {Array.from({ length: 12 }).map((_, index) => {
+                          const date = new Date(completedMonthPickerYear, index, 1);
+                          const monthValue = toIsoMonth(date);
+                          const selected = monthValue === completedSelectedMonth;
+                          return (
+                            <button
+                              key={monthValue}
+                              type="button"
+                              onClick={() => {
+                                setCompletedSelectedMonth(monthValue);
+                                setCompletedCalendarOpen(false);
+                              }}
+                              className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
+                                selected
+                                  ? 'bg-[#15803d] text-white'
+                                  : 'text-[#14532d] hover:bg-[#f0fdf4]'
+                              }`}
+                            >
+                              {date.toLocaleDateString([], { month: 'short' })}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {completedRange === 'year' && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {completedYearOptions.map((year) => {
+                        const selected = year === completedSelectedYear;
+                        return (
+                          <button
+                            key={year}
+                            type="button"
+                            onClick={() => {
+                              setCompletedSelectedYear(year);
+                              setCompletedCalendarOpen(false);
+                            }}
+                            className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
+                              selected ? 'bg-[#15803d] text-white' : 'text-[#14532d] hover:bg-[#f0fdf4]'
+                            }`}
+                          >
+                            {year}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -534,7 +792,7 @@ const VolunteerEvents = () => {
                 <p className="line-clamp-2 text-xs leading-5 text-[#6b7280]">{event.summary}</p>
                 <p className="inline-flex items-center gap-1 rounded-full bg-[#f5f3ff] px-2.5 py-1 text-[10px] font-medium text-[#5D3699]">
                   <Calendar className="h-3 w-3" />
-                  {formatDate(event.completed_on)}
+                  {formatDate(getCompletedEventDate(event))}
                 </p>
                 <div className="rounded-xl border border-[#dcfce7] bg-[#f0fdf4] p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-[#166534]">Impact</p>

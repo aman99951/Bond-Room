@@ -252,6 +252,41 @@
   box-shadow: 0 0 0 4px rgba(91, 44, 199, 0.1);
 }
 
+.lp-password-wrap {
+  position: relative;
+}
+
+.lp-password-input {
+  padding-right: 44px;
+}
+
+.lp-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: #8b95a7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.lp-password-toggle:hover {
+  color: #5b2c91;
+  background: #f5efff;
+}
+
+.lp-password-toggle:focus-visible {
+  outline: 2px solid rgba(91, 44, 199, 0.4);
+  outline-offset: 1px;
+}
+
 .lp-input-otp {
   letter-spacing: 0.38em;
   text-align: center;

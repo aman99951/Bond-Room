@@ -93,6 +93,10 @@ const MainLayout = () => {
     setMentorTourStep((prev) => prev + 1);
   };
 
+  const handleMentorTourPrevious = () => {
+    setMentorTourStep((prev) => Math.max(0, prev - 1));
+  };
+
   const handleMentorTourGoTo = () => {
     const step = mentorTourSteps[mentorTourStep];
     if (!step?.route) return;
@@ -205,6 +209,14 @@ const MainLayout = () => {
                 className="inline-flex items-center justify-center rounded-xl border border-[#d1d5db] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#f9fafb]"
               >
                 Skip
+              </button>
+              <button
+                type="button"
+                onClick={handleMentorTourPrevious}
+                disabled={mentorTourStep === 0}
+                className="inline-flex items-center justify-center rounded-xl border border-[#d1d5db] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Previous
               </button>
               {mentorTourSteps[mentorTourStep]?.route ? (
                 <button

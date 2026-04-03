@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Phone, Lock, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Mail } from 'lucide-react';
+import { Phone, Lock, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Mail, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import { clearAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
@@ -28,6 +28,7 @@ const Login = () => {
   const [selectedRole, setSelectedRole] = useState('mentee');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -249,14 +250,25 @@ const Login = () => {
                         <Lock size={16} />
                         Password
                       </label>
-                      <input
-                        id="loginPassword"
-                        type="password"
-                        className="lp-input"
-                        placeholder="Enter password"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                      />
+                      <div className="lp-password-wrap">
+                        <input
+                          id="loginPassword"
+                          type={showPassword ? 'text' : 'password'}
+                          className="lp-input lp-password-input"
+                          placeholder="Enter password"
+                          value={password}
+                          onChange={(event) => setPassword(event.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="lp-password-toggle"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          aria-pressed={showPassword}
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                     </div>
                   </>
                 ) : (

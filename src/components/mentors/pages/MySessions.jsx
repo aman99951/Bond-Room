@@ -400,6 +400,10 @@ const MySessions = () => {
       return true;
     });
   }, [filterValue, sessions, weekFilterValue, weekStartKey, weekEndKey, searchValue]);
+  const pendingRequestCount = useMemo(
+    () => sessions.filter((session) => String(session?.status || '').toLowerCase() === 'requested').length,
+    [sessions]
+  );
 
   const sessionsThisWeek = useMemo(() => {
     return filteredSessions.filter((session) => {
@@ -515,9 +519,9 @@ const MySessions = () => {
   };
 
 return (
-  <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
+  <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8 overflow-hidden">
     {/* Header Section */}
-    <div className="relative mb-8 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
+    <div className="relative z-10 mb-8 overflow-visible rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
       <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
       <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
@@ -533,6 +537,23 @@ return (
             <p className="mt-1 text-sm text-[#6b7280]">
               Manage and track all your mentoring sessions
             </p>
+            <button
+              type="button"
+              onClick={() => navigate('/mentor-session-requests')}
+              className={`mt-3 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-white transition-colors ${
+                pendingRequestCount > 0
+                  ? 'animate-pulse bg-[#6d28d9] shadow-[0_0_0_4px_rgba(109,40,217,0.18)] hover:bg-[#5b21b6]'
+                  : 'bg-[#5D3699] hover:bg-[#4a2b7a]'
+              }`}
+            >
+              Session Requests
+              {pendingRequestCount > 0 ? (
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold text-[#5D3699]">
+                  {pendingRequestCount}
+                </span>
+              ) : null}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
 
@@ -559,7 +580,7 @@ return (
           </div>
 
           {/* Filter Dropdown */}
-          <div className="relative" tabIndex={0} onBlur={() => setFilterOpen(false)}>
+          <div className="relative z-30" tabIndex={0} onBlur={() => setFilterOpen(false)}>
             <button
               type="button"
               className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] sm:w-40"
@@ -572,7 +593,7 @@ return (
               <ChevronDown className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
             </button>
             {filterOpen && (
-              <ul className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
+              <ul className="absolute z-50 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
                 {filterOptions.map((opt) => (
                   <li key={opt}>
                     <button
@@ -597,7 +618,7 @@ return (
           </div>
 
           {/* Week Filter Dropdown */}
-          <div className="relative" tabIndex={0} onBlur={() => setWeekFilterOpen(false)}>
+          <div className="relative z-30" tabIndex={0} onBlur={() => setWeekFilterOpen(false)}>
             <button
               type="button"
               className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] sm:w-36"
@@ -607,7 +628,7 @@ return (
               <ChevronDown className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${weekFilterOpen ? 'rotate-180' : ''}`} />
             </button>
             {weekFilterOpen && (
-              <ul className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
+              <ul className="absolute z-50 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
                 {weekFilterOptions.map((opt) => (
                   <li key={opt}>
                     <button

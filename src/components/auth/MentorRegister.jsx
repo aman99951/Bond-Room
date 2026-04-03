@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,12 +6,12 @@ import mentorLeft from '../assets/teach1.png';
 import mentorBottom from '../assets/teach2.png';
 import imageContainer from '../assets/Image Container.png';
 import { useMentorAuth } from '../../apis/apihook/useMentorAuth';
-import { authApi } from '../../apis/api/authApi';
 import { setPendingMentorRegistration } from '../../apis/api/storage';
-import { UserRound, Briefcase } from 'lucide-react';
+import { UserRound, Briefcase, Camera } from 'lucide-react';
+import BoundedDatePicker from '../shared/BoundedDatePicker';
 
-const MENTOR_MIN_AGE = 45;
-const MENTOR_MAX_AGE = 60;
+const MENTOR_MIN_AGE = 25;
+const MENTOR_MAX_AGE = 65;
 
 const yearsAgo = (years) => {
   const today = new Date();
@@ -34,7 +34,100 @@ const getMentorDobBounds = () => ({
 
 const REQUIRED_FIELDS_MESSAGE = 'Please fill all required fields to continue.';
 const MOBILE_DIGITS_LENGTH = 10;
+const BIO_MAX_WORDS = 1000;
+const CONTINUOUS_TEXT_WORD_CHUNK = 8;
 const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
+const countWords = (value) => {
+  const text = String(value || '').trim();
+  if (!text) return 0;
+
+  const tokens = text.split(/\s+/).filter(Boolean);
+  return tokens.reduce((count, token) => (
+    count + Math.max(1, Math.ceil(token.length / CONTINUOUS_TEXT_WORD_CHUNK))
+  ), 0);
+};
+const truncateToWordLimit = (value, maxWords) => {
+  const text = String(value || '');
+  if (!text.trim()) return text;
+
+  const parts = text.split(/(\s+)/);
+  const output = [];
+  let words = 0;
+
+  for (const part of parts) {
+    if (!part) continue;
+    if (/^\s+$/.test(part)) {
+      output.push(part);
+      continue;
+    }
+    const tokenWords = Math.max(1, Math.ceil(part.length / CONTINUOUS_TEXT_WORD_CHUNK));
+    const remaining = maxWords - words;
+    if (remaining <= 0) break;
+    if (tokenWords <= remaining) {
+      output.push(part);
+      words += tokenWords;
+      continue;
+    }
+
+    const allowedChars = remaining * CONTINUOUS_TEXT_WORD_CHUNK;
+    if (allowedChars > 0) {
+      output.push(part.slice(0, allowedChars));
+    }
+    words = maxWords;
+    break;
+  }
+
+  return output.join('').trimEnd();
+};
+const COUNTRY_OPTIONS = ['India', 'USA'];
+const COUNTRY_DIAL_CODE = {
+  India: '+91',
+  USA: '+1',
+};
+const LOCATION_OPTIONS = {
+  India: {
+    states: ['Tamil Nadu'],
+    citiesByState: {
+      'Tamil Nadu': [
+        'Arcot',
+        'Chengalpattu',
+        'Chennai',
+        'Chidambaram',
+        'Coimbatore',
+        'Cuddalore',
+        'Dharmapuri',
+        'Dindigul',
+        'Erode',
+        'Kanchipuram',
+        'Kanniyakumari',
+        'Kodaikanal',
+        'Kumbakonam',
+        'Madurai',
+        'Mamallapuram',
+        'Nagappattinam',
+        'Nagercoil',
+        'Palayamkottai',
+        'Pudukkottai',
+        'Rajapalayam',
+        'Ramanathapuram',
+        'Salem',
+        'Thanjavur',
+        'Tiruchchirappalli',
+        'Tirunelveli',
+        'Tiruppur',
+        'Thoothukudi',
+        'Udhagamandalam',
+        'Vellore',
+      ],
+    },
+  },
+  USA: {
+    states: ['Texas'],
+    citiesByState: {
+      Texas: ['Houston'],
+    },
+  },
+};
 const MENTOR_REGISTER_DRAFT_KEY = 'bondroom:mentor-register-draft:v1';
 
 const readMentorRegisterDraft = () => {
@@ -160,7 +253,21 @@ const MentorRegister = () => {
   const [selectedLanguages, setSelectedLanguages] = useState([]);
   const [selectedCareAreas, setSelectedCareAreas] = useState([]);
   const languagesOptions = ['Tamil', 'English', 'Telugu', 'Kannada', 'Malayalam', 'Hindi'];
-  const careAreaOptions = ['Anxiety', 'Relationships', 'Academic Stress'];
+  const careAreaOptions = [
+    'Anxiety',
+    'Relationships',
+    'Academic Stress',
+    'Exam Pressure',
+    'Parent Expectations',
+    'Friend Issues',
+    'Future Anxiety (Career/College)',
+    'Concentration Struggles',
+    'Study Struggles',
+    'Motivation',
+    'Stress Relief Strategies',
+    'Life Advice / Perspective',
+    'Someone to Listen',
+  ];
   const navigate = useNavigate();
   const { registerMentor, sendMentorOtp, verifyMentorOtp } = useMentorAuth();
   const [errorMessage, setErrorMessage] = useState('');
@@ -195,10 +302,12 @@ const MentorRegister = () => {
     lastName: '',
     email: '',
     mobile: '',
+    country: 'India',
     dob: '',
     gender: '',
-    stateName: '',
-    cityName: '',
+    stateName: 'Tamil Nadu',
+    cityName: 'Chennai',
+    postalCode: '',
     qualification: '',
     bio: '',
     consent: false,
@@ -220,19 +329,34 @@ const MentorRegister = () => {
     phone: 0,
   });
   const [draftReady, setDraftReady] = useState(false);
+  const bioTextareaRef = useRef(null);
+  const profileImageInputRef = useRef(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState('');
   const isDev = Boolean(import.meta?.env?.DEV);
   const dobBounds = getMentorDobBounds();
+  const dialCode = COUNTRY_DIAL_CODE[form.country] || '+91';
   const sectionOneFieldKeys = new Set([
     'firstName',
     'lastName',
     'email',
     'mobile',
+    'country',
     'dob',
     'gender',
     'stateName',
     'cityName',
+    'postalCode',
     'languages',
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(profileImagePreview);
+      }
+    };
+  }, [profileImagePreview]);
 
   useEffect(() => {
     const draft = readMentorRegisterDraft();
@@ -340,6 +464,21 @@ const MentorRegister = () => {
         : 'border-[#d7d0e2] bg-white hover:border-[#5b2c91]'
     }`;
 
+  const handleProfileImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Please select a valid image file.');
+      return;
+    }
+    if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(profileImagePreview);
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setProfileImageFile(file);
+    setProfileImagePreview(objectUrl);
+  };
+
   const updateField = (key, value) => {
     markFieldTouched(key);
     if (key === 'email') {
@@ -357,6 +496,22 @@ const MentorRegister = () => {
       setForm((prev) => ({ ...prev, mobile: digitsOnly }));
       return;
     }
+    if (key === 'country') {
+      const nextCountry = value;
+      const fallbackStates = LOCATION_OPTIONS[nextCountry]?.states || [];
+      const fallbackState = fallbackStates[0] || '';
+      const nextState = fallbackState;
+      const fallbackCities = LOCATION_OPTIONS[nextCountry]?.citiesByState?.[nextState] || [];
+      const nextCity = fallbackCities[0] || '';
+      setForm((prev) => ({
+        ...prev,
+        country: nextCountry,
+        stateName: nextState,
+        cityName: nextCity,
+        postalCode: '',
+      }));
+      return;
+    }
     if (key === 'stateName') {
       setForm((prev) => ({ ...prev, stateName: value, cityName: '' }));
       return;
@@ -365,65 +520,34 @@ const MentorRegister = () => {
   };
 
   useEffect(() => {
-    let active = true;
+    const states = LOCATION_OPTIONS[form.country]?.states || [];
+    setStateOptions(states);
+    setLocationBusy((prev) => ({ ...prev, states: false }));
+    setLocationError('');
 
-    const loadStates = async () => {
-      setLocationBusy((prev) => ({ ...prev, states: true }));
-      setLocationError('');
-      try {
-        const response = await authApi.getLocationStates();
-        if (!active) return;
-        const states = Array.isArray(response?.states) ? response.states : [];
-        setStateOptions(states);
-      } catch (err) {
-        if (!active) return;
-        setStateOptions([]);
-        setLocationError(err?.message || 'Unable to load states.');
-      } finally {
-        if (active) {
-          setLocationBusy((prev) => ({ ...prev, states: false }));
-        }
-      }
-    };
-
-    loadStates();
-    return () => {
-      active = false;
-    };
-  }, []);
+    if (!states.length) return;
+    if (!states.includes(form.stateName)) {
+      const firstState = states[0];
+      const firstCity = LOCATION_OPTIONS[form.country]?.citiesByState?.[firstState]?.[0] || '';
+      setForm((prev) => ({
+        ...prev,
+        stateName: firstState,
+        cityName: firstCity,
+      }));
+    }
+  }, [form.country, form.stateName]);
 
   useEffect(() => {
-    if (!form.stateName) {
-      setCityOptions([]);
-      return;
+    const cities = LOCATION_OPTIONS[form.country]?.citiesByState?.[form.stateName] || [];
+    setCityOptions(cities);
+    setLocationBusy((prev) => ({ ...prev, cities: false }));
+    setLocationError('');
+
+    if (!cities.length) return;
+    if (!cities.includes(form.cityName)) {
+      setForm((prev) => ({ ...prev, cityName: cities[0] || '' }));
     }
-
-    let active = true;
-
-    const loadCities = async () => {
-      setLocationBusy((prev) => ({ ...prev, cities: true }));
-      setLocationError('');
-      try {
-        const response = await authApi.getLocationCities(form.stateName);
-        if (!active) return;
-        const cities = Array.isArray(response?.cities) ? response.cities : [];
-        setCityOptions(cities);
-      } catch (err) {
-        if (!active) return;
-        setCityOptions([]);
-        setLocationError(err?.message || 'Unable to load cities for selected state.');
-      } finally {
-        if (active) {
-          setLocationBusy((prev) => ({ ...prev, cities: false }));
-        }
-      }
-    };
-
-    loadCities();
-    return () => {
-      active = false;
-    };
-  }, [form.stateName]);
+  }, [form.country, form.stateName, form.cityName]);
 
   useEffect(() => {
     if (!resendCooldown.email && !resendCooldown.phone) {
@@ -475,10 +599,12 @@ const MentorRegister = () => {
     else if (mobileDigits.length !== MOBILE_DIGITS_LENGTH) {
       errors.mobile = 'Mobile number must be exactly 10 digits.';
     }
+    if (!form.country) errors.country = 'Country is required.';
     if (!form.dob) errors.dob = 'Date of birth is required.';
     if (!form.gender) errors.gender = 'Gender is required.';
     if (!form.stateName) errors.stateName = 'State is required.';
     if (!form.cityName) errors.cityName = 'City is required.';
+    if (!form.postalCode.trim()) errors.postalCode = 'Pincode is required.';
     if (!selectedLanguages.length) errors.languages = 'Select at least one language.';
     if (form.dob && (form.dob < dobBounds.min || form.dob > dobBounds.max)) {
       errors.dob = `Mentor age must be between ${MENTOR_MIN_AGE} and ${MENTOR_MAX_AGE} years.`;
@@ -494,9 +620,14 @@ const MentorRegister = () => {
     }
     if (!form.bio.trim()) {
       errors.bio = 'Brief bio is required.';
+    } else if (countWords(form.bio) > BIO_MAX_WORDS) {
+      errors.bio = `Brief bio must be ${BIO_MAX_WORDS} words or fewer.`;
+    }
+    if (!selectedCareAreas.length) {
+      errors.careAreas = 'Select at least one mentor care area.';
     }
     if (!form.consent) {
-      errors.consent = 'Please agree to background verification before submitting.';
+      errors.consent = 'Please accept the mentor declaration before submitting.';
     }
     return errors;
   };
@@ -522,9 +653,14 @@ const MentorRegister = () => {
       last_name: form.lastName.trim(),
       email: form.email.trim().toLowerCase(),
       mobile: normalizePhone(form.mobile),
+      country_code: dialCode,
       dob: form.dob,
       gender: form.gender,
-      city_state: `${form.cityName}, ${form.stateName}`,
+      country: form.country.trim(),
+      state: form.stateName.trim(),
+      city: form.cityName.trim(),
+      postal_code: form.postalCode.trim(),
+      city_state: `${form.cityName}, ${form.stateName}, ${form.country} (${form.postalCode.trim()})`,
       languages: selectedLanguages,
       care_areas: selectedCareAreas,
       preferred_formats: [],
@@ -538,6 +674,23 @@ const MentorRegister = () => {
     };
     if (currentMentorId) {
       payload.mentor_id = currentMentorId;
+    }
+    if (profileImageFile) {
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value === null || value === undefined) return;
+        if (Array.isArray(value)) {
+          value.forEach((item) => formData.append(key, String(item)));
+          return;
+        }
+        if (typeof value === 'boolean') {
+          formData.append(key, value ? 'true' : 'false');
+          return;
+        }
+        formData.append(key, String(value));
+      });
+      formData.append('profile_image', profileImageFile);
+      return formData;
     }
     return payload;
   };
@@ -731,7 +884,7 @@ const MentorRegister = () => {
 
   // Prepare dropdown options
   const stateDropdownOptions = [
-    { value: '', label: locationBusy.states ? 'Loading states...' : 'Select State' },
+    { value: '', label: 'Select State' },
     ...stateOptions.map(state => ({ value: state, label: state }))
   ];
 
@@ -740,9 +893,7 @@ const MentorRegister = () => {
       value: '', 
       label: !form.stateName 
         ? 'Select State First' 
-        : locationBusy.cities 
-          ? 'Loading cities...' 
-          : 'Select City' 
+        : 'Select City' 
     },
     ...cityOptions.map(city => ({ value: city, label: city }))
   ];
@@ -771,6 +922,16 @@ const MentorRegister = () => {
       ? validationState.sectionOne || validationState.submit
       : validationState.submit;
     return Boolean(registrationErrors[fieldKey] && (touchedFields[fieldKey] || attempted));
+  };
+  const bioWordCount = countWords(form.bio);
+
+  const handleBioChange = (value) => {
+    const limitedValue = truncateToWordLimit(value, BIO_MAX_WORDS);
+    updateField('bio', limitedValue);
+    const textarea = bioTextareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 420)}px`;
   };
 
   return (
@@ -895,19 +1056,19 @@ const MentorRegister = () => {
                   src={imageContainer}
                   alt=""
                   aria-hidden="true"
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[300px] h-[300px] md:w-[380px] md:h-[380px] lg:w-[500px] lg:h-[500px] animate-pulse-slow"
+                  className="absolute left-1/2 top-1/2 z-20 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 animate-pulse-slow md:h-[380px] md:w-[380px] lg:h-[500px] lg:w-[500px]"
                 />
                 <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
                   <div className="min-h-0 overflow-hidden">
                     <img
                       src={mentorLeft}
                       alt="Mentor guidance"
-                      className="h-full w-full object-cover hover:scale-105 transition-transform duration-700"
+                      className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                     />
                   </div>
-                  <div className="relative flex min-h-0 flex-col justify-between bg-[#5b2c91] p-6 text-white">
-                    <div className="animate-fadeIn">
-                      <h3 className="font-sans font-bold text-[37px] leading-[36.5px]">
+                  <div className="relative flex min-h-0 flex-col items-center justify-start bg-[#5b2c91] px-10 pb-8 pt-24 lg:px-12 lg:pt-28 text-white">
+                    <div className="max-w-[280px] text-left animate-fadeIn">
+                      <h3 className="font-sans text-[37px] font-bold leading-[36.5px]">
                         Join a
                         <br />
                         community
@@ -916,7 +1077,7 @@ const MentorRegister = () => {
                         <br />
                         and care.
                       </h3>
-                      <p className="mt-3 font-sans text-[16px] leading-[22.5px] font-normal text-white/90">
+                      <p className="mt-3 font-sans text-[16px] font-normal leading-[22.5px] text-white/90">
                         Your guidance can help a student feel seen -- beyond marks, ranks, and expectations.
                       </p>
                     </div>
@@ -924,7 +1085,7 @@ const MentorRegister = () => {
                 </div>
                 <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
                   <div className="flex min-h-0 items-center justify-center bg-[#f2c94c] p-6 text-[#1f2937]">
-                    <ul className="list-disc pl-4 space-y-3 text-sm animate-fadeIn">
+                    <ul className="list-disc space-y-3 pl-4 text-sm animate-fadeIn">
                       <li>Bond Room exists to restore human connection in an exam-driven system.</li>
                       <li>You are not expected to teach.</li>
                       <li>Your presence and perspective are enough.</li>
@@ -934,7 +1095,7 @@ const MentorRegister = () => {
                     <img
                       src={mentorBottom}
                       alt="Students"
-                      className="h-full w-full object-cover hover:scale-105 transition-transform duration-700"
+                      className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                     />
                   </div>
                 </div>
@@ -985,7 +1146,7 @@ const MentorRegister = () => {
                           {formSection === 1 ? 'Personal Info' : 'Mentor Profile'}
                         </h3>
                         <span className="rounded-full bg-gradient-to-r from-[#f3ecff] to-[#e9ddff] px-2.5 py-1 text-[11px] font-medium text-[#5b2c91] shadow-sm">
-                          Section {formSection} of 2
+                          Section {formSection} of 3
                         </span>
                       </div>
 
@@ -1050,6 +1211,7 @@ const MentorRegister = () => {
                                     || actionBusy.verifyEmail
                                     || actionBusy.submit
                                     || !form.email.trim()
+                                    || resendCooldown.email > 0
                                     || emailVerified
                                   }
                                 >
@@ -1060,6 +1222,8 @@ const MentorRegister = () => {
                                       </svg>
                                       Verified
                                     </span>
+                                  ) : resendCooldown.email > 0 ? (
+                                    `Resend ${formatCooldown(resendCooldown.email)}`
                                   ) : 'Verify'}
                                 </button>
                               </div>
@@ -1068,22 +1232,31 @@ const MentorRegister = () => {
 
                             <div className="group">
                               <label htmlFor="mobile" className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
-                                Mobile Number
+                                Mobile Number *
                               </label>
                               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                <input
-                                  id="mobile"
-                                  type="tel"
-                                  className={`${getInputClasses(shouldShowError('mobile'))} min-w-0 flex-1`}
-                                  placeholder="9876543210"
-                                  value={form.mobile}
-                                  onChange={(event) => updateField('mobile', event.target.value)}
-                                  onBlur={() => markFieldTouched('mobile')}
-                                  inputMode="numeric"
-                                  pattern="[0-9]*"
-                                  maxLength={MOBILE_DIGITS_LENGTH}
-                                  autoComplete="tel-national"
-                                />
+                                <div className={`flex min-w-0 flex-1 rounded-lg border bg-white px-3 transition-all duration-200 ${
+                                  shouldShowError('mobile')
+                                    ? 'border-red-300 bg-red-50 hover:border-red-400 focus-within:ring-2 focus-within:ring-red-200 focus-within:border-red-400'
+                                    : 'border-[#d7d0e2] hover:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] focus-within:border-transparent'
+                                }`}>
+                                  <span className="inline-flex items-center text-sm font-medium text-[#5b2c91] pr-2 border-r border-[#e6e2f1]">
+                                    {dialCode}
+                                  </span>
+                                  <input
+                                    id="mobile"
+                                    type="tel"
+                                    className={`min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 text-sm text-[#111827] focus:outline-none ${shouldShowError('mobile') ? 'text-red-900 placeholder:text-red-400' : 'placeholder:text-[#9ca3af]'}`}
+                                    placeholder="9876543210"
+                                    value={form.mobile}
+                                    onChange={(event) => updateField('mobile', event.target.value)}
+                                    onBlur={() => markFieldTouched('mobile')}
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={MOBILE_DIGITS_LENGTH}
+                                    autoComplete="tel-national"
+                                  />
+                                </div>
                                 <button
                                   type="button"
                                   className={`w-full shrink-0 rounded-lg px-3 py-2 text-xs font-semibold border transition-all duration-200 sm:w-auto sm:min-w-[96px] ${
@@ -1097,6 +1270,7 @@ const MentorRegister = () => {
                                     || actionBusy.verifyPhone
                                     || actionBusy.submit
                                     || normalizePhone(form.mobile).length !== MOBILE_DIGITS_LENGTH
+                                    || resendCooldown.phone > 0
                                     || phoneVerified
                                   }
                                 >
@@ -1107,6 +1281,8 @@ const MentorRegister = () => {
                                       </svg>
                                       Verified
                                     </span>
+                                  ) : resendCooldown.phone > 0 ? (
+                                    `Resend ${formatCooldown(resendCooldown.phone)}`
                                   ) : 'Verify'}
                                 </button>
                               </div>
@@ -1119,15 +1295,15 @@ const MentorRegister = () => {
                               <label htmlFor="dob" className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
                                 Date of Birth
                               </label>
-                              <input
+                              <BoundedDatePicker
                                 id="dob"
-                                type="date"
-                                className={getInputClasses(shouldShowError('dob'))}
+                                inputClassName={getInputClasses(shouldShowError('dob'))}
                                 value={form.dob}
-                                onChange={(event) => updateField('dob', event.target.value)}
+                                onChange={(nextValue) => updateField('dob', nextValue)}
                                 onBlur={() => markFieldTouched('dob')}
-                                min={dobBounds.min}
-                                max={dobBounds.max}
+                                minDate={dobBounds.min}
+                                maxDate={dobBounds.max}
+                                placeholder="Select date of birth"
                               />
                               {shouldShowError('dob') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.dob}</p>}
                               <p className="mt-1 text-[11px] text-[#6b7280]">
@@ -1159,13 +1335,29 @@ const MentorRegister = () => {
                               Location Details
                             </p>
                             <p className="mt-1 text-xs text-[#6b7280]">
-                              Select your state first, then choose your city.
+                              Set country, then select state and city, and provide your pincode.
                             </p>
 
                             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <div className="group">
+                                <label htmlFor="country" className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
+                                  Country *
+                                </label>
+                                <CustomSelect
+                                  id="country"
+                                  value={form.country}
+                                  onChange={(value) => updateField('country', value)}
+                                  options={COUNTRY_OPTIONS.map((country) => ({ value: country, label: country }))}
+                                  placeholder="Select Country"
+                                  error={shouldShowError('country')}
+                                  className={shouldShowError('country') ? 'border-red-300 bg-red-50 hover:border-red-400 focus:ring-red-200' : ''}
+                                />
+                                {shouldShowError('country') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.country}</p>}
+                              </div>
+
+                              <div className="group">
                                 <label htmlFor="stateName" className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
-                                  State
+                                  State *
                                 </label>
                                 <CustomSelect
                                   id="stateName"
@@ -1182,7 +1374,7 @@ const MentorRegister = () => {
 
                               <div className="group">
                                 <label htmlFor="cityName" className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
-                                  City
+                                  City *
                                 </label>
                                 <CustomSelect
                                   id="cityName"
@@ -1195,6 +1387,22 @@ const MentorRegister = () => {
                                   className={shouldShowError('cityName') ? 'border-red-300 bg-red-50 hover:border-red-400 focus:ring-red-200' : ''}
                                 />
                                 {shouldShowError('cityName') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.cityName}</p>}
+                              </div>
+
+                              <div className="group">
+                                <label htmlFor="postalCode" className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
+                                  Pincode *
+                                </label>
+                                <input
+                                  id="postalCode"
+                                  type="text"
+                                  className={getInputClasses(shouldShowError('postalCode'))}
+                                  placeholder={form.country === 'USA' ? 'e.g. 77001' : 'e.g. 600001'}
+                                  value={form.postalCode}
+                                  onChange={(event) => updateField('postalCode', event.target.value)}
+                                  onBlur={() => markFieldTouched('postalCode')}
+                                />
+                                {shouldShowError('postalCode') && <p className="mt-1 text-xs text-red-600">{sectionOneErrors.postalCode}</p>}
                               </div>
                             </div>
 
@@ -1212,7 +1420,7 @@ const MentorRegister = () => {
                                 <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                                 </svg>
-                                {form.cityName}, {form.stateName}
+                                {form.cityName}, {form.stateName}, {form.country}{form.postalCode ? ` (${form.postalCode})` : ''}
                               </div>
                             )}
                           </div>
@@ -1251,9 +1459,64 @@ const MentorRegister = () => {
                         <div className="space-y-4 animate-fadeIn">
                           <div className="group">
                             <label className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
+                              Profile Image (Optional)
+                            </label>
+                            <div className="rounded-xl border border-[#d7d0e2] bg-white p-3">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[#f3ecff] ring-1 ring-[#e6e2f1]">
+                                  {profileImagePreview ? (
+                                    <img src={profileImagePreview} alt="Mentor preview" className="h-full w-full object-cover" />
+                                  ) : (
+                                    <Camera className="h-5 w-5 text-[#5b2c91]" />
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs text-[#6b7280]">Add an image for your mentor profile.</p>
+                                  <p className="mt-0.5 truncate text-[11px] text-[#9ca3af]">
+                                    {profileImageFile ? profileImageFile.name : 'No file selected'}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="rounded-lg border border-[#5b2c91] px-3 py-1.5 text-xs font-semibold text-[#5b2c91] hover:bg-[#f3ecff]"
+                                  onClick={() => profileImageInputRef.current?.click()}
+                                >
+                                  {profileImageFile ? 'Change' : 'Upload'}
+                                </button>
+                                {profileImageFile ? (
+                                  <button
+                                    type="button"
+                                    className="rounded-lg border border-[#e5e7eb] px-3 py-1.5 text-xs font-medium text-[#6b7280] hover:bg-[#f9fafb]"
+                                    onClick={() => {
+                                      if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+                                        URL.revokeObjectURL(profileImagePreview);
+                                      }
+                                      setProfileImageFile(null);
+                                      setProfileImagePreview('');
+                                      if (profileImageInputRef.current) {
+                                        profileImageInputRef.current.value = '';
+                                      }
+                                    }}
+                                  >
+                                    Remove
+                                  </button>
+                                ) : null}
+                              </div>
+                              <input
+                                ref={profileImageInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleProfileImageChange}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="group">
+                            <label className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
                               Mentor Care Areas
                             </label>
-                            <div className="w-full rounded-lg border border-[#d7d0e2] bg-white px-4 py-3 hover:border-[#5b2c91] transition-colors duration-200">
+                            <div className={getPanelClasses(shouldShowError('careAreas'))}>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {careAreaOptions.map((area) => (
                                   <label key={area} className="inline-flex items-center gap-2 text-sm text-[#111827] cursor-pointer group/checkbox hover:text-[#5b2c91] transition-colors">
@@ -1261,15 +1524,21 @@ const MentorRegister = () => {
                                       type="checkbox"
                                       className="accent-[#5b2c91] w-4 h-4 cursor-pointer rounded focus:ring-2 focus:ring-[#5b2c91] focus:ring-offset-1"
                                       checked={selectedCareAreas.includes(area)}
-                                      onChange={() => toggleMultiCheckbox(area, setSelectedCareAreas)}
+                                      onChange={() => {
+                                        markFieldTouched('careAreas');
+                                        toggleMultiCheckbox(area, setSelectedCareAreas);
+                                      }}
                                     />
                                     <span className="select-none">{area}</span>
                                   </label>
                                 ))}
                               </div>
                             </div>
+                            {shouldShowError('careAreas') && (
+                              <p className="mt-1 text-xs text-red-600">{registrationErrors.careAreas}</p>
+                            )}
                             <p className="text-xs text-[#6b7280] mt-1">
-                              Select one or more care areas.
+                              Select mentor strengths that best match mentee assessment themes for better AI recommendations.
                             </p>
                           </div>
 
@@ -1296,17 +1565,21 @@ const MentorRegister = () => {
                               Brief Bio
                             </label>
                             <textarea
+                              ref={bioTextareaRef}
                               id="bio"
-                              rows={3}
-                              className={`${getInputClasses(shouldShowError('bio'))} resize-none`}
+                              rows={5}
+                              className={`${getInputClasses(shouldShowError('bio'))} resize-y min-h-[140px] max-h-[420px]`}
                               placeholder="Tell us a bit about your professional background..."
                               value={form.bio}
-                              onChange={(event) => updateField('bio', event.target.value)}
+                              onChange={(event) => handleBioChange(event.target.value)}
                               onBlur={() => markFieldTouched('bio')}
                             />
                             {shouldShowError('bio') && (
                               <p className="mt-1 text-xs text-red-600">{registrationErrors.bio}</p>
                             )}
+                            <p className={`mt-1 text-xs ${bioWordCount > BIO_MAX_WORDS ? 'text-red-600' : 'text-[#6b7280]'}`}>
+                              Maximum {BIO_MAX_WORDS} words. Current: {bioWordCount}.
+                            </p>
                           </div>
 
                           <label className={`flex items-start gap-2 text-xs sm:text-sm cursor-pointer group transition-colors p-3 rounded-lg ${
@@ -1321,8 +1594,23 @@ const MentorRegister = () => {
                               checked={form.consent}
                               onChange={(event) => updateField('consent', event.target.checked)}
                             />
-                            <span className="select-none">
-                              I agree to share my information for background verification purposes.
+                            <span className="select-none space-y-2">
+                              <span className="block font-medium text-[#1f2937]">Mentor Commitment & Code of Conduct</span>
+                              <span className="block">
+                                I confirm that I am voluntarily joining Mentor To Go, will maintain professional boundaries,
+                                provide truthful information, protect mentee confidentiality, and follow all program policies,
+                                curriculum guidelines, safety expectations, and reporting timelines.
+                              </span>
+                              <span className="block">
+                                I understand I am responsible for my own communication costs, cannot seek payment for mentoring,
+                                must not engage in harassment or personal relationship-building with mentees, and may face
+                                suspension or removal for policy violations.
+                              </span>
+                              <span className="block">
+                                I agree to promptly escalate concerns about safety or wellbeing to the authorised grievance channels
+                                and continue acting in the best interests of the mentee and Mentor To Go during and after the mentorship period.
+                              </span>
+                              <span className="block font-medium">I agree to this declaration.</span>
                               {shouldShowError('consent') && (
                                 <span className="mt-1 block text-xs text-red-600">
                                   {registrationErrors.consent}
