@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { menteeApi } from "../apis/api/menteeApi";
 import logo from "./assets/logo.png";
-import happyStudent from "./assets/happyStudent.png";
+import happyStudent from "./assets/happystudent.png";
 import avatarFallback from "./assets/avatar-1.jpg";
 
 const MENTORS = [
