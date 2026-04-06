@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Calendar, CalendarDays, CheckCircle2, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, CalendarDays, CheckCircle2, ChevronRight, Users } from 'lucide-react';
 import { menteeApi } from '../apis/api/menteeApi';
 import { clearAuthSession, getAuthSession } from '../apis/api/storage';
 import './LandingPage.css';
@@ -43,6 +43,11 @@ const normalizeVolunteerEvent = (event) => ({
   date: event?.date || '',
   time: event?.time || '',
   completed_on: event?.completed_on || '',
+  joined_count: Number(event?.joined_count || 0),
+  completion_brief: String(event?.completion_brief || '').trim(),
+  gallery_images: Array.isArray(event?.gallery_images)
+    ? event.gallery_images.map((item) => String(item || '').trim()).filter(Boolean)
+    : [],
 });
 
 const getCompletedEventDate = (event) => String(event?.completed_on || event?.date || '');
@@ -434,7 +439,6 @@ const VolunteerPage = () => {
     const parsed = parseIsoDate(`${completedSelectedMonth}-01`);
     return parsed.toLocaleDateString([], { month: 'long', year: 'numeric' });
   }, [completedSelectedMonth]);
-
   const toggleCalendar = () => {
     setCalendarOpen((prev) => !prev);
     if (!calendarOpen) {
@@ -931,9 +935,11 @@ const VolunteerPage = () => {
           {filteredCompletedVolunteerEvents.length > 0 ? (
             <div className="flex gap-4 overflow-x-auto pb-2 [scrollbar-width:thin] [scrollbar-color:#c4b5fd_transparent]">
               {filteredCompletedVolunteerEvents.map((event) => (
-                <article
+                <button
                   key={event.id}
-                  className="group min-w-[260px] max-w-[260px] overflow-hidden rounded-2xl border border-[#e9ddff] bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] transition-transform duration-200 hover:-translate-y-1 sm:min-w-[300px] sm:max-w-[300px]"
+                  type="button"
+                  onClick={() => navigate(`/volunteer/completed/${event.id}`)}
+                  className="group min-w-[260px] max-w-[260px] overflow-hidden rounded-2xl border border-[#e9ddff] bg-white text-left shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] transition-transform duration-200 hover:-translate-y-1 sm:min-w-[300px] sm:max-w-[300px]"
                 >
                   <div className="relative h-40 overflow-hidden">
                     <img
@@ -963,8 +969,12 @@ const VolunteerPage = () => {
                       <p className="mt-1 text-xs font-medium text-[#166534]">{event.impact}</p>
                       <p className="mt-1 text-[11px] text-[#15803d]">{event.location}</p>
                     </div>
+                    <p className="inline-flex items-center gap-1 text-[11px] font-medium text-[#14532d]">
+                      <Users className="h-3.5 w-3.5" />
+                      {Number(event.joined_count || event.seats || 0)} joined
+                    </p>
                   </div>
-                </article>
+                </button>
               ))}
             </div>
           ) : (
@@ -987,3 +997,4 @@ const VolunteerPage = () => {
 };
 
 export default VolunteerPage;
+

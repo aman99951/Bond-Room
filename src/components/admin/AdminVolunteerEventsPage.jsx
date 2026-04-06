@@ -55,6 +55,9 @@ const defaultEventForm = {
   date: '',
   time: '',
   completed_on: '',
+  joinedCount: '0',
+  completionBrief: '',
+  galleryImagesText: '',
   location: '',
   organizer: '',
   seats: '0',
@@ -155,6 +158,13 @@ const AdminVolunteerEventsPage = () => {
     formData.append('date', eventForm.date || '');
     formData.append('time', eventForm.time.trim());
     formData.append('completed_on', eventForm.completed_on || '');
+    formData.append('joined_count', String(Number(eventForm.joinedCount || 0)));
+    formData.append('completion_brief', eventForm.completionBrief.trim());
+    eventForm.galleryImagesText
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .forEach((url) => formData.append('gallery_images', url));
     formData.append('location', eventForm.location.trim());
     formData.append('organizer', eventForm.organizer.trim());
     formData.append('seats', String(Number(eventForm.seats || 0)));
@@ -236,12 +246,15 @@ const AdminVolunteerEventsPage = () => {
               <div><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Completed On</label><input type="date" className={inputClass} value={eventForm.completed_on} onChange={(e) => updateEventForm('completed_on', e.target.value)} /></div>
               <div><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Time</label><input className={inputClass} value={eventForm.time} onChange={(e) => updateEventForm('time', e.target.value)} /></div>
               <div><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Seats</label><input type="number" min={0} className={inputClass} value={eventForm.seats} onChange={(e) => updateEventForm('seats', e.target.value)} /></div>
+              <div><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Joined Count</label><input type="number" min={0} className={inputClass} value={eventForm.joinedCount} onChange={(e) => updateEventForm('joinedCount', e.target.value)} /></div>
               <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Location</label><input className={inputClass} value={eventForm.location} onChange={(e) => updateEventForm('location', e.target.value)} /></div>
               <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Organizer</label><input className={inputClass} value={eventForm.organizer} onChange={(e) => updateEventForm('organizer', e.target.value)} /></div>
               <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Image URL</label><input className={inputClass} value={eventForm.image} onChange={(e) => updateEventForm('image', e.target.value)} /></div>
               <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Upload Image</label><label className="mt-1.5 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-800/60 px-4 py-3 text-sm text-slate-300"><ImagePlus className="h-4 w-4 text-violet-400" /><span>{eventForm.imageFile ? eventForm.imageFile.name : 'Choose image file'}</span><input type="file" accept="image/*" className="hidden" onChange={(e) => updateEventForm('imageFile', e.target.files?.[0] || null)} /></label></div>
               <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Description</label><textarea rows={3} className={inputClass} value={eventForm.description} onChange={(e) => updateEventForm('description', e.target.value)} /></div>
               <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Summary</label><textarea rows={2} className={inputClass} value={eventForm.summary} onChange={(e) => updateEventForm('summary', e.target.value)} /></div>
+              <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Completion Brief</label><textarea rows={4} className={inputClass} value={eventForm.completionBrief} onChange={(e) => updateEventForm('completionBrief', e.target.value)} placeholder="Detailed completion story for the event modal." /></div>
+              <div className="md:col-span-2"><label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Gallery Image URLs (one per line)</label><textarea rows={4} className={inputClass} value={eventForm.galleryImagesText} onChange={(e) => updateEventForm('galleryImagesText', e.target.value)} placeholder="https://example.com/image-1.jpg&#10;https://example.com/image-2.jpg" /></div>
               <div className="md:col-span-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Available Roles for Registration</label>
@@ -320,6 +333,7 @@ const AdminVolunteerEventsPage = () => {
                             <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${item.status === 'completed' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-violet-500/20 text-violet-300'}`}>{item.status || 'upcoming'}</span>
                           </div>
                           <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400"><span>{item.date || '-'}</span><span>-</span><span>{item.time || 'Time TBA'}</span><span>-</span><span>Seats: {item.seats ?? 0}</span></div>
+                          <p className="mt-1 text-[11px] text-emerald-300">Joined: {item.joined_count ?? 0}</p>
                           <p className="mt-1 text-[11px] text-slate-400">
                             Roles: {Array.isArray(item.available_roles) ? item.available_roles.length : 0}
                           </p>

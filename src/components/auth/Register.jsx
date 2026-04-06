@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, AlertCircle, X, UserRound, MapPin, ShieldCheck, Camera } from 'lucide-react';
+import { CheckCircle2, AlertCircle, X, UserRound, MapPin, ShieldCheck, Camera, Mail, Smartphone, RefreshCw } from 'lucide-react';
 import { Eye, EyeOff } from 'lucide-react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
@@ -120,6 +120,7 @@ const clearMenteeRegisterDraft = () => {
 
 const PASSWORD_REQUIREMENT_MESSAGE =
   'Password must be at least 10 characters and include uppercase, lowercase, number, and special character.';
+const OTP_RESEND_COOLDOWN_SECONDS = 30;
 
 const isStrongPassword = (value) => {
   const password = String(value || '');
@@ -164,6 +165,7 @@ const Register = () => {
   const [otpError, setOtpError] = useState('');
   const [otpHint, setOtpHint] = useState({ email: '', parentMobile: '', menteeMobile: '' });
   const [otpBusy, setOtpBusy] = useState({ sending: false, verifying: false });
+  const [otpCooldown, setOtpCooldown] = useState({ email: 0, parentMobile: 0, menteeMobile: 0 });
   const [showPassword, setShowPassword] = useState(false);
   const profileImageInputRef = useRef(null);
   const [profileImageFile, setProfileImageFile] = useState(null);
@@ -341,7 +343,8 @@ const Register = () => {
     setInfoMessage('');
     setOtpError('');
     setOtpModal({ open: true, channel, otp: '' });
-    await handleSendOtp(channel);
+    if ((otpCooldown[channel] || 0) > 0) return;
+    await handleSendOtp(channel, { force: true });
   };
 
   const closeOtpModal = () => {
@@ -349,8 +352,13 @@ const Register = () => {
     setOtpModal((prev) => ({ ...prev, open: false, otp: '' }));
   };
 
-  const handleSendOtp = async (channel) => {
+  const handleSendOtp = async (channel, options = {}) => {
+    const force = Boolean(options?.force);
     setOtpError('');
+    if (!force && (otpCooldown[channel] || 0) > 0) {
+      setOtpError(`Please wait ${otpCooldown[channel]}s before resending OTP.`);
+      return;
+    }
     const value =
       channel === 'email'
         ? form.email.trim().toLowerCase()
@@ -381,6 +389,7 @@ const Register = () => {
       if (response?.otp) {
         setOtpHint((prev) => ({ ...prev, [channel]: `Test OTP: ${response.otp}` }));
       }
+      setOtpCooldown((prev) => ({ ...prev, [channel]: OTP_RESEND_COOLDOWN_SECONDS }));
       setInfoMessage(
         channel === 'email'
           ? 'Email OTP sent.'
@@ -394,6 +403,19 @@ const Register = () => {
       setOtpBusy((prev) => ({ ...prev, sending: false }));
     }
   };
+
+  useEffect(() => {
+    const hasCooldown = Object.values(otpCooldown).some((value) => Number(value) > 0);
+    if (!hasCooldown) return undefined;
+    const timer = window.setInterval(() => {
+      setOtpCooldown((prev) => ({
+        email: Math.max(0, Number(prev.email) - 1),
+        parentMobile: Math.max(0, Number(prev.parentMobile) - 1),
+        menteeMobile: Math.max(0, Number(prev.menteeMobile) - 1),
+      }));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [otpCooldown]);
 
   const handleVerifyOtp = async () => {
     const channel = otpModal.channel;
@@ -469,7 +491,7 @@ const Register = () => {
       notifyError('Please verify email before continuing.');
       return;
     }
-    if (!form.recordConsent) {
+    if (!isEventFlowLock && !form.recordConsent) {
       notifyError('Session recording consent is required to continue.');
       return;
     }
@@ -526,7 +548,7 @@ const Register = () => {
         volunteer_access: true,
         signup_source: signupSource,
         mentee_program_enabled: signupSource !== 'event_flow',
-        record_consent: form.recordConsent,
+        record_consent: isEventFlowLock ? false : form.recordConsent,
       };
 
       const payloadToSubmit = profileImageFile
@@ -1169,20 +1191,24 @@ const Register = () => {
                   </div>
                 ) : null}
 
-                  <label className={`lp-register-checkline ${hasRequiredFieldError('recordConsent') ? 'lp-input-error-check' : ''}`}>
-                    <input
-                      id="recordConsent"
-                      type="checkbox"
-                      checked={form.recordConsent}
-                      onChange={(event) => updateField('recordConsent', event.target.checked)}
-                    />
-                    <span>
-                      I Agree to Session Recording for Safety *
-                      <span className="lp-register-note lp-register-note-block">
-                        All sessions are recorded to ensure student safety and quality of mentorship.
+                  {!isEventFlowLock ? (
+                    <label className={`lp-register-checkline ${hasRequiredFieldError('recordConsent') ? 'lp-input-error-check' : ''}`}>
+                      <input
+                        id="recordConsent"
+                        type="checkbox"
+                        checked={form.recordConsent}
+                        required={!isEventFlowLock}
+                        aria-required={!isEventFlowLock}
+                        onChange={(event) => updateField('recordConsent', event.target.checked)}
+                      />
+                      <span>
+                        I Agree to Session Recording for Safety *
+                        <span className="lp-register-note lp-register-note-block">
+                          All sessions are recorded to ensure student safety and quality of mentorship.
+                        </span>
                       </span>
-                    </span>
-                  </label>
+                    </label>
+                  ) : null}
                 </section>
 
                 <button type="submit" className="lp-login-submit" disabled={loading}>
@@ -1201,53 +1227,116 @@ const Register = () => {
       <BottomAuth />
 
       {otpModal.open && (
-        <div className="lp-register-otp-overlay" onClick={closeOtpModal}>
-          <div className="lp-register-otp-card" onClick={(e) => e.stopPropagation()}>
-            <div className="lp-register-otp-header">
-              <div className="lp-register-otp-icon" aria-hidden="true">
-                {otpModal.channel === 'email' ? '@' : '#'}
-              </div>
-              <h3 className="lp-register-otp-title">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fadeIn"
+          role="dialog"
+          aria-modal="true"
+          onClick={closeOtpModal}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-[#e6e2f1] bg-white p-6 shadow-2xl animate-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-[#1f2937]">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-[#e9ddff] to-[#f3ecff]">
+                  {otpModal.channel === 'email' ? (
+                    <Mail className="h-5 w-5 text-[#5b2c91]" />
+                  ) : (
+                    <Smartphone className="h-5 w-5 text-[#5b2c91]" />
+                  )}
+                </span>
                 Verify {otpModal.channel === 'email' ? 'Email' : otpModal.channel === 'parentMobile' ? 'Parent Mobile' : 'Mentee Mobile'}
               </h3>
-              <button type="button" className="lp-register-otp-close" onClick={closeOtpModal} aria-label="Close">
-                ×
+              <button
+                type="button"
+                onClick={closeOtpModal}
+                className="text-[#6b7280] transition-colors hover:text-[#1f2937]"
+                disabled={otpBusy.sending || otpBusy.verifying}
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="lp-register-otp-subtitle">Enter the 6-digit OTP sent to your contact.</p>
+
+            <p className="mb-4 text-sm text-[#6b7280]">Enter the 6-digit OTP sent to your contact.</p>
+
             <input
               type="text"
               inputMode="numeric"
               maxLength={6}
-              className="lp-register-otp-input"
+              className="w-full rounded-lg border-2 border-[#d7d0e2] bg-white px-4 py-3 text-center text-lg font-semibold tracking-widest text-[#111827] transition-all duration-200 hover:border-[#5b2c91] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#5b2c91]"
               placeholder="000000"
               value={otpModal.otp}
               onChange={(event) =>
                 setOtpModal((prev) => ({ ...prev, otp: event.target.value.replace(/\D/g, '').slice(0, 6) }))
               }
+              autoFocus
             />
-            {otpModal.channel === 'email' && otpHint.email ? <p className="lp-register-otp-hint">{otpHint.email}</p> : null}
-            {otpModal.channel === 'parentMobile' && otpHint.parentMobile ? <p className="lp-register-otp-hint">{otpHint.parentMobile}</p> : null}
-            {otpModal.channel === 'menteeMobile' && otpHint.menteeMobile ? <p className="lp-register-otp-hint">{otpHint.menteeMobile}</p> : null}
-            {otpError ? <p className="lp-register-otp-error">{otpError}</p> : null}
-            <div className="lp-register-otp-actions">
+
+            {otpModal.channel === 'email' && otpHint.email ? (
+              <p className="mt-3 rounded-lg bg-[#f3ecff] p-2 text-xs text-[#5b2c91]">Test OTP: {otpHint.email}</p>
+            ) : null}
+            {otpModal.channel === 'parentMobile' && otpHint.parentMobile ? (
+              <p className="mt-3 rounded-lg bg-[#f3ecff] p-2 text-xs text-[#5b2c91]">Test OTP: {otpHint.parentMobile}</p>
+            ) : null}
+            {otpModal.channel === 'menteeMobile' && otpHint.menteeMobile ? (
+              <p className="mt-3 rounded-lg bg-[#f3ecff] p-2 text-xs text-[#5b2c91]">Test OTP: {otpHint.menteeMobile}</p>
+            ) : null}
+
+            <div className="mt-5 flex items-center justify-between gap-3">
               <button
                 type="button"
-                className="lp-register-otp-btn lp-register-otp-btn-secondary"
+                className="flex items-center gap-1 text-xs text-[#5b2c91] underline transition-all duration-200 hover:text-[#4a2374] disabled:opacity-60 disabled:no-underline"
                 onClick={() => handleSendOtp(otpModal.channel)}
-                disabled={otpBusy.sending || otpBusy.verifying}
+                disabled={otpBusy.sending || otpBusy.verifying || (otpCooldown[otpModal.channel] || 0) > 0}
               >
-                {otpBusy.sending ? 'Sending...' : 'Resend OTP'}
+                {otpBusy.sending ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (otpCooldown[otpModal.channel] || 0) > 0 ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Resend in {otpCooldown[otpModal.channel]}s
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Resend OTP
+                  </>
+                )}
               </button>
               <button
                 type="button"
-                className="lp-register-otp-btn lp-register-otp-btn-primary"
+                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5b2c91] to-[#4a2374] px-5 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-[#4a2374] hover:to-[#3a1d5f] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={handleVerifyOtp}
                 disabled={otpBusy.sending || otpBusy.verifying || otpModal.otp.length !== 6}
               >
-                {otpBusy.verifying ? 'Verifying...' : 'Verify OTP'}
+                {otpBusy.verifying ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  'Verify OTP'
+                )}
               </button>
             </div>
+
+            {otpError ? (
+              <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 animate-fadeIn">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <p>{otpError}</p>
+              </div>
+            ) : null}
+            {infoMessage ? (
+              <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700 animate-fadeIn">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                <p>{infoMessage}</p>
+              </div>
+            ) : null}
           </div>
         </div>
       )}
@@ -1256,3 +1345,4 @@ const Register = () => {
 };
 
 export default Register;
+

@@ -60,6 +60,14 @@ const normalizeCity = (country, state, value) => {
   return cities[0] || '';
 };
 const getCountryCode = (country) => (country === 'USA' ? '+1' : '+91');
+const normalizePhoneDigits = (value) => String(value || '').replace(/\D/g, '');
+const EMERGENCY_CONTACT_DIGITS = 10;
+const withCountryCode = (country, value) => {
+  const code = getCountryCode(country);
+  const digits = normalizePhoneDigits(value);
+  if (!digits) return '';
+  return `${code}${digits}`;
+};
 const parseLegacyCityState = (value) => {
   const raw = String(value || '').trim();
   if (!raw) return {};
@@ -218,6 +226,10 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
       setForm((prev) => ({ ...prev, state: nextState, city: nextCity }));
       return;
     }
+    if (key === 'emergencyContact') {
+      setForm((prev) => ({ ...prev, emergencyContact: normalizePhoneDigits(nextValue) }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [key]: nextValue }));
   };
 
@@ -256,6 +268,10 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
       setErrorMessage('Please select a role for this event.');
       return;
     }
+    if (normalizePhoneDigits(form.emergencyContact).length !== EMERGENCY_CONTACT_DIGITS) {
+      setErrorMessage('Emergency contact number must be exactly 10 digits.');
+      return;
+    }
     if (!form.consent) {
       setErrorMessage('Please confirm consent before submitting.');
       return;
@@ -274,7 +290,7 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
         city: form.city.trim(),
         postal_code: form.postalCode.trim(),
         preferred_role: form.preferredRole.trim(),
-        emergency_contact: form.emergencyContact.trim(),
+        emergency_contact: withCountryCode(form.country, form.emergencyContact),
         notes: form.notes.trim(),
         consent: form.consent,
       };
@@ -290,6 +306,7 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
         notes: '',
         consent: false,
       }));
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setErrorMessage(err?.message || 'Unable to submit registration right now.');
     } finally {
@@ -516,16 +533,23 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Country Code</label>
-              <input
-                value={getCountryCode(form.country)}
-                readOnly
-                className="w-full rounded-xl border border-[#e7e2f6] bg-[#f9fafb] px-4 py-2.5 text-sm text-[#111827] outline-none"
-              />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Emergency Contact *</label>
-              <input value={form.emergencyContact} onChange={onChange('emergencyContact')} required className="w-full rounded-xl border border-[#e7e2f6] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none focus:border-[#c4b5fd]" />
+              <div className="flex overflow-hidden rounded-xl border border-[#e7e2f6] bg-white focus-within:border-[#c4b5fd]">
+                <span className="inline-flex items-center border-r border-[#e7e2f6] bg-[#f9fafb] px-3 text-sm font-semibold text-[#5D3699]">
+                  {getCountryCode(form.country)}
+                </span>
+                <input
+                  value={form.emergencyContact}
+                  onChange={onChange('emergencyContact')}
+                  required
+                  maxLength={EMERGENCY_CONTACT_DIGITS}
+                  inputMode="numeric"
+                  pattern={`\\d{${EMERGENCY_CONTACT_DIGITS}}`}
+                  title="Emergency contact number must be exactly 10 digits."
+                  placeholder={form.country === 'USA' ? 'e.g. 8325550101' : 'e.g. 9876543210'}
+                  className="w-full border-0 px-4 py-2.5 text-sm text-[#111827] outline-none"
+                />
+              </div>
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Notes to Organiser</label>

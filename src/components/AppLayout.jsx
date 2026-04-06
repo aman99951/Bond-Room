@@ -48,6 +48,7 @@ import LandingPage from './LandingPage';
 import AboutUs from './AboutUs';
 import DonationPage from './DonationPage';
 import VolunteerPage from './VolunteerPage';
+import CompletedEventStoryPage from './CompletedEventStoryPage';
 import {
   AUTH_LOGOUT_EVENT_NAME,
   getAssessmentDraft,
@@ -97,6 +98,7 @@ const isPublicPath = (pathname) => {
   ]);
   if (exactPublicPaths.has(pathname)) return true;
   if (pathname.startsWith('/volunteer-events/')) return true;
+  if (pathname.startsWith('/volunteer/completed/')) return true;
   return pathname.startsWith('/needs-assessment/');
 };
 
@@ -400,6 +402,7 @@ const AppLayout = () => {
         <Route path="/" element={<RootRoute />} />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/volunteer" element={<VolunteerPage />} />
+        <Route path="/volunteer/completed/:eventId" element={<CompletedEventStoryPage />} />
         <Route path="/volunteer-events" element={<VolunteerEvents />} />
         <Route path="/volunteer-events/:eventId/register" element={<VolunteerEventRegister />} />
         <Route path="/donate" element={<DonationPage />} />

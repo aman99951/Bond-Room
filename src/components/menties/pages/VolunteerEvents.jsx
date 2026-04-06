@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react';
 import { menteeApi } from '../../../apis/api/menteeApi';
+import './VolunteerEvents.css';
 
 const formatDate = (value) => {
   const date = new Date(value);
@@ -514,7 +515,7 @@ const VolunteerEvents = () => {
               key={event.id}
               className="group overflow-hidden rounded-2xl border border-[#e9ddff] bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] transition-transform duration-200 hover:-translate-y-1"
             >
-              <div className="relative h-44 overflow-hidden">
+              <div className="volunteer-events-card-media relative h-44 overflow-hidden">
                 <img
                   src={event.image}
                   alt={event.title}
@@ -776,7 +777,7 @@ const VolunteerEvents = () => {
               key={event.id}
               className="overflow-hidden rounded-2xl border border-[#e9ddff] bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)]"
             >
-              <div className="relative h-44 overflow-hidden">
+              <div className="volunteer-events-card-media relative h-44 overflow-hidden">
                 <img src={event.image} alt={event.title} className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#120a2c]/75 via-[#120a2c]/30 to-transparent" />
                 <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold text-[#14532d] ring-1 ring-[#bbf7d0]">

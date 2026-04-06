@@ -322,8 +322,10 @@ const RegisteredEvents = () => {
               return (
                 <article
                   key={item.id}
-                  className={`overflow-hidden rounded-2xl border border-[#e9ddff] bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] ${
-                    isCompleted ? 'cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_48px_-34px_rgba(21,128,61,0.6)]' : ''
+                  className={`group overflow-hidden rounded-2xl border bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] ${
+                    isCompleted
+                      ? 'cursor-pointer border-[#d4f2dd] transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_48px_-34px_rgba(21,128,61,0.6)]'
+                      : 'border-[#e9ddff]'
                   }`}
                   onClick={isCompleted ? () => navigate(`/event-certificate/${item.id}`) : undefined}
                   role={isCompleted ? 'button' : undefined}
@@ -339,58 +341,64 @@ const RegisteredEvents = () => {
                       : undefined
                   }
                 >
-                  <div className="flex flex-col sm:flex-row">
-                    <div className="relative h-44 w-full overflow-hidden bg-[#f5f3ff] sm:h-auto sm:w-44 sm:shrink-0 2xl:w-56">
-                      {event?.image ? (
-                        <img
-                          src={event.image}
-                          alt={item?.volunteer_event_title || event?.title || 'Volunteer event'}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#ede5ff] to-[#f7f2ff] text-[#7b699d]">
-                          <Calendar className="h-6 w-6" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#120a2c]/45 via-[#120a2c]/10 to-transparent" />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2 border-b border-[#f1eaff] px-4 py-3">
-                        <h2 className="line-clamp-2 text-sm font-semibold text-[#111827]">
-                          {item?.volunteer_event_title || event?.title || `Event #${getRegistrationEventId(item) || '-'}`}
-                        </h2>
-                        <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold ring-1 ${statusStyles}`}>
-                          <CheckCircle2 className="h-3 w-3" />
-                          {status === 'completed' ? 'Completed' : 'Upcoming'}
-                        </span>
+                  <div className="relative h-44 overflow-hidden bg-[#f5f3ff]">
+                    {event?.image ? (
+                      <img
+                        src={event.image}
+                        alt={item?.volunteer_event_title || event?.title || 'Volunteer event'}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#ede5ff] to-[#f7f2ff] text-[#7b699d]">
+                        <Calendar className="h-6 w-6" />
                       </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#120a2c]/75 via-[#120a2c]/30 to-transparent" />
+                    <span className={`absolute right-3 top-3 inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${statusStyles}`}>
+                      <CheckCircle2 className="h-3 w-3" />
+                      {status === 'completed' ? 'Completed' : 'Upcoming'}
+                    </span>
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#d8cff1]">
+                        {event?.stream || 'Volunteer Event'}
+                      </p>
+                      <h2
+                        className="mt-1 line-clamp-2 text-base font-semibold leading-5 text-white"
+                        title={item?.volunteer_event_title || event?.title || `Event #${getRegistrationEventId(item) || '-'}`}
+                      >
+                        {item?.volunteer_event_title || event?.title || `Event #${getRegistrationEventId(item) || '-'}`}
+                      </h2>
+                    </div>
+                  </div>
 
-                      <div className="space-y-2.5 p-4 text-xs text-[#5f6472]">
-                        <p className="flex items-start gap-2">
-                          <Calendar className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#5D3699]" />
-                          <span>{formatDate(item?.volunteer_event_date || event?.date)}</span>
-                        </p>
-                        <p className="flex items-start gap-2">
-                          <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#5D3699]" />
-                          <span>{item?.volunteer_event_time || event?.time || '-'}</span>
-                        </p>
-                        <p className="flex items-start gap-2">
+                  <div className="space-y-3 p-4">
+                    <div className="grid grid-cols-1 gap-2 text-xs text-[#5f6472] sm:grid-cols-2">
+                      <div className="rounded-lg border border-[#efe7ff] bg-[#fcfaff] px-3 py-2">
+                        <p className="inline-flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-[#5D3699]" />{formatDate(item?.volunteer_event_date || event?.date)}</p>
+                      </div>
+                      <div className="rounded-lg border border-[#efe7ff] bg-[#fcfaff] px-3 py-2">
+                        <p className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-[#5D3699]" />{item?.volunteer_event_time || event?.time || 'Time TBA'}</p>
+                      </div>
+                      <div className="rounded-lg border border-[#efe7ff] bg-[#fcfaff] px-3 py-2 sm:col-span-2">
+                        <p className="inline-flex items-start gap-1.5">
                           <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#5D3699]" />
                           <span>{event?.location || `${item?.city || '-'}, ${item?.state || '-'}`}</span>
                         </p>
-                        <p className="flex items-start gap-2">
-                          <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#5D3699]" />
-                          <span>Team: {item?.team_name || '-'}</span>
-                        </p>
                       </div>
-
-                      <div className="border-t border-[#f3ecff] bg-[#fcfaff] px-4 py-3">
-                        <p className="text-[11px] text-[#7b699d]">
-                          Registered on <span className="font-semibold text-[#5D3699]">{formatDateTime(item?.created_at)}</span>
-                        </p>
+                      <div className="rounded-lg border border-[#efe7ff] bg-[#fcfaff] px-3 py-2 sm:col-span-2">
+                        <p className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-[#5D3699]" />Team: {item?.team_name || 'Solo'}</p>
                       </div>
                     </div>
+
+                    <div className="rounded-lg border border-[#f0e9ff] bg-[#fcfaff] px-3 py-2">
+                      <p className="text-[11px] text-[#7b699d]">
+                        Registered on <span className="font-semibold text-[#5D3699]">{formatDateTime(item?.created_at)}</span>
+                      </p>
+                    </div>
+
+                    {isCompleted ? (
+                      <p className="text-[11px] font-semibold text-[#15803d]">Click card to view certificate</p>
+                    ) : null}
                   </div>
                 </article>
               );

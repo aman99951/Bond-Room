@@ -2,37 +2,37 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { menteeApi } from "../apis/api/menteeApi";
 import logo from "./assets/logo.png";
-import happyStudent from "./assets/happystudent.png";
+import happyStudent from "./assets/happyStudent.png";
 import avatarFallback from "./assets/avatar-1.jpg";
 
 const MENTORS = [
   { id: 1, name: "Dr. Meera Iyer", role: "Retired Professor · Physics", city: "Bangalore", qualification: "Ph.D. Physics, IISc", bio: "35 years of teaching physics to young minds. Passionate about making complex concepts simple and fun.", tags: ["Physics", "Board Exams", "Career Guidance"], languages: ["English", "Hindi", "Kannada"], rating: 4.9, avatar: "MI", color: "#7B4CBC" },
-  { id: 2, name: "Mr. Rajesh Sharma", role: "Software Engineer · Mentor", city: "Delhi", qualification: "B.Tech, IIT Delhi", bio: "From a small town to Silicon Valley and back. I love helping students navigate their career confusion.", tags: ["Computer Science", "Career", "Motivation"], languages: ["Hindi", "English"], rating: 4.8, avatar: "RS", color: "#5B2CC7" },
-  { id: 3, name: "Mrs. Sunita Deshmukh", role: "School Counselor · 20 yrs", city: "Pune", qualification: "M.A. Psychology", bio: "I've helped thousands of students deal with exam stress, peer pressure, and self-doubt.", tags: ["Stress", "Anxiety", "Study Tips"], languages: ["Marathi", "Hindi", "English"], rating: 4.9, avatar: "SD", color: "#5D3699" },
+  { id: 2, name: "Mr. Rajesh Sharma", role: "Software Engineer · Mentor", city: "Delhi", qualification: "B.Tech, IIT Delhi", bio: "From a small town to Silicon Valley and back. I love helping Teens navigate their career confusion.", tags: ["Computer Science", "Career", "Motivation"], languages: ["Hindi", "English"], rating: 4.8, avatar: "RS", color: "#5B2CC7" },
+  { id: 3, name: "Mrs. Sunita Deshmukh", role: "School Counselor · 20 yrs", city: "Pune", qualification: "M.A. Psychology", bio: "I've helped thousands of Teens deal with exam stress, peer pressure, and self-doubt.", tags: ["Stress", "Anxiety", "Study Tips"], languages: ["Marathi", "Hindi", "English"], rating: 4.9, avatar: "SD", color: "#5D3699" },
   { id: 4, name: "Mr. Anil Kapoor", role: "Parent & Life Coach", city: "Mumbai", qualification: "MBA, XLRI", bio: "As a father of two teenagers, I understand the challenges kids face today. Let's talk!", tags: ["Life Skills", "Decision Making", "Communication"], languages: ["Hindi", "English", "Gujarati"], rating: 4.7, avatar: "AK", color: "#8E61CE" },
-  { id: 5, name: "Dr. Fatima Khan", role: "Doctor & Wellness Guide", city: "Hyderabad", qualification: "MBBS, AIIMS", bio: "Health is wealth! I guide students on mental well-being, nutrition, and balanced living.", tags: ["Mental Health", "Wellness", "Biology"], languages: ["Urdu", "Hindi", "English", "Telugu"], rating: 5.0, avatar: "FK", color: "#4A2B7A" },
-  { id: 6, name: "Mr. Thomas George", role: "Retired Principal", city: "Kochi", qualification: "M.Ed, Kerala University", bio: "40 years in education. I believe every student has unlimited potential waiting to bloom.", tags: ["Academics", "Discipline", "Goal Setting"], languages: ["Malayalam", "English", "Hindi"], rating: 4.8, avatar: "TG", color: "#7B4CBC" },
+  { id: 5, name: "Dr. Fatima Khan", role: "Doctor & Wellness Guide", city: "Hyderabad", qualification: "MBBS, AIIMS", bio: "Health is wealth! I guide Teens on mental well-being, nutrition, and balanced living.", tags: ["Mental Health", "Wellness", "Biology"], languages: ["Urdu", "Hindi", "English", "Telugu"], rating: 5.0, avatar: "FK", color: "#4A2B7A" },
+  { id: 6, name: "Mr. Thomas George", role: "Retired Principal", city: "Kochi", qualification: "M.Ed, Kerala University", bio: "40 years in education. I believe every Teen has unlimited potential waiting to bloom.", tags: ["Academics", "Discipline", "Goal Setting"], languages: ["Malayalam", "English", "Hindi"], rating: 4.8, avatar: "TG", color: "#7B4CBC" },
 ];
 
 const STORIES = [
-  { quote: "I was so stressed about my board exams. Mr. Sharma helped me calm down — he didn't just give advice, he listened.", name: "Arav", meta: "Student · 17", emoji: "🎓" },
-  { quote: "I felt lost choosing a career path. My mentor shared her journey of confusion and success, which gave me so much hope.", name: "Priya", meta: "Student · 19", emoji: "✨" },
-  { quote: "It's different from talking to parents. My mentor feels like a wise friend who doesn't judge my mistakes.", name: "Rohan", meta: "Student · 16", emoji: "💬" },
+  { quote: "I was so stressed about my board exams. Mr. Sharma helped me calm down — he didn't just give advice, he listened.", name: "Arav", meta: "Teen · 17", emoji: "🎓" },
+  { quote: "I felt lost choosing a career path. My mentor shared her journey of confusion and success, which gave me so much hope.", name: "Priya", meta: "Teen · 19", emoji: "✨" },
+  { quote: "It's different from talking to parents. My mentor feels like a wise friend who doesn't judge my mistakes.", name: "Rohan", meta: "Teen · 16", emoji: "💬" },
 ];
 
 const MARQUEE_ITEMS = ["LISTEN", "UNDERSTAND", "GUIDE", "TRUSTED MENTORS", "SAFE SESSIONS", "AI MATCHING", "BOND ROOM"];
 
 const HOW_CARDS = [
-  { num: "01", title: "Listen", desc: "Students share concerns in a private, judgment-free space.", icon: "👂", gradient: "from-[#5D3699] to-[#7B4CBC]" },
+  { num: "01", title: "Listen", desc: "Teens share concerns in a private, judgment-free space.", icon: "👂", gradient: "from-[#5D3699] to-[#7B4CBC]" },
   { num: "02", title: "Understand", desc: "Intelligent matching finds the mentor who truly relates.", icon: "🧠", gradient: "from-[#5B2CC7] to-[#8E61CE]" },
   { num: "03", title: "Guide", desc: "Meaningful 1-on-1 free sessions that provide perspective and direction.", icon: "🧭", gradient: "from-[#4A2B7A] to-[#5D3699]" },
 ];
 
 const TRUST_ITEMS = [
-  { icon: "🛡️", title: "Safe & Monitored", desc: "Strict protocols — keyword monitoring and session recording keep every student safe.", gradient: "from-green-50 to-emerald-50", border: "border-green-200/60" },
+  { icon: "🛡️", title: "Safe & Monitored", desc: "Strict protocols — keyword monitoring and session recording keep every Teen safe.", gradient: "from-green-50 to-emerald-50", border: "border-green-200/60" },
   { icon: "👴", title: "Mentors 50+", desc: "Vetted professionals, retirees, and parents who genuinely care about young minds.", gradient: "from-[#F7F4FF] to-[#EDE3FF]", border: "border-[#DDD7ED]/60" },
   { icon: "🤖", title: "AI Matching", desc: "Algorithm weighs academic needs, emotions, and language for the perfect pairing.", gradient: "from-blue-50 to-indigo-50", border: "border-blue-200/60" },
-  { icon: "⚡", title: "Student-Friendly", desc: "No complex onboarding — sign up, match, and start talking in minutes.", gradient: "from-amber-50 to-yellow-50", border: "border-amber-200/60" },
+  { icon: "⚡", title: "Teen-Friendly", desc: "No complex onboarding — sign up, match, and start talking in minutes.", gradient: "from-amber-50 to-yellow-50", border: "border-amber-200/60" },
 ];
 
 const FALLBACK_MENTORS = MENTORS.map((mentor) => ({
@@ -86,8 +86,8 @@ const toLandingMentorCard = (mentor, index = 0) => {
     role,
     city: String(source?.city_state || source?.city || "").trim(),
     qualification: String(source?.qualification || "").trim(),
-    bio: bio || `Supports students with ${tags.join(", ") || "guided mentoring"}.`,
-    copy: bio || `Supports students with ${tags.join(", ") || "guided mentoring"}.`,
+    bio: bio || `Supports Teens with ${tags.join(", ") || "guided mentoring"}.`,
+    copy: bio || `Supports Teens with ${tags.join(", ") || "guided mentoring"}.`,
     tags,
     languages,
     rating: Number.isFinite(rating) ? rating : 0,
@@ -239,6 +239,14 @@ function MentorRingCarousel({ items, onSelectMentor }) {
 
   const handlePointerEnd = (event) => {
     if (!dragRef.current) return;
+    if (dragDistanceRef.current <= DRAG_CLICK_THRESHOLD && typeof onSelectMentor === "function") {
+      const target = document.elementFromPoint(event.clientX, event.clientY);
+      const card = target?.closest?.(".lp-arc-card");
+      const cardIndex = Number(card?.getAttribute("data-arc-index"));
+      if (Number.isFinite(cardIndex) && items[cardIndex]) {
+        onSelectMentor(items[cardIndex]);
+      }
+    }
     dragRef.current = false;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -263,13 +271,8 @@ function MentorRingCarousel({ items, onSelectMentor }) {
             <div
               key={`${item.name}-${index}`}
               className="lp-arc-card"
+              data-arc-index={index}
               ref={(el) => { cardRefs.current[index] = el; }}
-              onPointerUp={(event) => {
-                event.stopPropagation();
-                if (dragDistanceRef.current <= DRAG_CLICK_THRESHOLD && typeof onSelectMentor === "function") {
-                  onSelectMentor(item);
-                }
-              }}
             >
               <div className="lp-arc-card-inner">
                 <img src={item.image} alt={item.name} className="lp-arc-img" draggable={false} />
@@ -277,23 +280,6 @@ function MentorRingCarousel({ items, onSelectMentor }) {
                 <div className="lp-arc-info">
                   <strong>{item.name}</strong>
                   <span>{item.role}</span>
-                  <button
-                    type="button"
-                    className="lp-arc-action"
-                    onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); }}
-                    onPointerUp={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      if (typeof onSelectMentor === "function") onSelectMentor(item);
-                    }}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      if (typeof onSelectMentor === "function") onSelectMentor(item);
-                    }}
-                  >
-                    View Details
-                  </button>
                 </div>
               </div>
             </div>
@@ -455,7 +441,7 @@ export default function LandingPage() {
               <Link to="/login" onClick={closeMobile} className="px-3 py-2.5 rounded-lg text-sm font-medium text-[#5F6B81] hover:bg-[#EDE3FF] hover:text-[#5D3699] transition">Log in</Link>
             </nav>
             <div className="p-3 border-t border-[#EDE3FF]">
-              <Link to="/register" onClick={closeMobile} className="block text-center px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] rounded-lg shadow-md">Student Sign Up</Link>
+              <Link to="/register" onClick={closeMobile} className="block text-center px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] rounded-lg shadow-md">Mentee Sign Up</Link>
             </div>
           </div>
         </div>
@@ -475,7 +461,7 @@ export default function LandingPage() {
             {/* LEFT */}
             <div className="hidden lg:flex lg:col-span-3 flex-col items-center min-[2200px]:items-start gap-4 2xl:gap-5 min-[2200px]:gap-6">
               <div className={`${heroVis ? "asr d3" : "opacity-0"} w-full max-w-[260px] 2xl:max-w-[320px] min-[2200px]:max-w-[420px]`}>
-                <img src={happyStudent} alt="Happy students" className="w-full h-auto object-contain drop-shadow-[0_16px_30px_rgba(93,54,153,0.18)] rounded-2xl" />
+                <img src={happyStudent} alt="Happy Teens" className="w-full h-auto object-contain drop-shadow-[0_16px_30px_rgba(93,54,153,0.18)] rounded-2xl" />
               </div>
               <div className={`${heroVis ? "afi d7" : "opacity-0"} relative w-[110px] h-[110px] 2xl:w-[140px] 2xl:h-[140px] min-[2200px]:w-[180px] min-[2200px]:h-[180px]`}>
                 <div className="absolute inset-0 border-2 border-dashed border-[#DDD7ED] rounded-full asp" />
@@ -488,10 +474,10 @@ export default function LandingPage() {
               </div>
               <div className={`${heroVis ? "afi d8" : "opacity-0"} w-full max-w-[260px] 2xl:max-w-[320px] min-[2200px]:max-w-[420px]`}>
                 <div className="gl border border-[#DDD7ED]/70 rounded-xl 2xl:rounded-2xl p-3 2xl:p-4 min-[2200px]:p-5 shadow-md">
-                  <p className="text-[10px] 2xl:text-xs min-[2200px]:text-sm font-bold uppercase tracking-[.14em] text-[#5D3699]">Why Students Trust Us</p>
+                  <p className="text-[10px] 2xl:text-xs min-[2200px]:text-sm font-bold uppercase tracking-[.14em] text-[#5D3699]">Why Teens Trust Us</p>
                   <p className="mt-1.5 text-[13px] 2xl:text-[15px] min-[2200px]:text-lg font-semibold text-[#111827] leading-snug">Real support beyond marks and rankings.</p>
                   <div className="mt-2 2xl:mt-3 space-y-1.5 2xl:space-y-2">
-                    {[{l:"AI",t:"Personalized mentor matching"},{l:"1:1",t:"Guided one-on-one sessions"},{l:"Safe",t:"Monitored student-first environment"}].map((x,i)=>(
+                    {[{l:"AI",t:"Personalized mentor matching"},{l:"1:1",t:"Guided one-on-one sessions"},{l:"Safe",t:"Monitored Teen-first environment"}].map((x,i)=>(
                       <div key={i} className="flex items-center gap-2 2xl:gap-2.5 text-[11px] 2xl:text-[13px] min-[2200px]:text-[15px] text-[#5F6B81]">
                         <span className="w-5 h-5 2xl:w-6 2xl:h-6 min-[2200px]:w-8 min-[2200px]:h-8 rounded bg-[#EDE3FF] flex items-center justify-center text-[8px] 2xl:text-[9px] min-[2200px]:text-[11px] font-bold text-[#5D3699] shrink-0">{x.l}</span>
                         <span>{x.t}</span>
@@ -517,7 +503,7 @@ export default function LandingPage() {
                   <span className="relative inline-block"><span className="relative z-10 tg">Experience</span><span className="absolute -bottom-0.5 left-0 w-full h-2.5 bg-[#FDD253]/50 rounded-full -z-0" /></span>
                 </span>
                 <span className="block text-[2.2rem] sm:text-5xl md:text-[3.4rem] lg:text-[3.6rem] 2xl:text-[4.6rem] min-[2200px]:text-[5.8rem] min-[2500px]:text-[6.4rem] font-extrabold leading-[1.06] tracking-tight mt-0.5">
-                  <span className="text-[#111827]">for </span><span className="text-[#5B2CC7]">Students</span>
+                  <span className="text-[#111827]">for </span><span className="text-[#5B2CC7]">Teens</span>
                   <span className="inline-flex items-center ml-2 align-middle px-2 py-0.5 2xl:px-3 2xl:py-1 min-[2200px]:px-4 min-[2200px]:py-1.5 rounded-full bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] text-white text-[9px] 2xl:text-[11px] min-[2200px]:text-[13px] font-bold tracking-widest shadow-md apg">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FDD253] mr-1 animate-ping" />LIVE
                   </span>
@@ -525,23 +511,23 @@ export default function LandingPage() {
               </h1>
 
               <p className={`max-w-lg 2xl:max-w-2xl min-[2200px]:max-w-3xl mx-auto mt-4 2xl:mt-5 text-[15px] sm:text-base 2xl:text-xl min-[2200px]:text-[1.55rem] text-[#5F6B81] leading-relaxed ${heroVis?"asu d2":"opacity-0"}`}>
-                A safe platform where students grow through conversations with trusted mentors who have walked the path before.
+                A safe platform where Teens grow through conversations with trusted mentors who have walked the path before.
               </p>
 
               <div className={`flex flex-col sm:flex-row items-center justify-center gap-2.5 2xl:gap-4 mt-6 2xl:mt-8 ${heroVis?"asu d3":"opacity-0"}`}>
                 <Link to="/register" className="group relative px-7 py-3 text-sm 2xl:px-10 2xl:py-4 2xl:text-base min-[2200px]:px-12 min-[2200px]:py-5 min-[2200px]:text-xl font-bold text-white bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] rounded-xl 2xl:rounded-2xl shadow-lg shadow-[#5D3699]/25 hover:shadow-[#5D3699]/45 hover:scale-105 transition-all overflow-hidden">
-                  <span className="relative z-10 flex items-center gap-2">Student Sign Up<span className="group-hover:translate-x-0.5 transition-transform">→</span></span>
+                  <span className="relative z-10 flex items-center gap-2">Mentee Sign Up<span className="group-hover:translate-x-0.5 transition-transform">→</span></span>
                   <span className="absolute inset-0 bg-gradient-to-r from-[#4A2B7A] to-[#5D3699] opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
                 <Link to="/mentor-register" className="px-7 py-3 text-sm font-bold text-[#5D3699] bg-white border-2 border-[#DDD7ED] rounded-xl hover:border-[#5D3699] hover:bg-[#EDE3FF]/40 hover:scale-105 transition-all shadow-sm">Become a Mentor 🤝</Link>
               </div>
 
               <p className={`mt-3 2xl:mt-4 text-[11px] 2xl:text-[13px] min-[2200px]:text-[16px] text-[#6B7280] flex items-center justify-center gap-1 ${heroVis?"afi d4":"opacity-0"}`}>
-                🔒 Sessions are monitored & recorded for student safety.
+                🔒 Sessions are monitored & recorded for Teen safety.
               </p>
 
               <div className={`flex items-center justify-center gap-7 2xl:gap-10 min-[2200px]:gap-14 mt-5 2xl:mt-7 ${heroVis?"afi d5":"opacity-0"}`}>
-                {[{v:"2400+",l:"Students",i:"🎓"},{v:"180+",l:"Mentors",i:"👨‍🏫"},{v:"97%",l:"Happy",i:"😊"}].map((s,i)=>(
+                {[{v:"2400+",l:"Teens",i:"🎓"},{v:"180+",l:"Mentors",i:"👨‍🏫"},{v:"97%",l:"Happy",i:"😊"}].map((s,i)=>(
                   <div key={i} className="text-center group cursor-default">
                     <span className="text-base 2xl:text-2xl min-[2200px]:text-3xl group-hover:scale-125 inline-block transition-transform">{s.i}</span>
                     <p className="text-lg sm:text-xl 2xl:text-3xl min-[2200px]:text-5xl font-extrabold text-[#5D3699]">{s.v}</p>
@@ -648,7 +634,7 @@ export default function LandingPage() {
         <Particles />
         <Wrap>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-            {[{v:c1,s:"+",l:"Students guided",e:"🎓",g:"from-[#5D3699] to-[#7B4CBC]"},
+            {[{v:c1,s:"+",l:"Teens guided",e:"🎓",g:"from-[#5D3699] to-[#7B4CBC]"},
               {v:c2,s:"+",l:"Verified mentors",e:"✅",g:"from-[#5B2CC7] to-[#8E61CE]"},
               {v:c3,s:"%",l:"Satisfaction rate",e:"💯",g:"from-[#4A2B7A] to-[#5D3699]"},
               {v:c4,s:"+",l:"Sessions held",e:"💬",g:"from-[#7B4CBC] to-[#5B2CC7]"}].map((s,i)=>(
@@ -706,10 +692,10 @@ export default function LandingPage() {
             <div className="relative bg-gradient-to-br from-[#5D3699] via-[#5B2CC7] to-[#4A2B7A] rounded-2xl p-6 sm:p-8 text-center shadow-2xl shadow-[#5D3699]/20 overflow-hidden agr">
               <div className="absolute top-0 right-0 w-36 h-36 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
               <div className="absolute bottom-0 left-0 w-28 h-28 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-              <span className="text-4xl mb-3 block opacity-25">❝</span>
+              <span className="text-4xl mb-3 block  text-white">❝</span>
               <p className="text-base sm:text-lg font-medium text-white/95 leading-relaxed italic max-w-xl mx-auto">"Every interaction is designed to be safe, respectful, and deeply human."</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 mt-6">
-                <Link to="/register" className="px-6 py-2.5 rounded-lg bg-white text-[#5D3699] text-sm font-bold hover:scale-105 transition-all shadow-md flex items-center gap-1.5">Student Sign Up →</Link>
+                <Link to="/register" className="px-6 py-2.5 rounded-lg bg-white text-[#5D3699] text-sm font-bold hover:scale-105 transition-all shadow-md flex items-center gap-1.5">Mentee Sign Up →</Link>
                 <a href="#safety" className="px-5 py-2.5 rounded-lg bg-white/10 text-white text-sm font-semibold hover:bg-white/20 transition-all border border-white/20">Learn about safety</a>
               </div>
             </div>
@@ -729,14 +715,14 @@ export default function LandingPage() {
         </Wrap>
       </section>
 
-      {/* ═══ STUDENT VOICES ═══ */}
+      {/* ═══ Teen VOICES ═══ */}
       <section id="stories" ref={voicesRef} className="py-10 sm:py-14 bg-[#FAF8FF] relative overflow-hidden">
         <Particles />
         <Wrap>
           <div className={`text-center mb-7 sm:mb-10 ${voicesVis?"asu":"opacity-0"}`}>
-            <span className="inline-block px-3 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">💬 Student voices</span>
+            <span className="inline-block px-3 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">💬 Teen voices</span>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111827]">Stories That <span className="tg">Matter</span></h2>
-            <p className="max-w-lg mx-auto mt-2 text-[#5F6B81] text-sm">Real stories from real students whose lives were touched by Bond Room mentors</p>
+            <p className="max-w-lg mx-auto mt-2 text-[#5F6B81] text-sm">Real stories from real Teens whose lives were touched by Bond Room mentors</p>
           </div>
 
           <div className="hidden sm:grid sm:grid-cols-3 gap-3 sm:gap-4">
@@ -853,14 +839,14 @@ export default function LandingPage() {
           <div className={`text-center mb-7 sm:mb-10 ${whyVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">Why choose us</span>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111827]">More Than Just <span className="tg">Mentoring</span></h2>
-            <p className="max-w-lg mx-auto mt-2 text-[#5F6B81] text-sm">Bond Room bridges the generation gap, connecting students with experienced mentors who truly understand.</p>
+            <p className="max-w-lg mx-auto mt-2 text-[#5F6B81] text-sm">Bond Room bridges the generation gap, connecting Teens with experienced mentors who truly understand.</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {[{i:"🎯",t:"Goal-Oriented Sessions",d:"Every session is designed with clear outcomes to help students progress meaningfully.",g:"from-orange-50 to-amber-50",b:"border-orange-200/50"},
+            {[{i:"🎯",t:"Goal-Oriented Sessions",d:"Every session is designed with clear outcomes to help Teens progress meaningfully.",g:"from-orange-50 to-amber-50",b:"border-orange-200/50"},
               {i:"🌍",t:"Multi-Language Support",d:"Speak in your comfort language — we match mentors who speak your mother tongue.",g:"from-blue-50 to-cyan-50",b:"border-blue-200/50"},
-              {i:"📱",t:"Easy Mobile Access",d:"Access from any device, anywhere. Our platform is optimized for students on the go.",g:"from-violet-50 to-purple-50",b:"border-violet-200/50"},
-              {i:"🤝",t:"100% Free for Students",d:"Every session is completely free. Education guidance should never have a price tag.",g:"from-green-50 to-emerald-50",b:"border-green-200/50"},
+              {i:"📱",t:"Easy Mobile Access",d:"Access from any device, anywhere. Our platform is optimized for Teens on the go.",g:"from-violet-50 to-purple-50",b:"border-violet-200/50"},
+              {i:"🤝",t:"100% Free for Teens",d:"Every session is completely free. Education guidance should never have a price tag.",g:"from-green-50 to-emerald-50",b:"border-green-200/50"},
               {i:"📊",t:"Progress Tracking",d:"Track your growth journey with session summaries and personal development insights.",g:"from-pink-50 to-rose-50",b:"border-pink-200/50"},
               {i:"💡",t:"Real-World Wisdom",d:"Learn from people who've lived through similar challenges and came out stronger.",g:"from-[#F7F4FF] to-[#EDE3FF]",b:"border-[#DDD7ED]/50"},
             ].map((item,i)=>(
@@ -886,12 +872,12 @@ export default function LandingPage() {
           </div>
           <div className="space-y-2">
             {[
-              {q:"Is Bond Room really free for students?",a:"Yes! 100% free. Our mentors volunteer their time because they believe in giving back to the next generation."},
+              {q:"Is Bond Room really free for Teens?",a:"Yes! 100% free. Our mentors volunteer their time because they believe in giving back to the next generation."},
               {q:"How are mentors verified?",a:"Every mentor undergoes background checks, identity verification, and training before they can join the platform."},
               {q:"Are sessions safe and private?",a:"Absolutely. All sessions are monitored using AI keyword detection and recorded for safety."},
               {q:"Can I choose my own mentor?",a:"Our AI suggests the best match, but you can also browse mentor profiles and request a specific mentor."},
-              {q:"What age group is this for?",a:"Bond Room is designed for students aged 14-19 (typically 10th to 12th grade and early college students)."},
-              {q:"How long are the sessions?",a:"Sessions typically last 30-45 minutes, but can be shorter or longer based on the student's needs."},
+              {q:"What age group is this for?",a:"Bond Room is designed for Teens aged 14-19 (typically 10th to 12th grade and early college Teens)."},
+              {q:"How long are the sessions?",a:"Sessions typically last 30-45 minutes, but can be shorter or longer based on the Teen's needs."},
             ].map((f,i)=>(<FaqItem key={i} question={f.q} answer={f.a} index={i} visible={faqVis} />))}
           </div>
         </div>
@@ -910,9 +896,9 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.1] text-white">
               Let's tell your<br /><span className="text-[#FDD253]">next success</span><br />story.
             </h2>
-            <p className="max-w-md mx-auto mt-3 text-white/65 text-sm">Join thousands of students already growing with Bond Room mentors</p>
+            <p className="max-w-md mx-auto mt-3 text-white/65 text-sm">Join thousands of Teens already growing with Bond Room mentors</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 mt-7">
-              <Link to="/register" className="group px-7 py-3 text-sm font-bold text-[#5D3699] bg-white rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-1.5">Student Sign Up 🎓 <span className="group-hover:translate-x-0.5 transition-transform">→</span></Link>
+              <Link to="/register" className="group px-7 py-3 text-sm font-bold text-[#5D3699] bg-white rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-1.5">Mentee Sign Up 🎓 <span className="group-hover:translate-x-0.5 transition-transform">→</span></Link>
               <Link to="/mentor-register" className="px-7 py-3 text-sm font-bold text-white bg-white/10 border-2 border-white/25 rounded-xl hover:bg-white/20 hover:scale-105 transition-all">Become a Mentor 🤝</Link>
             </div>
             <div className="flex items-center justify-center gap-5 mt-6 text-white/45 text-[11px]">
@@ -937,7 +923,7 @@ export default function LandingPage() {
                 <img src={logo} alt="Bond Room" className="h-9 w-auto object-contain" />
                 <span className="text-lg font-extrabold">Bond Room</span>
               </div>
-              <p className="text-[13px] text-white/55 leading-relaxed mb-4">Bridging Old and New Destinies — A safe mentoring platform connecting students with experienced mentors who genuinely care.</p>
+              <p className="text-[13px] text-white/55 leading-relaxed mb-4">Bridging Old and New Destinies — A safe mentoring platform connecting Teens with experienced mentors who genuinely care.</p>
               <div className="flex items-center gap-3">
                 <a href="https://www.instagram.com/bondroomofficial" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition">
                   <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
@@ -978,7 +964,7 @@ export default function LandingPage() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-2">Get Started</p>
                 <div className="flex flex-col gap-2">
-                  <Link to="/register" className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white/10 text-[13px] font-semibold text-white hover:bg-white/20 transition border border-white/10 w-fit">Student Sign Up 🎓</Link>
+                  <Link to="/register" className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white/10 text-[13px] font-semibold text-white hover:bg-white/20 transition border border-white/10 w-fit">Mentee Sign Up 🎓</Link>
                   <Link to="/mentor-register" className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white/10 text-[13px] font-semibold text-white hover:bg-white/20 transition border border-white/10 w-fit">Become Mentor 🤝</Link>
                 </div>
               </div>
@@ -1008,3 +994,5 @@ function FaqItem({ question, answer, index, visible }) {
     </div>
   );
 }
+
+
