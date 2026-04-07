@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { menteeApi } from "../apis/api/menteeApi";
 import logo from "./assets/logo.png";
+import logoSvg from "./assets/Logo.svg";
 import happyStudent from "./assets/happystudent.png";
 import avatarFallback from "./assets/avatar-1.jpg";
 
@@ -264,7 +265,18 @@ function MentorRingCarousel({ items, onSelectMentor }) {
               key={`${item.name}-${index}`}
               className="lp-arc-card"
               ref={(el) => { cardRefs.current[index] = el; }}
+              onPointerDown={(event) => {
+                event.stopPropagation();
+                dragRef.current = false;
+                dragDistanceRef.current = 0;
+              }}
               onPointerUp={(event) => {
+                event.stopPropagation();
+                if (dragDistanceRef.current <= DRAG_CLICK_THRESHOLD && typeof onSelectMentor === "function") {
+                  onSelectMentor(item);
+                }
+              }}
+              onClick={(event) => {
                 event.stopPropagation();
                 if (dragDistanceRef.current <= DRAG_CLICK_THRESHOLD && typeof onSelectMentor === "function") {
                   onSelectMentor(item);
@@ -494,10 +506,10 @@ export default function LandingPage() {
 
               <h1 className={heroVis?"asu d1":"opacity-0"}>
                 <span className="block text-[2.2rem] sm:text-5xl md:text-[3.4rem] lg:text-[3.6rem] 2xl:text-[4.6rem] min-[2200px]:text-[5.8rem] min-[2500px]:text-[6.4rem] font-extrabold leading-[1.06] tracking-tight">
-                  <span className="text-[#111827]">Guided </span><span className="text-[#5D3699]">by</span>
+                  <span className="text-[#111827]">Real </span><span className="text-[#5D3699]">talk</span>
                 </span>
                 <span className="block text-[2.2rem] sm:text-5xl md:text-[3.4rem] lg:text-[3.6rem] 2xl:text-[4.6rem] min-[2200px]:text-[5.8rem] min-[2500px]:text-[6.4rem] font-extrabold leading-[1.06] tracking-tight mt-0.5">
-                  <span className="relative inline-block"><span className="relative z-10 tg">Experience</span><span className="absolute -bottom-0.5 left-0 w-full h-2.5 bg-[#FDD253]/50 rounded-full -z-0" /></span>
+                  <span className="relative inline-block"><span className="relative z-10 tg">real guidance</span><span className="absolute -bottom-0.5 left-0 w-full h-2.5 bg-[#FDD253]/50 rounded-full -z-0" /></span>
                 </span>
                 <span className="block text-[2.2rem] sm:text-5xl md:text-[3.4rem] lg:text-[3.6rem] 2xl:text-[4.6rem] min-[2200px]:text-[5.8rem] min-[2500px]:text-[6.4rem] font-extrabold leading-[1.06] tracking-tight mt-0.5">
                   <span className="text-[#111827]">for </span><span className="text-[#5B2CC7]">Teens</span>
@@ -524,7 +536,7 @@ export default function LandingPage() {
               </p>
 
               <div className={`flex items-center justify-center gap-7 2xl:gap-10 min-[2200px]:gap-14 mt-5 2xl:mt-7 ${heroVis?"afi d5":"opacity-0"}`}>
-                {[{v:"2400+",l:"Teens",i:"🎓"},{v:"180+",l:"Mentors",i:"👨‍🏫"},{v:"97%",l:"Happy",i:"😊"}].map((s,i)=>(
+                {[{v:"Always Free",l:"For Teens",i:"🎓"},{v:"Verified",l:"Mentors",i:"👨‍🏫"},{v:"Safe",l:"Conversations",i:"😊"}].map((s,i)=>(
                   <div key={i} className="text-center group cursor-default">
                     <span className="text-base 2xl:text-2xl min-[2200px]:text-3xl group-hover:scale-125 inline-block transition-transform">{s.i}</span>
                     <p className="text-lg sm:text-xl 2xl:text-3xl min-[2200px]:text-5xl font-extrabold text-[#5D3699]">{s.v}</p>
@@ -631,14 +643,14 @@ export default function LandingPage() {
         <Particles />
         <Wrap>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-            {[{v:c1,s:"+",l:"Teens guided",e:"🎓",g:"from-[#5D3699] to-[#7B4CBC]"},
-              {v:c2,s:"+",l:"Verified mentors",e:"✅",g:"from-[#5B2CC7] to-[#8E61CE]"},
-              {v:c3,s:"%",l:"Satisfaction rate",e:"💯",g:"from-[#4A2B7A] to-[#5D3699]"},
-              {v:c4,s:"+",l:"Sessions held",e:"💬",g:"from-[#7B4CBC] to-[#5B2CC7]"}].map((s,i)=>(
+            {[{v:"Student-first",s:"",l:"Teens guided",e:"🎓",g:"from-[#5D3699] to-[#7B4CBC]"},
+              {v:"Background-checked",s:"",l:"Verified mentors",e:"✅",g:"from-[#5B2CC7] to-[#8E61CE]"},
+              {v:"Warm & safe",s:"",l:"Satisfaction focus",e:"💯",g:"from-[#4A2B7A] to-[#5D3699]"},
+              {v:"Real conversations",s:"",l:"Sessions held",e:"💬",g:"from-[#7B4CBC] to-[#5B2CC7]"}].map((s,i)=>(
               <div key={i} className={`group relative gl border border-[#DDD7ED]/40 rounded-xl p-4 sm:p-5 text-center hl cs ${statsVis?`asu d${i+1}`:"opacity-0"}`}>
                 <div className={`absolute top-0 left-0 right-0 h-[3px] rounded-t-xl bg-gradient-to-r ${s.g} opacity-60`} />
                 <span className="text-2xl mb-1 block group-hover:scale-125 transition-transform">{s.e}</span>
-                <span className="block text-2xl sm:text-3xl font-extrabold tg">{s.v.toLocaleString()}{s.s}</span>
+                <span className="block text-lg sm:text-xl font-extrabold tg">{s.v}{s.s}</span>
                 <span className="block text-[11px] sm:text-xs font-medium text-[#5F6B81] mt-0.5">{s.l}</span>
               </div>
             ))}
@@ -917,8 +929,8 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 mb-8">
             <div className="max-w-xs">
               <div className="flex items-center gap-2 mb-3">
-                <img src={logo} alt="Bond Room" className="h-9 w-auto object-contain" />
-                <span className="text-lg font-extrabold">Bond Room</span>
+                <img src={logoSvg} alt="Bond Room" className="p-3 bg-white h-20 w-auto object-contain" />
+              
               </div>
               <p className="text-[13px] text-white/55 leading-relaxed mb-4">Bridging Old and New Destinies — A safe mentoring platform connecting Teens with experienced mentors who genuinely care.</p>
               <div className="flex items-center gap-3">
@@ -930,7 +942,6 @@ export default function LandingPage() {
                       <circle cx="17.5" cy="6.5" r="1" />
                     </svg>
                   </span>
-                  <span>bondroomofficial</span>
                 </a>
                 <a href="https://www.linkedin.com/in/bond-room-374aaa393/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition">
                   <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
@@ -938,7 +949,6 @@ export default function LandingPage() {
                       <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 8.98h4v12H3v-12Zm7 0h3.8v1.64h.06c.53-1 1.83-2.06 3.76-2.06 4.02 0 4.76 2.65 4.76 6.1v6.32h-4v-5.61c0-1.34-.02-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.97v5.7h-4v-12Z" />
                     </svg>
                   </span>
-                  <span>Bond Room</span>
                 </a>
               </div>
             </div>
@@ -991,5 +1001,7 @@ function FaqItem({ question, answer, index, visible }) {
     </div>
   );
 }
+
+
 
 

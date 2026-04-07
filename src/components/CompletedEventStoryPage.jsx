@@ -37,6 +37,7 @@ const CompletedEventStoryPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeImageIndex, setActiveImageIndex] = useState(null);
+  const [bondRoomParticipants, setBondRoomParticipants] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,9 +69,44 @@ const CompletedEventStoryPage = () => {
   }, [eventId]);
 
   useEffect(() => {
+    let cancelled = false;
+    const loadBondRoomParticipants = async () => {
+      try {
+        const payload = await menteeApi.getPublicVolunteerParticipantCount();
+        if (cancelled) return;
+        setBondRoomParticipants(Number(payload?.count || 0));
+      } catch {
+        if (!cancelled) setBondRoomParticipants(null);
+      }
+    };
+    loadBondRoomParticipants();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const galleryImages = (() => {
+    if (!eventItem) return [];
+    if (Array.isArray(eventItem.gallery_images) && eventItem.gallery_images.length) return eventItem.gallery_images;
+    return eventItem.image ? [eventItem.image] : [];
+  })();
+
+  useEffect(() => {
     if (activeImageIndex === null) return undefined;
     const onEsc = (event) => {
       if (event.key === 'Escape') setActiveImageIndex(null);
+      if (event.key === 'ArrowRight') {
+        setActiveImageIndex((prev) => {
+          if (prev === null) return prev;
+          return (prev + 1) % galleryImages.length;
+        });
+      }
+      if (event.key === 'ArrowLeft') {
+        setActiveImageIndex((prev) => {
+          if (prev === null) return prev;
+          return (prev - 1 + galleryImages.length) % galleryImages.length;
+        });
+      }
     };
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onEsc);
@@ -78,7 +114,7 @@ const CompletedEventStoryPage = () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', onEsc);
     };
-  }, [activeImageIndex]);
+  }, [activeImageIndex, galleryImages.length]);
 
   const storyBrief = useMemo(() => {
     const brief = String(eventItem?.completion_brief || '').trim();
@@ -86,12 +122,6 @@ const CompletedEventStoryPage = () => {
   }, [eventItem]);
 
   const joinedCount = useMemo(() => Number(eventItem?.joined_count || eventItem?.seats || 0), [eventItem]);
-
-  const galleryImages = useMemo(() => {
-    if (!eventItem) return [];
-    if (Array.isArray(eventItem.gallery_images) && eventItem.gallery_images.length) return eventItem.gallery_images;
-    return eventItem.image ? [eventItem.image] : [];
-  }, [eventItem]);
 
   if (loading) {
     return (
@@ -129,7 +159,7 @@ const CompletedEventStoryPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto w-full">
         <button
           type="button"
           onClick={() => navigate('/volunteer')}
@@ -139,7 +169,7 @@ const CompletedEventStoryPage = () => {
           Back to Volunteer
         </button>
 
-        <section className="mt-5 overflow-hidden rounded-3xl border border-[#dcfce7] bg-[linear-gradient(165deg,#ffffff_0%,#f3fbf6_45%,#ecfdf3_100%)] p-5 shadow-[0_30px_70px_-44px_rgba(15,23,42,0.75)] sm:p-7">
+        <section className="mt-5 w-full overflow-hidden rounded-3xl border border-[#dcfce7] bg-[linear-gradient(165deg,#ffffff_0%,#f3fbf6_45%,#ecfdf3_100%)] p-5 shadow-[0_30px_70px_-44px_rgba(15,23,42,0.75)] sm:p-7">
           <div className="mb-5">
             <p className="inline-flex items-center gap-1 rounded-full bg-[#dcfce7] px-3 py-1 text-[11px] font-semibold text-[#166534]">
               <CheckCircle2 className="h-3.5 w-3.5" />
@@ -159,13 +189,23 @@ const CompletedEventStoryPage = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-2xl border border-[#bbf7d0] bg-[#f0fdf4] p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">Participants</p>
-                <p className="mt-2 inline-flex items-center gap-2 text-3xl font-bold text-[#166534]">
-                  <Users className="h-6 w-6" />
-                  {joinedCount}
-                </p>
-                <p className="mt-1 text-xs text-[#166534]">Joined this event</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[#bbf7d0] bg-[#f0fdf4] p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">Participants</p>
+                  <p className="mt-2 inline-flex items-center gap-2 text-3xl font-bold text-[#166534]">
+                    <Users className="h-6 w-6" />
+                    {joinedCount}
+                  </p>
+                  <p className="mt-1 text-xs text-[#166534]">Joined this event</p>
+                </div>
+                <div className="rounded-2xl border border-[#d1fae5] bg-white/95 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">Bond Room Participants</p>
+                  <p className="mt-2 inline-flex items-center gap-2 text-3xl font-bold text-[#166534]">
+                    <Users className="h-6 w-6" />
+                    {bondRoomParticipants === null ? '—' : bondRoomParticipants}
+                  </p>
+                  <p className="mt-1 text-xs text-[#166534]">Volunteer</p>
+                </div>
               </div>
 
               <div className="rounded-2xl border border-[#d1fae5] bg-white/95 p-4">
@@ -185,7 +225,7 @@ const CompletedEventStoryPage = () => {
                         <img
                           src={imgSrc}
                           alt={`${eventItem.title} gallery ${index + 1}`}
-                          className="h-28 w-full object-cover transition-transform duration-500 hover:scale-105"
+                          className="h-44 w-full object-cover transition-transform duration-500 hover:scale-105 2xl:h-56"
                           loading="lazy"
                         />
                       </button>
@@ -217,6 +257,30 @@ const CompletedEventStoryPage = () => {
             >
               <X className="h-4 w-4" />
             </button>
+            {galleryImages.length > 1 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveImageIndex((prev) => (prev === null ? prev : (prev - 1 + galleryImages.length) % galleryImages.length))
+                  }
+                  className="absolute left-3 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white hover:bg-black/65"
+                  aria-label="Previous image"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveImageIndex((prev) => (prev === null ? prev : (prev + 1) % galleryImages.length))
+                  }
+                  className="absolute right-3 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white hover:bg-black/65"
+                  aria-label="Next image"
+                >
+                  <ArrowLeft className="h-4 w-4 rotate-180" />
+                </button>
+              </>
+            ) : null}
             <img
               src={galleryImages[activeImageIndex]}
               alt={`${eventItem.title} large preview ${activeImageIndex + 1}`}
