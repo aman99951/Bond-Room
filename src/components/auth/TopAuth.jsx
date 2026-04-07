@@ -41,16 +41,16 @@ const TopAuth = ({ lockNavigation = false, onBlockedNavigate, logoutRedirectTo =
             <button
               type="button"
               onClick={handleLogout}
-              className="lp-solid"
+              className="lp-ghost"
             >
               Logout
             </button>
           ) : isLogin ? (
-            <Link to="/register" className="lp-solid" onClick={(event) => handleNavClick(event, '/register')}>
+            <Link to="/register" className="lp-ghost" onClick={(event) => handleNavClick(event, '/register')}>
               Student Sign Up
             </Link>
           ) : (
-            <Link to="/login" className="lp-solid" onClick={(event) => handleNavClick(event, '/login')}>
+            <Link to="/login" className="lp-ghost" onClick={(event) => handleNavClick(event, '/login')}>
               Login
             </Link>
           )}

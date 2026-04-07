@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import mentorLeft from '../assets/teach1.png';
 import mentorBottom from '../assets/teach2.png';
 import imageContainer from '../assets/Image Container.png';
@@ -9,6 +9,8 @@ import { useMentorAuth } from '../../apis/apihook/useMentorAuth';
 import { setPendingMentorRegistration } from '../../apis/api/storage';
 import { UserRound, Briefcase, Camera } from 'lucide-react';
 import BoundedDatePicker from '../shared/BoundedDatePicker';
+import '../LandingPage.css';
+import './Register.css';
 
 const MENTOR_MIN_AGE = 25;
 const MENTOR_MAX_AGE = 65;
@@ -252,6 +254,7 @@ const Spinner = ({ size = 'sm' }) => {
 const MentorRegister = () => {
   const [selectedLanguages, setSelectedLanguages] = useState([]);
   const [selectedCareAreas, setSelectedCareAreas] = useState([]);
+  const location = useLocation();
   const languagesOptions = ['Tamil', 'English', 'Telugu', 'Kannada', 'Malayalam', 'Hindi'];
   const careAreaOptions = [
     'Anxiety',
@@ -520,23 +523,42 @@ const MentorRegister = () => {
   const openCameraModal = async () => {
     setProfileImageMenuOpen(false);
     setCameraErrorMessage('');
+    setCameraModalOpen(true);
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      setCameraErrorMessage('Camera is not supported on this device/browser.');
+      setCameraModalOpen(false);
+      return;
+    }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
-        audio: false,
-      });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user' },
+          audio: false,
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
       cameraStreamRef.current = stream;
-      setCameraModalOpen(true);
       window.setTimeout(() => {
         const video = cameraVideoRef.current;
         if (!video) return;
         video.srcObject = stream;
+        video.muted = true;
+        video.playsInline = true;
         video.onloadedmetadata = () => {
-          video.play().catch(() => {});
+          video.play().catch(() => {
+            setCameraErrorMessage('Unable to start live preview. Please try again.');
+          });
         };
       }, 0);
     } catch {
       setCameraErrorMessage('Unable to access camera. Please allow camera permission.');
+      stopCameraStream();
+      setCameraModalOpen(false);
     }
   };
 
@@ -1002,6 +1024,9 @@ const MentorRegister = () => {
 
   const sectionOneErrors = getSectionOneErrors();
   const registrationErrors = getRegistrationErrors();
+  const searchParams = new URLSearchParams(location.search);
+  const isEventFlowLock = searchParams.get('source') === 'event-flow';
+  const registerTabHref = isEventFlowLock ? `/register?${searchParams.toString()}` : '/register';
   const shouldShowError = (fieldKey) => {
     const isSectionOneField = sectionOneFieldKeys.has(fieldKey);
     const attempted = isSectionOneField
@@ -1020,8 +1045,13 @@ const MentorRegister = () => {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 420)}px`;
   };
 
+  useEffect(() => {
+    if (!isEventFlowLock) return;
+    navigate(registerTabHref, { replace: true });
+  }, [isEventFlowLock, navigate, registerTabHref]);
+
   return (
-    <div className="min-h-screen text-[#1f2937] flex flex-col">
+    <div className="mentor-register-page lp-register text-[#1f2937]">
       {toastState.open && (
         <div className={`fixed right-4 top-4 z-[70] max-w-xs rounded-lg border px-4 py-3 shadow-lg animate-fadeIn ${
           toastState.type === 'error'
@@ -1132,17 +1162,18 @@ const MentorRegister = () => {
 
       <TopAuth />
 
-      <main className="bg-transparent flex-1 pt-[104px] sm:pt-[112px]">
-        <div className="flex w-full justify-center px-3 py-4 sm:px-4 sm:py-8 lg:px-6 lg:py-10">
-          <div className="w-full max-w-[min(96vw,2400px)] 2xl:max-w-[min(97vw,3000px)] overflow-hidden rounded-xl bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)] animate-scaleIn">
-            <div className="grid grid-cols-1 items-stretch xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <main className="lp-register-main">
+        <div className="lp-register-orb lp-register-orb-a" />
+        <div className="lp-register-orb lp-register-orb-b" />
+        <div className="lp-register-shell animate-scaleIn">
+          <div className="lp-register-grid">
               {/* Left Panel */}
               <div className="relative hidden h-full min-h-0 overflow-hidden bg-transparent xl:grid xl:grid-rows-2">
                 <img
                   src={imageContainer}
                   alt=""
                   aria-hidden="true"
-                  className="absolute left-1/2 top-1/2 z-20 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 animate-pulse-slow md:h-[380px] md:w-[380px] lg:h-[500px] lg:w-[500px]"
+                  className="absolute left-1/2 top-1/2 z-10 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 animate-pulse-slow md:h-[280px] md:w-[280px] lg:h-[340px] lg:w-[340px]"
                 />
                 <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
                   <div className="min-h-0 overflow-hidden">
@@ -1152,8 +1183,8 @@ const MentorRegister = () => {
                       className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                     />
                   </div>
-                  <div className="relative flex min-h-0 flex-col items-center justify-start bg-[#5b2c91] px-10 pb-8 pt-24 lg:px-12 lg:pt-28 text-white">
-                    <div className="max-w-[280px] text-left animate-fadeIn">
+                  <div className="relative flex min-h-0 flex-col items-center justify-center bg-[#5b2c91] px-10 pb-8 pt-8 lg:px-12 text-white">
+                    <div className="relative z-20 max-w-[280px] text-left animate-fadeIn">
                       <h3 className="font-sans text-[37px] font-bold leading-[36.5px]">
                         Join a
                         <br />
@@ -1171,7 +1202,7 @@ const MentorRegister = () => {
                 </div>
                 <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
                   <div className="flex min-h-0 items-center justify-center bg-[#f2c94c] p-6 text-[#1f2937]">
-                    <ul className="list-disc space-y-3 pl-4 text-sm animate-fadeIn">
+                    <ul className="relative z-20 mx-auto max-w-[300px] list-disc space-y-3 pl-5 text-sm font-medium leading-6 text-[#1f2937] animate-fadeIn">
                       <li>Bond Room exists to restore human connection in an exam-driven system.</li>
                       <li>You are not expected to teach.</li>
                       <li>Your presence and perspective are enough.</li>
@@ -1202,7 +1233,7 @@ const MentorRegister = () => {
                   </p>
                   <div className="mt-3 inline-flex items-center gap-1 rounded-xl border border-[#e7e2f6] bg-[#f7f2ff] p-1">
                     <Link
-                      to="/register"
+                      to={registerTabHref}
                       className="rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#5b4a78] hover:text-[#4a2a7a]"
                     >
                       Mentee / Volunteer
@@ -1547,27 +1578,28 @@ const MentorRegister = () => {
                             <label className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
                               Profile Image (Optional)
                             </label>
-                            <div className="rounded-xl border border-[#d7d0e2] bg-white p-3">
-                              <div className="flex items-center gap-3">
-                                <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[#f3ecff] ring-1 ring-[#e6e2f1]">
+                            <div className="lp-profile-upload-card">
+                              <div className="lp-profile-upload-main">
+                                <div className="lp-profile-upload-avatar">
                                   {profileImagePreview ? (
                                     <img src={profileImagePreview} alt="Mentor preview" className="h-full w-full object-cover" />
                                   ) : (
                                     <Camera className="h-5 w-5 text-[#5b2c91]" />
                                   )}
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs text-[#6b7280]">Add an image for your mentor profile.</p>
-                                  <p className="mt-0.5 truncate text-[11px] text-[#9ca3af]">
+                                <div className="lp-profile-upload-copy">
+                                  <p className="lp-profile-upload-title">Add an image for your mentor profile.</p>
+                                  <p className="lp-profile-upload-file">
                                     {profileImageFile ? profileImageFile.name : 'No file selected'}
                                   </p>
                                 </div>
-                                <div className="relative" ref={profileImageMenuRef}>
+                                <div className="lp-profile-upload-actions" ref={profileImageMenuRef}>
                                   <button
                                     type="button"
-                                    className="rounded-lg border border-[#5b2c91] px-3 py-1.5 text-xs font-semibold text-[#5b2c91] hover:bg-[#f3ecff]"
+                                    className="lp-profile-upload-btn-primary"
                                     onClick={() => setProfileImageMenuOpen((prev) => !prev)}
                                   >
+                                    <Camera className="h-3.5 w-3.5" />
                                     {profileImageFile ? 'Change' : 'Upload'}
                                   </button>
                                   {profileImageMenuOpen ? (
@@ -1591,25 +1623,25 @@ const MentorRegister = () => {
                                       </button>
                                     </div>
                                   ) : null}
+                                  {profileImageFile ? (
+                                    <button
+                                      type="button"
+                                      className="lp-profile-upload-btn-secondary"
+                                      onClick={() => {
+                                        if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+                                          URL.revokeObjectURL(profileImagePreview);
+                                        }
+                                        setProfileImageFile(null);
+                                        setProfileImagePreview('');
+                                        if (profileImageInputRef.current) {
+                                          profileImageInputRef.current.value = '';
+                                        }
+                                      }}
+                                    >
+                                      Remove
+                                    </button>
+                                  ) : null}
                                 </div>
-                                {profileImageFile ? (
-                                  <button
-                                    type="button"
-                                    className="rounded-lg border border-[#e5e7eb] px-3 py-1.5 text-xs font-medium text-[#6b7280] hover:bg-[#f9fafb]"
-                                    onClick={() => {
-                                      if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
-                                        URL.revokeObjectURL(profileImagePreview);
-                                      }
-                                      setProfileImageFile(null);
-                                      setProfileImagePreview('');
-                                      if (profileImageInputRef.current) {
-                                        profileImageInputRef.current.value = '';
-                                      }
-                                    }}
-                                  >
-                                    Remove
-                                  </button>
-                                ) : null}
                               </div>
                               <input
                                 ref={profileImageInputRef}
@@ -1792,7 +1824,6 @@ const MentorRegister = () => {
                   </form>
                 </div>
               </div>
-            </div>
           </div>
         </div>
       </main>
@@ -1951,33 +1982,33 @@ const MentorRegister = () => {
 
       {cameraModalOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          className="lp-camera-overlay"
           role="dialog"
           aria-modal="true"
           onClick={closeCameraModal}
         >
-          <div
-            className="w-full max-w-xl overflow-hidden rounded-2xl border border-[#e6e2f1] bg-white shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-[#eee7fa] px-4 py-3">
-              <h3 className="text-lg font-semibold text-[#1f2937]">Capture Profile Photo</h3>
-              <button type="button" className="text-[#6b7280] hover:text-[#1f2937]" onClick={closeCameraModal}>
+          <div className="lp-camera-dialog" onClick={(event) => event.stopPropagation()}>
+            <div className="lp-camera-head">
+              <div>
+                <h3>Capture Profile Photo</h3>
+                <p>Position your face clearly, then click Capture.</p>
+              </div>
+              <button type="button" className="lp-camera-close" onClick={closeCameraModal}>
                 <span className="text-xl leading-none">&times;</span>
               </button>
             </div>
-            <div className="bg-black p-4">
-              <video ref={cameraVideoRef} autoPlay playsInline muted className="mx-auto max-h-[56vh] w-full rounded-lg object-cover" />
+            <div className="lp-camera-body">
+              <video ref={cameraVideoRef} autoPlay playsInline muted className="lp-camera-video" />
               <canvas ref={cameraCanvasRef} className="hidden" />
             </div>
             {cameraErrorMessage ? (
-              <p className="px-4 pb-2 text-sm text-red-600">{cameraErrorMessage}</p>
+              <p className="lp-camera-error">{cameraErrorMessage}</p>
             ) : null}
-            <div className="flex items-center justify-end gap-3 border-t border-[#eee7fa] px-4 py-3">
-              <button type="button" className="rounded-lg border border-[#d7d0e2] px-4 py-2 text-sm font-medium text-[#4b5563]" onClick={closeCameraModal}>
+            <div className="lp-camera-actions">
+              <button type="button" className="lp-camera-btn lp-camera-btn-secondary" onClick={closeCameraModal}>
                 Cancel
               </button>
-              <button type="button" className="rounded-lg bg-[#5b2c91] px-4 py-2 text-sm font-semibold text-white" onClick={captureFromCamera}>
+              <button type="button" className="lp-camera-btn lp-camera-btn-primary" onClick={captureFromCamera}>
                 Capture
               </button>
             </div>

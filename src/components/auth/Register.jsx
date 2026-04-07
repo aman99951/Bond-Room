@@ -190,6 +190,7 @@ const Register = () => {
   const nextAfterRegister = searchParams.get('next') || '';
   const safeNextAfterRegister = nextAfterRegister.startsWith('/') ? nextAfterRegister : '';
   const isEventFlowLock = signupSource === 'event_flow';
+  const registerTabHref = isEventFlowLock ? `/register?${searchParams.toString()}` : '/register';
   const [showVolunteerFlowLockModal, setShowVolunteerFlowLockModal] = useState(false);
 
   useEffect(() => {
@@ -664,23 +665,42 @@ const Register = () => {
   const openCameraModal = async () => {
     setProfileImageMenuOpen(false);
     setCameraErrorMessage('');
+    setCameraModalOpen(true);
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      setCameraErrorMessage('Camera is not supported on this device/browser.');
+      setCameraModalOpen(false);
+      return;
+    }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
-        audio: false,
-      });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user' },
+          audio: false,
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
       cameraStreamRef.current = stream;
-      setCameraModalOpen(true);
       window.setTimeout(() => {
         const video = cameraVideoRef.current;
         if (!video) return;
         video.srcObject = stream;
+        video.muted = true;
+        video.playsInline = true;
         video.onloadedmetadata = () => {
-          video.play().catch(() => {});
+          video.play().catch(() => {
+            setCameraErrorMessage('Unable to start live preview. Please try again.');
+          });
         };
       }, 0);
     } catch {
       setCameraErrorMessage('Unable to access camera. Please allow camera permission.');
+      stopCameraStream();
+      setCameraModalOpen(false);
     }
   };
 
@@ -721,6 +741,14 @@ const Register = () => {
         <div className="lp-register-lock-overlay">
           <div className="lp-register-lock-card" role="dialog" aria-modal="true" aria-labelledby="volunteer-flow-lock-title">
             <div className="lp-register-lock-head">
+              <button
+                type="button"
+                className="lp-register-lock-close"
+                aria-label="Close message"
+                onClick={() => setShowVolunteerFlowLockModal(false)}
+              >
+                <X size={16} />
+              </button>
               <div className="lp-register-lock-head-row">
                 <div className="lp-register-lock-icon">
                   <AlertCircle size={20} />
@@ -739,14 +767,14 @@ const Register = () => {
                 onClick={handleCancelEventFlowRegistration}
                 className="lp-register-lock-btn lp-register-lock-btn-secondary"
               >
-                Cancel
+                Leave This Registration
               </button>
               <button
                 type="button"
                 onClick={() => setShowVolunteerFlowLockModal(false)}
                 className="lp-register-lock-btn lp-register-lock-btn-primary"
               >
-                Continue Registration
+                Stay and Continue
               </button>
             </div>
           </div>
@@ -786,7 +814,7 @@ const Register = () => {
                 src={imageContainer}
                 alt=""
                 aria-hidden="true"
-                className="absolute left-1/2 top-1/2 z-20 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 animate-pulse-slow md:h-[380px] md:w-[380px] lg:h-[500px] lg:w-[500px]"
+                className="absolute left-1/2 top-1/2 z-10 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 animate-pulse-slow md:h-[280px] md:w-[280px] lg:h-[340px] lg:w-[340px]"
               />
               <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
                 <div className="min-h-0 overflow-hidden">
@@ -796,8 +824,8 @@ const Register = () => {
                     className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                   />
                 </div>
-                <div className="relative flex min-h-0 flex-col items-center justify-start bg-[#5b2c91] px-10 pb-8 pt-24 lg:px-12 lg:pt-28 text-white">
-                  <div className="max-w-[280px] text-left animate-fadeIn" style={{ paddingTop: '100px',paddingLeft:'24px',paddingRight:'24px' }}>
+                <div className="relative flex min-h-0 flex-col items-center justify-center bg-[#5b2c91] px-10 pb-8 pt-8 lg:px-12 text-white">
+                  <div className="relative z-20 max-w-[280px] text-left animate-fadeIn">
                     <h3 className="font-sans text-[37px] font-bold leading-[36.5px]">
                       Join a
                       <br />
@@ -807,7 +835,7 @@ const Register = () => {
                       <br />
                       and care.
                     </h3>
-                    <p className="font-sans text-[16px] font-normal leading-[22.5px] text-white/90" style={{marginTop: '14px'}}>
+                    <p className="mt-3 font-sans text-[16px] font-normal leading-[22.5px] text-white/90">
                       Your guidance can help a student feel seen -- beyond marks, ranks, and expectations.
                     </p>
                   </div>
@@ -815,7 +843,7 @@ const Register = () => {
               </div>
               <div className="grid min-h-0 grid-cols-[1.05fr_1fr]">
                 <div className="flex min-h-0 items-center justify-center bg-[#f2c94c] p-6 text-[#1f2937]">
-                  <ul className="list-disc space-y-3 pl-4 text-sm animate-fadeIn">
+                  <ul className="relative z-20 mx-auto max-w-[300px] list-disc space-y-3 pl-5 text-sm font-medium leading-6 text-[#1f2937] animate-fadeIn">
                     <li>Bond Room exists to restore human connection in an exam-driven system.</li>
                     <li>You are not expected to teach.</li>
                     <li>Your presence and perspective are enough.</li>
@@ -839,7 +867,7 @@ const Register = () => {
               <h2 className="lp-register-h2">Register your Mentee / Volunteer account</h2>
               <p className="lp-register-sub">Create your account and verify details in one step.</p>
               <div className="lp-register-role-tabs" role="tablist" aria-label="Select registration role">
-                <Link to="/register" className="lp-register-role-tab is-active" aria-current="page">
+                <Link to={registerTabHref} className="lp-register-role-tab is-active" aria-current="page">
                   Mentee / Volunteer
                 </Link>
                 {!isEventFlowLock ? (
@@ -891,9 +919,7 @@ const Register = () => {
                           {profileImagePreview ? (
                             <img src={profileImagePreview} alt="Profile preview" className="h-full w-full object-cover" />
                           ) : (
-                            <div className="lp-profile-upload-avatar-fallback">
-                              {form.firstName?.[0] ? String(form.firstName[0]).toUpperCase() : 'U'}
-                            </div>
+                            <Camera className="h-5 w-5 text-[#5b2c91]" />
                           )}
                         </div>
                         <div className="lp-profile-upload-copy">
@@ -1444,33 +1470,33 @@ const Register = () => {
 
       {cameraModalOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          className="lp-camera-overlay"
           role="dialog"
           aria-modal="true"
           onClick={closeCameraModal}
         >
-          <div
-            className="w-full max-w-xl overflow-hidden rounded-2xl border border-[#e6e2f1] bg-white shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-[#eee7fa] px-4 py-3">
-              <h3 className="text-lg font-semibold text-[#1f2937]">Capture Profile Photo</h3>
-              <button type="button" className="text-[#6b7280] hover:text-[#1f2937]" onClick={closeCameraModal}>
+          <div className="lp-camera-dialog lp-camera-dialog-compact" onClick={(event) => event.stopPropagation()}>
+            <div className="lp-camera-head">
+              <div>
+                <h3>Capture Profile Photo</h3>
+                <p>Position your face clearly, then click Capture.</p>
+              </div>
+              <button type="button" className="lp-camera-close" onClick={closeCameraModal}>
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="bg-black p-4">
-              <video ref={cameraVideoRef} autoPlay playsInline muted className="mx-auto max-h-[56vh] w-full rounded-lg object-cover" />
+            <div className="lp-camera-body">
+              <video ref={cameraVideoRef} autoPlay playsInline muted className="lp-camera-video lp-camera-video-compact" />
               <canvas ref={cameraCanvasRef} className="hidden" />
             </div>
             {cameraErrorMessage ? (
-              <p className="px-4 pb-2 text-sm text-red-600">{cameraErrorMessage}</p>
+              <p className="lp-camera-error">{cameraErrorMessage}</p>
             ) : null}
-            <div className="flex items-center justify-end gap-3 border-t border-[#eee7fa] px-4 py-3">
-              <button type="button" className="rounded-lg border border-[#d7d0e2] px-4 py-2 text-sm font-medium text-[#4b5563]" onClick={closeCameraModal}>
+            <div className="lp-camera-actions">
+              <button type="button" className="lp-camera-btn lp-camera-btn-secondary" onClick={closeCameraModal}>
                 Cancel
               </button>
-              <button type="button" className="rounded-lg bg-[#5b2c91] px-4 py-2 text-sm font-semibold text-white" onClick={captureFromCamera}>
+              <button type="button" className="lp-camera-btn lp-camera-btn-primary" onClick={captureFromCamera}>
                 Capture
               </button>
             </div>
