@@ -331,8 +331,15 @@ const MentorRegister = () => {
   const [draftReady, setDraftReady] = useState(false);
   const bioTextareaRef = useRef(null);
   const profileImageInputRef = useRef(null);
+  const cameraVideoRef = useRef(null);
+  const cameraCanvasRef = useRef(null);
+  const cameraStreamRef = useRef(null);
+  const profileImageMenuRef = useRef(null);
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState('');
+  const [profileImageMenuOpen, setProfileImageMenuOpen] = useState(false);
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
+  const [cameraErrorMessage, setCameraErrorMessage] = useState('');
   const isDev = Boolean(import.meta?.env?.DEV);
   const dobBounds = getMentorDobBounds();
   const dialCode = COUNTRY_DIAL_CODE[form.country] || '+91';
@@ -355,8 +362,23 @@ const MentorRegister = () => {
       if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
         URL.revokeObjectURL(profileImagePreview);
       }
+      if (cameraStreamRef.current) {
+        cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+        cameraStreamRef.current = null;
+      }
     };
   }, [profileImagePreview]);
+
+  useEffect(() => {
+    if (!profileImageMenuOpen) return undefined;
+    const handleOutside = (event) => {
+      if (!profileImageMenuRef.current?.contains(event.target)) {
+        setProfileImageMenuOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handleOutside);
+    return () => window.removeEventListener('mousedown', handleOutside);
+  }, [profileImageMenuOpen]);
 
   useEffect(() => {
     const draft = readMentorRegisterDraft();
@@ -477,6 +499,70 @@ const MentorRegister = () => {
     const objectUrl = URL.createObjectURL(file);
     setProfileImageFile(file);
     setProfileImagePreview(objectUrl);
+  };
+
+  const stopCameraStream = () => {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
+    }
+    if (cameraVideoRef.current) {
+      cameraVideoRef.current.srcObject = null;
+    }
+  };
+
+  const closeCameraModal = () => {
+    setCameraModalOpen(false);
+    setCameraErrorMessage('');
+    stopCameraStream();
+  };
+
+  const openCameraModal = async () => {
+    setProfileImageMenuOpen(false);
+    setCameraErrorMessage('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' },
+        audio: false,
+      });
+      cameraStreamRef.current = stream;
+      setCameraModalOpen(true);
+      window.setTimeout(() => {
+        const video = cameraVideoRef.current;
+        if (!video) return;
+        video.srcObject = stream;
+        video.onloadedmetadata = () => {
+          video.play().catch(() => {});
+        };
+      }, 0);
+    } catch {
+      setCameraErrorMessage('Unable to access camera. Please allow camera permission.');
+    }
+  };
+
+  const captureFromCamera = () => {
+    const video = cameraVideoRef.current;
+    const canvas = cameraCanvasRef.current;
+    if (!video || !canvas) return;
+    if (!video.videoWidth || !video.videoHeight) {
+      setCameraErrorMessage('Camera not ready. Please wait a moment and try again.');
+      return;
+    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(profileImagePreview);
+      }
+      const file = new File([blob], `mentor-profile-${Date.now()}.png`, { type: 'image/png' });
+      setProfileImageFile(file);
+      setProfileImagePreview(URL.createObjectURL(file));
+      closeCameraModal();
+    }, 'image/png');
   };
 
   const updateField = (key, value) => {
@@ -1476,13 +1562,36 @@ const MentorRegister = () => {
                                     {profileImageFile ? profileImageFile.name : 'No file selected'}
                                   </p>
                                 </div>
-                                <button
-                                  type="button"
-                                  className="rounded-lg border border-[#5b2c91] px-3 py-1.5 text-xs font-semibold text-[#5b2c91] hover:bg-[#f3ecff]"
-                                  onClick={() => profileImageInputRef.current?.click()}
-                                >
-                                  {profileImageFile ? 'Change' : 'Upload'}
-                                </button>
+                                <div className="relative" ref={profileImageMenuRef}>
+                                  <button
+                                    type="button"
+                                    className="rounded-lg border border-[#5b2c91] px-3 py-1.5 text-xs font-semibold text-[#5b2c91] hover:bg-[#f3ecff]"
+                                    onClick={() => setProfileImageMenuOpen((prev) => !prev)}
+                                  >
+                                    {profileImageFile ? 'Change' : 'Upload'}
+                                  </button>
+                                  {profileImageMenuOpen ? (
+                                    <div className="upload-menu-card">
+                                      <button
+                                        type="button"
+                                        className="upload-menu-item"
+                                        onClick={() => {
+                                          setProfileImageMenuOpen(false);
+                                          profileImageInputRef.current?.click();
+                                        }}
+                                      >
+                                        Upload from device
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="upload-menu-item"
+                                        onClick={openCameraModal}
+                                      >
+                                        Camera
+                                      </button>
+                                    </div>
+                                  ) : null}
+                                </div>
                                 {profileImageFile ? (
                                   <button
                                     type="button"
@@ -1839,6 +1948,42 @@ const MentorRegister = () => {
           </div>
         </div>
       )}
+
+      {cameraModalOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={closeCameraModal}
+        >
+          <div
+            className="w-full max-w-xl overflow-hidden rounded-2xl border border-[#e6e2f1] bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#eee7fa] px-4 py-3">
+              <h3 className="text-lg font-semibold text-[#1f2937]">Capture Profile Photo</h3>
+              <button type="button" className="text-[#6b7280] hover:text-[#1f2937]" onClick={closeCameraModal}>
+                <span className="text-xl leading-none">&times;</span>
+              </button>
+            </div>
+            <div className="bg-black p-4">
+              <video ref={cameraVideoRef} autoPlay playsInline muted className="mx-auto max-h-[56vh] w-full rounded-lg object-cover" />
+              <canvas ref={cameraCanvasRef} className="hidden" />
+            </div>
+            {cameraErrorMessage ? (
+              <p className="px-4 pb-2 text-sm text-red-600">{cameraErrorMessage}</p>
+            ) : null}
+            <div className="flex items-center justify-end gap-3 border-t border-[#eee7fa] px-4 py-3">
+              <button type="button" className="rounded-lg border border-[#d7d0e2] px-4 py-2 text-sm font-medium text-[#4b5563]" onClick={closeCameraModal}>
+                Cancel
+              </button>
+              <button type="button" className="rounded-lg bg-[#5b2c91] px-4 py-2 text-sm font-semibold text-white" onClick={captureFromCamera}>
+                Capture
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <BottomAuth />
     </div>

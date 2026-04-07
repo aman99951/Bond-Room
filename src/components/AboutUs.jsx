@@ -4,42 +4,77 @@ import studentsImage from './assets/teach2.png';
 import mentorImage from './assets/mentor2.png';
 import supportImage from './assets/student2.png';
 import communityImage from './assets/teach1.png';
-import founderImage from './assets/avatar-1.jpg';
-import coFounderImage from './assets/avatar-2.jpg';
-import ceoImage from './assets/mentor-left.png';
-import headMentorshipImage from './assets/mentor2.png';
+import volunteerOneImage from './assets/student2.png';
+import volunteerTwoImage from './assets/happystudent.png';
+import volunteerThreeImage from './assets/download.png';
 
 const AboutUs = () => {
+  const founders = [
+    {
+      name: 'Dr Raghavan Gopikumar',
+      role: 'Co-Founder, Managing Trustee',
+      bio: 'Co-creates the vision, culture, and long-term impact strategy for Bond Room.',
+      image: 'https://staticimg.amarujala.com/assets/images/2025/02/27/hindi-is-mask-sanskrit-the-face-says-cm-mk-stalin_c9d02dc65fe72c8be35ffa6162b6cbf7.jpeg',
+    },
+    {
+      name: 'Mr Vishwanath Jayakumar',
+      role: 'Co-Founder',
+      bio: 'Builds student-centered programs and partnerships across schools and communities.',
+      image: 'https://staticimg.amarujala.com/assets/images/2023/02/02/tamil-nadu_1675313390.jpeg',
+    },
+  ];
+
   const leadershipTeam = [
     {
-      name: 'Aarav Mehta',
-      role: 'Founder & CEO',
-      bio: 'Former student mentor focused on building safe, outcome-driven guidance programs.',
-      image: founderImage,
+      name: 'Dr KV Kishore Kumar',
+      role: 'Executive Director',
+      bio: 'Leads institutional strategy, governance, and execution across key initiatives.',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80',
     },
     {
-      name: 'Riya Kapoor',
-      role: 'Co-Founder & COO',
-      bio: 'Leads operations, mentor quality systems, and onboarding experiences at scale.',
-      image: coFounderImage,
+      name: 'Dr Archana Padmakar',
+      role: 'Director - Programs',
+      bio: 'Designs high-impact student support programs with measurable outcomes.',
+      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80',
     },
     {
-      name: 'Kabir Shah',
-      role: 'Chief Technology Officer',
-      bio: 'Designs trust-first technology for matching, session quality, and platform reliability.',
-      image: ceoImage,
+      name: 'Dr Preetha Krishnadas',
+      role: 'Director - Programs',
+      bio: 'Oversees mentorship curriculum quality and learner experience consistency.',
+      image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
     },
     {
-      name: 'Naina Verma',
-      role: 'Head of Mentorship',
-      bio: 'Builds mentor training frameworks that improve empathy, structure, and consistency.',
-      image: headMentorshipImage,
+      name: 'Ms Swapna Krishnakumar',
+      role: 'Director - Operations',
+      bio: 'Runs operations and delivery systems for reliable, safe, and scalable execution.',
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=900&q=80',
+    },
+  ];
+
+  const volunteers = [
+    {
+      name: 'Volunteer Mentor Circle',
+      role: 'Community Volunteers',
+      bio: 'Volunteers who show up consistently to support students with patience and empathy.',
+      image: volunteerOneImage,
+    },
+    {
+      name: 'Student Support Volunteers',
+      role: 'Youth Engagement',
+      bio: 'Peers and community members helping students feel seen, heard, and guided.',
+      image: volunteerTwoImage,
+    },
+    {
+      name: 'Program Volunteers',
+      role: 'Events and Outreach',
+      bio: 'On-ground contributors enabling sessions, workshops, and local outreach activities.',
+      image: volunteerThreeImage,
     },
   ];
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 sm:p-8">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto w-full max-w-[2440px]">
         <a
           href="/"
           className="inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
@@ -178,41 +213,87 @@ const AboutUs = () => {
           </article>
         </section>
 
-        <section className="relative mt-6 overflow-hidden rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
-          <div className="pointer-events-none absolute -left-12 -top-12 h-40 w-40 rounded-full bg-[#eadbff] opacity-70 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-[#e8ddff] opacity-70 blur-2xl" />
+        <section className="mt-6 space-y-6">
+          <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Founders</p>
+            <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">People Behind Bond Room</h2>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {founders.map((member) => (
+                <article
+                  key={member.name}
+                  className="group overflow-hidden rounded-2xl border border-[#e5d8fb] bg-white shadow-[0_22px_40px_-30px_rgba(93,54,153,0.78)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_44px_-26px_rgba(93,54,153,0.85)]"
+                >
+                  <div className="relative h-56 overflow-hidden bg-[#f6f0ff] 2xl:h-[22rem] min-[2200px]:h-[26rem]">
+                    <img
+                      src={member.image}
+                      alt={`${member.name} - ${member.role}`}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-[#111827]">{member.name}</h3>
+                    <p className="mt-1 text-sm font-medium text-[#5D3699]">{member.role}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#5f6472]">{member.bio}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </article>
 
-          <div className="relative">
+          <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Leadership Team</p>
-            <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">Meet the People Behind Bond Room</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5f6472]">
-              Our mock leadership team combines student support, technology, and operations experience to deliver a trusted
-              mentorship ecosystem.
-            </p>
-          </div>
+            <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">Program and Operations Leadership</h2>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {leadershipTeam.map((member) => (
+                <article
+                  key={member.name}
+                  className="group overflow-hidden rounded-2xl border border-[#e5d8fb] bg-white shadow-[0_22px_40px_-30px_rgba(93,54,153,0.78)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_44px_-26px_rgba(93,54,153,0.85)]"
+                >
+                  <div className="relative h-52 overflow-hidden bg-[#f6f0ff] 2xl:h-[17rem] min-[2200px]:h-[19rem]">
+                    <img
+                      src={member.image}
+                      alt={`${member.name} - ${member.role}`}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-[#111827]">{member.name}</h3>
+                    <p className="mt-1 text-sm font-medium text-[#5D3699]">{member.role}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#5f6472]">{member.bio}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </article>
 
-          <div className="relative mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {leadershipTeam.map((member) => (
-              <article
-                key={member.name}
-                className="group overflow-hidden rounded-2xl border border-[#e5d8fb] bg-white shadow-[0_22px_40px_-30px_rgba(93,54,153,0.78)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_44px_-26px_rgba(93,54,153,0.85)]"
-              >
-                <div className="relative h-52 overflow-hidden bg-[#f6f0ff]">
-                  <img
-                    src={member.image}
-                    alt={`${member.name} - ${member.role}`}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#28123f]/50 via-transparent to-transparent" />
-                </div>
-                <div className="p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">{member.role}</p>
-                  <h3 className="mt-1 text-lg font-semibold text-[#111827]">{member.name}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[#5f6472]">{member.bio}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Volunteers</p>
+            <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">Volunteer Community</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5f6472]">
+              Bond Room is powered by a volunteer community that supports programs, student engagement, and outreach.
+            </p>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {volunteers.map((member) => (
+                <article
+                  key={member.name}
+                  className="group overflow-hidden rounded-2xl border border-[#e5d8fb] bg-white shadow-[0_22px_40px_-30px_rgba(93,54,153,0.78)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_44px_-26px_rgba(93,54,153,0.85)]"
+                >
+                  <div className="relative h-56 overflow-hidden bg-[#f6f0ff] 2xl:h-72 min-[2200px]:h-80">
+                    <img
+                      src={member.image}
+                      alt={`${member.name} - ${member.role}`}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-[#111827]">{member.name}</h3>
+                    <p className="mt-1 text-sm font-medium text-[#5D3699]">{member.role}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#5f6472]">{member.bio}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </article>
         </section>
 
         <section className="mt-6 rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
