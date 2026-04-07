@@ -13,6 +13,8 @@ import {
   Users,
 } from 'lucide-react';
 import { menteeApi } from '../../../apis/api/menteeApi';
+import VolunteerTopAuth from '../../auth/VolunteerTopAuth';
+import VolunteerBottomAuth from '../../auth/VolunteerBottomAuth';
 import './VolunteerEvents.css';
 
 const formatDate = (value) => {
@@ -285,12 +287,14 @@ const VolunteerEvents = () => {
   };
 
   return (
-    <motion.div
-      className="relative overflow-hidden bg-transparent p-3 sm:p-6 lg:p-8"
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
+    <>
+      <VolunteerTopAuth logoutRedirectTo="/volunteer" />
+      <motion.div
+        className="relative overflow-hidden bg-transparent p-3 pt-24 sm:p-6 sm:pt-28 lg:p-8 lg:pt-32"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
       <div className="mb-6 flex items-center justify-between gap-3">
         <button
           type="button"
@@ -840,7 +844,9 @@ const VolunteerEvents = () => {
           {eventsError}
         </div>
       )}
-    </motion.div>
+      </motion.div>
+      <VolunteerBottomAuth />
+    </>
   );
 };
 

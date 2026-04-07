@@ -195,6 +195,8 @@ html.has-custom-cursor * {
 }
 .lp-solid:hover {
   background: linear-gradient(135deg, #4f2c85 0%, #5d3699 58%, #7f57c0 100%);
+  color: #fff;
+  text-decoration: none;
   box-shadow: 0 10px 28px rgba(91,44,199,0.42), 0 0 0 2px rgba(253,210,83,0.22);
   transform: translateY(-1px);
 }

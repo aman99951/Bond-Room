@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Calendar, CalendarDays, CheckCircle2, ChevronRight, Users } from 'lucide-react';
 import { menteeApi } from '../apis/api/menteeApi';
 import { clearAuthSession, getAuthSession } from '../apis/api/storage';
+import VolunteerTopAuth from './auth/VolunteerTopAuth';
+import VolunteerBottomAuth from './auth/VolunteerBottomAuth';
 import './LandingPage.css';
 import './menties/pages/DashboardMentorCarousel.css';
 
@@ -462,12 +464,14 @@ const VolunteerPage = () => {
   };
 
   return (
-    <motion.div
-      className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 sm:p-8"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <>
+      <VolunteerTopAuth logoutRedirectTo="/volunteer" />
+      <motion.div
+        className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 pt-24 sm:p-8 sm:pt-28"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
       {showLogoutPrompt ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
           <div className="w-full max-w-md rounded-2xl border border-[#e8dcff] bg-white p-6 shadow-[0_24px_54px_-26px_rgba(0,0,0,0.5)]">
@@ -496,15 +500,6 @@ const VolunteerPage = () => {
       ) : null}
 
       <div className="mx-auto max-w-full">
-        <button
-          type="button"
-          onClick={handleBackToHome}
-          className="inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Home
-        </button>
-
         <section className="relative mt-5 overflow-hidden rounded-[28px] border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-10">
           <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#efe6ff] blur-2xl" />
           <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#f4edff] blur-2xl" />
@@ -992,9 +987,10 @@ const VolunteerPage = () => {
           </div>
         ) : null}
       </div>
-    </motion.div>
+      </motion.div>
+      <VolunteerBottomAuth />
+    </>
   );
 };
 
 export default VolunteerPage;
-

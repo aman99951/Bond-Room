@@ -14,9 +14,12 @@ import {
   Send,
   User,
   Users,
+  X,
 } from 'lucide-react';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { useMenteeData } from '../../../apis/apihook/useMenteeData';
+import VolunteerTopAuth from '../../auth/VolunteerTopAuth';
+import VolunteerBottomAuth from '../../auth/VolunteerBottomAuth';
 
 const COUNTRY_OPTIONS = ['India', 'USA'];
 const LOCATION_OPTIONS = {
@@ -314,40 +317,54 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
     }
   };
 
+  const handleCloseLoginPrompt = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate(backPath);
+  };
+
   if (eventLoading || !eventItem) {
     return (
-      <div className="p-6 sm:p-8">
-        <div className="mx-auto max-w-xl rounded-2xl border border-red-200 bg-white p-8 text-center">
-          {eventLoading ? (
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#e7d8ff] border-t-[#5D3699]" />
-          ) : (
-            <AlertCircle className="mx-auto h-8 w-8 text-red-500" />
-          )}
-          <h2 className="mt-3 text-lg font-semibold text-[#111827]">
-            {eventLoading ? 'Loading Event' : 'Event Not Found'}
-          </h2>
-          <p className="mt-1 text-sm text-[#6b7280]">
-            {eventLoading ? 'Fetching volunteer event details...' : 'The selected volunteer event does not exist.'}
-          </p>
-          <Link
-            to={backPath}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#5D3699] px-4 py-2 text-sm font-semibold text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Link>
+      <>
+        <VolunteerTopAuth logoutRedirectTo="/volunteer" />
+        <div className="p-6 pt-24 sm:p-8 sm:pt-28">
+          <div className="mx-auto max-w-xl rounded-2xl border border-red-200 bg-white p-8 text-center">
+            {eventLoading ? (
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#e7d8ff] border-t-[#5D3699]" />
+            ) : (
+              <AlertCircle className="mx-auto h-8 w-8 text-red-500" />
+            )}
+            <h2 className="mt-3 text-lg font-semibold text-[#111827]">
+              {eventLoading ? 'Loading Event' : 'Event Not Found'}
+            </h2>
+            <p className="mt-1 text-sm text-[#6b7280]">
+              {eventLoading ? 'Fetching volunteer event details...' : 'The selected volunteer event does not exist.'}
+            </p>
+            <Link
+              to={backPath}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#5D3699] px-4 py-2 text-sm font-semibold text-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Link>
+          </div>
         </div>
-      </div>
+        <VolunteerBottomAuth />
+      </>
     );
   }
 
   return (
-    <motion.div
-      className="relative overflow-hidden bg-transparent p-3 sm:p-6 lg:p-8"
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45 }}
-    >
+    <>
+      <VolunteerTopAuth logoutRedirectTo="/volunteer" />
+      <motion.div
+        className="relative overflow-hidden bg-transparent p-3 pt-24 sm:p-6 sm:pt-28 lg:p-8 lg:pt-32"
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+      >
       {(errorMessage || successMessage) && (
         <div className="fixed right-4 top-4 z-[70] w-full max-w-sm">
           <div
@@ -364,7 +381,15 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
 
       {showLoginPrompt ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-[#e8dcff] bg-white p-6 shadow-[0_24px_54px_-26px_rgba(0,0,0,0.5)]">
+          <div className="relative w-full max-w-md rounded-2xl border border-[#e8dcff] bg-white p-6 shadow-[0_24px_54px_-26px_rgba(0,0,0,0.5)]">
+            <button
+              type="button"
+              onClick={handleCloseLoginPrompt}
+              aria-label="Close login prompt"
+              className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#e8dcff] bg-white text-[#5D3699] transition-colors hover:bg-[#f8f4ff]"
+            >
+              <X className="h-4 w-4" />
+            </button>
             <h3 className="text-lg font-semibold text-[#111827]">Do you already have a Mentee account?</h3>
             {isLoggedIn && !isMenteeLoggedIn ? (
               <p className="mt-2 text-sm text-[#6b7280]">
@@ -575,7 +600,9 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
           </div>
         </form>
       </div>
-    </motion.div>
+      </motion.div>
+      <VolunteerBottomAuth />
+    </>
   );
 };
 

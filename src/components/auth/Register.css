@@ -249,19 +249,19 @@
   margin-top: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .lp-register-form-card {
   border: 1px solid #e6e2f1;
   border-radius: 14px;
   background: linear-gradient(180deg, #ffffff 0%, #faf7ff 100%);
-  padding: 14px;
+  padding: 18px;
   box-shadow: 0 8px 20px rgba(25, 15, 45, 0.06);
 }
 
 .lp-register-form-card-head {
-  margin-bottom: 10px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -311,7 +311,8 @@
 .lp-register-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 14px;
+  margin-bottom: 10px;
 }
 
 .lp-profile-upload-card {
@@ -413,18 +414,25 @@
 
 .lp-field label {
   display: block;
-  margin-bottom: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: #6b7280;
+}
+
+.lp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .lp-register-field-label {
   display: block !important;
-  margin-bottom: 4px !important;
-  font-size: 0.75rem !important;
-  line-height: 1rem !important;
-  font-weight: 500 !important;
+  margin-bottom: 6px !important;
+  font-size: 0.78rem !important;
+  line-height: 1.15rem !important;
+  font-weight: 600 !important;
+  font-family: 'DM Sans', sans-serif !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
   color: #6b7280 !important;
@@ -435,7 +443,7 @@
   border: 1px solid #e7e2f6;
   background: #fff;
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 12px 12px;
   color: var(--ink);
   outline: none;
   transition: border-color .2s, box-shadow .2s;
@@ -726,9 +734,30 @@
 }
 
 .lp-register-lock-head {
+  position: relative;
   padding: 18px 20px 16px;
   border-bottom: 1px solid #f1e9ff;
   background: linear-gradient(120deg, #ffffff 0%, #faf5ff 100%);
+}
+
+.lp-register-lock-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid #e6def8;
+  background: #fff;
+  color: #5d3699;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.lp-register-lock-close:hover {
+  background: #f8f4ff;
 }
 
 .lp-register-lock-head-row {

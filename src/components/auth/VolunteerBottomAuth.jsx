@@ -1,6 +1,6 @@
 import React from 'react';
 
-const BottomAuth = () => {
+const VolunteerBottomAuth = () => {
   return (
     <footer className="bg-white border-t border-gray-100" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-2 px-4 py-3 text-[11px] text-[#9CA3AF] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10 xl:px-14">
@@ -15,4 +15,4 @@ const BottomAuth = () => {
   );
 };
 
-export default BottomAuth;
+export default VolunteerBottomAuth;

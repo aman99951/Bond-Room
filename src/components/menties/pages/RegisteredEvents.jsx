@@ -14,6 +14,8 @@ import {
   Users,
 } from 'lucide-react';
 import { menteeApi } from '../../../apis/api/menteeApi';
+import VolunteerTopAuth from '../../auth/VolunteerTopAuth';
+import VolunteerBottomAuth from '../../auth/VolunteerBottomAuth';
 
 const PAGE_SIZE = 6;
 
@@ -226,12 +228,14 @@ const RegisteredEvents = () => {
   const hasNoAvailableEvents = !showRegistrations && !loading && availableEvents.length === 0;
 
   return (
-    <motion.div
-      className="relative overflow-hidden bg-transparent p-3 sm:p-6 lg:p-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45 }}
-    >
+    <>
+      <VolunteerTopAuth logoutRedirectTo="/volunteer" />
+      <motion.div
+        className="relative overflow-hidden bg-transparent p-3 pt-24 sm:p-6 sm:pt-28 lg:p-8 lg:pt-32"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+      >
       <div className="mb-6">
         <button
           type="button"
@@ -550,7 +554,9 @@ const RegisteredEvents = () => {
           </div>
         )}
       </section>
-    </motion.div>
+      </motion.div>
+      <VolunteerBottomAuth />
+    </>
   );
 };
 

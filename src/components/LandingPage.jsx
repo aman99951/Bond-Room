@@ -239,14 +239,6 @@ function MentorRingCarousel({ items, onSelectMentor }) {
 
   const handlePointerEnd = (event) => {
     if (!dragRef.current) return;
-    if (dragDistanceRef.current <= DRAG_CLICK_THRESHOLD && typeof onSelectMentor === "function") {
-      const target = document.elementFromPoint(event.clientX, event.clientY);
-      const card = target?.closest?.(".lp-arc-card");
-      const cardIndex = Number(card?.getAttribute("data-arc-index"));
-      if (Number.isFinite(cardIndex) && items[cardIndex]) {
-        onSelectMentor(items[cardIndex]);
-      }
-    }
     dragRef.current = false;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -271,8 +263,13 @@ function MentorRingCarousel({ items, onSelectMentor }) {
             <div
               key={`${item.name}-${index}`}
               className="lp-arc-card"
-              data-arc-index={index}
               ref={(el) => { cardRefs.current[index] = el; }}
+              onPointerUp={(event) => {
+                event.stopPropagation();
+                if (dragDistanceRef.current <= DRAG_CLICK_THRESHOLD && typeof onSelectMentor === "function") {
+                  onSelectMentor(item);
+                }
+              }}
             >
               <div className="lp-arc-card-inner">
                 <img src={item.image} alt={item.name} className="lp-arc-img" draggable={false} />

@@ -4,8 +4,8 @@ import { CheckCircle2, AlertCircle, X, UserRound, MapPin, ShieldCheck, Camera, M
 import { Eye, EyeOff } from 'lucide-react';
 import TopAuth from './TopAuth';
 import BottomAuth from './BottomAuth';
-import mentorLeft from '../assets/teach1.png';
-import mentorBottom from '../assets/teach2.png';
+import mentorBottom from '../assets/teach1.png';
+import mentorLeft from '../assets/teach2.png';
 import imageContainer from '../assets/Image Container.png';
 import { authApi } from '../../apis/api/authApi';
 import { setAssessmentDraft } from '../../apis/api/storage';
