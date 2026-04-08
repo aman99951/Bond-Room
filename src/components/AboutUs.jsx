@@ -7,20 +7,24 @@ import communityImage from './assets/teach1.png';
 import volunteerOneImage from './assets/student2.png';
 import volunteerTwoImage from './assets/happystudent.png';
 import volunteerThreeImage from './assets/download.png';
+import smrithiFounderImage from './assets/smrithi(co-founder).png';
+import nikhilFounderImage from './assets/Nikhil(co-founder).jpg';
 
 const AboutUs = () => {
   const founders = [
     {
-      name: 'Dr Raghavan Gopikumar',
-      role: 'Co-Founder, Managing Trustee',
-      bio: 'Co-creates the vision, culture, and long-term impact strategy for Bond Room.',
-      image: 'https://staticimg.amarujala.com/assets/images/2025/02/27/hindi-is-mask-sanskrit-the-face-says-cm-mk-stalin_c9d02dc65fe72c8be35ffa6162b6cbf7.jpeg',
+      name: 'Smrithi',
+      role: 'Co-Founder',
+      bio: 'Co-creates the vision and growth direction for Bond Room.',
+      image: smrithiFounderImage,
+      objectPosition: 'center 18%',
     },
     {
-      name: 'Mr Vishwanath Jayakumar',
+      name: 'Nikhil',
       role: 'Co-Founder',
-      bio: 'Builds student-centered programs and partnerships across schools and communities.',
-      image: 'https://staticimg.amarujala.com/assets/images/2023/02/02/tamil-nadu_1675313390.jpeg',
+      bio: 'Builds product and platform experiences focused on student impact.',
+      image: nikhilFounderImage,
+      objectPosition: 'center 12%',
     },
   ];
 
@@ -228,6 +232,7 @@ const AboutUs = () => {
                       src={member.image}
                       alt={`${member.name} - ${member.role}`}
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      style={{ objectPosition: member.objectPosition || 'center center' }}
                     />
                   </div>
                   <div className="p-4">

@@ -81,13 +81,6 @@ const hasTurnIceServers = (servers) =>
     return urls.some((value) => String(value || '').trim().toLowerCase().startsWith('turn'));
   });
 
-const CLOUDINARY_CLOUD_NAME = String(import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
-const CLOUDINARY_UPLOAD_PRESET = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '').trim();
-const CLOUDINARY_UPLOAD_FOLDER = String(import.meta.env.VITE_CLOUDINARY_UPLOAD_FOLDER || 'bond-room').trim();
-const CLOUDINARY_CHUNK_SIZE_BYTES = Math.max(
-  5 * 1024 * 1024,
-  Number(import.meta.env.VITE_CLOUDINARY_CHUNK_SIZE_BYTES || 20 * 1024 * 1024)
-);
 const SERVERLESS_MAX_UPLOAD_BYTES = Number(import.meta.env.VITE_SERVERLESS_MAX_UPLOAD_BYTES || 4 * 1024 * 1024);
 const ABUSE_TOAST_DEDUP_MS = 6000;
 const ABUSE_SUMMARY_DEDUP_MS = 12000;
@@ -998,138 +991,43 @@ const MeetingRoomShell = ({
     }, 2000);
   }, [pollRecordingStatus]);
 
-  const uploadRecordingToCloudinary = useCallback(async (file, sessionIdValue) => {
+  const uploadRecordingToS3 = useCallback(async (file, sessionIdValue) => {
     if (!file) return null;
+    if (typeof api.getSessionRecordingUploadSignature !== 'function' || !sessionIdValue) return null;
 
-    const normalizeUploadResponse = (payload) => ({
-      secureUrl: String(payload?.secure_url || payload?.url || '').trim(),
-      publicId: String(payload?.public_id || '').trim(),
-      bytes: Number(payload?.bytes || 0),
+    const payload = await api.getSessionRecordingUploadSignature(sessionIdValue, {
+      file_name: String(file?.name || '').trim() || `session-${sessionIdValue}-${Date.now()}.webm`,
+      content_type: String(file?.type || '').trim() || 'video/webm',
+      file_size_bytes: String(file?.size || 0),
     });
+    const uploadUrl = String(payload?.upload_url || '').trim();
+    const method = String(payload?.method || 'PUT').trim().toUpperCase();
+    const storageKey = String(payload?.storage_key || '').trim();
+    const recordingUrl = String(payload?.recording_url || '').trim();
+    const uploadHeaders = payload?.headers && typeof payload.headers === 'object' ? payload.headers : {};
 
-    const nextUploadId = () => {
-      const randomId =
-        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-          ? crypto.randomUUID()
-          : `upl-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      return `recording-${sessionIdValue || 'unknown'}-${randomId}`;
-    };
-
-    const chunkedSignedUpload = async ({
-      uploadUrl,
-      apiKey,
-      timestamp,
-      signature,
-      folder,
-      publicId,
-    }) => {
-      const uploadId = nextUploadId();
-      const totalSize = Number(file.size || 0);
-      if (!totalSize) return null;
-
-      let offset = 0;
-      let lastPayload = null;
-
-      while (offset < totalSize) {
-        const chunkEndExclusive = Math.min(offset + CLOUDINARY_CHUNK_SIZE_BYTES, totalSize);
-        const chunk = file.slice(offset, chunkEndExclusive);
-        const contentRange = `bytes ${offset}-${chunkEndExclusive - 1}/${totalSize}`;
-        const formData = new FormData();
-        formData.append('file', chunk);
-        formData.append('api_key', apiKey);
-        formData.append('timestamp', timestamp);
-        formData.append('signature', signature);
-        if (folder) formData.append('folder', folder);
-        if (publicId) formData.append('public_id', publicId);
-
-        let response = null;
-        let payload = null;
-        let lastErrorMessage = '';
-        for (let attempt = 1; attempt <= 3; attempt += 1) {
-          try {
-            response = await fetch(uploadUrl, {
-              method: 'POST',
-              body: formData,
-              headers: {
-                'X-Unique-Upload-Id': uploadId,
-                'Content-Range': contentRange,
-              },
-            });
-            payload = await response.json().catch(() => ({}));
-            if (response.ok) break;
-            lastErrorMessage =
-              String(payload?.error?.message || payload?.message || '').trim() ||
-              `Cloud storage upload failed at chunk ${offset}-${chunkEndExclusive - 1}.`;
-          } catch (err) {
-            lastErrorMessage = String(err?.message || '').trim() || 'Cloud storage upload failed.';
-          }
-          if (attempt < 3) {
-            await new Promise((resolve) => window.setTimeout(resolve, attempt * 500));
-          }
-        }
-
-        if (!response?.ok) {
-          throw new Error(lastErrorMessage || 'Cloud storage upload failed.');
-        }
-        lastPayload = payload;
-        offset = chunkEndExclusive;
-      }
-      return lastPayload;
-    };
-
-    if (typeof api.getSessionRecordingUploadSignature === 'function' && sessionIdValue) {
-      let signaturePayload = null;
-      try {
-        signaturePayload = await api.getSessionRecordingUploadSignature(sessionIdValue, {});
-      } catch {
-        signaturePayload = null;
-      }
-      if (!signaturePayload) {
-        throw new Error('Cloudinary signing is not configured on backend.');
-      }
-      const uploadUrl = String(signaturePayload?.upload_url || '').trim();
-      const apiKey = String(signaturePayload?.api_key || '').trim();
-      const timestamp = String(signaturePayload?.timestamp || '').trim();
-      const signature = String(signaturePayload?.signature || '').trim();
-      const folder = String(signaturePayload?.folder || '').trim();
-      const publicId = String(signaturePayload?.public_id || '').trim();
-
-      if (uploadUrl && apiKey && timestamp && signature) {
-        const signedPayload = await chunkedSignedUpload({
-          uploadUrl,
-          apiKey,
-          timestamp,
-          signature,
-          folder,
-          publicId,
-        });
-        return normalizeUploadResponse(signedPayload);
-      }
+    if (!uploadUrl || !storageKey || !recordingUrl) {
+      throw new Error('S3 upload signing is not configured on backend.');
     }
 
-    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) return null;
-
-    const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
-    const cloudinaryForm = new FormData();
-    cloudinaryForm.append('file', file);
-    cloudinaryForm.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    cloudinaryForm.append('folder', CLOUDINARY_UPLOAD_FOLDER);
-    if (sessionIdValue) {
-      cloudinaryForm.append('public_id', `session-${sessionIdValue}-${Date.now()}`);
+    const headers = { ...uploadHeaders };
+    if (!headers['Content-Type'] && !headers['content-type']) {
+      headers['Content-Type'] = String(file?.type || '').trim() || 'video/webm';
     }
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      body: cloudinaryForm,
+    const response = await fetch(uploadUrl, {
+      method,
+      headers,
+      body: file,
     });
-    const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const message =
-        String(payload?.error?.message || payload?.message || '').trim() ||
-        'Cloud storage upload failed.';
-      throw new Error(message);
+      const rawMessage = (await response.text().catch(() => '')).trim();
+      throw new Error(rawMessage || 'S3 upload failed.');
     }
-    return normalizeUploadResponse(payload);
+    return {
+      recordingUrl,
+      storageKey,
+      provider: 's3',
+    };
   }, [api]);
 
   const sendSignal = useCallback(
@@ -2394,28 +2292,25 @@ const MeetingRoomShell = ({
           };
           let persisted = false;
 
-          if (
-            typeof api.getSessionRecordingUploadSignature === 'function' ||
-            (CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET)
-          ) {
+          if (typeof api.getSessionRecordingUploadSignature === 'function') {
             try {
-              const cloudUpload = await uploadRecordingToCloudinary(file, sessionId);
-              if (cloudUpload?.secureUrl) {
+              const s3Upload = await uploadRecordingToS3(file, sessionId);
+              if (s3Upload?.recordingUrl) {
                 await api.updateSessionRecording(sessionId, {
                   status: 'uploaded',
                   file_size_bytes: String(blob.size),
-                  recording_url: cloudUpload.secureUrl,
-                  storage_key: cloudUpload.publicId || '',
+                  recording_url: s3Upload.recordingUrl,
+                  storage_key: s3Upload.storageKey || '',
                   metadata: {
                     ...metadataBase,
-                    storage_provider: 'cloudinary',
-                    storage_mode: 'direct_upload',
+                    storage_provider: 's3',
+                    storage_mode: 'presigned_put',
                   },
                 });
                 persisted = true;
               }
             } catch (err) {
-              appendError(err?.message || 'Unable to upload recording to cloud storage.');
+              appendError(err?.message || 'Unable to upload recording to S3.');
             }
           }
 
@@ -2434,7 +2329,7 @@ const MeetingRoomShell = ({
               // no-op
             }
             appendError(
-              'Recording is too large for serverless upload. Configure backend Cloudinary signing or frontend Cloudinary upload env vars.'
+              'Recording is too large for serverless upload. Configure backend S3 upload signing.'
             );
             persisted = true;
           }
@@ -2467,8 +2362,8 @@ const MeetingRoomShell = ({
                 }
                 appendError(
                   err?.status === 503
-                    ? 'Recording file upload is disabled on this deployment. Configure Cloudinary signed/direct upload to save recordings.'
-                    : 'Recording upload exceeded deployment size limits. Configure Cloudinary direct upload.'
+                    ? 'Recording file upload is disabled on this deployment. Configure S3 pre-signed upload to save recordings.'
+                    : 'Recording upload exceeded deployment size limits. Configure S3 pre-signed upload.'
                 );
               } else {
                 throw err;
@@ -2510,7 +2405,7 @@ const MeetingRoomShell = ({
     participantRole,
     sessionId,
     stopRecordingComposition,
-    uploadRecordingToCloudinary,
+    uploadRecordingToS3,
   ]);
 
   const generateMeetingSummary = useCallback(async () => {

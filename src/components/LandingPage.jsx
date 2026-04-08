@@ -934,7 +934,7 @@ export default function LandingPage() {
               </div>
               <p className="text-[13px] text-white/55 leading-relaxed mb-4">Bridging Old and New Destinies — A safe mentoring platform connecting Teens with experienced mentors who genuinely care.</p>
               <div className="flex items-center gap-3">
-                <a href="https://www.instagram.com/bondroomofficial" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition">
+                <a href="https://www.instagram.com/bondroomfoundation/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition">
                   <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <rect x="3" y="3" width="18" height="18" rx="5" />
