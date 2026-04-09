@@ -229,7 +229,7 @@ const SessionRecords = () => {
   }, [debouncedSearchValue, isMentorRole, page, pageSize, statusFilter]);
 
   const statuses = useMemo(
-    () => ['all', 'requested', 'approved', 'scheduled', 'completed', 'canceled', 'no_show'],
+    () => ['all', 'requested', 'approved', 'scheduled', 'completed', 'canceled'],
     []
   );
 

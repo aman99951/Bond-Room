@@ -17,6 +17,7 @@ import {
 const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const ALLOWED_START_MINUTES = 8 * 60;
 const ALLOWED_END_MINUTES = 19 * 60;
+const SLOT_STEP_MINUTES = 30;
 
 const buildWeekDays = (startDateKey) =>
   dayLabels.map((label, index) => {
@@ -63,6 +64,35 @@ const parseTime = (value) => {
   return { hour: Number.isNaN(hour) ? 0 : hour, minute: Number.isNaN(minute) ? 0 : minute };
 };
 
+const toMinutes = (value) => {
+  const parsed = parseTime(value || '');
+  return parsed.hour * 60 + parsed.minute;
+};
+
+const minutesToLabel = (minutesValue) => {
+  const mins = Math.max(0, Number(minutesValue) || 0);
+  const hour = Math.floor(mins / 60);
+  const minute = mins % 60;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+};
+
+const buildTimeOptions = () => {
+  const options = [];
+  for (let minute = ALLOWED_START_MINUTES; minute <= ALLOWED_END_MINUTES; minute += SLOT_STEP_MINUTES) {
+    options.push(minutesToLabel(minute));
+  }
+  return options;
+};
+
+const toAmPmLabel = (value) => {
+  const mins = toMinutes(value);
+  const hour24 = Math.floor(mins / 60);
+  const minute = mins % 60;
+  const suffix = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hour24 % 12 || 12;
+  return `${hour12}:${String(minute).padStart(2, '0')} ${suffix}`;
+};
+
 const isWithinAllowedWindow = (startLabel, endLabel) => {
   if (!startLabel || !endLabel) return false;
   const startTime = parseTime(startLabel);
@@ -88,6 +118,8 @@ const ManageAvailability = () => {
   const [days, setDays] = useState(() => buildWeekDays(getIndiaWeekStartKey(new Date())));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [customDraft, setCustomDraft] = useState({});
+  const [customEditorDay, setCustomEditorDay] = useState(null);
 
   useEffect(() => {
     const handleClick = (event) => {
@@ -100,6 +132,7 @@ const ManageAvailability = () => {
   }, []);
   const weekLabel = useMemo(() => formatWeekRange(weekStartKey), [weekStartKey]);
   const timezoneLabel = INDIA_TIMEZONE;
+  const timeOptions = useMemo(() => buildTimeOptions(), []);
 
   const loadSlots = async (startDateKey) => {
     if (!mentor?.id) return;
@@ -146,6 +179,154 @@ const ManageAvailability = () => {
     loadSlots(weekStartKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mentor?.id, weekStartKey]);
+
+  useEffect(() => {
+    setCustomDraft(() => {
+      const next = {};
+      days.forEach((day) => {
+        const intervals = (day.slots || [])
+          .map((slot) => ({
+            start: formatTime(slot.start_time),
+            end: formatTime(slot.end_time),
+          }))
+          .sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+
+        next[day.label] = {
+          enabled: intervals.length > 0,
+          intervals: intervals.length ? intervals : [{ start: '08:00', end: '09:00' }],
+        };
+      });
+      return next;
+    });
+  }, [days]);
+
+  const setDayDraft = (dayLabel, updater) => {
+    setCustomDraft((prev) => {
+      const base = prev?.[dayLabel] || { enabled: false, intervals: [{ start: '08:00', end: '09:00' }] };
+      const nextValue = typeof updater === 'function' ? updater(base) : updater;
+      return { ...prev, [dayLabel]: nextValue };
+    });
+  };
+
+  const updateInterval = (dayLabel, index, field, value) => {
+    setDayDraft(dayLabel, (current) => {
+      const intervals = [...(current.intervals || [])];
+      if (!intervals[index]) return current;
+      intervals[index] = { ...intervals[index], [field]: value };
+      return { ...current, intervals };
+    });
+  };
+
+  const addInterval = (dayLabel) => {
+    setDayDraft(dayLabel, (current) => {
+      const intervals = [...(current.intervals || [])];
+      const lastEnd = intervals[intervals.length - 1]?.end || '08:00';
+      const nextStart = lastEnd;
+      const nextEnd = minutesToLabel(Math.min(toMinutes(nextStart) + SLOT_STEP_MINUTES, ALLOWED_END_MINUTES));
+      intervals.push({ start: nextStart, end: nextEnd });
+      return { ...current, intervals };
+    });
+  };
+
+  const removeInterval = (dayLabel, index) => {
+    setDayDraft(dayLabel, (current) => {
+      const intervals = [...(current.intervals || [])];
+      intervals.splice(index, 1);
+      return {
+        ...current,
+        intervals,
+      };
+    });
+  };
+
+  const applyDayCustomSchedule = async (dayLabel) => {
+    if (!mentor?.id) return;
+    const day = days.find((item) => item.label === dayLabel);
+    const draft = customDraft?.[dayLabel];
+    if (!day || !draft) return;
+    const todayKey = formatIndiaDateKey(new Date());
+    if (day.dateKey && todayKey && day.dateKey < todayKey) {
+      setError("Can't set availability for past dates.");
+      return;
+    }
+
+    const cleaned = (draft.intervals || [])
+      .map((interval) => ({
+        start: String(interval.start || '').trim(),
+        end: String(interval.end || '').trim(),
+      }))
+      .filter((interval) => interval.start && interval.end);
+
+    if (!cleaned.length) {
+      setLoading(true);
+      setError('');
+      try {
+        const existingIds = (day.slots || []).map((slot) => slot.id).filter(Boolean);
+        if (existingIds.length) {
+          await Promise.all(existingIds.map((slotId) => mentorApi.deleteAvailabilitySlot(slotId)));
+        }
+        await loadSlots(weekStartKey);
+        setCustomEditorDay(null);
+      } catch (err) {
+        setError(err?.message || 'Unable to clear day availability.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    const normalized = cleaned
+      .map((interval) => ({
+        ...interval,
+        startMins: toMinutes(interval.start),
+        endMins: toMinutes(interval.end),
+      }))
+      .sort((a, b) => a.startMins - b.startMins);
+
+    for (let i = 0; i < normalized.length; i += 1) {
+      const item = normalized[i];
+      if (item.startMins < ALLOWED_START_MINUTES || item.endMins > ALLOWED_END_MINUTES) {
+        setError('Slots must be between 08:00 and 19:00.');
+        return;
+      }
+      if (item.endMins <= item.startMins) {
+        setError('End time must be after start time.');
+        return;
+      }
+      if (i > 0 && item.startMins < normalized[i - 1].endMins) {
+        setError('Time ranges overlap. Adjust and try again.');
+        return;
+      }
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      const existingIds = (day.slots || []).map((slot) => slot.id).filter(Boolean);
+      if (existingIds.length) {
+        await Promise.all(existingIds.map((slotId) => mentorApi.deleteAvailabilitySlot(slotId)));
+      }
+
+      await Promise.all(
+        normalized.map((interval) =>
+          mentorApi.createAvailabilitySlot({
+            mentor: mentor.id,
+            start_time: indiaDateTimeToIso(day.dateKey, interval.start),
+            end_time: indiaDateTimeToIso(day.dateKey, interval.end),
+            timezone: timezoneLabel,
+            is_available: true,
+          })
+        )
+      );
+
+      await loadSlots(weekStartKey);
+      setCustomEditorDay(null);
+    } catch (err) {
+      setError(err?.message || 'Unable to save custom schedule.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const _handleDrop = async (targetLabel, payload) => {
     if (!payload) return;
@@ -778,15 +959,94 @@ const ManageAvailability = () => {
                       })()
                     ))}
 
-                    <button
-                      type="button"
-                      className="mt-auto inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#cfb9ef] bg-white text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-60"
-                      onClick={() => addSlot(day.label)}
-                      disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Slot
-                    </button>
+                    {customEditorDay === day.label && (
+                      <div className="mt-2 space-y-2 rounded-xl border border-[#e6def8] bg-[#faf7ff] p-2">
+                        <>
+                            {(customDraft?.[day.label]?.intervals || []).map((interval, index) => (
+                              <div key={`m-inline-${day.label}-${index}`} className="space-y-1.5 rounded-lg bg-white/80 p-1.5 ring-1 ring-[#e9ddff]">
+                                <select
+                                  value={interval.start}
+                                  onChange={(event) => updateInterval(day.label, index, 'start', event.target.value)}
+                                  className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-xs font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
+                                  disabled={loading}
+                                >
+                                  {timeOptions.map((option) => (
+                                    <option key={`m-start-${day.label}-${option}`} value={option}>
+                                      {toAmPmLabel(option)}
+                                    </option>
+                                  ))}
+                                </select>
+                                <select
+                                  value={interval.end}
+                                  onChange={(event) => updateInterval(day.label, index, 'end', event.target.value)}
+                                  className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-xs font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
+                                  disabled={loading}
+                                >
+                                  {timeOptions.map((option) => (
+                                    <option key={`m-end-${day.label}-${option}`} value={option}>
+                                      {toAmPmLabel(option)}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="flex items-center justify-between">
+                                  <span className="rounded-md bg-[#efe4ff] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#5D3699]">
+                                    {toAmPmLabel(interval.start)} - {toAmPmLabel(interval.end)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeInterval(day.label, index)}
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[#eadffb] bg-white text-[#7a5bad]"
+                                    disabled={loading}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                            <div className="flex flex-col gap-2">
+                              <button
+                                type="button"
+                                onClick={() => addInterval(day.label)}
+                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-[#cfb9ef] bg-white px-2 text-[11px] font-semibold text-[#5D3699]"
+                                disabled={loading}
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Interval
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => applyDayCustomSchedule(day.label)}
+                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg bg-[#5D3699] px-2 text-[11px] font-semibold text-white"
+                                disabled={loading}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Apply
+                              </button>
+                            </div>
+                        </>
+                      </div>
+                    )}
+
+                    <div className="mt-auto grid grid-cols-1 gap-2">
+                      <button
+                        type="button"
+                        className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-[#d7c7f5] bg-[#f7f1ff] text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#efe5ff] disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => setCustomEditorDay((prev) => (prev === day.label ? null : day.label))}
+                        disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
+                      >
+                        <Clock className="h-4 w-4" />
+                        Custom
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-dashed border-[#cfb9ef] bg-white text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => addSlot(day.label)}
+                        disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Quick Add
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -986,15 +1246,94 @@ const ManageAvailability = () => {
                       </div>
                     )}
 
-                    <button
-                      type="button"
-                      className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#cfb9ef] bg-white text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-60"
-                      onClick={() => addSlot(day.label)}
-                      disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Slot
-                    </button>
+                    {customEditorDay === day.label && (
+                      <div className="mt-2 space-y-2 rounded-xl border border-[#e6def8] bg-[#faf7ff] p-2">
+                        <>
+                            {(customDraft?.[day.label]?.intervals || []).map((interval, index) => (
+                              <div key={`d-inline-${day.label}-${index}`} className="space-y-1.5 rounded-lg bg-white/90 p-1.5 ring-1 ring-[#e9ddff]">
+                                <select
+                                  value={interval.start}
+                                  onChange={(event) => updateInterval(day.label, index, 'start', event.target.value)}
+                                  className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-[11px] font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
+                                  disabled={loading}
+                                >
+                                  {timeOptions.map((option) => (
+                                    <option key={`d-start-${day.label}-${option}`} value={option}>
+                                      {toAmPmLabel(option)}
+                                    </option>
+                                  ))}
+                                </select>
+                                <select
+                                  value={interval.end}
+                                  onChange={(event) => updateInterval(day.label, index, 'end', event.target.value)}
+                                  className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-[11px] font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
+                                  disabled={loading}
+                                >
+                                  {timeOptions.map((option) => (
+                                    <option key={`d-end-${day.label}-${option}`} value={option}>
+                                      {toAmPmLabel(option)}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="flex items-center justify-between">
+                                  <span className="rounded-md bg-[#efe4ff] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#5D3699]">
+                                    {toAmPmLabel(interval.start)} - {toAmPmLabel(interval.end)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeInterval(day.label, index)}
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[#eadffb] bg-white text-[#7a5bad]"
+                                    disabled={loading}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                            <div className="flex flex-col gap-2">
+                              <button
+                                type="button"
+                                onClick={() => addInterval(day.label)}
+                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-[#cfb9ef] bg-white px-2 text-[11px] font-semibold text-[#5D3699]"
+                                disabled={loading}
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Interval
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => applyDayCustomSchedule(day.label)}
+                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg bg-[#5D3699] px-2 text-[11px] font-semibold text-white"
+                                disabled={loading}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Apply
+                              </button>
+                            </div>
+                        </>
+                      </div>
+                    )}
+
+                    <div className="mt-2 grid grid-cols-1 gap-2">
+                      <button
+                        type="button"
+                        className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-[#d7c7f5] bg-[#f7f1ff] text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#efe5ff] disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => setCustomEditorDay((prev) => (prev === day.label ? null : day.label))}
+                        disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
+                      >
+                        <Clock className="h-4 w-4" />
+                        Custom
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-dashed border-[#cfb9ef] bg-white text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => addSlot(day.label)}
+                        disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Quick Add
+                      </button>
+                    </div>
                   </div>
                 );
               })}

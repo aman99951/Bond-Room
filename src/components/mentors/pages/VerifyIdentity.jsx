@@ -71,7 +71,7 @@ const validateProofNumber = (proofType, proofNumber) => {
   if (proofType === 'aadhaar' && !/^[0-9]{12}$/.test(value)) {
     return 'Aadhaar number must be exactly 12 digits.';
   }
-  if (proofType === 'passport' && !/^[A-Z][1-9][0-9]{6}$/.test(value)) {
+  if (proofType === 'passport' && !/^[A-Z][0-9]{7}$/.test(value)) {
     return 'Passport number must follow A1234567 format.';
   }
   if (proofType === 'pan_card' && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(value)) {
@@ -102,6 +102,9 @@ const isRejectedStatus = (value) => String(value || '').toLowerCase() === 'rejec
 const CAMERA_TARGET_BYTES = 900 * 1024;
 const CAMERA_SOFT_MAX_BYTES = 1200 * 1024;
 const CAMERA_MAX_LONG_EDGE = 1920;
+const IDENTITY_UPLOAD_TARGET_BYTES = 700 * 1024;
+const IDENTITY_UPLOAD_SOFT_MAX_BYTES = 950 * 1024;
+const IDENTITY_UPLOAD_MAX_LONG_EDGE = 1600;
 
 const canvasToJpegBlob = (canvas, quality) =>
   new Promise((resolve) => {
@@ -320,7 +323,7 @@ const UploadCard = ({
   return (
     <div>
       <div
-        className={`group min-h-[250px] border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
+        className={`group min-h-[330px] border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
           isRejected
             ? 'border-red-500 bg-[#fff1f2]'
             : uploaded
@@ -342,7 +345,7 @@ const UploadCard = ({
           accept=".jpg,.jpeg,.png,.pdf"
           onChange={onFileChange}
         />
-        <div className="h-[94px] w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f8fafc] flex items-center justify-center">
+        <div className="h-[180px] w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f8fafc] flex items-center justify-center">
           {viewUrl && kind === 'image' ? (
             <img src={viewUrl} alt={title} className="h-full w-full object-cover" />
           ) : (
@@ -544,6 +547,104 @@ const VerifyIdentity = () => {
       delete next[key];
       return next;
     });
+  };
+
+  const compressIdentityImageIfNeeded = async (file) => {
+    if (!file) return null;
+    const fileType = String(file.type || '').toLowerCase();
+    if (!fileType.startsWith('image/')) return file;
+    if (file.size <= IDENTITY_UPLOAD_TARGET_BYTES) return file;
+
+    const readAsDataUrl = (blobFile) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Unable to read image file.'));
+        reader.readAsDataURL(blobFile);
+      });
+
+    const loadImageElement = (src) =>
+      new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Unable to load image file.'));
+        image.src = src;
+      });
+
+    const dataUrl = await readAsDataUrl(file);
+    const image = await loadImageElement(dataUrl);
+    let width = image.naturalWidth || image.width || 0;
+    let height = image.naturalHeight || image.height || 0;
+    if (!width || !height) return file;
+
+    const longEdge = Math.max(width, height);
+    if (longEdge > IDENTITY_UPLOAD_MAX_LONG_EDGE) {
+      const ratio = IDENTITY_UPLOAD_MAX_LONG_EDGE / longEdge;
+      width = Math.max(1, Math.round(width * ratio));
+      height = Math.max(1, Math.round(height * ratio));
+    }
+
+    let bestBlob = null;
+    let attemptWidth = width;
+    let attemptHeight = height;
+    const qualitySteps = [0.9, 0.84, 0.78, 0.72, 0.66];
+
+    for (let resizePass = 0; resizePass < 3; resizePass += 1) {
+      const canvas = document.createElement('canvas');
+      canvas.width = attemptWidth;
+      canvas.height = attemptHeight;
+      const context = canvas.getContext('2d');
+      if (!context) break;
+      context.drawImage(image, 0, 0, attemptWidth, attemptHeight);
+
+      for (const quality of qualitySteps) {
+        const blob = await canvasToJpegBlob(canvas, quality);
+        if (!blob) continue;
+        if (!bestBlob || blob.size < bestBlob.size) {
+          bestBlob = blob;
+        }
+        if (blob.size <= IDENTITY_UPLOAD_TARGET_BYTES) {
+          const nextName = String(file.name || `document_${Date.now()}`)
+            .replace(/\.[^.]+$/, '')
+            .concat('.jpg');
+          return new File([blob], nextName, { type: 'image/jpeg' });
+        }
+      }
+
+      if (bestBlob && bestBlob.size <= IDENTITY_UPLOAD_SOFT_MAX_BYTES) {
+        const nextName = String(file.name || `document_${Date.now()}`)
+          .replace(/\.[^.]+$/, '')
+          .concat('.jpg');
+        return new File([bestBlob], nextName, { type: 'image/jpeg' });
+      }
+
+      attemptWidth = Math.max(1, Math.round(attemptWidth * 0.85));
+      attemptHeight = Math.max(1, Math.round(attemptHeight * 0.85));
+    }
+
+    if (bestBlob) {
+      const nextName = String(file.name || `document_${Date.now()}`)
+        .replace(/\.[^.]+$/, '')
+        .concat('.jpg');
+      return new File([bestBlob], nextName, { type: 'image/jpeg' });
+    }
+    return file;
+  };
+
+  const handleUploadFileChange = async ({ event, setter, touchedKey, reviewKey }) => {
+    const selected = event.target.files?.[0] || null;
+    try {
+      const file = await compressIdentityImageIfNeeded(selected);
+      setter(file);
+      if (file) clearDocumentReviewFor(reviewKey);
+      setTouched((prev) => ({ ...prev, [touchedKey]: true }));
+      if (selected && file && file.size < selected.size) {
+        setInfoMessage('Image optimized for faster upload.');
+      }
+    } catch (err) {
+      setErrorMessage(getFriendlyErrorMessage(err, 'Unable to process this file. Please try a different image.'));
+      setTouched((prev) => ({ ...prev, [touchedKey]: true }));
+    }
   };
 
   useEffect(() => {
@@ -892,12 +993,13 @@ const VerifyIdentity = () => {
                             uploaded={idProofFrontUploaded}
                             viewUrl={idProofFrontViewUrl}
                             kind={idProofFrontKind}
-                            onFileChange={(event) => {
-                              const file = event.target.files?.[0] || null;
-                              setIdProofFrontFile(file);
-                              if (file) clearDocumentReviewFor('id_front');
-                              setTouched((prev) => ({ ...prev, idProofFrontFile: true }));
-                            }}
+                            onFileChange={(event) =>
+                              handleUploadFileChange({
+                                event,
+                                setter: setIdProofFrontFile,
+                                touchedKey: 'idProofFrontFile',
+                                reviewKey: 'id_front',
+                              })}
                             error={showIdProofFrontError ? 'ID Proof Front is required.' : ''}
                             reviewStatus={documentReviewStatus.id_front}
                             reviewComment={documentReviewComments.id_front}
@@ -908,12 +1010,13 @@ const VerifyIdentity = () => {
                             uploaded={idProofBackUploaded}
                             viewUrl={idProofBackViewUrl}
                             kind={idProofBackKind}
-                            onFileChange={(event) => {
-                              const file = event.target.files?.[0] || null;
-                              setIdProofBackFile(file);
-                              if (file) clearDocumentReviewFor('id_back');
-                              setTouched((prev) => ({ ...prev, idProofBackFile: true }));
-                            }}
+                            onFileChange={(event) =>
+                              handleUploadFileChange({
+                                event,
+                                setter: setIdProofBackFile,
+                                touchedKey: 'idProofBackFile',
+                                reviewKey: 'id_back',
+                              })}
                             error={showIdProofBackError ? 'ID Proof Back is required.' : ''}
                             reviewStatus={documentReviewStatus.id_back}
                             reviewComment={documentReviewComments.id_back}
@@ -982,12 +1085,13 @@ const VerifyIdentity = () => {
                             uploaded={addressProofFrontUploaded}
                             viewUrl={addressProofFrontViewUrl}
                             kind={addressProofFrontKind}
-                            onFileChange={(event) => {
-                              const file = event.target.files?.[0] || null;
-                              setAddressProofFrontFile(file);
-                              if (file) clearDocumentReviewFor('address_front');
-                              setTouched((prev) => ({ ...prev, addressProofFrontFile: true }));
-                            }}
+                            onFileChange={(event) =>
+                              handleUploadFileChange({
+                                event,
+                                setter: setAddressProofFrontFile,
+                                touchedKey: 'addressProofFrontFile',
+                                reviewKey: 'address_front',
+                              })}
                             error={showAddressProofFrontError ? 'Address Proof Front is required.' : ''}
                             reviewStatus={documentReviewStatus.address_front}
                             reviewComment={documentReviewComments.address_front}
@@ -998,12 +1102,13 @@ const VerifyIdentity = () => {
                             uploaded={addressProofBackUploaded}
                             viewUrl={addressProofBackViewUrl}
                             kind={addressProofBackKind}
-                            onFileChange={(event) => {
-                              const file = event.target.files?.[0] || null;
-                              setAddressProofBackFile(file);
-                              if (file) clearDocumentReviewFor('address_back');
-                              setTouched((prev) => ({ ...prev, addressProofBackFile: true }));
-                            }}
+                            onFileChange={(event) =>
+                              handleUploadFileChange({
+                                event,
+                                setter: setAddressProofBackFile,
+                                touchedKey: 'addressProofBackFile',
+                                reviewKey: 'address_back',
+                              })}
                             error={showAddressProofBackError ? 'Address Proof Back is required.' : ''}
                             reviewStatus={documentReviewStatus.address_back}
                             reviewComment={documentReviewComments.address_back}
@@ -1022,12 +1127,13 @@ const VerifyIdentity = () => {
                           uploaded={professionalCertificateUploaded}
                           viewUrl={professionalCertificateViewUrl}
                           kind={professionalCertificateKind}
-                          onFileChange={(event) => {
-                            const file = event.target.files?.[0] || null;
-                            setProfessionalCertificateFile(file);
-                            if (file) clearDocumentReviewFor('professional_certificate');
-                            setTouched((prev) => ({ ...prev, professionalCertificateFile: true }));
-                          }}
+                          onFileChange={(event) =>
+                            handleUploadFileChange({
+                              event,
+                              setter: setProfessionalCertificateFile,
+                              touchedKey: 'professionalCertificateFile',
+                              reviewKey: 'professional_certificate',
+                            })}
                           error={showProfessionalCertificateError ? 'Professional Certificate is required.' : ''}
                           reviewStatus={documentReviewStatus.professional_certificate}
                           reviewComment={documentReviewComments.professional_certificate}

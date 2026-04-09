@@ -24,18 +24,30 @@ import {
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
 
 const resolveMediaUrl = (value) => {
-  if (!value) return '';
-  if (/^https?:\/\//i.test(value)) return value;
-  if (value.startsWith('/')) {
-    const base = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
-    return base ? `${base}${value}` : value;
-  }
-  return value;
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (['null', 'undefined', 'none'].includes(raw.toLowerCase())) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+
+  const base = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
+  if (raw.startsWith('/')) return base ? `${base}${raw}` : raw;
+  if (raw.startsWith('media/')) return base ? `${base}/${raw}` : `/${raw}`;
+  return raw;
 };
 
 const withCacheBuster = (url, versionToken) => {
   if (!url) return '';
   if (!versionToken) return url;
+  // Do not mutate signed URLs (S3/presigned/CDN signatures), it can invalidate them.
+  const lowered = String(url).toLowerCase();
+  if (
+    lowered.includes('x-amz-algorithm=') ||
+    lowered.includes('x-amz-signature=') ||
+    lowered.includes('signature=') ||
+    lowered.includes('token=')
+  ) {
+    return url;
+  }
   const separator = url.includes('?') ? '&' : '?';
   return `${url}${separator}v=${encodeURIComponent(versionToken)}`;
 };
@@ -226,10 +238,12 @@ const Myprofile = () => {
       experience: profileData?.years_experience ? String(profileData.years_experience) : '',
       bio: mentorData?.bio || '',
     });
+    const resolvedMentorAvatar = resolveMediaUrl(mentorData?.profile_photo || mentorData?.avatar);
+    const resolvedProfilePhoto = resolveMediaUrl(profileData?.profile_photo);
     setPhotoPreview(
       withCacheBuster(
-        resolveMediaUrl(profileData?.profile_photo),
-        profileData?.updated_at || ''
+        resolvedMentorAvatar || resolvedProfilePhoto,
+        profileData?.updated_at || mentorData?.updated_at || ''
       )
     );
   };
@@ -251,12 +265,16 @@ const Myprofile = () => {
         ]);
         if (!cancelled) {
           setProfile(profileResponse || null);
-          setPhotoPreview(
-            withCacheBuster(
-              resolveMediaUrl(profileResponse?.profile_photo),
-              profileResponse?.updated_at || ''
-            )
-          );
+          {
+            const resolvedMentorAvatar = resolveMediaUrl(mentor?.profile_photo || mentor?.avatar);
+            const resolvedProfilePhoto = resolveMediaUrl(profileResponse?.profile_photo);
+            setPhotoPreview(
+              withCacheBuster(
+                resolvedMentorAvatar || resolvedProfilePhoto,
+                profileResponse?.updated_at || mentor?.updated_at || ''
+              )
+            );
+          }
           setStats({
             sessions_completed: impactResponse?.summary?.completed_sessions || 0,
             average_rating: impactResponse?.summary?.average_rating || 0,
@@ -451,6 +469,18 @@ return (
                       src={photoPreview}
                       alt="Profile"
                       className="h-full w-full object-cover"
+                      onError={(event) => {
+                        const fallback = withCacheBuster(
+                          resolveMediaUrl(mentor?.profile_photo || mentor?.avatar),
+                          mentor?.updated_at || ''
+                        );
+                        if (fallback && event.currentTarget.src !== fallback) {
+                          setPhotoPreview(fallback);
+                          return;
+                        }
+                        // If /media isn't reachable in local dev, avoid broken-image icon.
+                        setPhotoPreview('');
+                      }}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-[#5D3699]">

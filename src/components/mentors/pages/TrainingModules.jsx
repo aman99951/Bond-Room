@@ -253,6 +253,16 @@ const TrainingModules = () => {
                 {error}
               </div>
             )}
+
+            <div className="pt-2 sm:pt-4">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center rounded-[10px] border border-[#d7d0e2] bg-white px-5 py-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
+                onClick={() => navigate('/mentor-impact-dashboard')}
+              >
+                Go to Dashboard
+              </button>
+            </div>
           </div>
         </div>
       </main>
