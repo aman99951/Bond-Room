@@ -736,7 +736,7 @@ const Register = () => {
   };
 
   return (
-    <div className="lp lp-register">
+    <div className="mentor-register-page lp-register text-[#1f2937]">
       {showVolunteerFlowLockModal ? (
         <div className="lp-register-lock-overlay">
           <div className="lp-register-lock-card" role="dialog" aria-modal="true" aria-labelledby="volunteer-flow-lock-title">
