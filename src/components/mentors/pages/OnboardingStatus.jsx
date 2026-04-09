@@ -152,7 +152,7 @@ const OnboardingStatus = () => {
     <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
       <TopAuth />
 
-      <main className="flex-1">
+      <main className="flex-1 pt-20 sm:pt-24">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="border border-[#e6e2f1] rounded-[18px] overflow-hidden bg-white shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
             <div className="p-8 sm:p-10 lg:p-12">

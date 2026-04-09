@@ -294,7 +294,7 @@ const TrainingBoundaries = () => {
     <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
       <TopAuth />
 
-      <main className="flex-1">
+      <main className="flex-1 pt-20 sm:pt-24">
         <div className="w-full px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
           <button
             type="button"
