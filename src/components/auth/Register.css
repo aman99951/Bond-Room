@@ -20,7 +20,7 @@
 
 .lp-toast {
   position: fixed;
-  top: 94px;
+  top: 112px;
   right: 20px;
   z-index: 500;
   display: grid;
@@ -1257,7 +1257,7 @@
 
 @media (max-width: 768px) {
   .lp-toast {
-    top: 84px;
+    top: 102px;
     right: 10px;
     left: 10px;
     max-width: none;

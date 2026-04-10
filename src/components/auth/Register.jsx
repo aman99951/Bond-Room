@@ -607,7 +607,7 @@ const Register = () => {
     if (!toastState.open) return undefined;
     const timer = window.setTimeout(() => {
       setToastState((prev) => ({ ...prev, open: false }));
-    }, 3500);
+    }, 7000);
     return () => window.clearTimeout(timer);
   }, [toastState.open, toastState.message]);
 

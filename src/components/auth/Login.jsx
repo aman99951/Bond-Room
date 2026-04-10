@@ -372,7 +372,7 @@ const Login = () => {
                   {loading ? (
                     <div className="lp-login-loading">
                       <span className="lp-login-spinner" />
-                      Signing in...
+                      Logging in...
                     </div>
                   ) : (
                     <>

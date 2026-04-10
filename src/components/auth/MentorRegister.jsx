@@ -7,7 +7,7 @@ import mentorBottom from '../assets/teach2.png';
 import imageContainer from '../assets/Image Container.png';
 import { useMentorAuth } from '../../apis/apihook/useMentorAuth';
 import { setPendingMentorRegistration } from '../../apis/api/storage';
-import { UserRound, Briefcase, Camera } from 'lucide-react';
+import { UserRound, Briefcase, Camera, X } from 'lucide-react';
 import BoundedDatePicker from '../shared/BoundedDatePicker';
 import '../LandingPage.css';
 import './Register.css';
@@ -274,6 +274,7 @@ const MentorRegister = () => {
   const navigate = useNavigate();
   const { registerMentor, sendMentorOtp, verifyMentorOtp } = useMentorAuth();
   const [errorMessage, setErrorMessage] = useState('');
+  const [errorSignal, setErrorSignal] = useState(0);
   const [infoMessage, setInfoMessage] = useState('');
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
   const [otpInfoMessage, setOtpInfoMessage] = useState('');
@@ -680,7 +681,7 @@ const MentorRegister = () => {
     }
     const timer = window.setTimeout(() => {
       setToastState((prev) => ({ ...prev, open: false }));
-    }, 3000);
+    }, 7000);
     return () => window.clearTimeout(timer);
   }, [toastState.open, toastState.message]);
 
@@ -689,7 +690,7 @@ const MentorRegister = () => {
       return;
     }
     setToastState({ open: true, message: errorMessage, type: 'error' });
-  }, [errorMessage]);
+  }, [errorMessage, errorSignal]);
 
   useEffect(() => {
     if (!infoMessage) {
@@ -743,6 +744,10 @@ const MentorRegister = () => {
   };
 
   const getFirstErrorMessage = (errors) => Object.values(errors)[0] || '';
+  const notifyError = (message) => {
+    setErrorMessage(String(message || '').trim());
+    setErrorSignal((prev) => prev + 1);
+  };
   const showToast = (message, type = 'success') => {
     setToastState({ open: true, message, type });
   };
@@ -948,11 +953,11 @@ const MentorRegister = () => {
 
     const validationError = validateSectionOneForm();
     if (validationError) {
-      setErrorMessage(validationError);
+      notifyError(validationError);
       return;
     }
     if (!emailVerified || !phoneVerified) {
-      setErrorMessage('Please verify both email and mobile to continue.');
+      notifyError('Please verify both email and mobile to continue.');
       return;
     }
     setFormSection(2);
@@ -965,12 +970,12 @@ const MentorRegister = () => {
 
     const validationError = validateRegistrationForm();
     if (validationError) {
-      setErrorMessage(validationError);
+      notifyError(validationError);
       return;
     }
 
     if (!emailVerified || !phoneVerified) {
-      setErrorMessage('Please verify both email and mobile before submitting.');
+      notifyError('Please verify both email and mobile before submitting.');
       return;
     }
 
@@ -982,7 +987,7 @@ const MentorRegister = () => {
       clearMentorRegisterDraft();
       navigate('/mentor-verify-identity');
     } catch (err) {
-      setErrorMessage(err?.message || 'Unable to submit mentor application right now.');
+      notifyError(err?.message || 'Unable to submit mentor application right now.');
     } finally {
       setActionBusy((prev) => ({ ...prev, submit: false }));
     }
@@ -1056,12 +1061,22 @@ const MentorRegister = () => {
   return (
     <div className="mentor-register-page lp-register text-[#1f2937]">
       {toastState.open && (
-        <div className={`fixed right-4 top-4 z-[70] max-w-xs rounded-lg border px-4 py-3 shadow-lg animate-fadeIn ${
+        <div className={`fixed right-4 top-[112px] z-[70] w-[min(360px,calc(100vw-24px))] rounded-lg border px-4 py-3 shadow-lg animate-fadeIn ${
           toastState.type === 'error'
             ? 'border-red-200 bg-red-50 text-red-700'
             : 'border-green-200 bg-green-50 text-green-700'
         }`}>
-          <p className="text-sm font-medium">{toastState.message}</p>
+          <div className="flex items-start gap-3">
+            <p className="text-sm font-medium leading-relaxed">{toastState.message}</p>
+            <button
+              type="button"
+              className="ml-auto inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-current opacity-70 hover:bg-black/5 hover:opacity-100"
+              aria-label="Close notification"
+              onClick={() => setToastState((prev) => ({ ...prev, open: false }))}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       )}
       <style>{`
