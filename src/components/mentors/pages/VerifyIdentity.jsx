@@ -91,6 +91,13 @@ const getUploadStatus = (file, uploaded) => {
 
 const getFriendlyErrorMessage = (error, fallbackMessage) => {
   const message = String(error?.message || '').trim();
+  if (
+    /413/.test(message) ||
+    /request entity too large/i.test(message) ||
+    /payload too large/i.test(message)
+  ) {
+    return 'Documents are too large for upload. Please use smaller files and try again.';
+  }
   if (!message || message.toLowerCase().includes('request failed')) return fallbackMessage;
   return message;
 };
@@ -102,14 +109,25 @@ const isRejectedStatus = (value) => String(value || '').toLowerCase() === 'rejec
 const CAMERA_TARGET_BYTES = 900 * 1024;
 const CAMERA_SOFT_MAX_BYTES = 1200 * 1024;
 const CAMERA_MAX_LONG_EDGE = 1920;
-const IDENTITY_UPLOAD_TARGET_BYTES = 700 * 1024;
-const IDENTITY_UPLOAD_SOFT_MAX_BYTES = 950 * 1024;
-const IDENTITY_UPLOAD_MAX_LONG_EDGE = 1600;
+const IDENTITY_UPLOAD_TARGET_BYTES = 320 * 1024;
+const IDENTITY_UPLOAD_SOFT_MAX_BYTES = 480 * 1024;
+const IDENTITY_UPLOAD_MAX_LONG_EDGE = 1280;
+const IDENTITY_MAX_NON_IMAGE_BYTES = 1024 * 1024;
+const IDENTITY_MAX_IMAGE_BYTES = 1024 * 1024;
+const IDENTITY_MAX_TOTAL_UPLOAD_BYTES = 2 * 1024 * 1024;
 
 const canvasToJpegBlob = (canvas, quality) =>
   new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
   });
+
+const formatFileSizeLabel = (bytes) => {
+  const value = Number(bytes || 0);
+  if (!value || value < 1024) return `${value || 0} B`;
+  const kb = value / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  return `${(kb / 1024).toFixed(2)} MB`;
+};
 
 const UploadCard = ({
   title,
@@ -599,9 +617,9 @@ const VerifyIdentity = () => {
     let bestBlob = null;
     let attemptWidth = width;
     let attemptHeight = height;
-    const qualitySteps = [0.9, 0.84, 0.78, 0.72, 0.66];
+    const qualitySteps = [0.82, 0.74, 0.66, 0.58, 0.5];
 
-    for (let resizePass = 0; resizePass < 3; resizePass += 1) {
+    for (let resizePass = 0; resizePass < 4; resizePass += 1) {
       const canvas = document.createElement('canvas');
       canvas.width = attemptWidth;
       canvas.height = attemptHeight;
@@ -630,8 +648,8 @@ const VerifyIdentity = () => {
         return new File([bestBlob], nextName, { type: 'image/jpeg' });
       }
 
-      attemptWidth = Math.max(1, Math.round(attemptWidth * 0.85));
-      attemptHeight = Math.max(1, Math.round(attemptHeight * 0.85));
+      attemptWidth = Math.max(1, Math.round(attemptWidth * 0.78));
+      attemptHeight = Math.max(1, Math.round(attemptHeight * 0.78));
     }
 
     if (bestBlob) {
@@ -646,7 +664,19 @@ const VerifyIdentity = () => {
   const handleUploadFileChange = async ({ event, setter, touchedKey, reviewKey }) => {
     const selected = event.target.files?.[0] || null;
     try {
+      if (selected && !String(selected.type || '').toLowerCase().startsWith('image/')) {
+        if (selected.size > IDENTITY_MAX_NON_IMAGE_BYTES) {
+          throw new Error(
+            `Document is too large (${formatFileSizeLabel(selected.size)}). Keep it under ${formatFileSizeLabel(IDENTITY_MAX_NON_IMAGE_BYTES)}.`
+          );
+        }
+      }
       const file = await compressIdentityImageIfNeeded(selected);
+      if (file && String(file.type || '').toLowerCase().startsWith('image/') && file.size > IDENTITY_MAX_IMAGE_BYTES) {
+        throw new Error(
+          `Image is too large (${formatFileSizeLabel(file.size)}). Please upload a smaller image.`
+        );
+      }
       setter(file);
       if (file) clearDocumentReviewFor(reviewKey);
       setTouched((prev) => ({ ...prev, [touchedKey]: true }));
@@ -838,6 +868,20 @@ const VerifyIdentity = () => {
     const validationErrors = validateBeforeSubmit();
     if (validationErrors.length > 0) {
       setErrorMessage(validationErrors[0]);
+      return;
+    }
+    const uploadFiles = [
+      idProofFrontFile,
+      idProofBackFile,
+      addressProofFrontFile,
+      addressProofBackFile,
+      professionalCertificateFile,
+    ].filter(Boolean);
+    const totalUploadBytes = uploadFiles.reduce((sum, file) => sum + Number(file?.size || 0), 0);
+    if (totalUploadBytes > IDENTITY_MAX_TOTAL_UPLOAD_BYTES) {
+      setErrorMessage(
+        `Total upload is too large (${formatFileSizeLabel(totalUploadBytes)}). Keep total documents under ${formatFileSizeLabel(IDENTITY_MAX_TOTAL_UPLOAD_BYTES)}.`
+      );
       return;
     }
     setLoading(true);
