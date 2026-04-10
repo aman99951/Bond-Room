@@ -121,6 +121,7 @@ const UploadCard = ({
   error,
   reviewStatus,
   reviewComment,
+  helperText = '',
 }) => {
   const computerInputRef = useRef(null);
   const pickerRef = useRef(null);
@@ -345,20 +346,63 @@ const UploadCard = ({
           accept=".jpg,.jpeg,.png,.pdf"
           onChange={onFileChange}
         />
-        <div className="h-[180px] w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f8fafc] flex items-center justify-center">
+        <div
+          ref={pickerRef}
+          className="relative h-[180px] w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f8fafc] flex items-center justify-center"
+        >
           {viewUrl && kind === 'image' ? (
             <img src={viewUrl} alt={title} className="h-full w-full object-cover" />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center">
+            <button
+              type="button"
+              className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center hover:bg-[#4a2374] transition-colors"
+              onClick={() => setShowSourcePicker((prev) => !prev)}
+              aria-label={`Upload ${title}`}
+              aria-haspopup="menu"
+              aria-expanded={showSourcePicker}
+            >
               <Upload
                 className={`h-5 w-5 ${uploaded ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
                 aria-hidden="true"
               />
+            </button>
+          )}
+          {viewUrl && kind === 'image' && (
+            <button
+              type="button"
+              className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#5b2c91] bg-white text-[#5b2c91] hover:bg-[#f3ecff] transition-colors"
+              onClick={() => setShowSourcePicker((prev) => !prev)}
+              aria-label={`Upload ${title}`}
+              aria-haspopup="menu"
+              aria-expanded={showSourcePicker}
+            >
+              <Upload className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+          {showSourcePicker && (
+            <div className="absolute left-1/2 top-1/2 z-20 w-[min(92%,320px)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-[#d7d0e2] bg-white shadow-lg divide-y divide-[#ece7f6]">
+              <button
+                type="button"
+                className="w-full px-3 py-2 text-xs font-medium text-[#1f2937] hover:bg-[#f3ecff] transition-colors inline-flex items-center justify-center gap-2"
+                onClick={openComputerPicker}
+              >
+                <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+                Device Storage
+              </button>
+              <button
+                type="button"
+                className="w-full px-3 py-2 text-xs font-medium text-[#1f2937] hover:bg-[#f3ecff] transition-colors inline-flex items-center justify-center gap-2"
+                onClick={openCameraPicker}
+              >
+                <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                Use Camera
+              </button>
             </div>
           )}
         </div>
         <span className="text-sm text-[#1f2937] min-h-[20px] flex items-center justify-center leading-5">{title}</span>
         <span className="text-xs text-[#6b7280]">Click the upload icon to choose source</span>
+        {helperText ? <span className="text-xs text-[#6b7280]">{helperText}</span> : null}
         <span className={`text-xs max-w-full truncate ${uploaded ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
           {getUploadStatus(file, uploaded)}
         </span>
@@ -369,38 +413,6 @@ const UploadCard = ({
           </p>
         )}
 
-        <div ref={pickerRef} className="relative mt-1">
-          <button
-            type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#5b2c91] text-[#5b2c91] hover:bg-[#f3ecff] transition-colors"
-            onClick={() => setShowSourcePicker((prev) => !prev)}
-            aria-label={`Upload ${title}`}
-            aria-haspopup="menu"
-            aria-expanded={showSourcePicker}
-          >
-            <Upload className="h-4 w-4" aria-hidden="true" />
-          </button>
-
-          {showSourcePicker && (
-            <div className="absolute left-1/2 top-full z-20 mt-2 w-44 -translate-x-1/2 overflow-hidden rounded-lg border border-[#d7d0e2] bg-white shadow-lg">
-              <button
-                type="button"
-                className="w-full px-3 py-2 text-left text-xs font-medium text-[#1f2937] hover:bg-[#f3ecff] transition-colors"
-                onClick={openComputerPicker}
-              >
-                Upload from Computer
-              </button>
-              <button
-                type="button"
-                className="w-full px-3 py-2 text-left text-xs font-medium text-[#1f2937] hover:bg-[#f3ecff] transition-colors inline-flex items-center gap-2"
-                onClick={openCameraPicker}
-              >
-                <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-                Use Camera
-              </button>
-            </div>
-          )}
-        </div>
       </div>
       {showCameraModal && (
         <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4">
@@ -1127,6 +1139,7 @@ const VerifyIdentity = () => {
                           uploaded={professionalCertificateUploaded}
                           viewUrl={professionalCertificateViewUrl}
                           kind={professionalCertificateKind}
+                          helperText="Or You can upload a alternative proof such as an ID card, or any document that proves your professional experience."
                           onFileChange={(event) =>
                             handleUploadFileChange({
                               event,

@@ -2119,7 +2119,48 @@ html.has-custom-cursor * {
 
 /* â”€â”€ tablet portrait (â‰¤ 768px) â”€â”€ */
 @media (max-width: 768px) {
-  .lp-nav, .lp-hdr-actions { display: none; }
+  .lp-hdr {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .lp-hdr > div {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .lp-nav {
+    display: flex;
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .lp-hdr-actions {
+    display: flex;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+
+  .lp-logo span {
+    letter-spacing: 0.12em;
+    font-size: 9px;
+  }
+
+  .lp-nav a,
+  .lp-ghost,
+  .lp-solid {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+  }
+
+  .lp-ghost,
+  .lp-solid {
+    padding: 8px 12px;
+  }
+
   .lp-burger { display: flex; }
   .lp-sec:not(.lp-trust-sec) { margin-top: 8px; border-radius: 22px; }
 
@@ -2146,6 +2187,34 @@ html.has-custom-cursor * {
 
 /* â”€â”€ mobile (â‰¤ 480px) â”€â”€ */
 @media (max-width: 480px) {
+  .lp-hdr {
+    padding: 10px 10px;
+  }
+
+  .lp-logo img {
+    height: 36px;
+  }
+
+  .lp-logo span {
+    display: none;
+  }
+
+  .lp-nav {
+    gap: 8px;
+  }
+
+  .lp-nav a,
+  .lp-ghost,
+  .lp-solid {
+    font-size: 0.64rem;
+    letter-spacing: 0.05em;
+  }
+
+  .lp-ghost,
+  .lp-solid {
+    padding: 7px 10px;
+  }
+
   .lp-w       { font-size: clamp(2.2rem, 16vw, 4rem); }
   .lp-w-muted { font-size: clamp(1.2rem, 8vw, 2rem); }
   .lp-sec:not(.lp-trust-sec) { margin-top: 6px; border-radius: 18px; }

@@ -118,7 +118,7 @@ export const navRoutes = [
     sidebar: false,
   },
   {
-    label: 'Availability',
+    label: 'Manage Availability',
     path: '/mentor-availability',
     icon: Calendar,
     component: MentorAvailability,

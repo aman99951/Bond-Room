@@ -79,7 +79,7 @@ const truncateToWordLimit = (value, maxWords) => {
     break;
   }
 
-  return output.join('').trimEnd();
+  return output.join('');
 };
 const COUNTRY_OPTIONS = ['India', 'USA'];
 const COUNTRY_DIAL_CODE = {
@@ -343,6 +343,7 @@ const MentorRegister = () => {
   const [profileImageMenuOpen, setProfileImageMenuOpen] = useState(false);
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const [cameraErrorMessage, setCameraErrorMessage] = useState('');
+  const skipDraftPersistenceRef = useRef(false);
   const isDev = Boolean(import.meta?.env?.DEV);
   const dobBounds = getMentorDobBounds();
   const dialCode = COUNTRY_DIAL_CODE[form.country] || '+91';
@@ -429,6 +430,7 @@ const MentorRegister = () => {
   useEffect(() => {
     if (!draftReady) return;
     if (typeof window === 'undefined') return;
+    if (skipDraftPersistenceRef.current) return;
     const payload = {
       form,
       selectedLanguages,
@@ -775,7 +777,7 @@ const MentorRegister = () => {
       availability: [],
       timezone,
       qualification: form.qualification.trim(),
-      bio: form.bio.trim(),
+      bio: form.bio,
       consent: form.consent,
       email_verified: emailVerified,
       phone_verified: phoneVerified,
@@ -976,6 +978,7 @@ const MentorRegister = () => {
     try {
       const mentor = await ensureMentorRegistered();
       setMentorId(mentor?.id || null);
+      skipDraftPersistenceRef.current = true;
       clearMentorRegisterDraft();
       navigate('/mentor-verify-identity');
     } catch (err) {
@@ -1738,18 +1741,27 @@ const MentorRegister = () => {
                             <span className="select-none space-y-2">
                               <span className="block font-medium text-[#1f2937]">Mentor Commitment & Code of Conduct</span>
                               <span className="block">
-                                I confirm that I am voluntarily joining Mentor To Go, will maintain professional boundaries,
-                                provide truthful information, protect mentee confidentiality, and follow all program policies,
-                                curriculum guidelines, safety expectations, and reporting timelines.
+                                I confirm that I am voluntarily joining as a Mentor. I will maintain appropriate
+                                professional boundaries, provide accurate and truthful information, respect and
+                                protect mentee confidentiality, and adhere to all program policies, curriculum
+                                guidelines, and safety standards.
                               </span>
                               <span className="block">
-                                I understand I am responsible for my own communication costs, cannot seek payment for mentoring,
-                                must not engage in harassment or personal relationship-building with mentees, and may face
-                                suspension or removal for policy violations.
+                                I understand that I am responsible for my own communication costs. My participation
+                                as a Mentor is voluntary, and I will not request, demand, or accept any direct or
+                                off-platform payments from mentees. Where applicable, any session fees or donations
+                                must be processed strictly through approved in-app features and in compliance with
+                                platform policies.
                               </span>
                               <span className="block">
-                                I agree to promptly escalate concerns about safety or wellbeing to the authorised grievance channels
-                                and continue acting in the best interests of the mentee and Mentor To Go during and after the mentorship period.
+                                I will not engage in any form of harassment, inappropriate conduct, or personal
+                                relationship-building with mentees. I acknowledge that any violation of these
+                                guidelines may result in suspension or removal from the platform.
+                              </span>
+                              <span className="block">
+                                I agree to promptly report and escalate any concerns related to safety or wellbeing
+                                through the designated grievance channels, and to act at all times in the best
+                                interests of the mentee and Mentor To Go during and after the mentorship period.
                               </span>
                               <span className="block font-medium">I agree to this declaration.</span>
                               {shouldShowError('consent') && (

@@ -2,6 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .mentor-register-page {
@@ -14,6 +15,7 @@
   --wht: #ffffff;
   --sh: 0 20px 52px rgba(43, 26, 89, 0.14);
   background: var(--bg);
+  overflow-x: hidden;
 }
 
 .lp-toast {
@@ -181,6 +183,7 @@
   padding: 34px;
   min-height: 720px;
   background: linear-gradient(180deg, #fcfaff 0%, #f8f4ff 100%);
+  min-width: 0;
 }
 
 .lp-login-pill {
@@ -325,6 +328,10 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
   margin-bottom: 10px;
+}
+
+.lp-register-row > * {
+  min-width: 0;
 }
 
 .lp-profile-upload-card {
@@ -1270,6 +1277,23 @@
     grid-template-columns: 1fr;
   }
 
+  .lp-register-inline-verify {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-register-mobile-row.lp-register-mobile-row-action {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-register-country {
+    display: none;
+  }
+
+  .lp-vp-inline-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
   .lp-profile-upload-main {
     grid-template-columns: 1fr;
     justify-items: center;
@@ -1314,12 +1338,22 @@
     width: 100%;
   }
 
-  .lp-hdr .lp-nav {
+  .lp-hdr .lp-logo span {
     display: none;
+  }
+
+  .lp-hdr .lp-nav {
+    display: flex;
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .lp-hdr .lp-hdr-actions {
     margin-left: auto;
+    order: 2;
   }
 }
 

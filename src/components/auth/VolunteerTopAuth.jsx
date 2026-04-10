@@ -36,7 +36,7 @@ const VolunteerTopAuth = ({ lockNavigation = false, onBlockedNavigate, logoutRed
 
   return (
     <header className="lp-hdr">
-      <div className="mx-auto flex w-full max-w-[1400px] 2xl:max-w-[min(97vw,3000px)] items-center gap-5 px-4 sm:px-6 lg:px-10 xl:px-14 2xl:px-6">
+      <div className="mx-auto flex w-full max-w-[1400px] 2xl:max-w-[min(97vw,3000px)] items-center gap-5 px-4 sm:px-6 lg:px-10 xl:px-14 2xl:px-6 max-[768px]:flex-wrap max-[768px]:gap-3">
         <Link
           to="/"
           className="lp-logo"
@@ -47,11 +47,11 @@ const VolunteerTopAuth = ({ lockNavigation = false, onBlockedNavigate, logoutRed
           <span>Bridging Old and New Destinies</span>
         </Link>
 
-        <nav className="lp-nav">
+        <nav className="lp-nav max-[768px]:order-3 max-[768px]:w-full">
           <Link to="/" onClick={handleHomeClick}>Home</Link>
         </nav>
 
-        <div className="lp-hdr-actions">
+        <div className="lp-hdr-actions max-[768px]:order-2 max-[768px]:ml-auto">
           {isLoggedIn ? (
             <button type="button" onClick={handleLogout} className="lp-solid">
               Logout

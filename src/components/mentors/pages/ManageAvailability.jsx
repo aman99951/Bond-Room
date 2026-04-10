@@ -18,6 +18,7 @@ const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const ALLOWED_START_MINUTES = 8 * 60;
 const ALLOWED_END_MINUTES = 19 * 60;
 const SLOT_STEP_MINUTES = 30;
+const SLOT_DURATION_MINUTES = 30;
 
 const buildWeekDays = (startDateKey) =>
   dayLabels.map((label, index) => {
@@ -74,6 +75,12 @@ const minutesToLabel = (minutesValue) => {
   const hour = Math.floor(mins / 60);
   const minute = mins % 60;
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+};
+
+const getFixedEndLabel = (startLabel) => {
+  const startMinutes = toMinutes(startLabel);
+  const endMinutes = Math.min(startMinutes + SLOT_DURATION_MINUTES, ALLOWED_END_MINUTES);
+  return minutesToLabel(endMinutes);
 };
 
 const buildTimeOptions = () => {
@@ -193,7 +200,7 @@ const ManageAvailability = () => {
 
         next[day.label] = {
           enabled: intervals.length > 0,
-          intervals: intervals.length ? intervals : [{ start: '08:00', end: '09:00' }],
+          intervals: intervals.length ? intervals : [{ start: '08:00', end: getFixedEndLabel('08:00') }],
         };
       });
       return next;
@@ -202,7 +209,7 @@ const ManageAvailability = () => {
 
   const setDayDraft = (dayLabel, updater) => {
     setCustomDraft((prev) => {
-      const base = prev?.[dayLabel] || { enabled: false, intervals: [{ start: '08:00', end: '09:00' }] };
+      const base = prev?.[dayLabel] || { enabled: false, intervals: [{ start: '08:00', end: getFixedEndLabel('08:00') }] };
       const nextValue = typeof updater === 'function' ? updater(base) : updater;
       return { ...prev, [dayLabel]: nextValue };
     });
@@ -212,7 +219,11 @@ const ManageAvailability = () => {
     setDayDraft(dayLabel, (current) => {
       const intervals = [...(current.intervals || [])];
       if (!intervals[index]) return current;
-      intervals[index] = { ...intervals[index], [field]: value };
+      if (field === 'start') {
+        intervals[index] = { ...intervals[index], start: value, end: getFixedEndLabel(value) };
+      } else {
+        intervals[index] = { ...intervals[index], [field]: value };
+      }
       return { ...current, intervals };
     });
   };
@@ -253,7 +264,7 @@ const ManageAvailability = () => {
     const cleaned = (draft.intervals || [])
       .map((interval) => ({
         start: String(interval.start || '').trim(),
-        end: String(interval.end || '').trim(),
+        end: getFixedEndLabel(String(interval.start || '').trim()),
       }))
       .filter((interval) => interval.start && interval.end);
 
@@ -291,6 +302,10 @@ const ManageAvailability = () => {
       }
       if (item.endMins <= item.startMins) {
         setError('End time must be after start time.');
+        return;
+      }
+      if (item.endMins !== item.startMins + SLOT_DURATION_MINUTES) {
+        setError(`Each slot must be exactly ${SLOT_DURATION_MINUTES} minutes.`);
         return;
       }
       if (i > 0 && item.startMins < normalized[i - 1].endMins) {
@@ -434,19 +449,18 @@ const ManageAvailability = () => {
     }
   };
 
-  const slotPresets = [
-    { time: '08:00', end: '09:00' },
-    { time: '09:00', end: '10:00' },
-    { time: '10:00', end: '11:00' },
-    { time: '11:00', end: '12:00' },
-    { time: '12:00', end: '13:00' },
-    { time: '13:00', end: '14:00' },
-    { time: '14:00', end: '15:00' },
-    { time: '15:00', end: '16:00' },
-    { time: '16:00', end: '17:00' },
-    { time: '17:00', end: '18:00' },
-    { time: '18:00', end: '19:00' },
-  ];
+  const slotPresets = useMemo(() => {
+    const presets = [];
+    for (
+      let startMinutes = ALLOWED_START_MINUTES;
+      startMinutes + SLOT_DURATION_MINUTES <= ALLOWED_END_MINUTES;
+      startMinutes += SLOT_STEP_MINUTES
+    ) {
+      const time = minutesToLabel(startMinutes);
+      presets.push({ time, end: getFixedEndLabel(time) });
+    }
+    return presets;
+  }, []);
 
   const addSlot = async (dayLabel) => {
     if (!mentor?.id) return;
@@ -977,20 +991,17 @@ const ManageAvailability = () => {
                                   ))}
                                 </select>
                                 <select
-                                  value={interval.end}
-                                  onChange={(event) => updateInterval(day.label, index, 'end', event.target.value)}
+                                  value={getFixedEndLabel(interval.start)}
                                   className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-xs font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
-                                  disabled={loading}
+                                  disabled
                                 >
-                                  {timeOptions.map((option) => (
-                                    <option key={`m-end-${day.label}-${option}`} value={option}>
-                                      {toAmPmLabel(option)}
-                                    </option>
-                                  ))}
+                                  <option value={getFixedEndLabel(interval.start)}>
+                                    {toAmPmLabel(getFixedEndLabel(interval.start))}
+                                  </option>
                                 </select>
                                 <div className="flex items-center justify-between">
                                   <span className="rounded-md bg-[#efe4ff] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#5D3699]">
-                                    {toAmPmLabel(interval.start)} - {toAmPmLabel(interval.end)}
+                                    {toAmPmLabel(interval.start)} - {toAmPmLabel(getFixedEndLabel(interval.start))}
                                   </span>
                                   <button
                                     type="button"
@@ -1264,20 +1275,17 @@ const ManageAvailability = () => {
                                   ))}
                                 </select>
                                 <select
-                                  value={interval.end}
-                                  onChange={(event) => updateInterval(day.label, index, 'end', event.target.value)}
+                                  value={getFixedEndLabel(interval.start)}
                                   className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-[11px] font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
-                                  disabled={loading}
+                                  disabled
                                 >
-                                  {timeOptions.map((option) => (
-                                    <option key={`d-end-${day.label}-${option}`} value={option}>
-                                      {toAmPmLabel(option)}
-                                    </option>
-                                  ))}
+                                  <option value={getFixedEndLabel(interval.start)}>
+                                    {toAmPmLabel(getFixedEndLabel(interval.start))}
+                                  </option>
                                 </select>
                                 <div className="flex items-center justify-between">
                                   <span className="rounded-md bg-[#efe4ff] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#5D3699]">
-                                    {toAmPmLabel(interval.start)} - {toAmPmLabel(interval.end)}
+                                    {toAmPmLabel(interval.start)} - {toAmPmLabel(getFixedEndLabel(interval.start))}
                                   </span>
                                   <button
                                     type="button"

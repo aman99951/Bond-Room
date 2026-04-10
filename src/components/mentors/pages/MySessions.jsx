@@ -442,6 +442,54 @@ const MySessions = () => {
     });
   }, [needsCompletionSelection, sessionsThisWeek, weekStartKey]);
 
+  const allTimeCalendarGroups = useMemo(() => {
+    const now = new Date();
+    const rows = filteredSessions
+      .filter((session) => session?.status !== 'requested')
+      .map((session) => {
+        const end = new Date(session.scheduled_end || session.scheduled_start);
+        const startMs = parseDateMs(session?.scheduled_start);
+        const dateKey = formatIndiaDateKey(session?.scheduled_start) || '';
+        const joinUrl = session?.meeting_url || session?.join_url || session?.host_join_url || '';
+        const menteeName = (getMenteeName(session) || '').trim() || 'Mentee';
+        const connectionClosed = isConnectionClosed(session);
+        return {
+          ...session,
+          id: session.id,
+          dateKey,
+          startMs: startMs || 0,
+          title: menteeName,
+          menteeAvatar: getMenteeAvatar(session),
+          time: formatTimeRange(session.scheduled_start, session.scheduled_end),
+          tone: session.status === 'completed' ? 'light' : 'dark',
+          isPast: !Number.isNaN(end.getTime()) && end < now,
+          needsSelection: needsCompletionSelection(session),
+          connectionClosed,
+          joinUrl,
+        };
+      })
+      .sort((a, b) => a.startMs - b.startMs);
+
+    const grouped = rows.reduce((acc, session) => {
+      const key = session.dateKey || 'unknown';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(session);
+      return acc;
+    }, {});
+
+    return Object.entries(grouped)
+      .sort(([a], [b]) => {
+        if (a === 'unknown') return 1;
+        if (b === 'unknown') return -1;
+        return a.localeCompare(b);
+      })
+      .map(([dateKey, items]) => ({
+        dateKey,
+        dateLabel: dateKey === 'unknown' ? 'Date TBD' : indiaDateKeyToLabel(dateKey, { month: 'short', day: 'numeric', year: 'numeric' }),
+        items,
+      }));
+  }, [filteredSessions, needsCompletionSelection]);
+
   const openJoinLink = (url, sessionId) => {
     if (!url) return false;
     setSelectedSessionId(sessionId);
@@ -706,6 +754,89 @@ return (
 
     {/* Calendar View */}
     {view === 'calendar' ? (
+      weekFilterValue === 'All Time' ? (
+        <div className="space-y-4">
+          {allTimeCalendarGroups.length ? (
+            allTimeCalendarGroups.map((group) => (
+              <div key={group.dateKey} className="overflow-hidden rounded-2xl bg-white ring-1 ring-[#e5e7eb]">
+                <div className="bg-[#f8fafc] px-4 py-3 text-sm font-semibold text-[#374151] sm:px-5">
+                  {group.dateLabel}
+                </div>
+                <div className="divide-y divide-[#eef2f7]">
+                  {group.items.map((session) => (
+                    <div
+                      key={session.id}
+                      className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <button
+                          type="button"
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f3f4f6] text-sm font-semibold text-[#5D3699]"
+                          onClick={() => navigate(`/mentor-mentee-profile/${session.id}`)}
+                        >
+                          {session.menteeAvatar ? (
+                            <img src={session.menteeAvatar} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            (session.title || 'M').charAt(0).toUpperCase()
+                          )}
+                        </button>
+                        <div className="min-w-0">
+                          <button
+                            type="button"
+                            className="block truncate text-left text-sm font-semibold text-[#111827] hover:text-[#5D3699]"
+                            onClick={() => navigate(`/mentor-mentee-profile/${session.id}`)}
+                          >
+                            {session.title}
+                          </button>
+                          <div className="mt-1 flex items-center gap-1.5 text-xs text-[#6b7280]">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{session.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                        {canJoinSession(session) ? (
+                          <button
+                            type="button"
+                            onClick={() => handleJoin(session)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a2b7a] disabled:opacity-50"
+                            disabled={joiningId === session.id}
+                          >
+                            <Video className="h-3.5 w-3.5" />
+                            {joiningId === session.id ? 'Joining...' : 'Join'}
+                          </button>
+                        ) : session.needsSelection ? (
+                          <button
+                            type="button"
+                            onClick={() => openSelectionSubmission(session.id)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
+                          >
+                            Submit Selection
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-xs text-[#9ca3af]">
+                            <span className="h-2 w-2 rounded-full bg-[#e5e7eb]" />
+                            {getJoinUnavailableLabel(session)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-2xl bg-white px-6 py-14 text-center shadow-sm ring-1 ring-[#e5e7eb]">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#f5f3ff]">
+                <Calendar className="h-7 w-7 text-[#9ca3af]" />
+              </div>
+              <p className="mt-4 text-sm font-medium text-[#111827]">No sessions found</p>
+              <p className="mt-1 text-sm text-[#6b7280]">Try changing filters to view more dates.</p>
+            </div>
+          )}
+        </div>
+      ) : (
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[980px] pr-2 lg:min-w-[1330px] lg:pr-3">
@@ -862,6 +993,7 @@ return (
           </div>
         </div>
       </div>
+      )
     ) : (
       /* Table View */
       <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">

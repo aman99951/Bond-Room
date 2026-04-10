@@ -178,6 +178,7 @@ const Register = () => {
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const [cameraErrorMessage, setCameraErrorMessage] = useState('');
   const [draftReady, setDraftReady] = useState(false);
+  const skipDraftPersistenceRef = useRef(false);
   const dialCode = COUNTRY_DIAL_CODE[form.country] || '+91';
 
   const navigate = useNavigate();
@@ -230,6 +231,7 @@ const Register = () => {
   useEffect(() => {
     if (!draftReady) return;
     if (typeof window === 'undefined') return;
+    if (skipDraftPersistenceRef.current) return;
     const payload = {
       form,
       touchedFields,
@@ -579,6 +581,7 @@ const Register = () => {
 
       await login(form.email.trim().toLowerCase(), form.password, 'menties');
       setAssessmentDraft({});
+      skipDraftPersistenceRef.current = true;
       clearMenteeRegisterDraft();
       if (signupSource === 'event_flow') {
         navigate(safeNextAfterRegister || '/dashboard');
@@ -731,12 +734,13 @@ const Register = () => {
 
   const handleCancelEventFlowRegistration = () => {
     setShowVolunteerFlowLockModal(false);
+    skipDraftPersistenceRef.current = true;
     clearMenteeRegisterDraft();
     navigate(safeNextAfterRegister || '/volunteer-events', { replace: true });
   };
 
   return (
-    <div className="mentor-register-page lp-register text-[#1f2937]">
+    <div className="mentor-register-page lp-register overflow-x-hidden text-[#1f2937]">
       {showVolunteerFlowLockModal ? (
         <div className="lp-register-lock-overlay">
           <div className="lp-register-lock-card" role="dialog" aria-modal="true" aria-labelledby="volunteer-flow-lock-title">

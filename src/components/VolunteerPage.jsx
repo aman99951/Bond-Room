@@ -406,6 +406,8 @@ const VolunteerPage = () => {
     completedSelectedYear,
     completedVolunteerEvents,
   ]);
+  const useCompactUpcomingLayout =
+    filteredVolunteerEvents.length > 0 && filteredVolunteerEvents.length <= 2;
 
   const calendarDays = useMemo(() => {
     const first = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
@@ -719,13 +721,61 @@ const VolunteerPage = () => {
           </div>
 
           {filteredVolunteerEvents.length > 0 ? (
-            <VolunteerRingCarousel
-              items={filteredVolunteerEvents}
-              onCardClick={(item) => {
-                if (!item?.id) return;
-                navigate(`/volunteer-events/${item.id}/register`);
-              }}
-            />
+            useCompactUpcomingLayout ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {filteredVolunteerEvents.map((event) => (
+                  <article
+                    key={event.id}
+                    className="overflow-hidden rounded-2xl border border-[#e8dcff] bg-white shadow-[0_16px_28px_-20px_rgba(93,54,153,0.55)]"
+                  >
+                    <div className="h-44 w-full overflow-hidden bg-[#f5f3ff]">
+                      {event.image ? (
+                        <img
+                          src={event.image}
+                          alt={event.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs font-semibold text-[#6b7280]">
+                          No image available
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2 p-4">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6b5f84]">
+                        {event.stream || 'Volunteer Event'}
+                      </p>
+                      <h3 className="line-clamp-2 text-base font-semibold text-[#111827]">
+                        {event.title}
+                      </h3>
+                      <p className="line-clamp-2 text-xs text-[#6b7280]">
+                        {event.summary || event.description || 'Join this event and contribute to your community.'}
+                      </p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#5f6b81]">
+                        <span>{formatDate(event.date)}</span>
+                        <span>{event.time || 'Time TBA'}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/volunteer-events/${event.id}/register`)}
+                        className="mt-1 inline-flex items-center gap-1 rounded-lg bg-[#5D3699] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
+                      >
+                        Register
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <VolunteerRingCarousel
+                items={filteredVolunteerEvents}
+                onCardClick={(item) => {
+                  if (!item?.id) return;
+                  navigate(`/volunteer-events/${item.id}/register`);
+                }}
+              />
+            )
           ) : (
             <div className="rounded-xl border border-[#e5e7eb] border-dashed bg-white p-8 text-center">
               <p className="text-sm text-[#6b7280]">

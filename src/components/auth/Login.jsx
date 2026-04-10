@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Phone, Lock, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Mail, Eye, EyeOff } from 'lucide-react';
-import logo from '../assets/logo.png';
+import TopAuth from './TopAuth';
+import BottomAuth from './BottomAuth';
+import mentorBottom from '../assets/teach1.png';
+import mentorLeft from '../assets/teach2.png';
+import imageContainer from '../assets/Image Container.png';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import { clearAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
 import { mentorApi } from '../../apis/api/mentorApi';
@@ -132,20 +136,7 @@ const Login = () => {
 
   return (
     <div className="lp lp-login">
-      <header className="lp-hdr">
-        <Link to="/" className="lp-logo" aria-label="Go to landing page">
-          <img src={logo} alt="Bond Room" />
-          <span>Bridging Old and New Destinies</span>
-        </Link>
-
-        <nav className="lp-nav">
-          <Link to="/">Home</Link>
-        </nav>
-
-        <div className="lp-hdr-actions">
-          <Link to="/register" className="lp-solid">Student Sign Up</Link>
-        </div>
-      </header>
+      <TopAuth />
 
       <main className="lp-login-main">
         <div className="lp-login-orb lp-login-orb-a" />
@@ -158,39 +149,34 @@ const Login = () => {
           className="lp-login-shell"
         >
           <div className="lp-login-grid">
-            <section className="lp-login-brand">
-              <Motion.div variants={itemVariants} className="lp-login-brand-inner">
-                <div className="lp-login-badge">
-                  <span className="lp-edot" />
-                  Welcome back
+            <aside className="lp-login-side" aria-hidden="true">
+              <img
+                src={imageContainer}
+                alt=""
+                className="lp-login-center-mark"
+              />
+              <div className="lp-login-side-grid">
+                <div className="lp-login-media-pane">
+                  <img src={mentorLeft} alt="Mentor support" className="lp-login-side-image" />
                 </div>
-                <h3 className="lp-login-title">
-                  Continue your
-                  <br />
-                  growth journey
-                </h3>
-                <p className="lp-login-copy">
-                  Join hundreds of mentors and mentees in building meaningful connections and driving real impact.
-                </p>
-              </Motion.div>
-
-              <Motion.div variants={itemVariants} className="lp-login-stats">
-                <div className="lp-login-stat">
-                  <div className="lp-login-stat-ico">
-                    <Sparkles size={18} />
-                  </div>
-                  <p>1:1</p>
-                  <span>Mentorship Sessions</span>
+                <div className="lp-login-copy-pane">
+                  <h3>Welcome Back to Bond Room</h3>
+                  <p>Continue your mentorship journey with focused support and meaningful conversations.</p>
                 </div>
-                <div className="lp-login-stat">
-                  <div className="lp-login-stat-ico">
-                    <CheckCircle2 size={18} />
-                  </div>
-                  <p>24/7</p>
-                  <span>Active Support</span>
+              </div>
+              <div className="lp-login-side-grid lp-login-side-grid-bottom">
+                <div className="lp-login-stats-pane">
+                  <ul>
+                    <li>Secure role-based Login In for mentees and mentors.</li>
+                    <li>Simple OTP flow for mentors with onboarding checks.</li>
+                    <li>Fast access to dashboards and active sessions.</li>
+                  </ul>
                 </div>
-              </Motion.div>
-            </section>
+                <div className="lp-login-media-pane">
+                  <img src={mentorBottom} alt="Growth journey" className="lp-login-side-image" />
+                </div>
+              </div>
+            </aside>
 
             <section className="lp-login-form-wrap">
               <Motion.div variants={itemVariants}>
@@ -198,7 +184,7 @@ const Login = () => {
                   <span className="lp-login-pill-dot" />
                   Welcome back
                 </div>
-                <h2 className="lp-login-h2">Login to your Mentee / Volunteer Or Mentor Account</h2>
+                <h2 className="lp-login-h2">Login to your Mentee / Volunteer or Mentor account</h2>
                 <p className="lp-login-sub">
                   {selectedRole === 'mentee'
                     ? 'Select mentee and login using email and password.'
@@ -210,112 +196,143 @@ const Login = () => {
                 variants={itemVariants}
                 className="lp-login-form"
                 onSubmit={handleLogin}
+                autoComplete="off"
               >
-                <div className="lp-role-switch" role="tablist" aria-label="Select login role">
-                  <button
-                    type="button"
-                    className={`lp-role-btn ${selectedRole === 'mentee' ? 'is-active' : ''}`}
-                    onClick={() => handleRoleChange('mentee')}
-                  >
-                    Mentee / Volunteer
-                  </button>
-                  <button
-                    type="button"
-                    className={`lp-role-btn ${selectedRole === 'mentor' ? 'is-active' : ''}`}
-                    onClick={() => handleRoleChange('mentor')}
-                  >
-                    Mentor
-                  </button>
+                <div className="lp-register-form-card">
+                  <div className="lp-register-form-card-head">
+                    <h3>
+                      <Sparkles size={14} />
+                      Access Role
+                    </h3>
+                  </div>
+                  <div className="lp-role-switch" role="tablist" aria-label="Select login role">
+                    <button
+                      type="button"
+                      className={`lp-role-btn ${selectedRole === 'mentee' ? 'is-active' : ''}`}
+                      onClick={() => handleRoleChange('mentee')}
+                    >
+                      Mentee / Volunteer
+                    </button>
+                    <button
+                      type="button"
+                      className={`lp-role-btn ${selectedRole === 'mentor' ? 'is-active' : ''}`}
+                      onClick={() => handleRoleChange('mentor')}
+                    >
+                      Mentor
+                    </button>
+                  </div>
                 </div>
 
-                {selectedRole === 'mentee' ? (
-                  <>
-                    <div className="lp-field">
-                      <label htmlFor="loginEmail">
-                        <Mail size={16} />
-                        Email Address
-                      </label>
-                      <input
-                        id="loginEmail"
-                        type="email"
-                        className="lp-input"
-                        placeholder="student@example.com"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                      />
-                    </div>
-
-                    <div className="lp-field">
-                      <label htmlFor="loginPassword">
-                        <Lock size={16} />
-                        Password
-                      </label>
-                      <div className="lp-password-wrap">
+                <div className="lp-register-form-card">
+                  <div className="lp-register-form-card-head">
+                    <h3>
+                      <Lock size={14} />
+                      Login Credentials
+                    </h3>
+                  </div>
+                  {selectedRole === 'mentee' ? (
+                    <>
+                      <div className="lp-field">
+                        <label className="lp-login-field-label" htmlFor="loginEmail">
+                          <Mail size={15} />
+                          Email Address
+                        </label>
                         <input
-                          id="loginPassword"
-                          type={showPassword ? 'text' : 'password'}
-                          className="lp-input lp-password-input"
-                          placeholder="Enter password"
-                          value={password}
-                          onChange={(event) => setPassword(event.target.value)}
+                          id="loginEmail"
+                          type="email"
+                          className="lp-input"
+                          placeholder="student@example.com"
+                          autoComplete="off"
+                          value={email}
+                          onChange={(event) => setEmail(event.target.value)}
                         />
-                        <button
-                          type="button"
-                          className="lp-password-toggle"
-                          onClick={() => setShowPassword((prev) => !prev)}
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
-                          aria-pressed={showPassword}
-                        >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
                       </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="lp-field">
-                      <label htmlFor="loginMobile">
-                        <Phone size={16} />
-                        Mobile Number
-                      </label>
-                      <input
-                        id="loginMobile"
-                        type="tel"
-                        className="lp-input"
-                        placeholder="+91 9876543210"
-                        value={mobile}
-                        onChange={(event) => setMobile(event.target.value)}
-                      />
-                      <div className="lp-field-action">
-                        <button
-                          type="button"
-                          className="lp-generate-otp"
-                          onClick={handleGenerateOtp}
-                        >
-                          <Sparkles size={12} />
-                          Generate Mock OTP
-                        </button>
-                      </div>
-                    </div>
 
-                    <div className="lp-field">
-                      <label htmlFor="loginOtp">
-                        <Lock size={16} />
-                        OTP Verification
-                      </label>
-                      <input
-                        id="loginOtp"
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        className="lp-input lp-input-otp"
-                        placeholder="******"
-                        value={otp}
-                        onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                      />
-                    </div>
-                  </>
-                )}
+                      <div className="lp-field">
+                        <label className="lp-login-field-label" htmlFor="loginPassword">
+                          <Lock size={15} />
+                          Password
+                        </label>
+                        <div className="lp-password-wrap">
+                          <input
+                            id="loginPassword"
+                            type={showPassword ? 'text' : 'password'}
+                            className="lp-input lp-password-input"
+                            placeholder="Enter password"
+                            autoComplete="new-password"
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className="lp-password-toggle"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            aria-pressed={showPassword}
+                          >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="lp-field">
+                        <label className="lp-login-field-label" htmlFor="loginMobile">
+                          <Phone size={15} />
+                          Mobile Number
+                        </label>
+                        <div className="lp-register-mobile-row lp-register-mobile-row-action">
+                          <div className="lp-register-country" aria-hidden="true">+91</div>
+                          <input
+                            id="loginMobile"
+                            type="tel"
+                            className="lp-input"
+                            placeholder="9876543210"
+                            autoComplete="off"
+                            value={mobile}
+                            onChange={(event) => setMobile(event.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className="lp-vp-inline-btn"
+                            onClick={handleGenerateOtp}
+                          >
+                            OTP
+                          </button>
+                        </div>
+                        <div className="lp-field-action">
+                          <button
+                            type="button"
+                            className="lp-generate-otp"
+                            onClick={handleGenerateOtp}
+                          >
+                            <Sparkles size={12} />
+                            Generate Mock OTP
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="lp-field">
+                        <label className="lp-login-field-label" htmlFor="loginOtp">
+                          <Lock size={15} />
+                          OTP Verification
+                        </label>
+                        <input
+                          id="loginOtp"
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={6}
+                          className="lp-input lp-input-otp"
+                          placeholder="000000"
+                          autoComplete="off"
+                          value={otp}
+                          onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
 
                 <AnimatePresence mode="wait">
                   {errorMessage && (
@@ -359,7 +376,7 @@ const Login = () => {
                     </div>
                   ) : (
                     <>
-                      Sign In
+                      Login
                       <ArrowRight size={16} />
                     </>
                   )}
@@ -379,16 +396,7 @@ const Login = () => {
         </Motion.div>
       </main>
 
-      <footer className="lp-footer lp-login-footer">
-        <div className="lp-footer-btm">
-          <span>(c) 2026 Bond Room Platform. All rights reserved.</span>
-          <span className="lp-login-footer-links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Support</a>
-          </span>
-        </div>
-      </footer>
+      <BottomAuth />
     </div>
   );
 };

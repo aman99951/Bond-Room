@@ -140,7 +140,7 @@ function Wrap({ children, className = "" }) {
   return <div className={`w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:px-16 min-[2500px]:px-20 ${className}`}>{children}</div>;
 }
 
-function MentorRingCarousel({ items, onSelectMentor }) {
+function MentorRingCarousel({ items, onSelectMentor, paused = false }) {
   const stageRef = useRef(null);
   const cardRefs = useRef([]);
   const rafRef = useRef(null);
@@ -198,7 +198,7 @@ function MentorRingCarousel({ items, onSelectMentor }) {
       const dt = Math.min(0.05, (ts - lastTsRef.current) / 1000);
       lastTsRef.current = ts;
 
-      if (!dragRef.current) {
+      if (!paused && !dragRef.current) {
         const blend = 1 - Math.exp(-dt * 8.2);
         speedRef.current += (targetSpeedRef.current - speedRef.current) * blend;
         phaseRef.current = (phaseRef.current + speedRef.current * dt + items.length) % items.length;
@@ -211,7 +211,7 @@ function MentorRingCarousel({ items, onSelectMentor }) {
       if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
       lastTsRef.current = null;
     };
-  }, [applyArcLayout, items.length]);
+  }, [applyArcLayout, items.length, paused]);
 
   useEffect(() => {
     const onResize = () => applyArcLayout();
@@ -251,13 +251,13 @@ function MentorRingCarousel({ items, onSelectMentor }) {
     <div className="lp-arc-shell">
       <div
         ref={stageRef}
-        className="lp-arc-stage"
+        className={`lp-arc-stage ${paused ? 'pointer-events-none' : ''}`}
         onMouseEnter={() => { hoverRef.current = true; if (!dragRef.current) { speedRef.current = 0; targetSpeedRef.current = HOVER_SPEED; } }}
         onMouseLeave={() => { hoverRef.current = false; if (!dragRef.current) targetSpeedRef.current = BASE_SPEED; }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerEnd}
-        onPointerCancel={handlePointerEnd}
+        onPointerDown={(event) => { if (paused) return; handlePointerDown(event); }}
+        onPointerMove={(event) => { if (paused) return; handlePointerMove(event); }}
+        onPointerUp={(event) => { if (paused) return; handlePointerEnd(event); }}
+        onPointerCancel={(event) => { if (paused) return; handlePointerEnd(event); }}
       >
         <div className="lp-arc-track">
           {items.map((item, index) => (
@@ -266,17 +266,20 @@ function MentorRingCarousel({ items, onSelectMentor }) {
               className="lp-arc-card"
               ref={(el) => { cardRefs.current[index] = el; }}
               onPointerDown={(event) => {
+                if (paused) return;
                 event.stopPropagation();
                 dragRef.current = false;
                 dragDistanceRef.current = 0;
               }}
               onPointerUp={(event) => {
+                if (paused) return;
                 event.stopPropagation();
                 if (dragDistanceRef.current <= DRAG_CLICK_THRESHOLD && typeof onSelectMentor === "function") {
                   onSelectMentor(item);
                 }
               }}
               onClick={(event) => {
+                if (paused) return;
                 event.stopPropagation();
                 if (dragDistanceRef.current <= DRAG_CLICK_THRESHOLD && typeof onSelectMentor === "function") {
                   onSelectMentor(item);
@@ -285,7 +288,6 @@ function MentorRingCarousel({ items, onSelectMentor }) {
             >
               <div className="lp-arc-card-inner">
                 <img src={item.image} alt={item.name} className="lp-arc-img" draggable={false} />
-                <div className="lp-arc-overlay" />
                 <div className="lp-arc-info">
                   <strong>{item.name}</strong>
                   <span>{item.role}</span>
@@ -347,6 +349,9 @@ export default function LandingPage() {
     { label: "Safety", href: "/#safety" },
     { label: "Stories", href: "/#stories" },
   ];
+  const FOOTER_PLATFORM_LINKS = NAV.filter((item) =>
+    ["About", "Volunteer", "Safety", "Stories"].includes(item.label)
+  );
 
   return (
     <div className="min-h-screen w-full bg-[#FAF8FF] overflow-x-hidden font-sans text-[#111827]">
@@ -393,14 +398,13 @@ export default function LandingPage() {
         .lp-arc-shell{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0 4px}
         .lp-arc-stage{--card-w:clamp(190px,16vw,262px);--card-h:clamp(286px,34vw,410px);width:100%;height:clamp(390px,41vw,560px);perspective:1680px;perspective-origin:50% 44%;overflow:hidden;position:relative;user-select:none;touch-action:pan-y;cursor:grab}
         .lp-arc-stage:active{cursor:grabbing}
-        .lp-arc-stage::before{content:'';position:absolute;inset:2% 10% auto;height:56%;pointer-events:none;background:radial-gradient(ellipse at 50% 30%,rgba(51,157,255,.2),rgba(51,157,255,0) 70%),radial-gradient(ellipse at 10% 20%,rgba(20,134,230,.2),rgba(20,134,230,0) 65%);filter:blur(14px)}
-        .lp-arc-stage::after{content:'';position:absolute;left:50%;bottom:8px;width:min(78%,960px);height:clamp(38px,5vw,66px);transform:translateX(-50%);pointer-events:none;background:radial-gradient(ellipse,rgba(30,95,170,.42) 0%,rgba(30,95,170,0) 72%);filter:blur(7px)}
+        .lp-arc-stage::before{content:'';position:absolute;inset:2% 10% auto;height:56%;pointer-events:none;background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.14),rgba(255,255,255,0) 70%);filter:blur(10px)}
+        .lp-arc-stage::after{content:'';position:absolute;left:50%;bottom:8px;width:min(78%,960px);height:clamp(38px,5vw,66px);transform:translateX(-50%);pointer-events:none;background:radial-gradient(ellipse,rgba(23,25,33,.24) 0%,rgba(23,25,33,0) 72%);filter:blur(7px)}
         .lp-arc-track{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;transform:translate3d(-50%,-50%,0);will-change:transform}
         .lp-arc-card{position:absolute;width:var(--card-w);height:var(--card-h);left:calc(var(--card-w)/-2);top:calc(var(--card-h)/-2);transform-style:preserve-3d;will-change:transform,opacity,filter;transition:opacity .18s linear,filter .18s linear;cursor:pointer}
-        .lp-arc-card-inner{width:100%;height:100%;position:relative;border-radius:24px;overflow:hidden;background:#0a111b;border:1px solid rgba(119,165,221,.48);box-shadow:0 18px 36px rgba(0,0,0,.56),inset 0 1px 0 rgba(193,222,255,.2)}
+        .lp-arc-card-inner{width:100%;height:100%;position:relative;border-radius:24px;overflow:hidden;background:#ffffff;border:1px solid rgba(221,215,237,.9);box-shadow:0 14px 30px rgba(31,41,55,.22)}
         .lp-arc-img{width:100%;height:100%;object-fit:cover}
-        .lp-arc-overlay{position:absolute;inset:0;background:radial-gradient(110% 90% at 50% 24%,rgba(41,166,255,.38),rgba(41,166,255,0) 58%),linear-gradient(90deg,rgba(2,10,18,.56) 0%,rgba(2,10,18,.1) 26%,rgba(2,10,18,.08) 74%,rgba(2,10,18,.56) 100%),linear-gradient(180deg,rgba(3,10,18,0) 44%,rgba(3,10,18,.88) 100%)}
-        .lp-arc-info{position:absolute;left:14px;right:14px;bottom:13px}
+        .lp-arc-info{position:absolute;left:0;right:0;bottom:0;padding:16px 14px 12px;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.56) 100%)}
         .lp-arc-info strong{display:block;color:#f1f7ff;font-size:clamp(.78rem,1.08vw,1.24rem);font-weight:700;line-height:1.2;text-shadow:0 4px 18px rgba(0,0,0,.56)}
         .lp-arc-info span{display:block;margin-top:2px;color:rgba(193,216,243,.9);font-size:clamp(.62rem,.74vw,.84rem);line-height:1.2;text-shadow:0 4px 14px rgba(0,0,0,.52)}
         .lp-arc-action{margin-top:10px;padding:6px 10px;border-radius:999px;border:1px solid rgba(190,220,255,.42);background:rgba(9,22,40,.62);color:#eef6ff;font-size:.68rem;font-weight:700;letter-spacing:.03em}
@@ -781,7 +785,7 @@ export default function LandingPage() {
             <div className="text-center py-12 text-[#6B7280]">No mentors available from API right now.</div>
           ) : (
             <div className={mentorSecVis ? "asu d1" : "opacity-0"}>
-              <MentorRingCarousel items={mentorCards} onSelectMentor={setSelectedMentor} />
+              <MentorRingCarousel items={mentorCards} onSelectMentor={setSelectedMentor} paused={Boolean(selectedMentor)} />
             </div>
           )}
         </Wrap>
@@ -803,41 +807,33 @@ export default function LandingPage() {
                 : { background: `linear-gradient(135deg,${selectedMentor.color || "#5D3699"},${(selectedMentor.color || "#5D3699")}99)` }}
             >
               <div className="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <button onClick={()=>setSelectedMentor(null)} className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/30 transition text-sm">✕</button>
-              <div className="absolute -bottom-7 left-5">
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-xl border-[3px] border-white overflow-hidden bg-white" style={{background:selectedMentor.image ? "#fff" : `linear-gradient(135deg,${selectedMentor.color || "#5D3699"},${(selectedMentor.color || "#5D3699")}cc)`}}>
-                  {selectedMentor.image ? (
-                    <img
-                      src={selectedMentor.image}
-                      alt={selectedMentor.name}
-                      className="h-full w-full object-cover"
-                      onError={(event) => {
-                        if (event.currentTarget.src !== avatarFallback) {
-                          event.currentTarget.src = avatarFallback;
-                        }
-                      }}
-                    />
-                  ) : (selectedMentor.avatar || "M")}
-                </div>
-              </div>
+              <button
+                onClick={()=>setSelectedMentor(null)}
+                className="absolute top-3 right-3 h-7 w-7 rounded-lg bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition"
+                aria-label="Close"
+              >
+                <svg viewBox="0 0 24 24" className="mx-auto h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <div className="pt-10 px-5 pb-5">
+            <div className="px-5 pb-5 pt-5">
               <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[9px] font-bold uppercase tracking-wider mb-1.5">Mentor Profile</span>
               <h3 className="text-lg font-bold text-[#111827]">{selectedMentor.name}</h3>
               <p className="text-[13px] text-[#6B7280]">{selectedMentor.role||"Mentor"}</p>
-              <p className="text-[11px] text-[#6B7280] mt-0.5">📍 {selectedMentor.city} • 🎓 {selectedMentor.qualification}</p>
+              <p className="text-[11px] text-[#6B7280] mt-0.5">Location: {selectedMentor.city} � Qualification: {selectedMentor.qualification}</p>
               <div className="grid grid-cols-3 gap-2 mt-4">
                 {[{v:selectedMentor.rating||"New",l:"Rating"},{v:(selectedMentor.languages || []).length,l:"Languages"},{v:(selectedMentor.tags || []).length,l:"Specialties"}].map((x,i)=>(
                   <div key={i} className="bg-[#F7F4FF] rounded-lg p-2.5 text-center"><p className="text-base font-bold text-[#5D3699]">{x.v}</p><p className="text-[9px] text-[#6B7280] font-medium">{x.l}</p></div>
                 ))}
               </div>
               <div className="mt-4"><p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Expertise</p><div className="flex flex-wrap gap-1.5">{(selectedMentor.tags || []).map(tag=><span key={tag} className="px-2.5 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-semibold">{tag}</span>)}</div></div>
-              <div className="mt-3"><p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Languages</p><p className="text-[13px] text-[#5F6B81]">{(selectedMentor.languages || []).join(" · ")}</p></div>
+              <div className="mt-3"><p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Languages</p><p className="text-[13px] text-[#5F6B81]">{(selectedMentor.languages || []).join(" � ")}</p></div>
               <div className="flex gap-2.5 mt-5">
                 <button onClick={()=>setSelectedMentor(null)} className="w-full px-3 py-2.5 rounded-lg border-2 border-[#DDD7ED] text-[13px] font-bold text-[#5F6B81] hover:border-[#5D3699] hover:text-[#5D3699] transition-all">Close</button>
               </div>
-            </div>
           </div>
+        </div>
         </div>
       )}
 
@@ -955,7 +951,25 @@ export default function LandingPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 lg:gap-10">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-2">Platform</p>
-                <div className="flex flex-col gap-1.5">{["About","Volunteer","Safety","Stories"].map(l=><a key={l} href={`#${l.toLowerCase()}`} className="text-[13px] text-white/65 hover:text-white transition">{l}</a>)}</div>
+                <div className="flex flex-col gap-1.5">{FOOTER_PLATFORM_LINKS.map((item) => (
+                    item.href.includes("#") ? (
+                      <a
+                        key={item.label}
+                        href={item.href}
+                        className="text-[13px] text-white/65 hover:text-white transition"
+                      >
+                        {item.label}
+                      </a>
+                    ) : (
+                      <Link
+                        key={item.label}
+                        to={item.href}
+                        className="text-[13px] text-white/65 hover:text-white transition"
+                      >
+                        {item.label}
+                      </Link>
+                    )
+                  ))}</div>
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-2">Support</p>
@@ -966,7 +980,17 @@ export default function LandingPage() {
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-2">Resources</p>
-                <div className="flex flex-col gap-1.5">{["Blog","Guides","Events","Newsletter"].map(l=><a key={l} href="#" className="text-[13px] text-white/65 hover:text-white transition">{l}</a>)}</div>
+                <div className="flex flex-col gap-1.5">
+                  {["Blog","Guides","Events","Newsletter"].map((l) =>
+                    l === "Events" ? (
+                      <Link key={l} to="/volunteer-events" className="text-[13px] text-white/65 hover:text-white transition">{l}</Link>
+                    ) : l === "Guides" ? (
+                      <a key={l} href="/#about" className="text-[13px] text-white/65 hover:text-white transition">{l}</a>
+                    ) : (
+                      <a key={l} href="#" className="text-[13px] text-white/65 hover:text-white transition">{l}</a>
+                    )
+                  )}
+                </div>
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-2">Get Started</p>
@@ -1001,6 +1025,11 @@ function FaqItem({ question, answer, index, visible }) {
     </div>
   );
 }
+
+
+
+
+
 
 
 

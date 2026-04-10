@@ -15,13 +15,13 @@ const MENTOR_TOUR_DONE_KEY = 'bondroom_mentor_tour_done_v1';
 const mentorTourSteps = [
   {
     title: 'Welcome to Mentor Workspace',
-    description: 'Use the left sidebar to move between Mentor Dashboard, Sessions, and Availability.',
+    description: 'Use the left sidebar to move between Mentor Dashboard, Sessions, and Manage Availability.',
   },
   {
     title: 'Set Your Availability',
-    description: 'Open Manage Availability and add your weekly slots so mentees can book you.',
+    description: 'Manage Availability and add your weekly slots so mentees can book you.',
     route: '/mentor-availability',
-    cta: 'Open Availability',
+    cta: 'Manage Availability',
   },
   {
     title: 'Review Session Requests',
@@ -33,7 +33,7 @@ const mentorTourSteps = [
     title: 'Start Your Sessions',
     description: 'Track upcoming sessions from My Sessions and join meetings on time.',
     route: '/mentor-sessions',
-    cta: 'Open My Sessions',
+    cta: 'My Sessions',
   },
 ];
 
