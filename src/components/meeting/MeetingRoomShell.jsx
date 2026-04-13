@@ -995,11 +995,21 @@ const MeetingRoomShell = ({
     if (!file) return null;
     if (typeof api.getSessionRecordingUploadSignature !== 'function' || !sessionIdValue) return null;
 
-    const payload = await api.getSessionRecordingUploadSignature(sessionIdValue, {
-      file_name: String(file?.name || '').trim() || `session-${sessionIdValue}-${Date.now()}.webm`,
-      content_type: String(file?.type || '').trim() || 'video/webm',
-      file_size_bytes: String(file?.size || 0),
-    });
+    let payload = null;
+    try {
+      payload = await api.getSessionRecordingUploadSignature(sessionIdValue, {
+        file_name: String(file?.name || '').trim() || `session-${sessionIdValue}-${Date.now()}.webm`,
+        content_type: String(file?.type || '').trim() || 'video/webm',
+        file_size_bytes: String(file?.size || 0),
+      });
+    } catch (err) {
+      const message = String(err?.message || '').trim();
+      const signingUnavailable =
+        err?.status === 503 || message.toLowerCase().includes('s3 upload signing is not configured');
+      const nextError = new Error(message || 'Unable to request S3 upload signature.');
+      nextError.code = signingUnavailable ? 'S3_SIGNING_UNAVAILABLE' : 'S3_SIGNING_REQUEST_FAILED';
+      throw nextError;
+    }
     const uploadUrl = String(payload?.upload_url || '').trim();
     const method = String(payload?.method || 'PUT').trim().toUpperCase();
     const storageKey = String(payload?.storage_key || '').trim();
@@ -1007,21 +1017,36 @@ const MeetingRoomShell = ({
     const uploadHeaders = payload?.headers && typeof payload.headers === 'object' ? payload.headers : {};
 
     if (!uploadUrl || !storageKey || !recordingUrl) {
-      throw new Error('S3 upload signing is not configured on backend.');
+      const error = new Error('S3 upload signing is not configured on backend.');
+      error.code = 'S3_SIGNING_UNAVAILABLE';
+      throw error;
     }
 
     const headers = { ...uploadHeaders };
     if (!headers['Content-Type'] && !headers['content-type']) {
       headers['Content-Type'] = String(file?.type || '').trim() || 'video/webm';
     }
-    const response = await fetch(uploadUrl, {
-      method,
-      headers,
-      body: file,
-    });
+    let response = null;
+    try {
+      response = await fetch(uploadUrl, {
+        method,
+        headers,
+        body: file,
+      });
+    } catch {
+      const error = new Error(
+        'Unable to upload recording to S3. Check S3 bucket CORS and region configuration.'
+      );
+      error.code = 'S3_UPLOAD_NETWORK';
+      throw error;
+    }
     if (!response.ok) {
       const rawMessage = (await response.text().catch(() => '')).trim();
-      throw new Error(rawMessage || 'S3 upload failed.');
+      const statusText = Number(response.status || 0) || 0;
+      const error = new Error(rawMessage || `S3 upload failed with status ${statusText}.`);
+      error.code = 'S3_UPLOAD_HTTP';
+      error.status = response.status;
+      throw error;
     }
     return {
       recordingUrl,
@@ -2291,6 +2316,7 @@ const MeetingRoomShell = ({
             [monitoringMetadataKey]: monitoringActive,
           };
           let persisted = false;
+          let blockServerlessFallback = false;
 
           if (typeof api.getSessionRecordingUploadSignature === 'function') {
             try {
@@ -2311,10 +2337,30 @@ const MeetingRoomShell = ({
               }
             } catch (err) {
               appendError(err?.message || 'Unable to upload recording to S3.');
+              const errorCode = String(err?.code || '').trim().toUpperCase();
+              if (errorCode === 'S3_UPLOAD_NETWORK' || errorCode === 'S3_UPLOAD_HTTP') {
+                blockServerlessFallback = true;
+                try {
+                  await api.updateSessionRecording(sessionId, {
+                    status: 'failed',
+                    file_size_bytes: String(blob.size),
+                    metadata: {
+                      ...metadataBase,
+                      storage_provider: 's3',
+                      storage_mode: 'presigned_put',
+                      upload_skipped_reason: 's3_upload_failed',
+                      s3_upload_error_code: errorCode,
+                    },
+                  });
+                } catch {
+                  // no-op
+                }
+                persisted = true;
+              }
             }
           }
 
-          if (!persisted && blob.size > SERVERLESS_MAX_UPLOAD_BYTES) {
+          if (!persisted && !blockServerlessFallback && blob.size > SERVERLESS_MAX_UPLOAD_BYTES) {
             try {
               await api.updateSessionRecording(sessionId, {
                 status: 'failed',
@@ -2334,7 +2380,7 @@ const MeetingRoomShell = ({
             persisted = true;
           }
 
-          if (!persisted) {
+          if (!persisted && !blockServerlessFallback) {
             const formData = new FormData();
             formData.append('status', 'uploaded');
             formData.append('file_size_bytes', String(blob.size));
