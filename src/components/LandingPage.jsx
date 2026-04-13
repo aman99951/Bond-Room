@@ -528,11 +528,11 @@ export default function LandingPage() {
               </p>
 
               <div className={`flex flex-col sm:flex-row items-center justify-center gap-2.5 2xl:gap-4 mt-6 2xl:mt-8 ${heroVis?"asu d3":"opacity-0"}`}>
-                <Link to="/register" className="group relative px-7 py-3 text-sm 2xl:px-10 2xl:py-4 2xl:text-base min-[2200px]:px-12 min-[2200px]:py-5 min-[2200px]:text-xl font-bold text-white bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] rounded-xl 2xl:rounded-2xl shadow-lg shadow-[#5D3699]/25 hover:shadow-[#5D3699]/45 hover:scale-105 transition-all overflow-hidden">
-                  <span className="relative z-10 flex items-center gap-2">Mentee Sign Up<span className="group-hover:translate-x-0.5 transition-transform">→</span></span>
+                <Link to="/register" className="group relative inline-flex w-[210px] items-center justify-center px-7 py-3 text-sm 2xl:w-auto 2xl:px-10 2xl:py-4 2xl:text-base min-[2200px]:px-12 min-[2200px]:py-5 min-[2200px]:text-xl font-bold text-white bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] rounded-xl 2xl:rounded-2xl shadow-lg shadow-[#5D3699]/25 hover:shadow-[#5D3699]/45 hover:scale-105 transition-all overflow-hidden">
+                  <span className="relative z-10 flex items-center justify-center gap-2">Mentee Sign Up<span className="group-hover:translate-x-0.5 transition-transform">→</span></span>
                   <span className="absolute inset-0 bg-gradient-to-r from-[#4A2B7A] to-[#5D3699] opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
-                <Link to="/mentor-register" className="px-7 py-3 text-sm font-bold text-[#5D3699] bg-white border-2 border-[#DDD7ED] rounded-xl hover:border-[#5D3699] hover:bg-[#EDE3FF]/40 hover:scale-105 transition-all shadow-sm">Become a Mentor 🤝</Link>
+                <Link to="/mentor-register" className="inline-flex w-[210px] items-center justify-center px-7 py-3 text-sm 2xl:w-auto font-bold text-[#5D3699] bg-white border-2 border-[#DDD7ED] rounded-xl hover:border-[#5D3699] hover:bg-[#EDE3FF]/40 hover:scale-105 transition-all shadow-sm">Become a Mentor 🤝</Link>
               </div>
 
               <p className={`mt-3 2xl:mt-4 text-[11px] 2xl:text-[13px] min-[2200px]:text-[16px] text-[#6B7280] flex items-center justify-center gap-1 ${heroVis?"afi d4":"opacity-0"}`}>
@@ -676,11 +676,15 @@ export default function LandingPage() {
             {HOW_CARDS.map((c,i)=>(
               <div key={i} className={`group relative bg-white border border-[#DDD7ED]/40 rounded-2xl p-5 sm:p-6 hl cs ${howVis?`asu d${(i+1)*2}`:"opacity-0"}`}>
                 <div className={`absolute top-0 left-5 right-5 h-[3px] rounded-b-full bg-gradient-to-r ${c.gradient} opacity-0 group-hover:opacity-100 transition-opacity`} />
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${c.gradient} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 group-hover:rotate-3 transition-all`}>
-                  <span className="text-2xl">{c.icon}</span>
+                <div className="mb-2.5 flex items-center gap-3">
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${c.gradient} shadow-md transition-all group-hover:scale-110 group-hover:rotate-3`}>
+                    <span className="text-2xl">{c.icon}</span>
+                  </div>
+                  <h3 className="text-[16px] font-bold leading-tight text-[#111827] sm:text-lg">
+                    <span className="mr-1.5 align-middle text-[11px] font-bold tracking-wider text-[#8E61CE] sm:text-xs">{c.num}</span>
+                    <span className="align-middle">{c.title}</span>
+                  </h3>
                 </div>
-                <span className="text-[11px] font-bold text-[#8E61CE] tracking-wider">{c.num}</span>
-                <h3 className="text-lg font-bold text-[#111827] mt-0.5 mb-1">{c.title}</h3>
                 <p className="text-[13px] text-[#5F6B81] leading-relaxed">{c.desc}</p>
                 {i<2 && <div className="hidden sm:block absolute top-1/2 -right-2 w-4 border-t-2 border-dashed border-[#DDD7ED]" />}
               </div>
@@ -717,10 +721,12 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {TRUST_ITEMS.map((t,i)=>(
               <div key={i} className={`group bg-gradient-to-br ${t.gradient} border ${t.border} rounded-xl p-4 sm:p-5 hl cs ${trustVis?`asu d${i+2}`:"opacity-0"}`}>
-                <div className="w-11 h-11 rounded-xl bg-white/80 flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all">
-                  <span className="text-2xl">{t.icon}</span>
+                <div className="mb-2.5 flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/80 shadow-sm transition-all group-hover:scale-110 group-hover:rotate-3">
+                    <span className="text-2xl">{t.icon}</span>
+                  </div>
+                  <h4 className="text-[15px] font-bold leading-tight text-[#111827]">{t.title}</h4>
                 </div>
-                <h4 className="font-bold text-[#111827] mb-1 text-[15px]">{t.title}</h4>
                 <p className="text-[13px] text-[#5F6B81] leading-relaxed">{t.desc}</p>
               </div>
             ))}
@@ -821,14 +827,14 @@ export default function LandingPage() {
               <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[9px] font-bold uppercase tracking-wider mb-1.5">Mentor Profile</span>
               <h3 className="text-lg font-bold text-[#111827]">{selectedMentor.name}</h3>
               <p className="text-[13px] text-[#6B7280]">{selectedMentor.role||"Mentor"}</p>
-              <p className="text-[11px] text-[#6B7280] mt-0.5">Location: {selectedMentor.city} � Qualification: {selectedMentor.qualification}</p>
+              <p className="text-[11px] text-[#6B7280] mt-0.5">Location: {selectedMentor.city} � Qualification: {selectedMentor.qualification}</p>
               <div className="grid grid-cols-3 gap-2 mt-4">
                 {[{v:selectedMentor.rating||"New",l:"Rating"},{v:(selectedMentor.languages || []).length,l:"Languages"},{v:(selectedMentor.tags || []).length,l:"Specialties"}].map((x,i)=>(
                   <div key={i} className="bg-[#F7F4FF] rounded-lg p-2.5 text-center"><p className="text-base font-bold text-[#5D3699]">{x.v}</p><p className="text-[9px] text-[#6B7280] font-medium">{x.l}</p></div>
                 ))}
               </div>
               <div className="mt-4"><p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Expertise</p><div className="flex flex-wrap gap-1.5">{(selectedMentor.tags || []).map(tag=><span key={tag} className="px-2.5 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-semibold">{tag}</span>)}</div></div>
-              <div className="mt-3"><p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Languages</p><p className="text-[13px] text-[#5F6B81]">{(selectedMentor.languages || []).join(" � ")}</p></div>
+              <div className="mt-3"><p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Languages</p><p className="text-[13px] text-[#5F6B81]">{(selectedMentor.languages || []).join(" � ")}</p></div>
               <div className="flex gap-2.5 mt-5">
                 <button onClick={()=>setSelectedMentor(null)} className="w-full px-3 py-2.5 rounded-lg border-2 border-[#DDD7ED] text-[13px] font-bold text-[#5F6B81] hover:border-[#5D3699] hover:text-[#5D3699] transition-all">Close</button>
               </div>
