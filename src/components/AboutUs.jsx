@@ -4,7 +4,7 @@ import { HeartHandshake, ShieldCheck, Users, Brain, Sparkles, CheckCircle2, X } 
 import logo from './assets/Logo.svg';
 import smrithiFounderImage from './assets/smrithi(co-founder).png';
 import nikhilFounderImage from './assets/Nikhil.jfif';
-import santhiDirectorImage from './assets/Santhi.jfif';
+import santhiDirectorImage from './assets/Santhi.jpg';
 import babuDirectorImage from './assets/Babu.jfif';
 import hemachandraImage from './assets/Hemachandra patil.png';
 import avantikaImage from './assets/Avantika.jfif';

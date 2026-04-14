@@ -1002,7 +1002,7 @@ export default function LandingPage() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-2">Get Started</p>
                 <div className="flex flex-col gap-2">
                   <Link to="/register" className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white/10 text-[13px] font-semibold text-white hover:bg-white/20 transition border border-white/10 w-fit">Mentee Sign Up 🎓</Link>
-                  <Link to="/mentor-register" className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white/10 text-[13px] font-semibold text-white hover:bg-white/20 transition border border-white/10 w-fit">Become Mentor 🤝</Link>
+                  <Link to="/mentor-register" className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white/10 text-[13px] font-semibold text-white hover:bg-white/20 transition border border-white/10 w-fit">Become a Mentor 🤝</Link>
                 </div>
               </div>
             </div>
