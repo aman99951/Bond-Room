@@ -105,7 +105,6 @@ test("menteeApi maps every wrapper to correct endpoint", async () => {
     { fnName: "sendRealtimeTranscriptChunk", args: [44, new FormData()], expectedMethod: "post", expectedPath: "/sessions/44/realtime-transcript-chunk/" },
     { fnName: "sendMenteeRealtimeTranscriptSignal", args: [44, {}], expectedMethod: "post", expectedPath: "/sessions/44/mentee-monitoring-transcript/" },
     { fnName: "getSessionRecordingUploadSignature", args: [44, {}], expectedMethod: "post", expectedPath: "/sessions/44/recording-upload-signature/" },
-    { fnName: "updateSessionRecording", args: [44, {}], expectedMethod: "post", expectedPath: "/sessions/44/recording/" },
     { fnName: "analyzeSessionTranscript", args: [44, {}], expectedMethod: "post", expectedPath: "/sessions/44/analyze-transcript/" },
     { fnName: "listSessionAbuseIncidents", args: [44], expectedMethod: "get", expectedPath: "/sessions/44/abuse-incidents/" },
     { fnName: "getSessionFeedback", args: [44], expectedMethod: "get", expectedPath: "/sessions/44/feedback/" },
@@ -115,6 +114,17 @@ test("menteeApi maps every wrapper to correct endpoint", async () => {
 
   for (const item of cases) {
     await runCase({ api: menteeApi, ...item });
+  }
+});
+
+test("menteeApi.updateSessionRecording returns local skip marker (no API call)", async () => {
+  const calls = installApiClientSpy();
+  try {
+    const result = await menteeApi.updateSessionRecording(44, {});
+    assert.deepEqual(result, { skipped: true });
+    assert.equal(calls.length, 0);
+  } finally {
+    restoreApiClientMethods();
   }
 });
 

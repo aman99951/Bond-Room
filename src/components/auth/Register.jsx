@@ -493,6 +493,10 @@ const Register = () => {
       notifyError('Please fill all required fields to continue.');
       return;
     }
+    if (!profileImageFile) {
+      notifyError('Profile image is required.');
+      return;
+    }
     if (!isStrongPassword(form.password)) {
       notifyError(PASSWORD_REQUIREMENT_MESSAGE);
       return;
@@ -916,7 +920,7 @@ const Register = () => {
                   </div>
 
                   <div className="lp-field">
-                    <label className="lp-register-field-label">Profile Image (Optional)</label>
+                    <label className="lp-register-field-label">Profile Image *</label>
                     <div className="lp-profile-upload-card">
                       <div className="lp-profile-upload-main">
                         <div className="lp-profile-upload-avatar">
@@ -990,6 +994,9 @@ const Register = () => {
                         onChange={handleProfileImageChange}
                       />
                     </div>
+                    {submitAttempted && !profileImageFile ? (
+                      <p className="mt-1 text-xs text-red-600">Profile image is required.</p>
+                    ) : null}
                   </div>
 
                   <div className="lp-register-row">

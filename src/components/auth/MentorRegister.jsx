@@ -726,6 +726,9 @@ const MentorRegister = () => {
 
   const getRegistrationErrors = () => {
     const errors = getSectionOneErrors();
+    if (!profileImageFile) {
+      errors.profileImage = 'Profile image is required.';
+    }
     if (!form.qualification.trim()) {
       errors.qualification = 'Educational qualification is required.';
     }
@@ -1594,7 +1597,7 @@ const MentorRegister = () => {
                         <div className="space-y-4 animate-fadeIn">
                           <div className="group">
                             <label className="block text-xs font-medium text-[#6b7280] mb-1 group-hover:text-[#5b2c91] transition-colors">
-                              Profile Image (Optional)
+                              Profile Image *
                             </label>
                             <div className="lp-profile-upload-card">
                               <div className="lp-profile-upload-main">
@@ -1669,6 +1672,9 @@ const MentorRegister = () => {
                                 onChange={handleProfileImageChange}
                               />
                             </div>
+                            {shouldShowError('profileImage') && (
+                              <p className="mt-1 text-xs text-red-600">{registrationErrors.profileImage}</p>
+                            )}
                           </div>
 
                           <div className="group">

@@ -23,6 +23,7 @@ const createJwt = (payload) => {
 
 const setupBrowserGlobals = () => {
   globalThis.localStorage = createLocalStorage();
+  globalThis.sessionStorage = createLocalStorage();
   globalThis.window = {
     location: {
       pathname: "/dashboard",
@@ -30,6 +31,7 @@ const setupBrowserGlobals = () => {
         globalThis.window.location.pathname = nextPath;
       },
     },
+    sessionStorage: globalThis.sessionStorage,
     dispatchEvent: () => {},
   };
   globalThis.Event = class {

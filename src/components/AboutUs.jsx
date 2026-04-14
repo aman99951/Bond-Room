@@ -1,28 +1,40 @@
-import React from 'react';
-import { ArrowLeft, HeartHandshake, ShieldCheck, Users, Brain, Sparkles, CheckCircle2 } from 'lucide-react';
-import studentsImage from './assets/teach2.png';
-import mentorImage from './assets/mentor2.png';
-import supportImage from './assets/student2.png';
-import communityImage from './assets/teach1.png';
-import volunteerOneImage from './assets/student2.png';
-import volunteerTwoImage from './assets/happystudent.png';
-import volunteerThreeImage from './assets/download.png';
+import React, { useCallback, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { HeartHandshake, ShieldCheck, Users, Brain, Sparkles, CheckCircle2, X } from 'lucide-react';
+import logo from './assets/Logo.svg';
 import smrithiFounderImage from './assets/smrithi(co-founder).png';
-import nikhilFounderImage from './assets/Nikhil(co-founder).jpg';
+import nikhilFounderImage from './assets/Nikhil.jfif';
+import santhiDirectorImage from './assets/Santhi.jfif';
+import babuDirectorImage from './assets/Babu.jfif';
+import hemachandraImage from './assets/Hemachandra patil.png';
+import avantikaImage from './assets/Avantika.jfif';
+import anushaVolunteerImage from './assets/Anusha.jpg';
 
 const AboutUs = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+
+  const NAV = [
+    { label: 'Home', href: '/' },
+    { label: 'About', href: '/about' },
+    { label: 'Volunteer', href: '/volunteer' },
+    { label: 'Safety', href: '/#safety' },
+    { label: 'Stories', href: '/#stories' },
+  ];
+
   const founders = [
     {
       name: 'Smrithi',
       role: 'Co-Founder',
-      bio: 'Co-creates the vision and growth direction for Bond Room.',
+      bio: 'I’m Smrithi, a curious, self-driven student figuring things out as I go. I love finding patterns in everything, whether it’s math, algorithms, or just how people think. I’ve mostly built my journey on my own, pushing through what I don’t understand until I do. I’m into tech, learning, and growing both mentally and physically (yes, the gym too). I like doing things that matter, whether it’s small initiatives or bigger goals. Not perfect, but definitely not average, and I’m working my way toward something big.',
       image: smrithiFounderImage,
       objectPosition: 'center 18%',
     },
     {
       name: 'Nikhil',
-      role: 'Co-Founder',
-      bio: 'Builds product and platform experiences focused on student impact.',
+      role: 'Co-Founder & Creative Director',
+      bio: 'Hey! My name is Nikhil Vijay, I am the Co-Founder & Creative Director at BondRoom, I’m passionate about building meaningful connections, and creating opportunities for people to learn from one another. Often, I enjoy playing tennis, creating art, pondering about the wonders of medical innovation, and leading initiatives that bring communities together. Through BondRoom, I’m learning, apprehending, and applying, the ideology of connecting different generations among various backgrounds. I’m doing this by helping people grow from mentorship, conversation, and shared experiences. I am very excited to expand our impact and create a space where everyone feels forever included and inspired.',
       image: nikhilFounderImage,
       objectPosition: 'center 12%',
     },
@@ -30,64 +42,170 @@ const AboutUs = () => {
 
   const leadershipTeam = [
     {
-      name: 'Dr KV Kishore Kumar',
-      role: 'Executive Director',
-      bio: 'Leads institutional strategy, governance, and execution across key initiatives.',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80',
+      name: 'Babu',
+      role: 'Director - Bondroom Foundation',
+      bio: 'Serving Bondroom Foundation as Director, focused on strengthening people, systems, and long-term community impact.',
+      image: babuDirectorImage,
     },
     {
-      name: 'Dr Archana Padmakar',
-      role: 'Director - Programs',
-      bio: 'Designs high-impact student support programs with measurable outcomes.',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80',
+      name: 'Santhi',
+      role: 'Director - Bondroom Foundation',
+      bio: 'Serving Bondroom Foundation as Director, with focus on people-first program development and responsible execution.',
+      image: santhiDirectorImage,
     },
     {
-      name: 'Dr Preetha Krishnadas',
-      role: 'Director - Programs',
-      bio: 'Oversees mentorship curriculum quality and learner experience consistency.',
-      image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
+      name: 'Hemachandra Patil',
+      role: 'Volunteer Outreach and Legal',
+      bio: 'Hello, my name is Hemachandra Patil and I am currently a junior in high school. I am excited to work with Bondroom and serve the people of my community. Outside of Bondroom, I sing Carnatic music and participate in DEC.',
+      image: hemachandraImage,
     },
     {
-      name: 'Ms Swapna Krishnakumar',
-      role: 'Director - Operations',
-      bio: 'Runs operations and delivery systems for reliable, safe, and scalable execution.',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=900&q=80',
+      name: 'Avantika',
+      role: 'Creative Director',
+      bio: 'I love creating through art and theatre, and I like losing myself in the beauty of oceans and animals. I’m passionate about Tamil history, enjoy reading, and care deeply about uplifting people around me.',
+      image: avantikaImage,
     },
   ];
 
   const volunteers = [
     {
-      name: 'Volunteer Mentor Circle',
-      role: 'Community Volunteers',
-      bio: 'Volunteers who show up consistently to support students with patience and empathy.',
-      image: volunteerOneImage,
-    },
-    {
-      name: 'Student Support Volunteers',
-      role: 'Youth Engagement',
-      bio: 'Peers and community members helping students feel seen, heard, and guided.',
-      image: volunteerTwoImage,
-    },
-    {
-      name: 'Program Volunteers',
-      role: 'Events and Outreach',
-      bio: 'On-ground contributors enabling sessions, workshops, and local outreach activities.',
-      image: volunteerThreeImage,
+      name: 'Anusha',
+      role: 'Volunteer',
+      bio: 'My introduction: Hey all. I am Anusha. I love listening to music and dancing around. I always goof around, jumping from here to there! I love seeing someone else smile and have fun, as it makes me happier and motivates me to do better at what I do! Also, I’m my favourite, I am my first love! I am very honoured to be a volunteer in the Bond Room!! Keep going, all of you out there! You all got this!!',
+      image: anushaVolunteerImage,
     },
   ];
 
-  return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 sm:p-8">
-      <div className="mx-auto w-full max-w-[2440px]">
-        <a
-          href="/"
-          className="inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Home
-        </a>
+  const openProfile = (member) => setSelectedProfile(member);
+  const closeProfile = () => setSelectedProfile(null);
 
-        <section className="relative mt-5 overflow-hidden rounded-[28px] border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-10">
+  const renderProfileCard = (
+    member,
+    imageHeightClass = 'h-56',
+    imagePosition = 'center center',
+    previewLines = 4,
+    buttonLabel = 'Read More',
+  ) => (
+    <article
+      key={member.name}
+      className="group overflow-hidden rounded-2xl border border-[#e5d8fb] bg-white shadow-[0_22px_40px_-30px_rgba(93,54,153,0.78)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_44px_-26px_rgba(93,54,153,0.85)]"
+    >
+      <div className={`relative ${imageHeightClass} overflow-hidden bg-[#f6f0ff]`}>
+        <img
+          src={member.image}
+          alt={`${member.name} - ${member.role}`}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          style={{ objectPosition: member.objectPosition || imagePosition }}
+        />
+      </div>
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-[#111827]">{member.name}</h3>
+        <p className="mt-1 text-sm font-medium text-[#5D3699]">{member.role}</p>
+        <p
+          className="mt-2 text-sm leading-6 text-[#5f6472] [display:-webkit-box] [-webkit-box-orient:vertical] overflow-hidden"
+          style={{ WebkitLineClamp: previewLines }}
+        >
+          {member.bio}
+        </p>
+        <button
+          type="button"
+          onClick={() => openProfile(member)}
+          className="mt-3 rounded-lg border border-[#d8c7fb] bg-white px-3 py-1.5 text-xs font-semibold text-[#5D3699] transition hover:bg-[#f8f4ff]"
+        >
+          {buttonLabel}
+        </button>
+      </div>
+    </article>
+  );
+
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] pt-[64px]">
+      <div className="mx-auto w-full max-w-[2440px] px-4 pb-8 pt-8 sm:px-6 sm:pb-10 sm:pt-10 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:px-16 min-[2500px]:px-20">
+        <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 backdrop-blur-[14px]">
+          <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:h-[84px] min-[2200px]:px-16 min-[2500px]:px-20">
+            <Link to="/" className="flex flex-col items-center leading-none group">
+              <img src={logo} alt="Bond Room" className="h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
+              <span className="mt-0.5 hidden text-[9px] tracking-wide text-[#000] sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
+                Bridging Old and New Destinies
+              </span>
+            </Link>
+
+            <nav className="hidden items-center gap-0.5 md:flex 2xl:gap-1.5 min-[2200px]:gap-2">
+              {NAV.map((n) => (
+                n.href.includes('#') ? (
+                  <a
+                    key={n.label}
+                    href={n.href}
+                    className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
+                  >
+                    {n.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={n.label}
+                    to={n.href}
+                    className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
+                  >
+                    {n.label}
+                  </Link>
+                )
+              ))}
+            </nav>
+
+            <div className="hidden items-center gap-2 md:flex 2xl:gap-3 min-[2200px]:gap-4">
+              <Link to="/donate" className="rounded-lg border border-[#DDD7ED] px-3.5 py-1.5 text-[13px] font-semibold text-[#5D3699] transition-all hover:scale-105 hover:bg-[#EDE3FF] 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
+                Donate
+              </Link>
+              <Link to="/login" className="rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-1.5 text-[13px] font-semibold text-white shadow-md shadow-[#5D3699]/20 transition-all hover:scale-105 hover:shadow-[#5D3699]/40 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
+                Log in
+              </Link>
+            </div>
+
+            <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[#EDE3FF] md:hidden">
+              <svg className="h-5 w-5 text-[#5D3699]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        {mobileOpen ? (
+          <div className="fixed inset-0 z-[100] flex">
+            <div className="absolute inset-0 bg-[#4A2B7A]/40 backdrop-blur-sm" onClick={closeMobile} />
+            <div className="relative ml-auto flex h-full w-[270px] max-w-[82vw] flex-col bg-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-[#EDE3FF] px-4 pb-2 pt-4">
+                <span className="text-sm font-bold text-[#5D3699]">Menu</span>
+                <button onClick={closeMobile} className="flex h-8 w-8 items-center justify-center rounded-lg text-sm transition hover:bg-[#EDE3FF]">X</button>
+              </div>
+              <nav className="flex flex-1 flex-col gap-0.5 p-3">
+                {NAV.map((n) => (
+                  n.href.includes('#') ? (
+                    <a key={n.label} href={n.href} onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+                      {n.label}
+                    </a>
+                  ) : (
+                    <Link key={n.label} to={n.href} onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+                      {n.label}
+                    </Link>
+                  )
+                ))}
+                <Link to="/donate" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5D3699] transition hover:bg-[#EDE3FF]">
+                  Donate
+                </Link>
+                <Link to="/login" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+                  Log in
+                </Link>
+              </nav>
+              <div className="border-t border-[#EDE3FF] p-3">
+                <Link to="/register" onClick={closeMobile} className="block rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-2.5 text-center text-sm font-bold text-white shadow-md">
+                  Mentee Sign Up
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <section className="relative overflow-hidden rounded-[28px] border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-10">
           <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#efe6ff] blur-2xl" />
           <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#f4edff] blur-2xl" />
 
@@ -107,16 +225,8 @@ const AboutUs = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="overflow-hidden rounded-2xl border border-[#eadfff] bg-[#f8f3ff] p-1">
-                <img src={studentsImage} alt="Students receiving guidance" className="h-36 w-full object-contain sm:h-44" />
-              </div>
-              <div className="overflow-hidden rounded-2xl border border-[#eadfff] bg-[#f8f3ff] p-1">
-                <img src={mentorImage} alt="Mentor support" className="h-36 w-full object-contain sm:h-44" />
-              </div>
-              <div className="col-span-2 overflow-hidden rounded-2xl border border-[#eadfff] bg-[#f8f3ff] p-1">
-                <img src={supportImage} alt="Student wellbeing and support" className="h-40 w-full object-contain sm:h-48" />
-              </div>
+            <div className="flex items-center justify-center rounded-2xl border border-[#eadfff] bg-[#f8f3ff] p-6 sm:p-8">
+              <img src={logo} alt="Bond Room logo" className="h-36 w-auto object-contain sm:h-44" />
             </div>
           </div>
         </section>
@@ -170,11 +280,7 @@ const AboutUs = () => {
             </p>
           </article>
 
-          <article className="overflow-hidden rounded-2xl border border-[#e9ddff] bg-white shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)]">
-            <div className="bg-[#f8f3ff] p-1">
-              <img src={communityImage} alt="Community mentorship activity" className="h-44 w-full object-contain" />
-            </div>
-            <div className="p-6">
+          <article className="rounded-2xl border border-[#e9ddff] bg-white p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)]">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">How It Works</p>
             <ul className="mt-3 space-y-3 text-sm text-[#5f6472]">
               {[
@@ -189,7 +295,6 @@ const AboutUs = () => {
                 </li>
               ))}
             </ul>
-            </div>
           </article>
         </section>
 
@@ -222,26 +327,7 @@ const AboutUs = () => {
             <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Founders</p>
             <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">People Behind Bond Room</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
-              {founders.map((member) => (
-                <article
-                  key={member.name}
-                  className="group overflow-hidden rounded-2xl border border-[#e5d8fb] bg-white shadow-[0_22px_40px_-30px_rgba(93,54,153,0.78)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_44px_-26px_rgba(93,54,153,0.85)]"
-                >
-                  <div className="relative h-56 overflow-hidden bg-[#f6f0ff] 2xl:h-[22rem] min-[2200px]:h-[26rem]">
-                    <img
-                      src={member.image}
-                      alt={`${member.name} - ${member.role}`}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      style={{ objectPosition: member.objectPosition || 'center center' }}
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-[#111827]">{member.name}</h3>
-                    <p className="mt-1 text-sm font-medium text-[#5D3699]">{member.role}</p>
-                    <p className="mt-2 text-sm leading-6 text-[#5f6472]">{member.bio}</p>
-                  </div>
-                </article>
-              ))}
+              {founders.map((member) => renderProfileCard(member, 'h-56 2xl:h-[22rem] min-[2200px]:h-[26rem]'))}
             </div>
           </article>
 
@@ -249,56 +335,22 @@ const AboutUs = () => {
             <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Leadership Team</p>
             <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">Program and Operations Leadership</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {leadershipTeam.map((member) => (
-                <article
-                  key={member.name}
-                  className="group overflow-hidden rounded-2xl border border-[#e5d8fb] bg-white shadow-[0_22px_40px_-30px_rgba(93,54,153,0.78)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_44px_-26px_rgba(93,54,153,0.85)]"
-                >
-                  <div className="relative h-52 overflow-hidden bg-[#f6f0ff] 2xl:h-[17rem] min-[2200px]:h-[19rem]">
-                    <img
-                      src={member.image}
-                      alt={`${member.name} - ${member.role}`}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-[#111827]">{member.name}</h3>
-                    <p className="mt-1 text-sm font-medium text-[#5D3699]">{member.role}</p>
-                    <p className="mt-2 text-sm leading-6 text-[#5f6472]">{member.bio}</p>
-                  </div>
-                </article>
-              ))}
+              {leadershipTeam.map((member) => renderProfileCard(member, 'h-52 2xl:h-[17rem] min-[2200px]:h-[19rem]', 'top center', 3, 'Read more'))}
             </div>
           </article>
 
-          <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Volunteers</p>
-            <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">Volunteer Community</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5f6472]">
-              Bond Room is powered by a volunteer community that supports programs, student engagement, and outreach.
-            </p>
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
-              {volunteers.map((member) => (
-                <article
-                  key={member.name}
-                  className="group overflow-hidden rounded-2xl border border-[#e5d8fb] bg-white shadow-[0_22px_40px_-30px_rgba(93,54,153,0.78)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_44px_-26px_rgba(93,54,153,0.85)]"
-                >
-                  <div className="relative h-56 overflow-hidden bg-[#f6f0ff] 2xl:h-72 min-[2200px]:h-80">
-                    <img
-                      src={member.image}
-                      alt={`${member.name} - ${member.role}`}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-[#111827]">{member.name}</h3>
-                    <p className="mt-1 text-sm font-medium text-[#5D3699]">{member.role}</p>
-                    <p className="mt-2 text-sm leading-6 text-[#5f6472]">{member.bio}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </article>
+          {volunteers.length ? (
+            <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Volunteers</p>
+              <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">Volunteer Community</h2>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5f6472]">
+                Bond Room is powered by a volunteer community that supports programs, student engagement, and outreach.
+              </p>
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                {volunteers.map((member) => renderProfileCard(member, 'h-56 2xl:h-72 min-[2200px]:h-80'))}
+              </div>
+            </article>
+          ) : null}
         </section>
 
         <section className="mt-6 rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
@@ -323,6 +375,37 @@ const AboutUs = () => {
             </a>
           </div>
         </section>
+
+        {selectedProfile ? (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 px-4 py-8">
+            <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[#e8dcff] bg-white p-6 shadow-[0_24px_54px_-26px_rgba(0,0,0,0.45)] sm:p-8">
+              <button
+                type="button"
+                onClick={closeProfile}
+                aria-label="Close writeup"
+                className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e8dcff] text-[#5D3699] transition hover:bg-[#f8f4ff]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <div className="grid gap-5 md:grid-cols-[220px_1fr]">
+                <div className="overflow-hidden rounded-xl border border-[#eadfff] bg-[#f8f3ff]">
+                  <img
+                    src={selectedProfile.image}
+                    alt={`${selectedProfile.name} - ${selectedProfile.role}`}
+                    className="h-full w-full object-cover"
+                    style={{ objectPosition: selectedProfile.objectPosition || 'center center' }}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Team Writeup</p>
+                  <h3 className="mt-1 text-2xl font-semibold text-[#111827]">{selectedProfile.name}</h3>
+                  <p className="mt-1 text-sm font-medium text-[#5D3699]">{selectedProfile.role}</p>
+                  <p className="mt-4 whitespace-pre-line text-sm leading-7 text-[#5f6472]">{selectedProfile.bio}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
