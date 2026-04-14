@@ -862,10 +862,12 @@ export default function LandingPage() {
               {i:"💡",t:"Real-World Wisdom",d:"Learn from people who've lived through similar challenges and came out stronger.",g:"from-[#F7F4FF] to-[#EDE3FF]",b:"border-[#DDD7ED]/50"},
             ].map((item,i)=>(
               <div key={i} className={`group bg-gradient-to-br ${item.g} border ${item.b} rounded-xl p-4 sm:p-5 hl cs ${whyVis?`asu d${((i%3)+1)}`:"opacity-0"}`}>
-                <div className="w-11 h-11 rounded-xl bg-white/80 flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all">
-                  <span className="text-2xl">{item.i}</span>
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/80 shadow-sm transition-all group-hover:scale-110 group-hover:rotate-3">
+                    <span className="text-2xl">{item.i}</span>
+                  </div>
+                  <h4 className="font-bold text-[#111827] text-[15px] leading-tight">{item.t}</h4>
                 </div>
-                <h4 className="font-bold text-[#111827] mb-1 text-[15px]">{item.t}</h4>
                 <p className="text-[13px] text-[#5F6B81] leading-relaxed">{item.d}</p>
               </div>
             ))}
