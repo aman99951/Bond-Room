@@ -47,6 +47,172 @@ const VOLUNTEER_ROLE_OPTIONS = [
   'Safety & Emergency Support Volunteers',
 ];
 
+const THUMBNAIL_MAX_BYTES = 450 * 1024;
+const GALLERY_MAX_BYTES = 500 * 1024;
+const THUMBNAIL_MAX_SIDE = 1600;
+const GALLERY_MAX_SIDE = 1800;
+const EVENT_IMAGE_TARGET_BYTES = 320 * 1024;
+const EVENT_IMAGE_SOFT_MAX_BYTES = 480 * 1024;
+const EVENT_IMAGE_MAX_LONG_EDGE = 1280;
+const EVENT_MAX_IMAGE_BYTES = 1024 * 1024;
+const EVENT_MAX_TOTAL_UPLOAD_BYTES = 6 * 1024 * 1024;
+
+const getFriendlyErrorMessage = (error, fallbackMessage) => {
+  const message = String(error?.message || '').trim();
+  if (
+    /413/.test(message) ||
+    /request entity too large/i.test(message) ||
+    /payload too large/i.test(message)
+  ) {
+    return 'Images are too large for upload. Please use smaller images and try again.';
+  }
+  if (!message || message.toLowerCase().includes('request failed')) return fallbackMessage;
+  return message;
+};
+
+const formatFileSizeLabel = (bytes) => {
+  const value = Number(bytes || 0);
+  if (!value || value < 1024) return `${value || 0} B`;
+  const kb = value / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  return `${(kb / 1024).toFixed(2)} MB`;
+};
+
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Unable to read image file.'));
+    reader.readAsDataURL(file);
+  });
+
+const loadImage = (src) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Unable to process image file.'));
+    img.src = src;
+  });
+
+const canvasToBlob = (canvas, type, quality) =>
+  new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Unable to optimize image.'));
+      },
+      type,
+      quality,
+    );
+  });
+
+const compressImageFile = async (file, { maxBytes, maxSide }) => {
+  if (!file || !String(file.type || '').startsWith('image/')) return file;
+  if (file.size <= maxBytes) return file;
+
+  const src = await readFileAsDataUrl(file);
+  const image = await loadImage(src);
+  const longest = Math.max(image.width, image.height) || 1;
+  const initialScale = Math.min(1, maxSide / longest);
+  let width = Math.max(1, Math.round(image.width * initialScale));
+  let height = Math.max(1, Math.round(image.height * initialScale));
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return file;
+
+  let quality = 0.86;
+  let blob = null;
+
+  while (true) {
+    canvas.width = width;
+    canvas.height = height;
+    ctx.clearRect(0, 0, width, height);
+    ctx.drawImage(image, 0, 0, width, height);
+    blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+    if (blob.size <= maxBytes) break;
+
+    if (quality > 0.46) {
+      quality = Math.max(0.46, quality - 0.08);
+      continue;
+    }
+
+    if (Math.max(width, height) <= 720) break;
+    width = Math.max(720, Math.round(width * 0.86));
+    height = Math.max(720, Math.round(height * 0.86));
+  }
+
+  if (!blob || blob.size >= file.size) return file;
+  const safeName = String(file.name || 'image').replace(/\.[^.]+$/, '');
+  return new File([blob], `${safeName}.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
+};
+
+const compressEventImageIfNeeded = async (file) => {
+  if (!file) return null;
+  const fileType = String(file.type || '').toLowerCase();
+  if (!fileType.startsWith('image/')) return file;
+  if (file.size <= EVENT_IMAGE_TARGET_BYTES) return file;
+
+  const dataUrl = await readFileAsDataUrl(file);
+  const image = await loadImage(dataUrl);
+  let width = image.naturalWidth || image.width || 0;
+  let height = image.naturalHeight || image.height || 0;
+  if (!width || !height) return file;
+
+  const longEdge = Math.max(width, height);
+  if (longEdge > EVENT_IMAGE_MAX_LONG_EDGE) {
+    const ratio = EVENT_IMAGE_MAX_LONG_EDGE / longEdge;
+    width = Math.max(1, Math.round(width * ratio));
+    height = Math.max(1, Math.round(height * ratio));
+  }
+
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (!context) return file;
+
+  let attemptWidth = width;
+  let attemptHeight = height;
+  let bestBlob = null;
+  const qualitySteps = [0.92, 0.86, 0.8, 0.74, 0.68];
+
+  for (let resizePass = 0; resizePass < 3; resizePass += 1) {
+    canvas.width = attemptWidth;
+    canvas.height = attemptHeight;
+    context.clearRect(0, 0, attemptWidth, attemptHeight);
+    context.drawImage(image, 0, 0, attemptWidth, attemptHeight);
+
+    for (const quality of qualitySteps) {
+      const blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+      if (!blob) continue;
+      if (!bestBlob || blob.size < bestBlob.size) bestBlob = blob;
+      if (blob.size <= EVENT_IMAGE_TARGET_BYTES) {
+        const nextName = String(file.name || `event_image_${Date.now()}`)
+          .replace(/\.[^.]+$/, '')
+          .concat('.jpg');
+        return new File([blob], nextName, { type: 'image/jpeg' });
+      }
+    }
+
+    if (bestBlob && bestBlob.size <= EVENT_IMAGE_SOFT_MAX_BYTES) {
+      const nextName = String(file.name || `event_image_${Date.now()}`)
+        .replace(/\.[^.]+$/, '')
+        .concat('.jpg');
+      return new File([bestBlob], nextName, { type: 'image/jpeg' });
+    }
+
+    attemptWidth = Math.max(1, Math.round(attemptWidth * 0.85));
+    attemptHeight = Math.max(1, Math.round(attemptHeight * 0.85));
+  }
+
+  if (bestBlob) {
+    const nextName = String(file.name || `event_image_${Date.now()}`)
+      .replace(/\.[^.]+$/, '')
+      .concat('.jpg');
+    return new File([bestBlob], nextName, { type: 'image/jpeg' });
+  }
+  return file;
+};
+
 const createEmptyForm = () => ({
   title: '',
   stream: '',
@@ -99,6 +265,7 @@ const EventFormModal = ({
   onClose,
   onSubmit,
   onFieldChange,
+  onThumbnailFileChange,
   onToggleRole,
   onAppendGalleryFiles,
   onRemoveGalleryFile,
@@ -206,7 +373,7 @@ const EventFormModal = ({
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => onFieldChange('imageFile', e.target.files?.[0] || null)}
+                  onChange={(e) => onThumbnailFileChange(e)}
                 />
               </label>
             </div>
@@ -484,14 +651,63 @@ const AdminVolunteerEventsPage = () => {
     setEventForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const appendGalleryFiles = (incomingFiles) => {
+  const handleThumbnailFileChange = async (event) => {
+    const selected = event?.target?.files?.[0] || null;
+    if (!selected) {
+      setEventForm((prev) => ({ ...prev, imageFile: null }));
+      return;
+    }
+    try {
+      if (!String(selected.type || '').toLowerCase().startsWith('image/')) {
+        throw new Error('Please select a valid image file.');
+      }
+      const optimized = await compressEventImageIfNeeded(selected);
+      if (optimized && optimized.size > EVENT_MAX_IMAGE_BYTES) {
+        throw new Error(
+          `Image is too large (${formatFileSizeLabel(optimized.size)}). Please upload a smaller image.`
+        );
+      }
+      setEventForm((prev) => ({ ...prev, imageFile: optimized }));
+      if (optimized.size < selected.size) {
+        setEventSuccess('Image optimized for faster upload.');
+        window.setTimeout(() => setEventSuccess(''), 3500);
+      }
+    } catch (err) {
+      setEventError(getFriendlyErrorMessage(err, 'Unable to process this image. Please try a different file.'));
+    } finally {
+      if (event?.target) event.target.value = '';
+    }
+  };
+
+  const appendGalleryFiles = async (incomingFiles) => {
     const filesToAdd = Array.from(incomingFiles || []);
     if (!filesToAdd.length) return;
-    setEventForm((prev) => {
-      const existingKeys = new Set(prev.galleryImageFiles.map((file) => `${file.name}-${file.size}-${file.lastModified}`));
-      const dedupedNewFiles = filesToAdd.filter((file) => !existingKeys.has(`${file.name}-${file.size}-${file.lastModified}`));
-      return { ...prev, galleryImageFiles: [...prev.galleryImageFiles, ...dedupedNewFiles] };
-    });
+    try {
+      const optimizedFiles = [];
+      let optimizedCount = 0;
+      for (const selected of filesToAdd) {
+        if (!String(selected.type || '').toLowerCase().startsWith('image/')) continue;
+        const optimized = await compressEventImageIfNeeded(selected);
+        if (optimized && optimized.size > EVENT_MAX_IMAGE_BYTES) {
+          throw new Error(
+            `Image is too large (${formatFileSizeLabel(optimized.size)}). Please upload a smaller image.`
+          );
+        }
+        if (optimized && optimized.size < selected.size) optimizedCount += 1;
+        if (optimized) optimizedFiles.push(optimized);
+      }
+      setEventForm((prev) => {
+        const existingKeys = new Set(prev.galleryImageFiles.map((file) => `${file.name}-${file.size}-${file.lastModified}`));
+        const dedupedNewFiles = optimizedFiles.filter((file) => !existingKeys.has(`${file.name}-${file.size}-${file.lastModified}`));
+        return { ...prev, galleryImageFiles: [...prev.galleryImageFiles, ...dedupedNewFiles] };
+      });
+      if (optimizedCount > 0) {
+        setEventSuccess('Selected images were optimized for faster upload.');
+        window.setTimeout(() => setEventSuccess(''), 3500);
+      }
+    } catch (err) {
+      setEventError(getFriendlyErrorMessage(err, 'Unable to process one or more gallery images.'));
+    }
   };
 
   const removeGalleryFile = (targetFile) => {
@@ -561,44 +777,82 @@ const AdminVolunteerEventsPage = () => {
       setEventError('Completed date is required for completed events.');
       return;
     }
-
-    const formData = new FormData();
-    formData.append('title', eventForm.title.trim());
-    formData.append('stream', eventForm.stream.trim());
-    formData.append('description', eventForm.description.trim());
-    formData.append('summary', eventForm.summary.trim());
-    formData.append('status', eventForm.status);
-    formData.append('date', eventForm.date || '');
-    formData.append('time', eventForm.time.trim());
-    formData.append('completed_on', eventForm.completed_on || '');
-    formData.append('joined_count', String(Number(eventForm.joinedCount || 0)));
-    formData.append('budget_spent', String(Number(eventForm.budgetSpent || 0)));
-    formData.append('completion_brief', eventForm.completionBrief.trim());
-    eventForm.galleryImageFiles.forEach((file) => formData.append('gallery_image_files', file));
-    formData.append('location', eventForm.location.trim());
-    formData.append('organizer', eventForm.organizer.trim());
-    formData.append('seats', String(Number(eventForm.seats || 0)));
-    formData.append('impact', eventForm.impact.trim());
-    eventForm.availableRoles.forEach((role) => formData.append('available_roles', role));
-    formData.append('is_active', eventForm.is_active ? 'true' : 'false');
-    if (eventForm.imageFile) formData.append('image_file', eventForm.imageFile);
+    const totalUploadBytes =
+      Number(eventForm.imageFile?.size || 0) +
+      eventForm.galleryImageFiles.reduce((sum, file) => sum + Number(file?.size || 0), 0);
+    if (totalUploadBytes > EVENT_MAX_TOTAL_UPLOAD_BYTES) {
+      setEventError(
+        `Total upload is too large (${formatFileSizeLabel(totalUploadBytes)}). Keep total images under ${formatFileSizeLabel(EVENT_MAX_TOTAL_UPLOAD_BYTES)}.`
+      );
+      return;
+    }
 
     setEventSaving(true);
     try {
+      const baseFormData = new FormData();
+      baseFormData.append('title', eventForm.title.trim());
+      baseFormData.append('stream', eventForm.stream.trim());
+      baseFormData.append('description', eventForm.description.trim());
+      baseFormData.append('summary', eventForm.summary.trim());
+      baseFormData.append('status', eventForm.status);
+      baseFormData.append('date', eventForm.date || '');
+      baseFormData.append('time', eventForm.time.trim());
+      baseFormData.append('completed_on', eventForm.completed_on || '');
+      baseFormData.append('joined_count', String(Number(eventForm.joinedCount || 0)));
+      baseFormData.append('budget_spent', String(Number(eventForm.budgetSpent || 0)));
+      baseFormData.append('completion_brief', eventForm.completionBrief.trim());
+      baseFormData.append('location', eventForm.location.trim());
+      baseFormData.append('organizer', eventForm.organizer.trim());
+      baseFormData.append('seats', String(Number(eventForm.seats || 0)));
+      baseFormData.append('impact', eventForm.impact.trim());
+      eventForm.availableRoles.forEach((role) => baseFormData.append('available_roles', role));
+      baseFormData.append('is_active', eventForm.is_active ? 'true' : 'false');
+
+      let eventId = editingEventId;
       if (formMode === 'edit' && editingEventId) {
-        await menteeApi.updateVolunteerEvent(editingEventId, formData);
-        setEventSuccess('Volunteer event updated successfully.');
+        await menteeApi.updateVolunteerEvent(editingEventId, baseFormData);
       } else {
-        await menteeApi.createVolunteerEvent(formData);
-        setEventSuccess('Volunteer event created successfully.');
+        const created = await menteeApi.createVolunteerEvent(baseFormData);
+        eventId = Number(created?.id || 0) || null;
       }
+
+      if (!eventId) {
+        throw new Error('Event saved but event id was not returned. Please refresh and retry image uploads.');
+      }
+
+      if (eventForm.imageFile) {
+        const optimizedThumbnail = await compressImageFile(eventForm.imageFile, {
+          maxBytes: THUMBNAIL_MAX_BYTES,
+          maxSide: THUMBNAIL_MAX_SIDE,
+        });
+        const thumbnailFormData = new FormData();
+        thumbnailFormData.append('image_file', optimizedThumbnail);
+        await menteeApi.updateVolunteerEvent(eventId, thumbnailFormData);
+      }
+
+      for (const galleryFile of eventForm.galleryImageFiles) {
+        const optimizedGalleryImage = await compressImageFile(galleryFile, {
+          maxBytes: GALLERY_MAX_BYTES,
+          maxSide: GALLERY_MAX_SIDE,
+        });
+        const galleryFormData = new FormData();
+        galleryFormData.append('gallery_image_files', optimizedGalleryImage);
+        await menteeApi.updateVolunteerEvent(eventId, galleryFormData);
+      }
+
+      setEventSuccess(formMode === 'edit' ? 'Volunteer event updated successfully.' : 'Volunteer event created successfully.');
       setFormOpen(false);
       setEventForm(createEmptyForm());
       setEditingEventId(null);
       await loadVolunteerEvents(formMode === 'edit' ? currentPage : 1);
       window.setTimeout(() => setEventSuccess(''), 5000);
     } catch (err) {
-      setEventError(err?.message || `Unable to ${formMode === 'edit' ? 'update' : 'create'} volunteer event.`);
+      setEventError(
+        getFriendlyErrorMessage(
+          err,
+          `Unable to ${formMode === 'edit' ? 'update' : 'create'} volunteer event.`
+        )
+      );
     } finally {
       setEventSaving(false);
     }
@@ -810,6 +1064,7 @@ const AdminVolunteerEventsPage = () => {
         onClose={closeFormModal}
         onSubmit={handleSaveEvent}
         onFieldChange={updateEventForm}
+        onThumbnailFileChange={handleThumbnailFileChange}
         onToggleRole={toggleRoleSelection}
         onAppendGalleryFiles={appendGalleryFiles}
         onRemoveGalleryFile={removeGalleryFile}
