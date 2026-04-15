@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, CheckCircle2, Images, MapPin, Users, X } from 'lucide-react';
 import { menteeApi } from '../apis/api/menteeApi';
+import logo from './assets/Logo.svg';
 
 const DEFAULT_COMPLETION_BRIEF = `Day 1 began with preparing the space and creating a welcoming environment for everyone. Through ice-breaker conversations, storytelling, music, and interactive games, we focused on building comfort, connection, and joy among the participants.
 
@@ -38,6 +39,15 @@ const CompletedEventStoryPage = () => {
   const [error, setError] = useState('');
   const [activeImageIndex, setActiveImageIndex] = useState(null);
   const [bondRoomParticipants, setBondRoomParticipants] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const NAV = [
+    { label: 'Home', href: '/' },
+    { label: 'About', href: '/about' },
+    { label: 'Volunteer', href: '/volunteer' },
+    { label: 'Safety', href: '/#safety' },
+    { label: 'Stories', href: '/#stories' },
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -123,42 +133,108 @@ const CompletedEventStoryPage = () => {
 
   const joinedCount = useMemo(() => Number(eventItem?.joined_count || eventItem?.seats || 0), [eventItem]);
 
+  const topBar = (
+    <>
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 shadow-[0_10px_24px_-18px_rgba(93,54,153,0.35)] backdrop-blur-[14px]">
+        <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:h-[84px] min-[2200px]:px-16 min-[2500px]:px-20">
+          <Link to="/" className="flex flex-col items-center leading-none group">
+            <img src={logo} alt="Bond Room" className="h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
+            <span className="mt-0.5 hidden text-[9px] tracking-wide text-[#000] sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
+              Bridging Old and New Destinies
+            </span>
+          </Link>
+          <nav className="hidden items-center gap-0.5 md:flex 2xl:gap-1.5 min-[2200px]:gap-2">
+            {NAV.map((n) => (
+              n.href.includes('#') ? (
+                <a key={n.label} href={n.href} className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">{n.label}</a>
+              ) : (
+                <Link key={n.label} to={n.href} className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">{n.label}</Link>
+              )
+            ))}
+          </nav>
+          <div className="hidden items-center gap-2 md:flex 2xl:gap-3 min-[2200px]:gap-4">
+            <Link to="/donate" className="rounded-lg border border-[#DDD7ED] px-3.5 py-1.5 text-[13px] font-semibold text-[#5D3699] transition-all hover:scale-105 hover:bg-[#EDE3FF] 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">Donate</Link>
+            <Link to="/login?source=volunteer" className="rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-1.5 text-[13px] font-semibold text-white shadow-md shadow-[#5D3699]/20 transition-all hover:scale-105 hover:shadow-[#5D3699]/40 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">Log in</Link>
+          </div>
+          <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[#EDE3FF] md:hidden">
+            <svg className="h-5 w-5 text-[#5D3699]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </header>
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-[100] flex">
+          <div className="absolute inset-0 bg-[#4A2B7A]/40 backdrop-blur-sm" onClick={closeMobile} />
+          <div className="relative ml-auto flex h-full w-[270px] max-w-[82vw] flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#EDE3FF] px-4 pb-2 pt-4">
+              <span className="text-sm font-bold text-[#5D3699]">Menu</span>
+              <button onClick={closeMobile} className="flex h-8 w-8 items-center justify-center rounded-lg text-sm transition hover:bg-[#EDE3FF]">X</button>
+            </div>
+            <nav className="flex flex-1 flex-col gap-0.5 p-3">
+              {NAV.map((n) => (
+                n.href.includes('#') ? (
+                  <a key={n.label} href={n.href} onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">{n.label}</a>
+                ) : (
+                  <Link key={n.label} to={n.href} onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">{n.label}</Link>
+                )
+              ))}
+              <Link to="/donate" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5D3699] transition hover:bg-[#EDE3FF]">Donate</Link>
+              <Link to="/login?source=volunteer" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">Log in</Link>
+            </nav>
+            <div className="border-t border-[#EDE3FF] p-3">
+              <Link to="/register?source=event-flow" onClick={closeMobile} className="block rounded-lg bg-[#fdd253] px-4 py-2.5 text-center text-sm font-bold text-[#1f2937] shadow-md shadow-[#fdd253]/30">Mentee Sign Up</Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 sm:p-8">
-        <div className="mx-auto max-w-5xl rounded-2xl border border-[#e8dcff] bg-white p-10 text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#d1fae5] border-t-[#15803d]" />
-          <p className="mt-3 text-sm text-[#6b7280]">Loading completed event story...</p>
+      <>
+        {topBar}
+        <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 pt-24 sm:p-8 sm:pt-28">
+          <div className="mx-auto max-w-5xl rounded-2xl border border-[#e8dcff] bg-white p-10 text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#d1fae5] border-t-[#15803d]" />
+            <p className="mt-3 text-sm text-[#6b7280]">Loading completed event story...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error || !eventItem?.id) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 sm:p-8">
-        <div className="mx-auto max-w-5xl rounded-2xl border border-red-200 bg-white p-10 text-center">
-          <p className="text-sm text-red-600">{error || 'Completed event not found.'}</p>
-          <button
-            type="button"
-            onClick={() => navigate('/volunteer')}
-            className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Volunteer
-          </button>
+      <>
+        {topBar}
+        <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 pt-24 sm:p-8 sm:pt-28">
+          <div className="mx-auto max-w-5xl rounded-2xl border border-red-200 bg-white p-10 text-center">
+            <p className="text-sm text-red-600">{error || 'Completed event not found.'}</p>
+            <button
+              type="button"
+              onClick={() => navigate('/volunteer')}
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to Volunteer
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <motion.div
-      className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 sm:p-8"
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-    >
+    <>
+      {topBar}
+      <motion.div
+        className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 pt-24 sm:p-8 sm:pt-28"
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
       <div className="mx-auto w-full">
         <button
           type="button"
@@ -289,7 +365,8 @@ const CompletedEventStoryPage = () => {
           </div>
         </div>
       ) : null}
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 

@@ -476,7 +476,7 @@ const VolunteerPage = () => {
 
   return (
     <>
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 backdrop-blur-[14px]">
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 shadow-[0_10px_24px_-18px_rgba(93,54,153,0.35)] backdrop-blur-[14px]">
         <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:h-[84px] min-[2200px]:px-16 min-[2500px]:px-20">
           <Link to="/" className="flex flex-col items-center leading-none group">
             <img src={logo} alt="Bond Room" className="h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
@@ -511,7 +511,7 @@ const VolunteerPage = () => {
             <Link to="/donate" className="rounded-lg border border-[#DDD7ED] px-3.5 py-1.5 text-[13px] font-semibold text-[#5D3699] transition-all hover:scale-105 hover:bg-[#EDE3FF] 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
               Donate
             </Link>
-            <Link to="/login" className="rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-1.5 text-[13px] font-semibold text-white shadow-md shadow-[#5D3699]/20 transition-all hover:scale-105 hover:shadow-[#5D3699]/40 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
+            <Link to="/login?source=volunteer" className="rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-1.5 text-[13px] font-semibold text-white shadow-md shadow-[#5D3699]/20 transition-all hover:scale-105 hover:shadow-[#5D3699]/40 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
               Log in
             </Link>
           </div>
@@ -547,12 +547,12 @@ const VolunteerPage = () => {
               <Link to="/donate" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5D3699] transition hover:bg-[#EDE3FF]">
                 Donate
               </Link>
-              <Link to="/login" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+              <Link to="/login?source=volunteer" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
                 Log in
               </Link>
             </nav>
             <div className="border-t border-[#EDE3FF] p-3">
-              <Link to="/register" onClick={closeMobile} className="block rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-2.5 text-center text-sm font-bold text-white shadow-md">
+              <Link to="/register?source=event-flow" onClick={closeMobile} className="block rounded-lg bg-[#fdd253] px-4 py-2.5 text-center text-sm font-bold text-[#1f2937] shadow-md shadow-[#fdd253]/30">
                 Mentee Sign Up
               </Link>
             </div>
@@ -576,7 +576,7 @@ const VolunteerPage = () => {
               <button
                 type="button"
                 onClick={handleLogoutAndGoHome}
-                className="inline-flex items-center rounded-lg bg-[#5D3699] px-4 py-2 text-sm font-semibold text-white hover:bg-[#4a2b7a]"
+                className="inline-flex items-center rounded-lg bg-[#fdd253] px-4 py-2 text-sm font-semibold text-[#1f2937] hover:bg-[#f59e0b]"
               >
                 Logout and Go Home
               </button>
@@ -594,14 +594,15 @@ const VolunteerPage = () => {
 
       <div className="mx-auto max-w-full">
         <section className="relative mt-0 overflow-hidden rounded-[28px] border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-10">
-          <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#efe6ff] blur-2xl" />
-          <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#f4edff] blur-2xl" />
+          <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#fdd253] opacity-50 blur-2xl" />
+          <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#5D3699] opacity-25 blur-2xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-10 h-20 w-20 rounded-full bg-[#fdd253] opacity-40 blur-xl" />
           <div className="relative">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Volunteer</p>
             <h1 className="mt-2 text-3xl font-semibold leading-tight text-[#111827] sm:text-5xl">
               Upcoming and Completed
               <br />
-              <span className="bg-gradient-to-r from-[#5D3699] to-[#8c63cc] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#5D3699] via-[#fdd253] to-[#5D3699] bg-clip-text text-transparent">
                 Community Events
               </span>
             </h1>
@@ -614,8 +615,8 @@ const VolunteerPage = () => {
         <section className="mt-6 rounded-2xl border border-[#e9ddff] bg-white p-4 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff] ring-1 ring-[#e9ddff]">
-                <Calendar className="h-5 w-5 text-[#5D3699]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdd253]/30 ring-1 ring-[#fdd253]">
+                <Calendar className="h-5 w-5 text-[#c9a227]" />
               </div>
               <div>
                 <h2 className="text-base font-semibold text-[#111827]">Upcoming Events</h2>
@@ -640,7 +641,7 @@ const VolunteerPage = () => {
                     }}
                     className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
                       volunteerRange === item.key
-                        ? 'bg-[#5D3699] text-white shadow-sm'
+                        ? 'bg-[#fdd253] text-[#1f2937] shadow-sm shadow-[#fdd253]/40'
                         : 'text-[#5D3699] hover:bg-[#f5f3ff]'
                     }`}
                   >
@@ -803,7 +804,7 @@ const VolunteerPage = () => {
 
               <Link
                 to="/volunteer-events"
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f3ff] px-4 py-2 text-xs font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#fdd253] px-4 py-2 text-xs font-medium text-[#1f2937] transition-all hover:bg-[#f59e0b] hover:text-white shadow-[#fdd253]/30"
               >
                 View All
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -849,7 +850,7 @@ const VolunteerPage = () => {
                       <button
                         type="button"
                         onClick={() => navigate(`/volunteer-events/${event.id}/register`)}
-                        className="mt-1 inline-flex items-center gap-1 rounded-lg bg-[#5D3699] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
+                        className="mt-1 inline-flex items-center gap-1 rounded-lg bg-[#fdd253] px-3 py-2 text-xs font-semibold text-[#1f2937] hover:bg-[#f59e0b] hover:text-white shadow-[#fdd253]/30"
                       >
                         Register
                         <ArrowRight className="h-3.5 w-3.5" />
@@ -876,11 +877,11 @@ const VolunteerPage = () => {
           )}
         </section>
 
-        <section className="mt-6 rounded-2xl border border-[#dcfce7] bg-white p-4 shadow-[0_24px_44px_-34px_rgba(21,128,61,0.35)] sm:p-6">
+        <section className="mt-6 rounded-2xl border border-[#fdd253]/40 bg-white p-4 shadow-[0_24px_44px_-34px_rgba(253,210,83,0.5)] sm:p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eefcf5] ring-1 ring-[#c7f0da]">
-                <CheckCircle2 className="h-5 w-5 text-[#15803d]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdd253]/30 ring-1 ring-[#fdd253]">
+                <CheckCircle2 className="h-5 w-5 text-[#c9a227]" />
               </div>
               <div>
                 <h2 className="text-base font-semibold text-[#111827]">Completed Volunteer Events</h2>
@@ -889,7 +890,7 @@ const VolunteerPage = () => {
             </div>
 
             <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
-              <div className="inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-[#dcfce7] bg-white p-1">
+              <div className="inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-[#fdd253]/40 bg-white p-1">
                 {[
                   { key: 'day', label: 'Day' },
                   { key: 'week', label: 'Week' },
@@ -905,7 +906,7 @@ const VolunteerPage = () => {
                     }}
                     className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
                       completedRange === item.key
-                        ? 'bg-[#15803d] text-white shadow-sm'
+                        ? 'bg-[#fdd253] text-[#1f2937] shadow-sm shadow-[#fdd253]/40'
                         : 'text-[#166534] hover:bg-[#f0fdf4]'
                     }`}
                   >
@@ -918,7 +919,7 @@ const VolunteerPage = () => {
                 <button
                   type="button"
                   onClick={toggleCompletedCalendar}
-                  className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#dcfce7] bg-white px-3 py-2 text-xs font-medium text-[#166534] transition-colors hover:bg-[#f0fdf4]"
+                  className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#fdd253]/40 bg-white px-3 py-2 text-xs font-medium text-[#c9a227] transition-colors hover:bg-[#fdd253]/20"
                 >
                   <CalendarDays className="h-3.5 w-3.5" />
                   <span className="max-w-[130px] truncate sm:max-w-none">
@@ -1084,7 +1085,7 @@ const VolunteerPage = () => {
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#120a2c]/75 via-[#120a2c]/30 to-transparent" />
-                    <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold text-[#14532d] ring-1 ring-[#bbf7d0]">
+                    <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#fdd253] px-2.5 py-1 text-[10px] font-semibold text-[#1f2937] ring-1 ring-[#fdd253]">
                       <CheckCircle2 className="h-3 w-3" />
                       Completed
                     </div>
@@ -1100,12 +1101,12 @@ const VolunteerPage = () => {
                       <Calendar className="h-3 w-3" />
                       {formatDate(getCompletedEventDate(event))}
                     </div>
-                    <div className="rounded-xl border border-[#dcfce7] bg-[#f0fdf4] p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#166534]">Impact</p>
-                      <p className="mt-1 text-xs font-medium text-[#166534]">{event.impact}</p>
-                      <p className="mt-1 text-[11px] text-[#15803d]">{event.location}</p>
+                    <div className="rounded-xl border border-[#fdd253]/40 bg-[#fdd253]/10 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#c9a227]">Impact</p>
+                      <p className="mt-1 text-xs font-medium text-[#1f2937]">{event.impact}</p>
+                      <p className="mt-1 text-[11px] text-[#c9a227]">{event.location}</p>
                     </div>
-                    <p className="inline-flex items-center gap-1 text-[11px] font-medium text-[#14532d]">
+                    <p className="inline-flex items-center gap-1 text-[11px] font-medium text-[#c9a227]">
                       <Users className="h-3.5 w-3.5" />
                       {Number(event.joined_count || event.seats || 0)} joined
                     </p>

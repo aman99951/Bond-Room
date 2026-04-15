@@ -48,6 +48,10 @@
 
   --color-border: #e5e7eb;
   --color-accent: #5D3699;
+  --color-accent-strong: #7c3aed;
+  --color-brand-deep: #123d76;
+  --color-brand-gold: #fdd253;
+  --color-brand-gold-dark: #f59e0b;
   --color-accent-contrast: #ffffff;
   --color-link: #5D3699;
 
@@ -99,6 +103,10 @@ select option:hover {
   .text-on-accent { color: var(--color-accent-contrast); }
   .border-accent { border-color: var(--color-accent); }
   .link-primary { color: var(--color-link); }
+  .bg-brand-gold { background-color: var(--color-brand-gold); }
+  .text-brand-gold { color: var(--color-brand-gold); }
+  .bg-accent-brand { background-color: var(--color-accent); }
+  .text-accent-brand { color: var(--color-accent); }
 }
 
 

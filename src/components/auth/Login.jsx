@@ -41,8 +41,11 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { loading, loginWithMobile, login } = useMenteeAuth();
-  const nextParam = new URLSearchParams(location.search).get('next') || '';
+  const searchParams = new URLSearchParams(location.search);
+  const nextParam = searchParams.get('next') || '';
+  const sourceParam = (searchParams.get('source') || '').toLowerCase();
   const nextPath = nextParam.startsWith('/') ? nextParam : '';
+  const createAccountHref = sourceParam === 'volunteer' ? '/register?source=event-flow' : '/register';
 
   const handleRoleChange = (role) => {
     setSelectedRole(role);
@@ -385,7 +388,7 @@ const Login = () => {
                 <div className="lp-login-register">
                   <p>
                     Don&apos;t have an account?{' '}
-                    <Link to="/register">
+                    <Link to={createAccountHref}>
                       Create account
                     </Link>
                   </p>

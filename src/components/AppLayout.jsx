@@ -49,6 +49,7 @@ import AboutUs from './AboutUs';
 import DonationPage from './DonationPage';
 import VolunteerPage from './VolunteerPage';
 import CompletedEventStoryPage from './CompletedEventStoryPage';
+import BondRoomChatbot from './chatbot/BondRoomChatbot';
 import {
   AUTH_LOGOUT_EVENT_NAME,
   getAssessmentDraft,
@@ -143,6 +144,23 @@ const AuthExpiryWatcher = () => {
   }, [location.pathname]);
 
   return null;
+};
+
+const GlobalChatbot = () => {
+  const { pathname } = useLocation();
+  const normalizedPath = String(pathname || '').toLowerCase();
+  const hideOnPaths = [
+    '/mentee-meeting-room',
+    '/mentor-meeting-room',
+    '/zoom-meeting',
+  ];
+  const isHidden =
+    hideOnPaths.some((part) => normalizedPath.includes(part)) ||
+    normalizedPath === '/admin' ||
+    normalizedPath.startsWith('/admin/');
+
+  if (isHidden) return null;
+  return <BondRoomChatbot />;
 };
 
 const ProtectedApp = ({ children }) => {
@@ -398,6 +416,7 @@ const AppLayout = () => {
     <Router>
       <ScrollToTop />
       <AuthExpiryWatcher />
+      <GlobalChatbot />
       <Routes>
         <Route path="/" element={<RootRoute />} />
         <Route path="/about" element={<AboutUs />} />

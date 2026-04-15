@@ -12,9 +12,10 @@
   --ink:  #1d2332;
   --mute: #56647b;
   --line: #ddd7ed;
-  --acc:  #5d3699;
-  --acc2: #5d3699;
+  --acc:  #fdd253;
+  --acc2: #fdd253;
   --gold: #fdd253;
+  --acc-ink: #5b4300;
   --dark: #21163e;
   --wht:  #ffffff;
   --sh:   0 20px 52px rgba(43,26,89,0.14);
@@ -171,15 +172,15 @@ html.has-custom-cursor * {
   font-family: 'DM Mono', monospace;
   transition: background .22s, color .22s, border-color .22s;
 }
-.lp-ghost:hover { background: var(--acc); color: var(--wht); border-color: var(--acc); }
+.lp-ghost:hover { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); }
 .lp-ghost-lt { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.9); }
 .lp-ghost-lt:hover { background: rgba(255,255,255,0.15); color: var(--wht); border-color: rgba(255,255,255,0.6); }
 
 .lp-solid {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 10px 22px; border-radius: 999px;
-  background: linear-gradient(135deg, var(--acc) 0%, #7b4cbc 72%, #8e61ce 100%);
-  color: var(--wht);
+  background: linear-gradient(135deg, #f59e0b 0%, var(--acc) 100%);
+  color: var(--acc-ink);
   font-size: 0.76rem; letter-spacing: 0.1em;
   text-transform: uppercase;
   font-family: 'DM Mono', monospace;
@@ -194,8 +195,8 @@ html.has-custom-cursor * {
   transform: translateX(-110%);
 }
 .lp-solid:hover {
-  background: linear-gradient(135deg, #4f2c85 0%, #5d3699 58%, #7f57c0 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--acc) 0%, #f59e0b 100%);
+  color: var(--acc-ink);
   text-decoration: none;
   box-shadow: 0 10px 28px rgba(91,44,199,0.42), 0 0 0 2px rgba(253,210,83,0.22);
   transform: translateY(-1px);

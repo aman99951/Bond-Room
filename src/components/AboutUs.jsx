@@ -121,7 +121,7 @@ const AboutUs = () => {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] pt-[64px]">
       <div className="mx-auto w-full max-w-[2440px] px-4 pb-8 pt-8 sm:px-6 sm:pb-10 sm:pt-10 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:px-16 min-[2500px]:px-20">
-        <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 backdrop-blur-[14px]">
+        <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 shadow-[0_10px_24px_-18px_rgba(93,54,153,0.35)] backdrop-blur-[14px]">
           <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:h-[84px] min-[2200px]:px-16 min-[2500px]:px-20">
             <Link to="/" className="flex flex-col items-center leading-none group">
               <img src={logo} alt="Bond Room" className="h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
@@ -197,7 +197,7 @@ const AboutUs = () => {
                 </Link>
               </nav>
               <div className="border-t border-[#EDE3FF] p-3">
-                <Link to="/register" onClick={closeMobile} className="block rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-2.5 text-center text-sm font-bold text-white shadow-md">
+                <Link to="/register" onClick={closeMobile} className="block rounded-lg bg-[#fdd253] px-4 py-2.5 text-center text-sm font-bold text-[#1f2937] shadow-md shadow-[#fdd253]/30">
                   Mentee Sign Up
                 </Link>
               </div>
@@ -206,8 +206,9 @@ const AboutUs = () => {
         ) : null}
 
         <section className="relative overflow-hidden rounded-[28px] border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-10">
-          <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#efe6ff] blur-2xl" />
-          <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#f4edff] blur-2xl" />
+          <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#fdd253] opacity-40 blur-2xl" />
+          <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#5D3699] opacity-20 blur-2xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-10 h-20 w-20 rounded-full bg-[#fdd253] opacity-30 blur-xl" />
 
           <div className="grid items-center gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
@@ -215,7 +216,7 @@ const AboutUs = () => {
               <h1 className="mt-2 text-3xl font-semibold leading-tight text-[#111827] sm:text-5xl">
                 Bridging Generations
                 <br />
-                <span className="bg-gradient-to-r from-[#5D3699] to-[#8c63cc] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#5D3699] via-[#fdd253] to-[#5D3699] bg-clip-text text-transparent">
                   Through Mentorship
                 </span>
               </h1>
@@ -225,38 +226,42 @@ const AboutUs = () => {
               </p>
             </div>
 
-            <div className="flex items-center justify-center rounded-2xl border border-[#eadfff] bg-[#f8f3ff] p-6 sm:p-8">
+            <div className="flex items-center justify-center rounded-2xl border border-[#eadfff] bg-gradient-to-br from-[#f8f3ff] to-[#fdf8e0] p-6 sm:p-8">
               <img src={logo} alt="Bond Room logo" className="h-36 w-auto object-contain sm:h-44" />
             </div>
           </div>
         </section>
 
-        <section className="mt-6 grid gap-4 md:grid-cols-3">
+          <section className="mt-6 grid gap-4 md:grid-cols-3">
           {[
             {
               icon: HeartHandshake,
               title: 'Human-First Guidance',
               body: 'Mentorship that listens first and supports students with empathy and respect.',
+              accent: 'gold',
             },
             {
               icon: ShieldCheck,
               title: 'Safety by Design',
               body: 'Session monitoring and safety workflows help protect every student interaction.',
+              accent: 'accent',
             },
             {
               icon: Users,
               title: 'Trusted Mentors',
               body: 'Experienced mentors across domains who understand student pressure and growth.',
+              accent: 'gold',
             },
           ].map((item) => {
             const Icon = item.icon;
+            const isGold = item.accent === 'gold';
             return (
               <article
                 key={item.title}
                 className="rounded-2xl border border-[#e9ddff] bg-white p-5 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)]"
               >
-                <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-                  <Icon className="h-5 w-5 text-[#5D3699]" />
+                <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${isGold ? 'bg-[#fdd253]/30' : 'bg-[#f5f3ff]'}`}>
+                  <Icon className={`h-5 w-5 ${isGold ? 'text-[#c9a227]' : 'text-[#5D3699]'}`} />
                 </div>
                 <h2 className="mt-3 text-base font-semibold text-[#111827]">{item.title}</h2>
                 <p className="mt-2 text-sm leading-6 text-[#5f6472]">{item.body}</p>
@@ -298,10 +303,10 @@ const AboutUs = () => {
           </article>
         </section>
 
-        <section className="mt-6 grid gap-4 md:grid-cols-2">
+          <section className="mt-6 grid gap-4 md:grid-cols-2">
           <article className="rounded-2xl border border-[#e9ddff] bg-white p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)]">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-              <Brain className="h-5 w-5 text-[#5D3699]" />
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdd253]/30">
+              <Brain className="h-5 w-5 text-[#c9a227]" />
             </div>
             <h3 className="mt-3 text-lg font-semibold text-[#111827]">Mentor Quality & Relevance</h3>
             <p className="mt-2 text-sm leading-7 text-[#5f6472]">
@@ -322,8 +327,8 @@ const AboutUs = () => {
           </article>
         </section>
 
-        <section className="mt-6 space-y-6">
-          <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
+          <section className="mt-6 space-y-6">
+          <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fffdf0_0%,#ffffff_45%,#fef9e7_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(253,210,83,0.5)] sm:p-8">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Founders</p>
             <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">People Behind Bond Room</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -331,7 +336,7 @@ const AboutUs = () => {
             </div>
           </article>
 
-          <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
+          <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#fffdf0_45%,#fef9e7_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(253,210,83,0.4)] sm:p-8">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Leadership Team</p>
             <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">Program and Operations Leadership</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -340,7 +345,7 @@ const AboutUs = () => {
           </article>
 
           {volunteers.length ? (
-            <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fcf8ff_0%,#ffffff_45%,#f7f1ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
+            <article className="rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#fffdf0_0%,#ffffff_45%,#fef9e7_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(253,210,83,0.4)] sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Volunteers</p>
               <h2 className="mt-2 text-2xl font-semibold text-[#111827] sm:text-3xl">Volunteer Community</h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5f6472]">
@@ -363,7 +368,7 @@ const AboutUs = () => {
           <div className="mt-5 flex flex-wrap gap-3">
             <a
               href="/register"
-              className="rounded-xl bg-[#5D3699] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#4a2b7a]"
+              className="rounded-xl bg-[#fdd253] px-5 py-2.5 text-sm font-semibold text-[#1f2937] hover:bg-[#f59e0b] hover:text-white shadow-[0_4px_14px_rgba(253,210,83,0.4)]"
             >
               Student Sign Up
             </a>
