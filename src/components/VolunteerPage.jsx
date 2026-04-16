@@ -55,6 +55,7 @@ const normalizeVolunteerEvent = (event) => ({
 const getCompletedEventDate = (event) => String(event?.completed_on || event?.date || '');
 
 const calendarWeekLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const EVENTS_PER_PAGE = 6;
 
 const MentorRingCarousel = ({ items, className = 'dash-volunteer-arc', onCardClick = null }) => {
   const stageRef = useRef(null);
@@ -267,6 +268,8 @@ const VolunteerPage = () => {
   const [completedCalendarOpen, setCompletedCalendarOpen] = useState(false);
   const [completedCalendarCursor, setCompletedCalendarCursor] = useState(() => parseIsoDate(new Date().toISOString().slice(0, 10)));
   const [completedMonthPickerYear, setCompletedMonthPickerYear] = useState(() => Number(new Date().getFullYear()));
+  const [upcomingPage, setUpcomingPage] = useState(1);
+  const [completedPage, setCompletedPage] = useState(1);
   const [showLogoutPrompt, setShowLogoutPrompt] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const calendarPopoverRef = useRef(null);
@@ -415,8 +418,46 @@ const VolunteerPage = () => {
     completedSelectedYear,
     completedVolunteerEvents,
   ]);
-  const useCompactUpcomingLayout =
-    filteredVolunteerEvents.length > 0 && filteredVolunteerEvents.length <= 2;
+  const upcomingGridClass =
+    filteredVolunteerEvents.length <= 1
+      ? 'mx-auto grid max-w-xl grid-cols-1 gap-4'
+      : filteredVolunteerEvents.length === 2
+        ? 'grid grid-cols-1 gap-4 md:grid-cols-2'
+        : 'grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3';
+  const completedGridClass =
+    filteredCompletedVolunteerEvents.length <= 1
+      ? 'mx-auto grid max-w-xl grid-cols-1 gap-4'
+      : filteredCompletedVolunteerEvents.length === 2
+        ? 'grid grid-cols-1 gap-4 md:grid-cols-2'
+        : 'grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3';
+  const upcomingTotalPages = Math.max(1, Math.ceil(filteredVolunteerEvents.length / EVENTS_PER_PAGE));
+  const completedTotalPages = Math.max(1, Math.ceil(filteredCompletedVolunteerEvents.length / EVENTS_PER_PAGE));
+
+  const paginatedUpcomingEvents = useMemo(() => {
+    const start = (upcomingPage - 1) * EVENTS_PER_PAGE;
+    return filteredVolunteerEvents.slice(start, start + EVENTS_PER_PAGE);
+  }, [filteredVolunteerEvents, upcomingPage]);
+
+  const paginatedCompletedEvents = useMemo(() => {
+    const start = (completedPage - 1) * EVENTS_PER_PAGE;
+    return filteredCompletedVolunteerEvents.slice(start, start + EVENTS_PER_PAGE);
+  }, [filteredCompletedVolunteerEvents, completedPage]);
+
+  useEffect(() => {
+    if (upcomingPage > upcomingTotalPages) setUpcomingPage(upcomingTotalPages);
+  }, [upcomingPage, upcomingTotalPages]);
+
+  useEffect(() => {
+    if (completedPage > completedTotalPages) setCompletedPage(completedTotalPages);
+  }, [completedPage, completedTotalPages]);
+
+  useEffect(() => {
+    setUpcomingPage(1);
+  }, [volunteerRange, selectedDay, selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    setCompletedPage(1);
+  }, [completedRange, completedSelectedDay, completedSelectedMonth, completedSelectedYear]);
 
   const calendarDays = useMemo(() => {
     const first = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
@@ -802,77 +843,89 @@ const VolunteerPage = () => {
                 )}
               </div>
 
-              <Link
-                to="/volunteer-events"
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#fdd253] px-4 py-2 text-xs font-medium text-[#1f2937] transition-all hover:bg-[#f59e0b] hover:text-white shadow-[#fdd253]/30"
-              >
-                View All
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
             </div>
           </div>
 
           {filteredVolunteerEvents.length > 0 ? (
-            useCompactUpcomingLayout ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {filteredVolunteerEvents.map((event) => (
-                  <article
-                    key={event.id}
-                    className="overflow-hidden rounded-2xl border border-[#e8dcff] bg-white shadow-[0_16px_28px_-20px_rgba(93,54,153,0.55)]"
-                  >
-                    <div className="h-44 w-full overflow-hidden bg-[#f5f3ff]">
-                      {event.image ? (
-                        <img
-                          src={event.image}
-                          alt={event.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-xs font-semibold text-[#6b7280]">
-                          No image available
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-2 p-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6b5f84]">
-                        {event.stream || 'Volunteer Event'}
-                      </p>
-                      <h3 className="line-clamp-2 text-base font-semibold text-[#111827]">
-                        {event.title}
-                      </h3>
-                      <p className="line-clamp-2 text-xs text-[#6b7280]">
-                        {event.summary || event.description || 'Join this event and contribute to your community.'}
-                      </p>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#5f6b81]">
-                        <span>{formatDate(event.date)}</span>
-                        <span>{event.time || 'Time TBA'}</span>
+            <div className={upcomingGridClass}>
+              {paginatedUpcomingEvents.map((event) => (
+                <article
+                  key={event.id}
+                  className="group overflow-hidden rounded-2xl border border-[#e8dcff] bg-white shadow-[0_16px_28px_-20px_rgba(93,54,153,0.55)] transition-transform duration-200 hover:-translate-y-1"
+                >
+                  <div className="relative h-44 w-full overflow-hidden bg-[#f5f3ff]">
+                    {event.image ? (
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs font-semibold text-[#6b7280]">
+                        No image available
                       </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#120a2c]/65 via-[#120a2c]/20 to-transparent" />
+                    <div className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#5D3699]">
+                      {event.stream || 'Volunteer Event'}
+                    </div>
+                  </div>
+                  <div className="space-y-2 p-4">
+                    <h3 className="line-clamp-2 text-base font-semibold text-[#111827]">
+                      {event.title}
+                    </h3>
+                    <p className="line-clamp-2 text-xs text-[#6b7280]">
+                      {event.summary || event.description || 'Join this event and contribute to your community.'}
+                    </p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#5f6b81]">
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5 text-[#5D3699]" />
+                        {formatDate(event.date)}
+                      </span>
+                      <span>{event.time || 'Time TBA'}</span>
+                    </div>
+                    <div className="pt-1">
                       <button
                         type="button"
                         onClick={() => navigate(`/volunteer-events/${event.id}/register`)}
-                        className="mt-1 inline-flex items-center gap-1 rounded-lg bg-[#fdd253] px-3 py-2 text-xs font-semibold text-[#1f2937] hover:bg-[#f59e0b] hover:text-white shadow-[#fdd253]/30"
+                        className="inline-flex items-center gap-1 rounded-lg bg-[#fdd253] px-3 py-2 text-xs font-semibold text-[#1f2937] transition-all hover:bg-[#f59e0b] hover:text-white shadow-[#fdd253]/30"
                       >
                         Register
                         <ArrowRight className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <VolunteerRingCarousel
-                items={filteredVolunteerEvents}
-                onCardClick={(item) => {
-                  if (!item?.id) return;
-                  navigate(`/volunteer-events/${item.id}/register`);
-                }}
-              />
-            )
+                  </div>
+                </article>
+              ))}
+            </div>
           ) : (
             <div className="rounded-xl border border-[#e5e7eb] border-dashed bg-white p-8 text-center">
               <p className="text-sm text-[#6b7280]">
                 {eventsLoading ? 'Loading upcoming events...' : 'No volunteer activities found for this filter.'}
               </p>
+            </div>
+          )}
+          {filteredVolunteerEvents.length > EVENTS_PER_PAGE && (
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setUpcomingPage((prev) => Math.max(1, prev - 1))}
+                disabled={upcomingPage === 1}
+                className="rounded-full border border-[#d9c9ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <p className="text-xs font-medium text-[#6b7280]">
+                Page {upcomingPage} of {upcomingTotalPages}
+              </p>
+              <button
+                type="button"
+                onClick={() => setUpcomingPage((prev) => Math.min(upcomingTotalPages, prev + 1))}
+                disabled={upcomingPage === upcomingTotalPages}
+                className="rounded-full border border-[#d9c9ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
             </div>
           )}
         </section>
@@ -1070,20 +1123,26 @@ const VolunteerPage = () => {
           </div>
 
           {filteredCompletedVolunteerEvents.length > 0 ? (
-            <div className="flex gap-4 overflow-x-auto pb-2 [scrollbar-width:thin] [scrollbar-color:#c4b5fd_transparent]">
-              {filteredCompletedVolunteerEvents.map((event) => (
+            <div className={completedGridClass}>
+              {paginatedCompletedEvents.map((event) => (
                 <button
                   key={event.id}
                   type="button"
                   onClick={() => navigate(`/volunteer/completed/${event.id}`)}
-                  className="group min-w-[260px] max-w-[260px] overflow-hidden rounded-2xl border border-[#e9ddff] bg-white text-left shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] transition-transform duration-200 hover:-translate-y-1 sm:min-w-[300px] sm:max-w-[300px]"
+                  className="group overflow-hidden rounded-2xl border border-[#e9ddff] bg-white text-left shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] transition-transform duration-200 hover:-translate-y-1"
                 >
-                  <div className="relative h-40 overflow-hidden">
-                    <img
-                      src={event.image}
-                      alt={event.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                  <div className="relative h-40 overflow-hidden bg-[#f5f3ff]">
+                    {event.image ? (
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs font-semibold text-[#6b7280]">
+                        No image available
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#120a2c]/75 via-[#120a2c]/30 to-transparent" />
                     <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#fdd253] px-2.5 py-1 text-[10px] font-semibold text-[#1f2937] ring-1 ring-[#fdd253]">
                       <CheckCircle2 className="h-3 w-3" />
@@ -1096,15 +1155,19 @@ const VolunteerPage = () => {
                   </div>
 
                   <div className="space-y-3 p-4">
-                    <p className="line-clamp-2 text-xs leading-5 text-[#6b7280]">{event.summary}</p>
+                    <p className="line-clamp-2 text-xs leading-5 text-[#6b7280]">
+                      {event.summary || event.description || 'Completed event details available.'}
+                    </p>
                     <div className="inline-flex items-center gap-1 rounded-full bg-[#f5f3ff] px-2.5 py-1 text-[10px] font-medium text-[#5D3699]">
                       <Calendar className="h-3 w-3" />
                       {formatDate(getCompletedEventDate(event))}
                     </div>
                     <div className="rounded-xl border border-[#fdd253]/40 bg-[#fdd253]/10 p-3">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-[#c9a227]">Impact</p>
-                      <p className="mt-1 text-xs font-medium text-[#1f2937]">{event.impact}</p>
-                      <p className="mt-1 text-[11px] text-[#c9a227]">{event.location}</p>
+                      <p className="mt-1 text-xs font-medium text-[#1f2937]">
+                        {event.impact || 'Community impact details available in event story.'}
+                      </p>
+                      <p className="mt-1 text-[11px] text-[#c9a227]">{event.location || 'Location not specified'}</p>
                     </div>
                     <p className="inline-flex items-center gap-1 text-[11px] font-medium text-[#c9a227]">
                       <Users className="h-3.5 w-3.5" />
@@ -1119,6 +1182,29 @@ const VolunteerPage = () => {
               <p className="text-sm text-[#6b7280]">
                 {eventsLoading ? 'Loading completed events...' : 'No completed volunteer events found for this filter.'}
               </p>
+            </div>
+          )}
+          {filteredCompletedVolunteerEvents.length > EVENTS_PER_PAGE && (
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setCompletedPage((prev) => Math.max(1, prev - 1))}
+                disabled={completedPage === 1}
+                className="rounded-full border border-[#fdd253]/50 bg-white px-3 py-1.5 text-xs font-semibold text-[#c9a227] transition-colors hover:bg-[#fff8de] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <p className="text-xs font-medium text-[#6b7280]">
+                Page {completedPage} of {completedTotalPages}
+              </p>
+              <button
+                type="button"
+                onClick={() => setCompletedPage((prev) => Math.min(completedTotalPages, prev + 1))}
+                disabled={completedPage === completedTotalPages}
+                className="rounded-full border border-[#fdd253]/50 bg-white px-3 py-1.5 text-xs font-semibold text-[#c9a227] transition-colors hover:bg-[#fff8de] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
             </div>
           )}
         </section>

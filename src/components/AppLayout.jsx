@@ -20,7 +20,6 @@ import BookSession from './menties/pages/BookSession';
 import BookingSuccess from './menties/pages/BookingSuccess';
 import Feedback from './menties/pages/Feedback';
 import MentorProfile from './menties/pages/MentorProfile';
-import VolunteerEvents from './menties/pages/VolunteerEvents';
 import VolunteerEventRegister from './menties/pages/VolunteerEventRegister';
 import RegisteredEvents from './menties/pages/RegisteredEvents';
 import EventCertificate from './menties/pages/EventCertificate';
@@ -422,7 +421,7 @@ const AppLayout = () => {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/volunteer" element={<VolunteerPage />} />
         <Route path="/volunteer/completed/:eventId" element={<CompletedEventStoryPage />} />
-        <Route path="/volunteer-events" element={<VolunteerEvents />} />
+        <Route path="/volunteer-events" element={<Navigate to="/volunteer" replace />} />
         <Route path="/volunteer-events/:eventId/register" element={<VolunteerEventRegister />} />
         <Route path="/donate" element={<DonationPage />} />
         <Route path="/login" element={<Login />} />
