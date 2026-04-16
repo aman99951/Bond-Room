@@ -430,7 +430,7 @@ export default function LandingPage() {
         <Wrap className="flex items-center justify-between h-[60px] 2xl:h-[72px] min-[2200px]:h-[84px]">
           <Link to="/" className="flex flex-col items-center leading-none group">
             <img src={logo} alt="Bond Room" className="theme-v-logo h-10 2xl:h-12 min-[2200px]:h-14 w-auto object-contain group-hover:scale-105 transition-transform" />
-            <span className="theme-v-tagline mt-0.5 block max-w-[120px] truncate text-[8px] tracking-wide sm:max-w-none sm:text-[9px] 2xl:text-[11px] min-[2200px]:text-[13px]">Bridging Old and New Destinies</span>
+            <span className="theme-v-tagline mt-0.5 block text-[8px] leading-tight tracking-wide sm:text-[9px] 2xl:text-[11px] min-[2200px]:text-[13px]">Bridging Old and New Destinies</span>
           </Link>
           <nav className="hidden md:flex items-center gap-0.5 2xl:gap-1.5 min-[2200px]:gap-2">
             {NAV.map((n) => (
@@ -1081,6 +1081,7 @@ function FaqItem({ question, answer, index, visible }) {
     </div>
   );
 }
+
 
 
 
