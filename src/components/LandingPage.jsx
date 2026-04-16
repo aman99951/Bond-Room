@@ -140,7 +140,7 @@ function Wrap({ children, className = "" }) {
   return <div className={`w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:px-16 min-[2500px]:px-20 ${className}`}>{children}</div>;
 }
 
-function MentorRingCarousel({ items, onSelectMentor, paused = false }) {
+function MentorRingCarousel({ items, onSelectMentor, paused = false, stepSignal }) {
   const stageRef = useRef(null);
   const cardRefs = useRef([]);
   const rafRef = useRef(null);
@@ -218,6 +218,14 @@ function MentorRingCarousel({ items, onSelectMentor, paused = false }) {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [applyArcLayout]);
+
+  useEffect(() => {
+    if (!stepSignal?.dir) return;
+    phaseRef.current = (phaseRef.current + stepSignal.dir + items.length) % items.length;
+    targetSpeedRef.current = HOVER_SPEED;
+    speedRef.current = 0;
+    applyArcLayout();
+  }, [applyArcLayout, items.length, stepSignal]);
 
   const handlePointerDown = (event) => {
     dragRef.current = true;
@@ -307,6 +315,7 @@ export default function LandingPage() {
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [mentorCards, setMentorCards] = useState(FALLBACK_MENTORS);
   const [activeStory, setActiveStory] = useState(0);
+  const [mentorStepSignal, setMentorStepSignal] = useState({ tick: 0, dir: 0 });
 
   useEffect(() => { const t = setInterval(() => setActiveStory((p) => (p + 1) % STORIES.length), 5000); return () => clearInterval(t); }, []);
   useEffect(() => {
@@ -341,6 +350,11 @@ export default function LandingPage() {
   const [faqRef, faqVis] = useOnScreen(0.1);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const prevStory = useCallback(() => setActiveStory((p) => (p - 1 + STORIES.length) % STORIES.length), []);
+  const nextStory = useCallback(() => setActiveStory((p) => (p + 1) % STORIES.length), []);
+  const moveMentorCarousel = useCallback((dir) => {
+    setMentorStepSignal((prev) => ({ tick: prev.tick + 1, dir }));
+  }, []);
 
   const NAV = [
     { label: "Home", href: "/" },
@@ -354,7 +368,7 @@ export default function LandingPage() {
   );
 
   return (
-    <div className="min-h-screen w-full bg-[#FAF8FF] overflow-x-hidden font-sans text-[#111827]">
+    <div className="theme-v-page min-h-screen w-full overflow-x-hidden font-sans text-white">
       <style>{`
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
         @keyframes floatSlow{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-10px) rotate(2deg)}}
@@ -387,14 +401,14 @@ export default function LandingPage() {
         .d7{animation-delay:.7s}.d8{animation-delay:.8s}.d10{animation-delay:1s}
         html{scroll-behavior:smooth}
         *::-webkit-scrollbar{width:5px}
-        *::-webkit-scrollbar-track{background:#F7F4FF}
+        *::-webkit-scrollbar-track{background:#3F236F}
         *::-webkit-scrollbar-thumb{background:#8E61CE;border-radius:99px}
         .gl{background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
         .hl{transition:all .28s ease}.hl:hover{transform:translateY(-5px);box-shadow:0 18px 36px -10px rgba(93,54,153,.16)}
         .cs{position:relative;overflow:hidden}
         .cs::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,.08) 50%,transparent 60%);transition:all .5s}
         .cs:hover::after{transform:translateX(100%) translateY(100%)}
-        .tg{background:linear-gradient(135deg,#5D3699,#5B2CC7,#8E61CE);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .tg{background:linear-gradient(135deg,#FDD253,#FFE28A,#FDD253);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .lp-arc-shell{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0 4px}
         .lp-arc-stage{--card-w:clamp(190px,16vw,262px);--card-h:clamp(286px,34vw,410px);width:100%;height:clamp(390px,41vw,560px);perspective:1680px;perspective-origin:50% 44%;overflow:hidden;position:relative;user-select:none;touch-action:pan-y;cursor:grab}
         .lp-arc-stage:active{cursor:grabbing}
@@ -412,25 +426,25 @@ export default function LandingPage() {
       `}</style>
 
       {/* ═══ HEADER ═══ */}
-      <header className="fixed top-0 inset-x-0 z-50 gl border-b border-[#DDD7ED]/40">
+      <header className="theme-v-header fixed top-0 inset-x-0 z-50">
         <Wrap className="flex items-center justify-between h-[60px] 2xl:h-[72px] min-[2200px]:h-[84px]">
           <Link to="/" className="flex flex-col items-center leading-none group">
-            <img src={logo} alt="Bond Room" className="h-10 2xl:h-12 min-[2200px]:h-14 w-auto object-contain group-hover:scale-105 transition-transform" />
-            <span className="text-[9px] 2xl:text-[11px] min-[2200px]:text-[13px] text-[#000] tracking-wide mt-0.5 hidden sm:block">Bridging Old and New Destinies</span>
+            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 2xl:h-12 min-[2200px]:h-14 w-auto object-contain group-hover:scale-105 transition-transform" />
+            <span className="theme-v-tagline text-[9px] 2xl:text-[11px] min-[2200px]:text-[13px] tracking-wide mt-0.5 hidden sm:block">Bridging Old and New Destinies</span>
           </Link>
           <nav className="hidden md:flex items-center gap-0.5 2xl:gap-1.5 min-[2200px]:gap-2">
             {NAV.map((n) => (
               n.href.includes("#")
-                ? <a key={n.label} href={n.href} className="px-3 py-1.5 2xl:px-4 2xl:py-2 min-[2200px]:px-5 min-[2200px]:py-2.5 rounded-lg text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-medium text-[#5F6B81] hover:text-[#5D3699] hover:bg-[#EDE3FF]/60 transition-all">{n.label}</a>
-                : <Link key={n.label} to={n.href} className="px-3 py-1.5 2xl:px-4 2xl:py-2 min-[2200px]:px-5 min-[2200px]:py-2.5 rounded-lg text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-medium text-[#5F6B81] hover:text-[#5D3699] hover:bg-[#EDE3FF]/60 transition-all">{n.label}</Link>
+                ? <a key={n.label} href={n.href} className="theme-v-nav-link px-3 py-1.5 2xl:px-4 2xl:py-2 min-[2200px]:px-5 min-[2200px]:py-2.5 rounded-lg text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-medium">{n.label}</a>
+                : <Link key={n.label} to={n.href} className="theme-v-nav-link px-3 py-1.5 2xl:px-4 2xl:py-2 min-[2200px]:px-5 min-[2200px]:py-2.5 rounded-lg text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-medium">{n.label}</Link>
             ))}
           </nav>
           <div className="hidden md:flex items-center gap-2 2xl:gap-3 min-[2200px]:gap-4">
-            {donateEnabled && <Link to="/donate" className="px-3.5 py-1.5 2xl:px-4.5 2xl:py-2 min-[2200px]:px-5 min-[2200px]:py-2.5 text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-semibold text-[#5D3699] border border-[#DDD7ED] rounded-lg hover:bg-[#EDE3FF] hover:scale-105 transition-all">Donate</Link>}
-            <Link to="/login" className="px-4 py-1.5 2xl:px-5 2xl:py-2 min-[2200px]:px-6 min-[2200px]:py-2.5 text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-semibold text-white bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] rounded-lg shadow-md shadow-[#5D3699]/20 hover:shadow-[#5D3699]/40 hover:scale-105 transition-all">Log in</Link>
+            {donateEnabled && <Link to="/donate" className="theme-v-cta px-3.5 py-1.5 2xl:px-4.5 2xl:py-2 min-[2200px]:px-5 min-[2200px]:py-2.5 text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-semibold rounded-lg hover:scale-105 transition-all">Donate</Link>}
+            <Link to="/login" className="theme-v-cta px-4 py-1.5 2xl:px-5 2xl:py-2 min-[2200px]:px-6 min-[2200px]:py-2.5 text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-semibold rounded-lg shadow-md shadow-[#2D1A4F]/30 hover:shadow-[#2D1A4F]/45 hover:scale-105 transition-all">Log in</Link>
           </div>
-          <button onClick={() => setMobileOpen(true)} className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[#EDE3FF] transition">
-            <svg className="w-5 h-5 text-[#5D3699]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          <button onClick={() => setMobileOpen(true)} className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/10 transition">
+            <svg className="theme-v-menu-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
         </Wrap>
       </header>
@@ -454,14 +468,14 @@ export default function LandingPage() {
               <Link to="/login" onClick={closeMobile} className="px-3 py-2.5 rounded-lg text-sm font-medium text-[#5F6B81] hover:bg-[#EDE3FF] hover:text-[#5D3699] transition">Log in</Link>
             </nav>
             <div className="p-3 border-t border-[#EDE3FF]">
-              <Link to="/register" onClick={closeMobile} className="block text-center px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] rounded-lg shadow-md">Mentee Sign Up</Link>
+              <Link to="/register" onClick={closeMobile} className="block text-center px-4 py-2.5 text-sm font-bold text-[#3B2265] bg-[#FDD253] rounded-lg shadow-md hover:bg-[#F7C940] transition-all">Mentee Sign Up</Link>
             </div>
           </div>
         </div>
       )}
 
       {/* ═══ HERO ═══ */}
-      <section ref={heroRef} className="relative pt-[64px] bg-gradient-to-b from-[#F7F4FF] via-[#FAF8FF] to-[#EDE3FF] overflow-hidden">
+      <section ref={heroRef} className="relative pt-[64px] bg-gradient-to-b from-[#4A2B7A] via-[#5D3699] to-[#3D1F6D] overflow-hidden">
         <Particles />
         <div className="absolute -top-36 -left-36 w-[480px] h-[480px] bg-[#5B2CC7]/[.07] rounded-full blur-3xl ab" />
         <div className="absolute top-8 -right-28 w-[400px] h-[400px] bg-[#8E61CE]/10 rounded-full blur-3xl ab d3" />
@@ -491,7 +505,7 @@ export default function LandingPage() {
                   <p className="mt-1.5 text-[13px] 2xl:text-[15px] min-[2200px]:text-lg font-semibold text-[#111827] leading-snug">Real support beyond marks and rankings.</p>
                   <div className="mt-2 2xl:mt-3 space-y-1.5 2xl:space-y-2">
                     {[{l:"AI",t:"Personalized mentor matching"},{l:"1:1",t:"Guided one-on-one sessions"},{l:"Safe",t:"Monitored Teen-first environment"}].map((x,i)=>(
-                      <div key={i} className="flex items-center gap-2 2xl:gap-2.5 text-[11px] 2xl:text-[13px] min-[2200px]:text-[15px] text-[#5F6B81]">
+                      <div key={i} className="flex items-center gap-2 2xl:gap-2.5 text-[11px] 2xl:text-[13px] min-[2200px]:text-[15px] font-medium text-[#334155]">
                         <span className="w-5 h-5 2xl:w-6 2xl:h-6 min-[2200px]:w-8 min-[2200px]:h-8 rounded bg-[#EDE3FF] flex items-center justify-center text-[8px] 2xl:text-[9px] min-[2200px]:text-[11px] font-bold text-[#5D3699] shrink-0">{x.l}</span>
                         <span>{x.t}</span>
                       </div>
@@ -510,32 +524,32 @@ export default function LandingPage() {
 
               <h1 className={heroVis?"asu d1":"opacity-0"}>
                 <span className="block text-[2.2rem] sm:text-5xl md:text-[3.4rem] lg:text-[3.6rem] 2xl:text-[4.6rem] min-[2200px]:text-[5.8rem] min-[2500px]:text-[6.4rem] font-extrabold leading-[1.06] tracking-tight">
-                  <span className="text-[#111827]">Real </span><span className="text-[#5D3699]">talk</span>
+                  <span className="text-white">Real </span><span className="text-[#FDD253]">talk</span>
                 </span>
                 <span className="block text-[2.2rem] sm:text-5xl md:text-[3.4rem] lg:text-[3.6rem] 2xl:text-[4.6rem] min-[2200px]:text-[5.8rem] min-[2500px]:text-[6.4rem] font-extrabold leading-[1.06] tracking-tight mt-0.5">
                   <span className="relative inline-block"><span className="relative z-10 tg">real guidance</span><span className="absolute -bottom-0.5 left-0 w-full h-2.5 bg-[#FDD253]/50 rounded-full -z-0" /></span>
                 </span>
                 <span className="block text-[2.2rem] sm:text-5xl md:text-[3.4rem] lg:text-[3.6rem] 2xl:text-[4.6rem] min-[2200px]:text-[5.8rem] min-[2500px]:text-[6.4rem] font-extrabold leading-[1.06] tracking-tight mt-0.5">
-                  <span className="text-[#111827]">for </span><span className="text-[#5B2CC7]">Teens</span>
+                  <span className="text-white">for </span><span className="text-[#FDD253]">Teens</span>
                   <span className="inline-flex items-center ml-2 align-middle px-2 py-0.5 2xl:px-3 2xl:py-1 min-[2200px]:px-4 min-[2200px]:py-1.5 rounded-full bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] text-white text-[9px] 2xl:text-[11px] min-[2200px]:text-[13px] font-bold tracking-widest shadow-md apg">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FDD253] mr-1 animate-ping" />LIVE
                   </span>
                 </span>
               </h1>
 
-              <p className={`max-w-lg 2xl:max-w-2xl min-[2200px]:max-w-3xl mx-auto mt-4 2xl:mt-5 text-[15px] sm:text-base 2xl:text-xl min-[2200px]:text-[1.55rem] text-[#5F6B81] leading-relaxed ${heroVis?"asu d2":"opacity-0"}`}>
+              <p className={`max-w-lg 2xl:max-w-2xl min-[2200px]:max-w-3xl mx-auto mt-4 2xl:mt-5 text-[15px] sm:text-base 2xl:text-xl min-[2200px]:text-[1.55rem] text-white/85 leading-relaxed ${heroVis?"asu d2":"opacity-0"}`}>
                 A safe platform where Teens grow through conversations with trusted mentors who have walked the path before.
               </p>
 
               <div className={`flex flex-col sm:flex-row items-center justify-center gap-2.5 2xl:gap-4 mt-6 2xl:mt-8 ${heroVis?"asu d3":"opacity-0"}`}>
-                <Link to="/register" className="group relative inline-flex w-[210px] items-center justify-center px-7 py-3 text-sm 2xl:w-auto 2xl:px-10 2xl:py-4 2xl:text-base min-[2200px]:px-12 min-[2200px]:py-5 min-[2200px]:text-xl font-bold text-white bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] rounded-xl 2xl:rounded-2xl shadow-lg shadow-[#5D3699]/25 hover:shadow-[#5D3699]/45 hover:scale-105 transition-all overflow-hidden">
-                  <span className="relative z-10 flex items-center justify-center gap-2">Mentee Sign Up<span className="group-hover:translate-x-0.5 transition-transform">→</span></span>
-                  <span className="absolute inset-0 bg-gradient-to-r from-[#4A2B7A] to-[#5D3699] opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Link to="/register" className="group relative inline-flex h-14 w-[210px] items-center justify-center px-7 text-sm 2xl:h-16 2xl:px-10 2xl:text-base min-[2200px]:h-[72px] min-[2200px]:px-12 min-[2200px]:text-xl font-bold text-[#3B2265] bg-[#FDD253] rounded-xl 2xl:rounded-2xl shadow-lg shadow-[#2D1A4F]/35 hover:shadow-[#2D1A4F]/50 hover:bg-[#F7C940] hover:scale-105 transition-all overflow-hidden">
+                  <span className="relative z-10 flex items-center justify-center gap-2 whitespace-nowrap">Mentee Sign Up<span className="group-hover:translate-x-0.5 transition-transform">→</span></span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-[#FFE28A] to-[#F7C940] opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
-                <Link to="/mentor-register" className="inline-flex w-[210px] items-center justify-center px-7 py-3 text-sm 2xl:w-auto font-bold text-[#5D3699] bg-white border-2 border-[#DDD7ED] rounded-xl hover:border-[#5D3699] hover:bg-[#EDE3FF]/40 hover:scale-105 transition-all shadow-sm">Become a Mentor 🤝</Link>
+                <Link to="/mentor-register" className="inline-flex h-14 w-[210px] items-center justify-center px-7 text-sm 2xl:h-16 min-[2200px]:h-[72px] font-bold text-[#3B2265] bg-[#FDD253] border-2 border-[#FDD253] rounded-xl hover:bg-[#F7C940] hover:scale-105 transition-all shadow-sm whitespace-nowrap">Become a Mentor 🤝</Link>
               </div>
 
-              <p className={`mt-3 2xl:mt-4 text-[11px] 2xl:text-[13px] min-[2200px]:text-[16px] text-[#6B7280] flex items-center justify-center gap-1 ${heroVis?"afi d4":"opacity-0"}`}>
+              <p className={`mt-3 2xl:mt-4 text-[11px] 2xl:text-[13px] min-[2200px]:text-[16px] text-white/80 flex items-center justify-center gap-1 ${heroVis?"afi d4":"opacity-0"}`}>
                 🔒 Sessions are monitored & recorded for Teen safety.
               </p>
 
@@ -543,15 +557,15 @@ export default function LandingPage() {
                 {[{v:"Always Free",l:"For Teens",i:"🎓"},{v:"Verified",l:"Mentors",i:"👨‍🏫"},{v:"Safe",l:"Conversations",i:"😊"}].map((s,i)=>(
                   <div key={i} className="text-center group cursor-default">
                     <span className="text-base 2xl:text-2xl min-[2200px]:text-3xl group-hover:scale-125 inline-block transition-transform">{s.i}</span>
-                    <p className="text-lg sm:text-xl 2xl:text-3xl min-[2200px]:text-5xl font-extrabold text-[#5D3699]">{s.v}</p>
-                    <p className="text-[10px] 2xl:text-sm min-[2200px]:text-base text-[#6B7280] font-medium">{s.l}</p>
+                    <p className="text-lg sm:text-xl 2xl:text-3xl min-[2200px]:text-5xl font-extrabold text-[#FDD253]">{s.v}</p>
+                    <p className="text-[10px] 2xl:text-sm min-[2200px]:text-base text-white font-semibold">{s.l}</p>
                   </div>
                 ))}
               </div>
 
               <div className={`mt-5 flex flex-col items-center gap-1.5 ${heroVis?"afi d6":"opacity-0"}`}>
-                <span className="text-[9px] uppercase tracking-[.18em] text-[#6B7280]">scroll to discover</span>
-                <span className="w-4 h-7 border-2 border-[#DDD7ED] rounded-full flex items-start justify-center p-0.5"><span className="w-1 h-1 bg-[#5B2CC7] rounded-full animate-bounce" /></span>
+                <span className="text-[9px] uppercase tracking-[.18em] text-[#FDD253]">scroll to discover</span>
+                <span className="w-4 h-7 border-2 border-[#FDD253] rounded-full flex items-start justify-center p-0.5"><span className="w-1 h-1 bg-[#FDD253] rounded-full animate-bounce" /></span>
               </div>
             </div>
 
@@ -643,7 +657,7 @@ export default function LandingPage() {
       </div>
 
       {/* ═══ STATS ═══ */}
-      <section ref={statsRef} className="py-8 sm:py-10 bg-gradient-to-b from-[#EDE3FF] to-[#F7F4FF] relative overflow-hidden">
+      <section ref={statsRef} className="py-8 sm:py-10 bg-gradient-to-b from-[#5D3699] to-[#4A2B7A] relative overflow-hidden">
         <Particles />
         <Wrap>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
@@ -651,11 +665,11 @@ export default function LandingPage() {
               {v:"Background-checked",s:"",l:"Verified mentors",e:"✅",g:"from-[#5B2CC7] to-[#8E61CE]"},
               {v:"Warm & safe",s:"",l:"Satisfaction focus",e:"💯",g:"from-[#4A2B7A] to-[#5D3699]"},
               {v:"Real conversations",s:"",l:"Sessions held",e:"💬",g:"from-[#7B4CBC] to-[#5B2CC7]"}].map((s,i)=>(
-              <div key={i} className={`group relative gl border border-[#DDD7ED]/40 rounded-xl p-4 sm:p-5 text-center hl cs ${statsVis?`asu d${i+1}`:"opacity-0"}`}>
+              <div key={i} className={`group relative border border-[#FDD253]/35 bg-[#3F236F]/85 rounded-xl p-4 sm:p-5 text-center hl cs ${statsVis?`asu d${i+1}`:"opacity-0"}`}>
                 <div className={`absolute top-0 left-0 right-0 h-[3px] rounded-t-xl bg-gradient-to-r ${s.g} opacity-60`} />
                 <span className="text-2xl mb-1 block group-hover:scale-125 transition-transform">{s.e}</span>
-                <span className="block text-lg sm:text-xl font-extrabold tg">{s.v}{s.s}</span>
-                <span className="block text-[11px] sm:text-xs font-medium text-[#5F6B81] mt-0.5">{s.l}</span>
+                <span className="block text-lg sm:text-xl font-extrabold text-[#FDD253] drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">{s.v}{s.s}</span>
+                <span className="block text-[11px] sm:text-xs font-semibold text-white mt-0.5">{s.l}</span>
               </div>
             ))}
           </div>
@@ -663,14 +677,14 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ HOW IT WORKS ═══ */}
-      <section id="about" ref={howRef} className="py-10 sm:py-14 bg-[#FAF8FF] relative overflow-hidden">
+      <section id="about" ref={howRef} className="py-10 sm:py-14 bg-[#4A2B7A] relative overflow-hidden">
         <Particles />
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#5B2CC7]/5 rounded-full blur-3xl" />
         <Wrap>
           <div className={`text-center mb-8 sm:mb-10 ${howVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">How it works</span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111827]">How Guidance <span className="tg">Flows</span></h2>
-            <p className="max-w-lg mx-auto mt-2 text-[#5F6B81] text-sm">Three simple steps to connect with a mentor who understands your journey</p>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">How Guidance <span className="tg">Flows</span></h2>
+            <p className="max-w-lg mx-auto mt-2 text-white/85 text-sm">Three simple steps to connect with a mentor who understands your journey</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
             {HOW_CARDS.map((c,i)=>(
@@ -691,18 +705,18 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="sm:hidden flex justify-center mt-5">
-            <Link to="/register" className="px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] rounded-xl shadow-md hover:scale-105 transition-all">Get Started Now →</Link>
+            <Link to="/register" className="px-5 py-2.5 text-sm font-bold text-[#3B2265] bg-[#FDD253] rounded-xl shadow-md hover:bg-[#F7C940] hover:scale-105 transition-all">Get Started Now →</Link>
           </div>
         </Wrap>
       </section>
 
       {/* ═══ SAFETY / TRUST ═══ */}
-      <section id="safety" ref={trustRef} className="py-10 sm:py-14 bg-gradient-to-b from-[#F7F4FF] to-[#EDE3FF] relative overflow-hidden">
+      <section id="safety" ref={trustRef} className="py-10 sm:py-14 bg-gradient-to-b from-[#5D3699] to-[#4A2B7A] relative overflow-hidden">
         <Particles />
         <Wrap>
           <div className={`text-center mb-7 sm:mb-10 ${trustVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full gl border border-[#DDD7ED] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">🛡️ Safety first</span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111827]">Built on <span className="tg">Trust</span></h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">Built on <span className="tg">Trust</span></h2>
           </div>
 
           <div className={`max-w-3xl mx-auto mb-7 sm:mb-10 ${trustVis?"asu d1":"opacity-0"}`}>
@@ -712,8 +726,8 @@ export default function LandingPage() {
               <span className="text-4xl mb-3 block  text-white">❝</span>
               <p className="text-base sm:text-lg font-medium text-white/95 leading-relaxed italic max-w-xl mx-auto">"Every interaction is designed to be safe, respectful, and deeply human."</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 mt-6">
-                <Link to="/register" className="px-6 py-2.5 rounded-lg bg-white text-[#5D3699] text-sm font-bold hover:scale-105 transition-all shadow-md flex items-center gap-1.5">Mentee Sign Up →</Link>
-                <a href="#safety" className="px-5 py-2.5 rounded-lg bg-white/10 text-white text-sm font-semibold hover:bg-white/20 transition-all border border-white/20">Learn about safety</a>
+                <Link to="/register" className="px-6 py-2.5 rounded-lg bg-[#FDD253] text-[#3B2265] text-sm font-bold hover:bg-[#F7C940] hover:scale-105 transition-all shadow-md flex items-center gap-1.5">Mentee Sign Up →</Link>
+                <a href="#safety" className="px-5 py-2.5 rounded-lg bg-[#FDD253] text-[#3B2265] text-sm font-semibold hover:bg-[#F7C940] transition-all border border-[#FDD253]">Learn about safety</a>
               </div>
             </div>
           </div>
@@ -735,13 +749,13 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ Teen VOICES ═══ */}
-      <section id="stories" ref={voicesRef} className="py-10 sm:py-14 bg-[#FAF8FF] relative overflow-hidden">
+      <section id="stories" ref={voicesRef} className="py-10 sm:py-14 bg-[#4A2B7A] relative overflow-hidden">
         <Particles />
         <Wrap>
           <div className={`text-center mb-7 sm:mb-10 ${voicesVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">💬 Teen voices</span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111827]">Stories That <span className="tg">Matter</span></h2>
-            <p className="max-w-lg mx-auto mt-2 text-[#5F6B81] text-sm">Real stories from real Teens whose lives were touched by Bond Room mentors</p>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">Stories That <span className="tg">Matter</span></h2>
+            <p className="max-w-lg mx-auto mt-2 text-white/85 text-sm">Real stories from real Teens whose lives were touched by Bond Room mentors</p>
           </div>
 
           <div className="hidden sm:grid sm:grid-cols-3 gap-3 sm:gap-4">
@@ -761,13 +775,31 @@ export default function LandingPage() {
 
           {/* Mobile carousel */}
           <div className="sm:hidden">
-            <div className={`bg-white border border-[#DDD7ED]/40 rounded-2xl p-5 ${voicesVis?"asu d2":"opacity-0"}`}>
+            <div className="relative">
+              <div className={`bg-white border border-[#DDD7ED]/40 rounded-2xl p-5 ${voicesVis?"asu d2":"opacity-0"}`}>
+                <button
+                  type="button"
+                  onClick={prevStory}
+                  aria-label="Previous story"
+                  className="absolute left-2 bottom-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#5D3699]/25 bg-white/95 text-[#5D3699] shadow hover:bg-[#FDD253] hover:text-[#3B2265] transition-all"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={nextStory}
+                  aria-label="Next story"
+                  className="absolute right-2 bottom-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#5D3699]/25 bg-white/95 text-[#5D3699] shadow hover:bg-[#FDD253] hover:text-[#3B2265] transition-all"
+                >
+                  ›
+                </button>
               <span className="text-3xl mb-3 block">{STORIES[activeStory].emoji}</span>
               <p className="text-[14px] text-[#111827] leading-relaxed font-medium italic mb-4 min-h-[70px]">"{STORIES[activeStory].quote}"</p>
-              <div className="flex items-center gap-2.5 pt-3 border-t border-[#EDE3FF]">
+              <div className="flex items-center justify-center gap-2.5 pt-3 border-t border-[#EDE3FF]">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#5D3699] to-[#8E61CE] flex items-center justify-center text-white text-xs font-bold">{STORIES[activeStory].name[0]}</div>
-                <div><p className="text-[13px] font-bold text-[#111827]">{STORIES[activeStory].name}</p><p className="text-[11px] text-[#6B7280]">{STORIES[activeStory].meta}</p></div>
+                <div className="text-center"><p className="text-[13px] font-bold text-[#111827]">{STORIES[activeStory].name}</p><p className="text-[11px] text-[#6B7280]">{STORIES[activeStory].meta}</p></div>
               </div>
+            </div>
             </div>
             <div className="flex items-center justify-center gap-1.5 mt-3">{STORIES.map((_,i)=><button key={i} onClick={()=>setActiveStory(i)} className={`h-2 rounded-full transition-all ${i===activeStory?"bg-[#5D3699] w-6":"bg-[#DDD7ED] w-2"}`} />)}</div>
           </div>
@@ -775,14 +807,14 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ MENTORS ═══ */}
-      <section id="volunteer" ref={mentorSecRef} className="py-10 sm:py-14 bg-gradient-to-b from-[#EDE3FF] to-[#F7F4FF] relative overflow-hidden">
+      <section id="volunteer" ref={mentorSecRef} className="py-10 sm:py-14 bg-gradient-to-b from-[#5D3699] to-[#4A2B7A] relative overflow-hidden">
         <Particles />
         <Wrap>
           <div className={`flex flex-col sm:flex-row sm:items-end sm:justify-between mb-7 sm:mb-10 gap-3 ${mentorSecVis?"asu":"opacity-0"}`}>
             <div>
               <span className="inline-block px-3 py-1 rounded-full gl border border-[#DDD7ED] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">Our mentors</span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111827]">Wisdom You Can <span className="tg">See</span></h2>
-              <p className="mt-1 text-[#5F6B81] text-sm max-w-md">Click on any mentor to learn more about their background and expertise</p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">Wisdom You Can <span className="tg">See</span></h2>
+              <p className="mt-1 text-white/85 text-sm max-w-md">Click on any mentor to learn more about their background and expertise</p>
             </div>
             <a href="#volunteer" className="text-sm font-bold text-[#5D3699] hover:text-[#4A2B7A] flex items-center gap-1 group px-3 py-1.5 rounded-lg hover:bg-[#EDE3FF] transition-all">Meet all <span className="group-hover:translate-x-0.5 transition-transform">→</span></a>
           </div>
@@ -790,8 +822,24 @@ export default function LandingPage() {
           {mentorCards.length===0 ? (
             <div className="text-center py-12 text-[#6B7280]">No mentors available from API right now.</div>
           ) : (
-            <div className={mentorSecVis ? "asu d1" : "opacity-0"}>
-              <MentorRingCarousel items={mentorCards} onSelectMentor={setSelectedMentor} paused={Boolean(selectedMentor)} />
+            <div className={`relative ${mentorSecVis ? "asu d1" : "opacity-0"}`}>
+              <button
+                type="button"
+                onClick={() => moveMentorCarousel(-1)}
+                aria-label="Scroll mentors left"
+                className="absolute left-0 top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#FDD253]/65 bg-[#4A2B7A]/85 text-[#FDD253] shadow-lg hover:bg-[#FDD253] hover:text-[#3B2265] transition-all"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={() => moveMentorCarousel(1)}
+                aria-label="Scroll mentors right"
+                className="absolute right-0 top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#FDD253]/65 bg-[#4A2B7A]/85 text-[#FDD253] shadow-lg hover:bg-[#FDD253] hover:text-[#3B2265] transition-all"
+              >
+                ›
+              </button>
+              <MentorRingCarousel items={mentorCards} onSelectMentor={setSelectedMentor} paused={Boolean(selectedMentor)} stepSignal={mentorStepSignal} />
             </div>
           )}
         </Wrap>
@@ -844,13 +892,13 @@ export default function LandingPage() {
       )}
 
       {/* ═══ WHY BOND ROOM ═══ */}
-      <section ref={whyRef} className="py-10 sm:py-14 bg-[#FAF8FF] relative overflow-hidden">
+      <section ref={whyRef} className="py-10 sm:py-14 bg-[#4A2B7A] relative overflow-hidden">
         <Particles />
         <Wrap>
           <div className={`text-center mb-7 sm:mb-10 ${whyVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">Why choose us</span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111827]">More Than Just <span className="tg">Mentoring</span></h2>
-            <p className="max-w-lg mx-auto mt-2 text-[#5F6B81] text-sm">Bond Room bridges the generation gap, connecting Teens with experienced mentors who truly understand.</p>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">More Than Just <span className="tg">Mentoring</span></h2>
+            <p className="max-w-lg mx-auto mt-2 text-white/85 text-sm">Bond Room bridges the generation gap, connecting Teens with experienced mentors who truly understand.</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -876,12 +924,12 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ FAQ ═══ */}
-      <section ref={faqRef} className="py-10 sm:py-14 bg-gradient-to-b from-[#F7F4FF] to-[#EDE3FF] relative overflow-hidden">
+      <section ref={faqRef} className="py-10 sm:py-14 bg-gradient-to-b from-[#5D3699] to-[#4A2B7A] relative overflow-hidden">
         <Particles />
         <div className="max-w-[720px] mx-auto px-4 sm:px-6">
           <div className={`text-center mb-7 sm:mb-10 ${faqVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full gl border border-[#DDD7ED] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">❓ Got questions?</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827]">Frequently <span className="tg">Asked</span></h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Frequently <span className="tg">Asked</span></h2>
           </div>
           <div className="space-y-2">
             {[
@@ -897,7 +945,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ EDITORIAL CTA ═══ */}
-      <section ref={ctaRef} className="py-10 sm:py-14 bg-[#FAF8FF] relative overflow-hidden">
+      <section ref={ctaRef} className="py-10 sm:py-14 bg-[#4A2B7A] relative overflow-hidden">
         <Particles />
         <div className="absolute top-6 left-6 w-16 h-16 bg-[#FDD253]/20 rounded-full blur-lg af" />
         <div className="absolute bottom-6 right-6 w-14 h-14 bg-[#5B2CC7]/10 rounded-lg rotate-45 blur-md afs" />
@@ -911,8 +959,8 @@ export default function LandingPage() {
             </h2>
             <p className="max-w-md mx-auto mt-3 text-white/65 text-sm">Join thousands of Teens already growing with Bond Room mentors</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 mt-7">
-              <Link to="/register" className="group px-7 py-3 text-sm font-bold text-[#5D3699] bg-white rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-1.5">Mentee Sign Up 🎓 <span className="group-hover:translate-x-0.5 transition-transform">→</span></Link>
-              <Link to="/mentor-register" className="px-7 py-3 text-sm font-bold text-white bg-white/10 border-2 border-white/25 rounded-xl hover:bg-white/20 hover:scale-105 transition-all">Become a Mentor 🤝</Link>
+              <Link to="/register" className="group px-7 py-3 text-sm font-bold text-[#3B2265] bg-[#FDD253] rounded-xl shadow-lg hover:bg-[#F7C940] hover:scale-105 transition-all flex items-center gap-1.5">Mentee Sign Up 🎓 <span className="group-hover:translate-x-0.5 transition-transform">→</span></Link>
+              <Link to="/mentor-register" className="px-7 py-3 text-sm font-bold text-[#3B2265] bg-[#FDD253] border-2 border-[#FDD253] rounded-xl hover:bg-[#F7C940] hover:scale-105 transition-all">Become a Mentor 🤝</Link>
             </div>
             <div className="flex items-center justify-center gap-5 mt-6 text-white/45 text-[11px]">
               {["Free forever","No credit card","Start in 2 min"].map((t,i)=>(
@@ -1003,8 +1051,8 @@ export default function LandingPage() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-2">Get Started</p>
                 <div className="flex flex-col gap-2">
-                  <Link to="/register" className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white/10 text-[13px] font-semibold text-white hover:bg-white/20 transition border border-white/10 w-fit">Mentee Sign Up 🎓</Link>
-                  <Link to="/mentor-register" className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white/10 text-[13px] font-semibold text-white hover:bg-white/20 transition border border-white/10 w-fit">Become a Mentor 🤝</Link>
+                  <Link to="/register" className="inline-flex w-[160px] sm:w-[190px] items-center justify-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg bg-[#FDD253] text-[12px] sm:text-[13px] font-semibold text-[#3B2265] hover:bg-[#F7C940] transition border border-[#FDD253]">Mentee Sign Up 🎓</Link>
+                  <Link to="/mentor-register" className="inline-flex w-[160px] sm:w-[190px] items-center justify-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg bg-[#FDD253] text-[12px] sm:text-[13px] font-semibold text-[#3B2265] hover:bg-[#F7C940] transition border border-[#FDD253]">Become a Mentor 🤝</Link>
                 </div>
               </div>
             </div>
@@ -1022,17 +1070,22 @@ export default function LandingPage() {
 function FaqItem({ question, answer, index, visible }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`gl border border-[#DDD7ED]/40 rounded-xl overflow-hidden hl ${visible?`asu d${index+1}`:"opacity-0"}`}>
+    <div className={`bg-white/95 border border-[#E9DFFF] rounded-xl overflow-hidden shadow-sm hl ${visible?`asu d${index+1}`:"opacity-0"}`}>
       <button onClick={()=>setOpen(!open)} className="w-full flex items-center justify-between gap-3 p-4 text-left">
         <span className="text-[13px] sm:text-[14px] font-semibold text-[#111827]">{question}</span>
-        <span className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-all duration-300 ${open?"bg-[#5D3699] text-white rotate-45 shadow-md shadow-[#5D3699]/20":"bg-[#EDE3FF] text-[#5D3699]"}`}>+</span>
+        <span className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-all duration-300 ${open?"bg-[#5D3699] text-white rotate-45 shadow-md shadow-[#5D3699]/20":"bg-[#FDD253] text-[#3B2265] shadow-sm"}`}>+</span>
       </button>
       <div className={`overflow-hidden transition-all duration-300 ${open?"max-h-40":"max-h-0"}`}>
-        <p className="px-4 pb-4 text-[13px] text-[#5F6B81] leading-relaxed">{answer}</p>
+        <p className="px-4 pb-4 text-[13px] text-[#4b5563] leading-relaxed">{answer}</p>
       </div>
     </div>
   );
 }
+
+
+
+
+
 
 
 

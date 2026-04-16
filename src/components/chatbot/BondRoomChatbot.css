@@ -64,180 +64,54 @@
   animation-delay: 1.4s;
 }
 
-/* Avatar Container */
+/* Avatar Container - Bee Images */
 .bond-chatbot-avatar {
   position: relative;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--color-brand-gold), var(--color-brand-gold-dark) 40%, var(--color-accent));
+  width: 54px;
+  height: 54px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  border: 3px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 2px 8px rgba(255, 255, 255, 0.3);
-  overflow: visible;
 }
 
-.avatar-glow {
+.bond-chatbot-avatar-image {
+  animation: bee-bob 1.9s ease-in-out infinite;
+}
+
+.bee-frame {
   position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(253, 210, 83, 0.6), transparent 70%);
-  animation: pulse-glow 2s ease-in-out infinite;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.22));
+  transition: opacity 0.42s ease;
 }
 
-/* Robot Head */
-.bond-chatbot-head {
-  width: 32px;
-  height: 28px;
-  border-radius: 12px 12px 16px 16px;
-  border: 2.5px solid #1f2937;
-  background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 3px;
-  position: relative;
-  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 2px 8px rgba(0, 0, 0, 0.15);
+.bee-frame-rest {
+  opacity: 1;
 }
 
-/* Antenna */
-.antenna {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  height: 10px;
-  background: #1f2937;
-  animation: antenna-bounce 1.5s ease-in-out infinite;
+.bee-frame-wing {
+  opacity: 0;
 }
 
-.antenna-ball {
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--color-brand-gold), var(--color-brand-gold-dark));
-  box-shadow: 0 0 8px rgba(253, 210, 83, 0.8);
-  animation: antenna-glow 1.5s ease-in-out infinite;
+.bond-chatbot-float:hover .bee-frame-rest {
+  opacity: 0;
 }
 
-/* Eyes */
-.eyes-container {
-  display: flex;
-  gap: 7px;
-  margin-top: 4px;
+.bond-chatbot-float:hover .bee-frame-wing {
+  opacity: 1;
 }
 
-.bond-chatbot-eye {
-  position: relative;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #1f2937;
-  animation: eye-blink 4s ease-in-out infinite;
+.mini-bee-image {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
-.eye-pupil {
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #fff;
-  animation: eye-look 3s ease-in-out infinite;
-}
-
-.eye-shine {
-  position: absolute;
-  top: 1px;
-  right: 1px;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-/* Smile */
-.bond-chatbot-smile {
-  position: absolute;
-  bottom: 4px;
-  width: 12px;
-  height: 6px;
-  border-bottom: 2.5px solid #1f2937;
-  border-radius: 0 0 12px 12px;
-  animation: smile-animate 3s ease-in-out infinite;
-}
-
-/* Cheeks */
-.cheek {
-  position: absolute;
-  bottom: 8px;
-  width: 5px;
-  height: 4px;
-  border-radius: 50%;
-  background: rgba(251, 113, 133, 0.4);
-}
-
-.cheek-left {
-  left: 3px;
-}
-
-.cheek-right {
-  right: 3px;
-}
-
-/* Waving Hand */
-.bond-chatbot-hand {
-  position: absolute;
-  right: -8px;
-  top: 8px;
-  transform-origin: bottom left;
-  animation: hand-wave 1.5s ease-in-out infinite;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-}
-
-.hand-palm {
-  position: relative;
-  width: 14px;
-  height: 12px;
-  border-radius: 8px;
-  border: 2.5px solid #1f2937;
-  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 1px;
-  padding-top: 2px;
-}
-
-.finger {
-  width: 2px;
-  height: 5px;
-  background: #1f2937;
-  border-radius: 2px 2px 0 0;
-  animation: finger-wave 1.5s ease-in-out infinite;
-}
-
-.finger:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.finger:nth-child(2) {
-  animation-delay: 0.1s;
-  height: 6px;
-}
-
-.finger:nth-child(3) {
-  animation-delay: 0.2s;
+.typing-bee-image {
+  animation: bee-bob 0.9s ease-in-out infinite;
 }
 
 /* Prompt Text */
@@ -455,28 +329,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.mini-bot-head {
-  width: 16px;
-  height: 14px;
-  border-radius: 6px;
-  background: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 3px;
-}
-
-.mini-eye {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #1f2937;
-}
-
-.typing-bot {
-  animation: bot-thinking 1s ease-in-out infinite;
-}
-
 .bond-chatbot-message {
   max-width: 75%;
   border-radius: 16px;
@@ -687,85 +539,16 @@
   }
 }
 
-@keyframes hand-wave {
+@keyframes bee-bob {
   0%, 100% {
-    transform: rotate(0deg);
-  }
-  10%, 30% {
-    transform: rotate(-35deg);
-  }
-  20%, 40% {
-    transform: rotate(25deg);
-  }
-  50%, 80% {
-    transform: rotate(0deg);
-  }
-}
-
-@keyframes finger-wave {
-  0%, 100% {
-    transform: scaleY(1);
+    transform: translateY(0);
   }
   50% {
-    transform: scaleY(1.2);
+    transform: translateY(-3px);
   }
 }
 
-@keyframes antenna-bounce {
-  0%, 100% {
-    transform: translateX(-50%) scaleY(1);
-  }
-  50% {
-    transform: translateX(-50%) scaleY(1.2);
-  }
-}
 
-@keyframes antenna-glow {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(253, 210, 83, 0.8);
-  }
-  50% {
-    box-shadow: 0 0 16px rgba(253, 210, 83, 1);
-  }
-}
-
-@keyframes eye-blink {
-  0%, 94%, 100% {
-    transform: scaleY(1);
-  }
-  95%, 97% {
-    transform: scaleY(0.1);
-  }
-}
-
-@keyframes eye-look {
-  0%, 40%, 100% {
-    transform: translate(0, 0);
-  }
-  45%, 55% {
-    transform: translate(1px, 0);
-  }
-}
-
-@keyframes smile-animate {
-  0%, 100% {
-    width: 12px;
-  }
-  50% {
-    width: 14px;
-  }
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.1);
-  }
-}
 
 @keyframes sparkle-float {
   0%, 100% {
@@ -829,15 +612,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes bot-thinking {
-  0%, 100% {
-    transform: rotate(-3deg);
-  }
-  50% {
-    transform: rotate(3deg);
   }
 }
 

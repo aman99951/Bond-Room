@@ -94,16 +94,16 @@ const VolunteerTopAuth = ({ lockNavigation = false, onBlockedNavigate, logoutRed
           <button
             type="button"
             onClick={() => setDrawerOpen((open) => !open)}
-            className="md:hidden ml-auto w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[#EDE3FF] transition"
+            className="md:hidden ml-auto w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/10 transition"
             aria-label={drawerOpen ? "Close menu" : "Open menu"}
             aria-expanded={drawerOpen}
           >
             {drawerOpen ? (
-              <svg className="w-5 h-5 text-[#5D3699]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg className="theme-v-menu-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             ) : (
-              <svg className="w-5 h-5 text-[#5D3699]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <svg className="theme-v-menu-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             )}

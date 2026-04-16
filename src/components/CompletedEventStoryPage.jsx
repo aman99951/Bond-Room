@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, CheckCircle2, Images, MapPin, Users, X } from 'lucide-react';
 import { menteeApi } from '../apis/api/menteeApi';
@@ -32,7 +32,6 @@ const normalizeVolunteerEvent = (event) => ({
 const getCompletedEventDate = (event) => String(event?.completed_on || event?.date || '');
 
 const CompletedEventStoryPage = () => {
-  const navigate = useNavigate();
   const { eventId } = useParams();
   const [eventItem, setEventItem] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -135,29 +134,29 @@ const CompletedEventStoryPage = () => {
 
   const topBar = (
     <>
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 shadow-[0_10px_24px_-18px_rgba(93,54,153,0.35)] backdrop-blur-[14px]">
+      <header className="theme-v-header fixed top-0 inset-x-0 z-50">
         <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:h-[84px] min-[2200px]:px-16 min-[2500px]:px-20">
           <Link to="/" className="flex flex-col items-center leading-none group">
-            <img src={logo} alt="Bond Room" className="h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
-            <span className="mt-0.5 hidden text-[9px] tracking-wide text-[#000] sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
+            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
+            <span className="theme-v-tagline mt-0.5 hidden text-[9px] tracking-wide sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
               Bridging Old and New Destinies
             </span>
           </Link>
           <nav className="hidden items-center gap-0.5 md:flex 2xl:gap-1.5 min-[2200px]:gap-2">
             {NAV.map((n) => (
               n.href.includes('#') ? (
-                <a key={n.label} href={n.href} className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">{n.label}</a>
+                <a key={n.label} href={n.href} className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">{n.label}</a>
               ) : (
-                <Link key={n.label} to={n.href} className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">{n.label}</Link>
+                <Link key={n.label} to={n.href} className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">{n.label}</Link>
               )
             ))}
           </nav>
           <div className="hidden items-center gap-2 md:flex 2xl:gap-3 min-[2200px]:gap-4">
-            <Link to="/donate" className="rounded-lg border border-[#DDD7ED] px-3.5 py-1.5 text-[13px] font-semibold text-[#5D3699] transition-all hover:scale-105 hover:bg-[#EDE3FF] 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">Donate</Link>
-            <Link to="/login?source=volunteer" className="rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-1.5 text-[13px] font-semibold text-white shadow-md shadow-[#5D3699]/20 transition-all hover:scale-105 hover:shadow-[#5D3699]/40 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">Log in</Link>
+            <Link to="/donate" className="theme-v-cta rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all hover:scale-105 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">Donate</Link>
+            <Link to="/login?source=volunteer" className="theme-v-cta rounded-lg px-4 py-1.5 text-[13px] font-semibold shadow-md shadow-[#2D1A4F]/30 transition-all hover:scale-105 hover:shadow-[#2D1A4F]/45 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">Log in</Link>
           </div>
-          <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[#EDE3FF] md:hidden">
-            <svg className="h-5 w-5 text-[#5D3699]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-white/10 md:hidden">
+            <svg className="theme-v-menu-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -195,7 +194,7 @@ const CompletedEventStoryPage = () => {
     return (
       <>
         {topBar}
-        <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 pt-24 sm:p-8 sm:pt-28">
+        <div className="theme-v-page min-h-screen p-4 pt-[86px] sm:p-8 sm:pt-[90px]">
           <div className="mx-auto max-w-5xl rounded-2xl border border-[#e8dcff] bg-white p-10 text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#d1fae5] border-t-[#15803d]" />
             <p className="mt-3 text-sm text-[#6b7280]">Loading completed event story...</p>
@@ -209,13 +208,13 @@ const CompletedEventStoryPage = () => {
     return (
       <>
         {topBar}
-        <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 pt-24 sm:p-8 sm:pt-28">
+        <div className="theme-v-page min-h-screen p-4 pt-[86px] sm:p-8 sm:pt-[90px]">
           <div className="mx-auto max-w-5xl rounded-2xl border border-red-200 bg-white p-10 text-center">
             <p className="text-sm text-red-600">{error || 'Completed event not found.'}</p>
             <button
               type="button"
               onClick={() => navigate('/volunteer')}
-              className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
+              className="theme-v-back-btn mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Back to Volunteer
@@ -230,88 +229,77 @@ const CompletedEventStoryPage = () => {
     <>
       {topBar}
       <motion.div
-        className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 pt-24 sm:p-8 sm:pt-28"
+        className="theme-v-page min-h-screen p-4 pt-[86px] sm:p-8 sm:pt-[90px]"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
       <div className="mx-auto w-full">
-        <button
-          type="button"
-          onClick={() => navigate('/volunteer')}
-          className="inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Volunteer
-        </button>
-
-        <section className="mt-5 w-full overflow-hidden rounded-3xl border border-[#dcfce7] bg-[linear-gradient(165deg,#ffffff_0%,#f3fbf6_45%,#ecfdf3_100%)] p-5 shadow-[0_30px_70px_-44px_rgba(15,23,42,0.75)] sm:p-7">
+        <section className="theme-v-hero mt-5 w-full overflow-hidden rounded-3xl p-5 sm:p-7">
           <div className="mb-5">
-            <p className="inline-flex items-center gap-1 rounded-full bg-[#dcfce7] px-3 py-1 text-[11px] font-semibold text-[#166534]">
+            <p className="inline-flex items-center gap-1 rounded-full bg-[#FDD253]/20 px-3 py-1 text-[11px] font-semibold text-[#FDD253]">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Completed Event Story
             </p>
-            <h1 className="mt-3 text-2xl font-semibold text-[#111827] sm:text-3xl">{eventItem.title}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[#4b5563]">
-              <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5 text-[#15803d]" />{formatDate(getCompletedEventDate(eventItem))}</span>
-              <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-[#15803d]" />{eventItem.location || 'Location not provided'}</span>
+            <h1 className="theme-v-title mt-3 text-2xl font-semibold sm:text-3xl">{eventItem.title}</h1>
+            <div className="theme-v-subtitle mt-2 flex flex-wrap items-center gap-3 text-xs">
+              <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5 text-[#FDD253]" />{formatDate(getCompletedEventDate(eventItem))}</span>
+              <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-[#FDD253]" />{eventItem.location || 'Location not provided'}</span>
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[1.45fr_1fr]">
-            <div className="rounded-2xl border border-[#d1fae5] bg-white/90 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">Brief</p>
+          <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+            <div className="rounded-2xl border border-[#d1fae5] bg-white/90 p-4 sm:p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">Story Brief</p>
               <p className="mt-2 whitespace-pre-line text-sm leading-7 text-[#1f2937]">{storyBrief}</p>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[#bbf7d0] bg-[#f0fdf4] p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">Participants</p>
-                  <p className="mt-2 inline-flex items-center gap-2 text-3xl font-bold text-[#166534]">
-                    <Users className="h-6 w-6" />
-                    {joinedCount}
-                  </p>
-                  <p className="mt-1 text-xs text-[#166534]">Joined this event</p>
-                </div>
-                <div className="rounded-2xl border border-[#d1fae5] bg-white/95 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">Bond Room Participants</p>
-                  <p className="mt-2 inline-flex items-center gap-2 text-3xl font-bold text-[#166534]">
-                    <Users className="h-6 w-6" />
-                    {bondRoomParticipants === null ? '—' : bondRoomParticipants}
-                  </p>
-                  <p className="mt-1 text-xs text-[#166534]">Volunteer</p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-[#d1fae5] bg-white/95 p-4">
-                <p className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">
-                  <Images className="h-3.5 w-3.5" />
-                  Event Gallery
+            <aside className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <div className="rounded-2xl border border-[#bbf7d0] bg-[#f0fdf4] p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">Participants</p>
+                <p className="mt-2 inline-flex items-center gap-2 text-3xl font-bold text-[#166534]">
+                  <Users className="h-6 w-6" />
+                  {joinedCount}
                 </p>
-                {galleryImages.length ? (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    {galleryImages.map((imgSrc, index) => (
-                      <button
-                        key={`${imgSrc}-${index}`}
-                        type="button"
-                        onClick={() => setActiveImageIndex(index)}
-                        className="overflow-hidden rounded-xl border border-[#d1fae5] text-left"
-                      >
-                        <img
-                          src={imgSrc}
-                          alt={`${eventItem.title} gallery ${index + 1}`}
-                          className="h-44 w-full object-cover transition-transform duration-500 hover:scale-105 2xl:h-56"
-                          loading="lazy"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-2 text-xs text-[#6b7280]">No gallery images were added for this event.</p>
-                )}
+                <p className="mt-1 text-xs text-[#166534]">Joined this event</p>
               </div>
-            </div>
+              <div className="rounded-2xl border border-[#d1fae5] bg-white/95 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">Bond Room Participants</p>
+                <p className="mt-2 inline-flex items-center gap-2 text-3xl font-bold text-[#166534]">
+                  <Users className="h-6 w-6" />
+                  {bondRoomParticipants === null ? 'N/A' : bondRoomParticipants}
+                </p>
+                <p className="mt-1 text-xs text-[#166534]">Volunteer</p>
+              </div>
+            </aside>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-[#d1fae5] bg-white/95 p-4 sm:p-5">
+            <p className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-[#15803d]">
+              <Images className="h-3.5 w-3.5" />
+              Event Gallery
+            </p>
+            {galleryImages.length ? (
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {galleryImages.map((imgSrc, index) => (
+                  <button
+                    key={`${imgSrc}-${index}`}
+                    type="button"
+                    onClick={() => setActiveImageIndex(index)}
+                    className="overflow-hidden rounded-xl border border-[#d1fae5] text-left"
+                  >
+                    <img
+                      src={imgSrc}
+                      alt={`${eventItem.title} gallery ${index + 1}`}
+                      className="h-52 w-full object-cover transition-transform duration-500 hover:scale-105"
+                      loading="lazy"
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-[#6b7280]">No gallery images were added for this event.</p>
+            )}
           </div>
         </section>
       </div>
@@ -371,3 +359,4 @@ const CompletedEventStoryPage = () => {
 };
 
 export default CompletedEventStoryPage;
+

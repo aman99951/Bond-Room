@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Send, X, Sparkles } from 'lucide-react';
 import { chatbotApi } from '../../apis/api/chatbotApi';
+import beeWithWing from '../assets/bee-with-wing.png';
+import beeWithoutWing from '../assets/bee-without-wing.png';
 import './BondRoomChatbot.css';
 
 const FAQ_QUESTIONS = [
@@ -90,44 +92,9 @@ const BondRoomChatbot = () => {
             <span className="sparkle sparkle-3">✨</span>
           </div>
           
-          <span className="bond-chatbot-avatar" aria-hidden="true">
-            <div className="avatar-glow"></div>
-            
-            {/* Robot Head */}
-            <div className="bond-chatbot-head">
-              {/* Antenna */}
-              <div className="antenna">
-                <div className="antenna-ball"></div>
-              </div>
-              
-              {/* Eyes */}
-              <div className="eyes-container">
-                <span className="bond-chatbot-eye">
-                  <span className="eye-pupil"></span>
-                  <span className="eye-shine"></span>
-                </span>
-                <span className="bond-chatbot-eye">
-                  <span className="eye-pupil"></span>
-                  <span className="eye-shine"></span>
-                </span>
-              </div>
-              
-              {/* Smile */}
-              <span className="bond-chatbot-smile"></span>
-              
-              {/* Cheeks */}
-              <span className="cheek cheek-left"></span>
-              <span className="cheek cheek-right"></span>
-            </div>
-            
-            {/* Waving Hand */}
-            <span className="bond-chatbot-hand">
-              <span className="hand-palm">
-                <span className="finger"></span>
-                <span className="finger"></span>
-                <span className="finger"></span>
-              </span>
-            </span>
+          <span className="bond-chatbot-avatar bond-chatbot-avatar-image" aria-hidden="true">
+            <img src={beeWithoutWing} alt="" className="bee-frame bee-frame-rest" />
+            <img src={beeWithWing} alt="" className="bee-frame bee-frame-wing" />
           </span>
           
           <div className="bond-chatbot-prompt-wrap">
@@ -151,7 +118,7 @@ const BondRoomChatbot = () => {
                 <Sparkles size={18} />
               </span>
               <div>
-                <p className="bond-chatbot-title">Bondy - Your Bond Room Buddy 🤖</p>
+                <p className="bond-chatbot-title">Bondy - Your Bond Room Buddy 🐝</p>
                 <p className="bond-chatbot-subtitle">
                   <span className="status-dot"></span>
                   Online & ready to help!
@@ -176,10 +143,7 @@ const BondRoomChatbot = () => {
               >
                 {item.role === 'assistant' && (
                   <div className="message-avatar">
-                    <div className="mini-bot-head">
-                      <div className="mini-eye"></div>
-                      <div className="mini-eye"></div>
-                    </div>
+                    <img src={beeWithoutWing} alt="" className="mini-bee-image" />
                   </div>
                 )}
                 <div className={`bond-chatbot-message ${item.role === 'user' ? 'is-user' : 'is-assistant'}`}>
@@ -190,10 +154,7 @@ const BondRoomChatbot = () => {
             {loading ? (
               <div className="bond-chatbot-message-wrapper is-assistant">
                 <div className="message-avatar">
-                  <div className="mini-bot-head typing-bot">
-                    <div className="mini-eye"></div>
-                    <div className="mini-eye"></div>
-                  </div>
+                  <img src={beeWithWing} alt="" className="mini-bee-image typing-bee-image" />
                 </div>
                 <div className="bond-chatbot-typing">
                   <span className="typing-dot"></span>

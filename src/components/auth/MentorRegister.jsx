@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import TopAuth from './TopAuth';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import BottomAuth from './BottomAuth';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import logo from '../assets/Logo.svg';
 import mentorLeft from '../assets/teach1.png';
 import mentorBottom from '../assets/teach2.png';
 import imageContainer from '../assets/Image Container.png';
@@ -344,6 +344,8 @@ const MentorRegister = () => {
   const [profileImageMenuOpen, setProfileImageMenuOpen] = useState(false);
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const [cameraErrorMessage, setCameraErrorMessage] = useState('');
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
   const skipDraftPersistenceRef = useRef(false);
   const isDev = Boolean(import.meta?.env?.DEV);
   const dobBounds = getMentorDobBounds();
@@ -1038,6 +1040,13 @@ const MentorRegister = () => {
   const searchParams = new URLSearchParams(location.search);
   const isEventFlowLock = searchParams.get('source') === 'event-flow';
   const registerTabHref = isEventFlowLock ? `/register?${searchParams.toString()}` : '/register';
+  const NAV = [
+    { label: 'Home', href: '/' },
+    { label: 'About', href: '/about' },
+    { label: 'Volunteer', href: '/volunteer' },
+    { label: 'Safety', href: '/#safety' },
+    { label: 'Stories', href: '/#stories' },
+  ];
   const shouldShowError = (fieldKey) => {
     const isSectionOneField = sectionOneFieldKeys.has(fieldKey);
     const attempted = isSectionOneField
@@ -1062,7 +1071,7 @@ const MentorRegister = () => {
   }, [isEventFlowLock, navigate, registerTabHref]);
 
   return (
-    <div className="mentor-register-page lp-register text-[#1f2937]">
+    <div className="mentor-register-page lp-register theme-v-page text-[#1f2937]">
       {toastState.open && (
         <div className={`fixed right-4 top-[112px] z-[70] w-[min(360px,calc(100vw-24px))] rounded-lg border px-4 py-3 shadow-lg animate-fadeIn ${
           toastState.type === 'error'
@@ -1181,7 +1190,76 @@ const MentorRegister = () => {
         }
       `}</style>
 
-      <TopAuth />
+      <header className="theme-v-header fixed inset-x-0 top-0 z-50">
+        <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16">
+          <Link to="/" className="flex flex-col items-center leading-none group">
+            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 w-auto object-contain transition-transform group-hover:scale-105" />
+            <span className="theme-v-tagline mt-0.5 hidden text-[9px] tracking-wide sm:block">
+              Bridging Old and New Destinies
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-1 md:flex">
+            {NAV.map((n) => (
+              n.href.includes('#') ? (
+                <a key={n.label} href={n.href} className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium">
+                  {n.label}
+                </a>
+              ) : (
+                <Link key={n.label} to={n.href} className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium">
+                  {n.label}
+                </Link>
+              )
+            ))}
+          </nav>
+
+          <div className="hidden items-center gap-2 md:flex">
+            <Link to="/donate" className="theme-v-cta rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all hover:scale-105">
+              Donate
+            </Link>
+            <Link to="/login" className="theme-v-cta rounded-lg px-4 py-1.5 text-[13px] font-semibold shadow-md shadow-[#2D1A4F]/30 transition-all hover:scale-105">
+              Log in
+            </Link>
+          </div>
+
+          <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-white/10 md:hidden">
+            <svg className="theme-v-menu-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-[100] flex">
+          <div className="absolute inset-0 bg-[#4A2B7A]/40 backdrop-blur-sm" onClick={closeMobile} />
+          <div className="relative ml-auto flex h-full w-[270px] max-w-[82vw] flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#EDE3FF] px-4 pb-2 pt-4">
+              <span className="text-sm font-bold text-[#5D3699]">Menu</span>
+              <button onClick={closeMobile} className="flex h-8 w-8 items-center justify-center rounded-lg text-sm transition hover:bg-[#EDE3FF]">X</button>
+            </div>
+            <nav className="flex flex-1 flex-col gap-0.5 p-3">
+              {NAV.map((n) => (
+                n.href.includes('#') ? (
+                  <a key={n.label} href={n.href} onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+                    {n.label}
+                  </a>
+                ) : (
+                  <Link key={n.label} to={n.href} onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+                    {n.label}
+                  </Link>
+                )
+              ))}
+              <Link to="/donate" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5D3699] transition hover:bg-[#EDE3FF]">
+                Donate
+              </Link>
+              <Link to="/login" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+                Log in
+              </Link>
+            </nav>
+          </div>
+        </div>
+      ) : null}
 
       <main className="lp-register-main">
         <div className="lp-register-orb lp-register-orb-a" />

@@ -8,7 +8,7 @@ import santhiDirectorImage from './assets/Santhi.jpg';
 import babuDirectorImage from './assets/Babu.jfif';
 import hemachandraImage from './assets/Hemachandra patil.png';
 import avantikaImage from './assets/Avantika.jfif';
-import anushaVolunteerImage from './assets/Anusha.jpg';
+import anushaVolunteerImage from './assets/Anusha.png';
 
 const AboutUs = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -55,7 +55,7 @@ const AboutUs = () => {
     },
     {
       name: 'Hemachandra Patil',
-      role: 'Volunteer Outreach and Legal',
+      role: 'Director of External Relations & Legal Affairs',
       bio: 'Hello, my name is Hemachandra Patil and I am currently a junior in high school. I am excited to work with Bondroom and serve the people of my community. Outside of Bondroom, I sing Carnatic music and participate in DEC.',
       image: hemachandraImage,
     },
@@ -73,6 +73,7 @@ const AboutUs = () => {
       role: 'Volunteer',
       bio: 'My introduction: Hey all. I am Anusha. I love listening to music and dancing around. I always goof around, jumping from here to there! I love seeing someone else smile and have fun, as it makes me happier and motivates me to do better at what I do! Also, I’m my favourite, I am my first love! I am very honoured to be a volunteer in the Bond Room!! Keep going, all of you out there! You all got this!!',
       image: anushaVolunteerImage,
+      objectPosition: 'center top',
     },
   ];
 
@@ -119,13 +120,13 @@ const AboutUs = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] pt-[64px]">
+    <div className="theme-v-page min-h-screen pt-[64px]">
       <div className="mx-auto w-full max-w-[2440px] px-4 pb-8 pt-8 sm:px-6 sm:pb-10 sm:pt-10 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:px-16 min-[2500px]:px-20">
-        <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 shadow-[0_10px_24px_-18px_rgba(93,54,153,0.35)] backdrop-blur-[14px]">
+        <header className="theme-v-header fixed top-0 inset-x-0 z-50">
           <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:h-[84px] min-[2200px]:px-16 min-[2500px]:px-20">
             <Link to="/" className="flex flex-col items-center leading-none group">
-              <img src={logo} alt="Bond Room" className="h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
-              <span className="mt-0.5 hidden text-[9px] tracking-wide text-[#000] sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
+              <img src={logo} alt="Bond Room" className="theme-v-logo h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
+              <span className="theme-v-tagline mt-0.5 hidden text-[9px] tracking-wide sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
                 Bridging Old and New Destinies
               </span>
             </Link>
@@ -136,7 +137,7 @@ const AboutUs = () => {
                   <a
                     key={n.label}
                     href={n.href}
-                    className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
+                    className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
                   >
                     {n.label}
                   </a>
@@ -144,7 +145,7 @@ const AboutUs = () => {
                   <Link
                     key={n.label}
                     to={n.href}
-                    className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
+                    className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
                   >
                     {n.label}
                   </Link>
@@ -153,16 +154,16 @@ const AboutUs = () => {
             </nav>
 
             <div className="hidden items-center gap-2 md:flex 2xl:gap-3 min-[2200px]:gap-4">
-              <Link to="/donate" className="rounded-lg border border-[#DDD7ED] px-3.5 py-1.5 text-[13px] font-semibold text-[#5D3699] transition-all hover:scale-105 hover:bg-[#EDE3FF] 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
+              <Link to="/donate" className="theme-v-cta rounded-lg px-3.5 py-1.5 text-[13px] font-semibold hover:scale-105 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
                 Donate
               </Link>
-              <Link to="/login" className="rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-1.5 text-[13px] font-semibold text-white shadow-md shadow-[#5D3699]/20 transition-all hover:scale-105 hover:shadow-[#5D3699]/40 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
+              <Link to="/login" className="theme-v-cta rounded-lg px-4 py-1.5 text-[13px] font-semibold shadow-md shadow-[#2D1A4F]/30 transition-all hover:scale-105 hover:shadow-[#2D1A4F]/45 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
                 Log in
               </Link>
             </div>
 
-            <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[#EDE3FF] md:hidden">
-              <svg className="h-5 w-5 text-[#5D3699]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-white/10 md:hidden">
+              <svg className="theme-v-menu-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
@@ -205,22 +206,22 @@ const AboutUs = () => {
           </div>
         ) : null}
 
-        <section className="relative overflow-hidden rounded-[28px] border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-10">
+        <section className="theme-v-hero relative overflow-hidden rounded-[28px] p-6 sm:p-10">
           <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#fdd253] opacity-40 blur-2xl" />
           <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#5D3699] opacity-20 blur-2xl" />
           <div className="pointer-events-none absolute -right-20 bottom-10 h-20 w-20 rounded-full bg-[#fdd253] opacity-30 blur-xl" />
 
           <div className="grid items-center gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">About Bond Room</p>
-              <h1 className="mt-2 text-3xl font-semibold leading-tight text-[#111827] sm:text-5xl">
+              <p className="theme-v-kicker text-xs font-semibold uppercase tracking-wide">About Bond Room</p>
+              <h1 className="theme-v-title mt-2 text-3xl font-semibold leading-tight sm:text-5xl">
                 Bridging Generations
                 <br />
-                <span className="bg-gradient-to-r from-[#5D3699] via-[#fdd253] to-[#5D3699] bg-clip-text text-transparent">
+                <span className="theme-v-highlight">
                   Through Mentorship
                 </span>
               </h1>
-              <p className="mt-5 max-w-3xl text-sm leading-7 text-[#5f6472] sm:text-base">
+              <p className="theme-v-subtitle mt-5 max-w-3xl text-sm leading-7 sm:text-base">
                 Bond Room connects students with trusted mentors for meaningful one-on-one guidance.
                 We focus on emotional safety, career clarity, and confidence building through real conversations.
               </p>
@@ -358,9 +359,9 @@ const AboutUs = () => {
           ) : null}
         </section>
 
-        <section className="mt-6 rounded-2xl border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-6 shadow-[0_24px_44px_-34px_rgba(93,54,153,0.7)] sm:p-8">
-          <h2 className="text-2xl font-semibold text-[#111827]">Our Commitment</h2>
-          <p className="mt-3 max-w-4xl text-sm leading-7 text-[#5f6472]">
+        <section className="theme-v-hero mt-6 rounded-2xl p-6 sm:p-8">
+          <h2 className="theme-v-title text-2xl font-semibold">Our Commitment</h2>
+          <p className="theme-v-subtitle mt-3 max-w-4xl text-sm leading-7">
             Bond Room is committed to building a mentoring platform that is accessible, trustworthy, and student-centered.
             We continuously improve matching quality, mentor standards, and safety controls so students receive meaningful
             guidance that supports both wellbeing and long-term growth.
@@ -368,13 +369,13 @@ const AboutUs = () => {
           <div className="mt-5 flex flex-wrap gap-3">
             <a
               href="/register"
-              className="rounded-xl bg-[#fdd253] px-5 py-2.5 text-sm font-semibold text-[#1f2937] hover:bg-[#f59e0b] hover:text-white shadow-[0_4px_14px_rgba(253,210,83,0.4)]"
+              className="theme-v-cta rounded-xl px-5 py-2.5 text-sm font-semibold shadow-[0_4px_14px_rgba(253,210,83,0.4)]"
             >
               Student Sign Up
             </a>
             <a
               href="/mentor-register"
-              className="rounded-xl border border-[#d8c7fb] bg-white px-5 py-2.5 text-sm font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
+              className="theme-v-cta rounded-xl px-5 py-2.5 text-sm font-semibold"
             >
               Become a Mentor
             </a>

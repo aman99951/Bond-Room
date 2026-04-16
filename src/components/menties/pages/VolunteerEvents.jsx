@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
   ArrowUpRight,
   Calendar,
   CalendarDays,
@@ -302,11 +301,11 @@ const VolunteerEvents = () => {
 
   return (
     <>
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 backdrop-blur-[14px]">
+      <header className="theme-v-header fixed top-0 inset-x-0 z-50">
         <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:h-[84px] min-[2200px]:px-16 min-[2500px]:px-20">
           <Link to="/" className="flex flex-col items-center leading-none group">
-            <img src={logo} alt="Bond Room" className="h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
-            <span className="mt-0.5 hidden text-[9px] tracking-wide text-[#000] sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
+            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
+            <span className="theme-v-tagline mt-0.5 hidden text-[9px] tracking-wide sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
               Bridging Old and New Destinies
             </span>
           </Link>
@@ -317,7 +316,7 @@ const VolunteerEvents = () => {
                 <a
                   key={n.label}
                   href={n.href}
-                  className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
+                  className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
                 >
                   {n.label}
                 </a>
@@ -325,7 +324,7 @@ const VolunteerEvents = () => {
                 <Link
                   key={n.label}
                   to={n.href}
-                  className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
+                  className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
                 >
                   {n.label}
                 </Link>
@@ -334,16 +333,16 @@ const VolunteerEvents = () => {
           </nav>
 
           <div className="hidden items-center gap-2 md:flex 2xl:gap-3 min-[2200px]:gap-4">
-            <Link to="/donate" className="rounded-lg border border-[#DDD7ED] px-3.5 py-1.5 text-[13px] font-semibold text-[#5D3699] transition-all hover:scale-105 hover:bg-[#EDE3FF] 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
+            <Link to="/donate" className="theme-v-cta rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all hover:scale-105 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
               Donate
             </Link>
-            <Link to="/login" className="rounded-lg bg-[#fdd253] px-4 py-1.5 text-[13px] font-semibold text-[#1f2937] shadow-md shadow-[#fdd253]/30 transition-all hover:scale-105 hover:bg-[#f59e0b] 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
+            <Link to="/login" className="theme-v-cta rounded-lg px-4 py-1.5 text-[13px] font-semibold shadow-md shadow-[#2D1A4F]/30 transition-all hover:scale-105 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
               Log in
             </Link>
           </div>
 
-          <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[#EDE3FF] md:hidden">
-            <svg className="h-5 w-5 text-[#5D3699]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-white/10 md:hidden">
+            <svg className="theme-v-menu-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -386,35 +385,24 @@ const VolunteerEvents = () => {
         </div>
       ) : null}
       <motion.div
-        className="relative overflow-hidden bg-transparent p-3 pt-[64px] sm:p-6 sm:pt-[64px] lg:p-8 lg:pt-[64px]"
+        className="theme-v-page relative min-h-screen overflow-hidden p-3 pt-[86px] sm:p-6 sm:pt-[90px] lg:p-8 lg:pt-[94px]"
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={() => navigate('/volunteer')}
-          className="inline-flex items-center gap-2 rounded-full border border-[#fdd253]/50 bg-white px-4 py-2 text-xs font-semibold text-[#c9a227] hover:bg-[#fdd253]/20"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Volunteer
-        </button>
-      </div>
-
-      <div className="relative overflow-hidden rounded-[24px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fffdf0_45%,#fef9e7_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(253,210,83,0.5)] ring-1 ring-[#efe7ff] sm:rounded-[28px] sm:p-8">
+      <div className="theme-v-hero relative overflow-hidden rounded-[24px] p-4 ring-1 ring-[#FDD253]/20 sm:rounded-[28px] sm:p-8">
         <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#fdd253] opacity-50 blur-2xl" />
         <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#5D3699] opacity-25 blur-2xl" />
         <div className="pointer-events-none absolute -right-20 bottom-10 h-20 w-20 rounded-full bg-[#fdd253] opacity-40 blur-xl" />
         <div className="relative">
-          <h1 className="text-2xl font-semibold leading-tight tracking-tight text-[#111827] sm:text-4xl">
+          <h1 className="theme-v-title text-2xl font-semibold leading-tight tracking-tight sm:text-4xl">
             Volunteer Events
             <br />
-            <span className="bg-gradient-to-r from-[#5D3699] via-[#fdd253] to-[#5D3699] bg-clip-text text-transparent">
+            <span className="theme-v-highlight">
               Explore Every Activity
             </span>
           </h1>
-          <p className="mt-3 max-w-2xl text-sm text-[#6b7280] sm:text-base">
+          <p className="theme-v-subtitle mt-3 max-w-2xl text-sm sm:text-base">
             Browse all upcoming and completed volunteer activities in one place.
           </p>
         </div>
@@ -427,8 +415,8 @@ const VolunteerEvents = () => {
               <Calendar className="h-5 w-5 text-[#c9a227]" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[#111827]">Upcoming Activities</h2>
-              <p className="text-xs text-[#6b7280]">Join and participate with your community</p>
+              <h2 className="text-base font-semibold text-white">Upcoming Activities</h2>
+              <p className="text-xs text-white/85">Join and participate with your community</p>
             </div>
           </div>
 
@@ -687,8 +675,8 @@ const VolunteerEvents = () => {
               <CheckCircle2 className="h-5 w-5 text-[#c9a227]" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[#111827]">Completed Activities</h2>
-              <p className="text-xs text-[#6b7280]">Finished events and impact highlights</p>
+              <h2 className="text-base font-semibold text-white">Completed Activities</h2>
+              <p className="text-xs text-white/85">Finished events and impact highlights</p>
             </div>
           </div>
 

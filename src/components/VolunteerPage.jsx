@@ -476,11 +476,11 @@ const VolunteerPage = () => {
 
   return (
     <>
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-[#DDD7ED]/40 bg-white/75 shadow-[0_10px_24px_-18px_rgba(93,54,153,0.35)] backdrop-blur-[14px]">
+      <header className="theme-v-header fixed top-0 inset-x-0 z-50">
         <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 min-[2200px]:h-[84px] min-[2200px]:px-16 min-[2500px]:px-20">
           <Link to="/" className="flex flex-col items-center leading-none group">
-            <img src={logo} alt="Bond Room" className="h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
-            <span className="mt-0.5 hidden text-[9px] tracking-wide text-[#000] sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
+            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 w-auto object-contain transition-transform group-hover:scale-105 2xl:h-12 min-[2200px]:h-14" />
+            <span className="theme-v-tagline mt-0.5 hidden text-[9px] tracking-wide sm:block 2xl:text-[11px] min-[2200px]:text-[13px]">
               Bridging Old and New Destinies
             </span>
           </Link>
@@ -491,7 +491,7 @@ const VolunteerPage = () => {
                 <a
                   key={n.label}
                   href={n.href}
-                  className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
+                  className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
                 >
                   {n.label}
                 </a>
@@ -499,7 +499,7 @@ const VolunteerPage = () => {
                 <Link
                   key={n.label}
                   to={n.href}
-                  className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#5F6B81] transition-all hover:bg-[#EDE3FF]/60 hover:text-[#5D3699] 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
+                  className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium 2xl:px-4 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]"
                 >
                   {n.label}
                 </Link>
@@ -508,16 +508,16 @@ const VolunteerPage = () => {
           </nav>
 
           <div className="hidden items-center gap-2 md:flex 2xl:gap-3 min-[2200px]:gap-4">
-            <Link to="/donate" className="rounded-lg border border-[#DDD7ED] px-3.5 py-1.5 text-[13px] font-semibold text-[#5D3699] transition-all hover:scale-105 hover:bg-[#EDE3FF] 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
+            <Link to="/donate" className="theme-v-cta rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all hover:scale-105 2xl:px-4.5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-5 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
               Donate
             </Link>
-            <Link to="/login?source=volunteer" className="rounded-lg bg-gradient-to-r from-[#5D3699] to-[#5B2CC7] px-4 py-1.5 text-[13px] font-semibold text-white shadow-md shadow-[#5D3699]/20 transition-all hover:scale-105 hover:shadow-[#5D3699]/40 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
+            <Link to="/login?source=volunteer" className="theme-v-cta rounded-lg px-4 py-1.5 text-[13px] font-semibold shadow-md shadow-[#2D1A4F]/30 transition-all hover:scale-105 hover:shadow-[#2D1A4F]/45 2xl:px-5 2xl:py-2 2xl:text-[15px] min-[2200px]:px-6 min-[2200px]:py-2.5 min-[2200px]:text-[17px]">
               Log in
             </Link>
           </div>
 
-          <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[#EDE3FF] md:hidden">
-            <svg className="h-5 w-5 text-[#5D3699]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-white/10 md:hidden">
+            <svg className="theme-v-menu-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -560,7 +560,7 @@ const VolunteerPage = () => {
         </div>
       ) : null}
       <motion.div
-        className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 pt-24 sm:p-8 sm:pt-28"
+        className="theme-v-page min-h-screen p-4 pt-24 sm:p-8 sm:pt-28"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -593,20 +593,20 @@ const VolunteerPage = () => {
       ) : null}
 
       <div className="mx-auto max-w-full">
-        <section className="relative mt-0 overflow-hidden rounded-[28px] border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-10">
+        <section className="theme-v-hero relative mt-0 overflow-hidden rounded-[28px] p-6 sm:p-10">
           <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#fdd253] opacity-50 blur-2xl" />
           <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#5D3699] opacity-25 blur-2xl" />
           <div className="pointer-events-none absolute -right-20 bottom-10 h-20 w-20 rounded-full bg-[#fdd253] opacity-40 blur-xl" />
           <div className="relative">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Volunteer</p>
-            <h1 className="mt-2 text-3xl font-semibold leading-tight text-[#111827] sm:text-5xl">
+            <p className="theme-v-kicker text-xs font-semibold uppercase tracking-wide">Volunteer</p>
+            <h1 className="theme-v-title mt-2 text-3xl font-semibold leading-tight sm:text-5xl">
               Upcoming and Completed
               <br />
-              <span className="bg-gradient-to-r from-[#5D3699] via-[#fdd253] to-[#5D3699] bg-clip-text text-transparent">
+              <span className="theme-v-highlight">
                 Community Events
               </span>
             </h1>
-            <p className="mt-5 max-w-3xl text-sm leading-7 text-[#5f6472] sm:text-base">
+            <p className="theme-v-subtitle mt-5 max-w-3xl text-sm leading-7 sm:text-base">
               Discover active opportunities and impact from completed drives using the same event experience as the mentee dashboard.
             </p>
           </div>

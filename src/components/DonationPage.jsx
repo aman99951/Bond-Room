@@ -1,6 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Heart, ShieldCheck } from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Heart, ShieldCheck } from 'lucide-react';
 import { donationApi } from '../apis/api/donationApi';
+import logo from './assets/Logo.svg';
 
 const quickAmounts = [250, 500, 1000, 2500];
 
@@ -36,6 +38,15 @@ const DonationPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const NAV = [
+    { label: 'Home', href: '/' },
+    { label: 'About', href: '/about' },
+    { label: 'Volunteer', href: '/volunteer' },
+    { label: 'Safety', href: '/#safety' },
+    { label: 'Stories', href: '/#stories' },
+  ];
 
   const amountLabel = useMemo(
     () => `Rs ${Number(selectedAmount || 0).toLocaleString('en-IN')}`,
@@ -128,53 +139,127 @@ const DonationPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8f3ff_0%,#ffffff_55%,#f6f0ff_100%)] p-4 sm:p-8">
-      <div className="mx-auto max-w-5xl">
-        <a
-          href="/"
-          className="inline-flex items-center gap-2 rounded-full border border-[#e7d8ff] bg-white px-4 py-2 text-xs font-semibold text-[#5D3699] hover:bg-[#f8f4ff]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Home
-        </a>
+    <>
+      <header className="theme-v-header fixed inset-x-0 top-0 z-50">
+        <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16">
+          <Link to="/" className="flex flex-col items-center leading-none group">
+            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 w-auto object-contain transition-transform group-hover:scale-105" />
+            <span className="theme-v-tagline mt-0.5 hidden text-[9px] tracking-wide sm:block">
+              Bridging Old and New Destinies
+            </span>
+          </Link>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-3xl border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#7b699d]">Support Students</p>
-            <h1 className="mt-2 text-3xl font-semibold leading-tight text-[#111827] sm:text-4xl">
-              Help Us Expand
-              <br />
-              <span className="bg-gradient-to-r from-[#5D3699] to-[#8c63cc] bg-clip-text text-transparent">
-                Safe Mentorship Access
-              </span>
-            </h1>
-            <p className="mt-4 text-sm leading-7 text-[#5f6472]">
-              Your donation helps us improve mentorship quality, student support operations, and safety systems
-              for underserved learners.
-            </p>
+          <nav className="hidden items-center gap-1 md:flex">
+            {NAV.map((n) => (
+              n.href.includes('#') ? (
+                <a key={n.label} href={n.href} className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium">
+                  {n.label}
+                </a>
+              ) : (
+                <Link key={n.label} to={n.href} className="theme-v-nav-link rounded-lg px-3 py-1.5 text-[13px] font-medium">
+                  {n.label}
+                </Link>
+              )
+            ))}
+          </nav>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {[
-                'Student onboarding and support operations',
-                'Mentor quality review and platform safety',
-                'Learning resources for student wellbeing',
-                'Scalable community outreach initiatives',
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-xl border border-[#ece3ff] bg-[#faf7ff] px-4 py-3 text-sm text-[#5f6472]"
-                >
-                  {item}
-                </div>
-              ))}
+          <div className="hidden items-center gap-2 md:flex">
+            <Link to="/donate" className="theme-v-cta rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all hover:scale-105">
+              Donate
+            </Link>
+            <Link to="/login" className="theme-v-cta rounded-lg px-4 py-1.5 text-[13px] font-semibold shadow-md shadow-[#2D1A4F]/30 transition-all hover:scale-105">
+              Log in
+            </Link>
+          </div>
+
+          <button onClick={() => setMobileOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-white/10 md:hidden">
+            <svg className="theme-v-menu-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-[100] flex">
+          <div className="absolute inset-0 bg-[#4A2B7A]/40 backdrop-blur-sm" onClick={closeMobile} />
+          <div className="relative ml-auto flex h-full w-[270px] max-w-[82vw] flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#EDE3FF] px-4 pb-2 pt-4">
+              <span className="text-sm font-bold text-[#5D3699]">Menu</span>
+              <button onClick={closeMobile} className="flex h-8 w-8 items-center justify-center rounded-lg text-sm transition hover:bg-[#EDE3FF]">X</button>
             </div>
-          </section>
+            <nav className="flex flex-1 flex-col gap-0.5 p-3">
+              {NAV.map((n) => (
+                n.href.includes('#') ? (
+                  <a key={n.label} href={n.href} onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+                    {n.label}
+                  </a>
+                ) : (
+                  <Link key={n.label} to={n.href} onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+                    {n.label}
+                  </Link>
+                )
+              ))}
+              <Link to="/donate" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5D3699] transition hover:bg-[#EDE3FF]">
+                Donate
+              </Link>
+              <Link to="/login" onClick={closeMobile} className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#5F6B81] transition hover:bg-[#EDE3FF] hover:text-[#5D3699]">
+                Log in
+              </Link>
+            </nav>
+            <div className="border-t border-[#EDE3FF] p-3">
+              <Link to="/register" onClick={closeMobile} className="block rounded-lg bg-[#fdd253] px-4 py-2.5 text-center text-sm font-bold text-[#1f2937] shadow-md shadow-[#fdd253]/30">
+                Mentee Sign Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
-          <section className="rounded-3xl border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-8">
-            {!submitted ? (
-              <form onSubmit={handleSubmit}>
-                <h2 className="text-xl font-semibold text-[#111827]">Donate Now</h2>
-                <p className="mt-1 text-xs text-[#6b7280]">Choose an amount and pay securely with Razorpay.</p>
+      <div className="theme-v-page relative min-h-screen overflow-hidden p-3 pt-[86px] sm:p-6 sm:pt-[90px] lg:p-8 lg:pt-[94px]">
+        <div className="mx-auto max-w-6xl">
+          <div className="theme-v-hero relative overflow-hidden rounded-[24px] p-5 ring-1 ring-[#FDD253]/20 sm:rounded-[28px] sm:p-8">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#fdd253] opacity-50 blur-2xl" />
+            <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#5D3699] opacity-25 blur-2xl" />
+            <div className="pointer-events-none absolute -right-20 bottom-10 h-20 w-20 rounded-full bg-[#fdd253] opacity-40 blur-xl" />
+            <div className="relative">
+              <p className="theme-v-subtitle text-xs font-semibold uppercase tracking-wide">Support Students</p>
+              <h1 className="theme-v-title mt-2 text-3xl font-semibold leading-tight sm:text-4xl">
+                Help Us Expand
+                <br />
+                <span className="theme-v-highlight">Safe Mentorship Access</span>
+              </h1>
+              <p className="theme-v-subtitle mt-4 max-w-3xl text-sm leading-7">
+                Your donation helps us improve mentorship quality, student support operations, and safety systems
+                for underserved learners.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+            <section className="rounded-3xl border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-8">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  'Student onboarding and support operations',
+                  'Mentor quality review and platform safety',
+                  'Learning resources for student wellbeing',
+                  'Scalable community outreach initiatives',
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-xl border border-[#ece3ff] bg-[#faf7ff] px-4 py-3 text-sm text-[#5f6472]"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-[#e8dcff] bg-white p-6 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] sm:p-8">
+              {!submitted ? (
+                <form onSubmit={handleSubmit}>
+                  <h2 className="text-xl font-semibold text-[#111827]">Donate Now</h2>
+                  <p className="mt-1 text-xs text-[#6b7280]">Choose an amount and pay securely with Razorpay.</p>
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   {quickAmounts.map((amount) => (
@@ -249,30 +334,31 @@ const DonationPage = () => {
                   </p>
                 ) : null}
 
-                <button
-                  type="submit"
-                  disabled={processing || !selectedAmount || Number(selectedAmount) <= 0}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-5 py-3 text-sm font-semibold text-white hover:bg-[#4a2b7a] disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  <Heart className="h-4 w-4" />
-                  {processing ? 'Processing...' : `Proceed with ${amountLabel}`}
-                </button>
-              </form>
-            ) : (
-              <div className="text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#f5f3ff]">
-                  <ShieldCheck className="h-7 w-7 text-[#5D3699]" />
+                  <button
+                    type="submit"
+                    disabled={processing || !selectedAmount || Number(selectedAmount) <= 0}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#fdd253] px-5 py-3 text-sm font-semibold text-[#271343] hover:bg-[#f8c93d] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    <Heart className="h-4 w-4" />
+                    {processing ? 'Processing...' : `Proceed with ${amountLabel}`}
+                  </button>
+                </form>
+              ) : (
+                <div className="text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#f5f3ff]">
+                    <ShieldCheck className="h-7 w-7 text-[#5D3699]" />
+                  </div>
+                  <h3 className="mt-3 text-xl font-semibold text-[#111827]">Thank You for Your Support</h3>
+                  <p className="mt-2 text-sm text-[#6b7280]">
+                    Your donation of {amountLabel} is confirmed. We appreciate your support.
+                  </p>
                 </div>
-                <h3 className="mt-3 text-xl font-semibold text-[#111827]">Thank You for Your Support</h3>
-                <p className="mt-2 text-sm text-[#6b7280]">
-                  Your donation of {amountLabel} is confirmed. We appreciate your support.
-                </p>
-              </div>
-            )}
-          </section>
+              )}
+            </section>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
