@@ -2197,7 +2197,14 @@ html.has-custom-cursor * {
   }
 
   .lp-logo span {
-    display: none;
+    display: block;
+    max-width: 118px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 7px;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
   }
 
   .lp-nav {

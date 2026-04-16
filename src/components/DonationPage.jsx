@@ -144,7 +144,7 @@ const DonationPage = () => {
         <div className="mx-auto flex h-[60px] w-full max-w-[1920px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16">
           <Link to="/" className="flex flex-col items-center leading-none group">
             <img src={logo} alt="Bond Room" className="theme-v-logo h-10 w-auto object-contain transition-transform group-hover:scale-105" />
-            <span className="theme-v-tagline mt-0.5 hidden text-[9px] tracking-wide sm:block">
+            <span className="theme-v-tagline mt-0.5 block max-w-[120px] truncate text-[8px] tracking-wide sm:max-w-none sm:text-[9px]">
               Bridging Old and New Destinies
             </span>
           </Link>
