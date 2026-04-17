@@ -205,12 +205,12 @@ const MentorProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-transparent p-4 text-[color:var(--theme-v-text-primary)] sm:p-6 lg:p-8">
       <div className="mx-auto max-w-6xl">
         {/* Back Link */}
         <Link
           to="/dashboard"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-[#6b7280] transition-colors hover:text-[#5D3699]"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)] transition-colors hover:text-[color:var(--theme-v-accent)]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to recommendations
@@ -220,9 +220,9 @@ const MentorProfile = () => {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
           {/* Left Sidebar - Mentor Card */}
           <div className="space-y-6">
-            <aside className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
+            <aside className="overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
               {/* Header Background */}
-              <div className="relative h-28 bg-[#5D3699]">
+              <div className="relative h-28 bg-[color:var(--theme-v-accent)]">
                 <div className="absolute inset-0 opacity-30">
                   <div
                     className="absolute inset-0"
@@ -239,7 +239,7 @@ const MentorProfile = () => {
                 <div className="-mt-14 flex flex-col items-center text-center">
                   {/* Avatar */}
                   <div className="relative">
-                    <div className="h-28 w-28 overflow-hidden rounded-2xl bg-white ring-4 ring-white shadow-xl">
+                    <div className="h-28 w-28 overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay)] ring-4 ring-[color:var(--theme-v-surface-overlay)] shadow-xl">
                       {mentor?.avatar ? (
                         <img
                           src={mentor.avatar}
@@ -247,25 +247,25 @@ const MentorProfile = () => {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-[#f5f3ff]">
-                          <User className="h-12 w-12 text-[#5D3699]" />
+                        <div className="flex h-full w-full items-center justify-center bg-[color:var(--theme-v-surface-overlay-strong)]">
+                          <User className="h-12 w-12 text-[color:var(--theme-v-accent)]" />
                         </div>
                       )}
                     </div>
                     {/* Verified Badge */}
-                    <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#10b981] ring-2 ring-white">
-                      <CheckCircle2 className="h-4 w-4 text-white" />
+                    <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--theme-v-toast-success-bg)] ring-2 ring-[color:var(--theme-v-surface-overlay)]">
+                      <CheckCircle2 className="h-4 w-4 text-[color:var(--theme-v-toast-success-text)]" />
                     </div>
                   </div>
 
                   {/* Name */}
-                  <h1 className="mt-4 text-xl font-bold text-[#111827] sm:text-2xl">
+                  <h1 className="mt-4 text-xl font-bold text-[color:var(--theme-v-text-primary)] sm:text-2xl">
                     {displayName}
                   </h1>
 
                   {/* Location */}
                   {mentor?.location && (
-                    <div className="mt-1 flex items-center gap-1.5 text-sm text-[#6b7280]">
+                    <div className="mt-1 flex items-center gap-1.5 text-sm text-[color:var(--theme-v-text-secondary)]">
                       <MapPin className="h-4 w-4" />
                       <span>{mentor.location}</span>
                     </div>
@@ -273,7 +273,7 @@ const MentorProfile = () => {
 
                   {/* Qualification Badge */}
                   {mentor?.qualification && (
-                    <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf3] px-4 py-1.5 text-xs font-semibold text-[#10b981] ring-1 ring-[#10b981]/20">
+                    <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[color:var(--theme-v-toast-success-bg)] px-4 py-1.5 text-xs font-semibold text-[color:var(--theme-v-toast-success-text)] ring-1 ring-[color:var(--theme-v-toast-success-border)]">
                       <Award className="h-3.5 w-3.5" />
                       {mentor.qualification}
                     </div>
@@ -285,7 +285,7 @@ const MentorProfile = () => {
                       {mentor.languages.map((language) => (
                         <span
                           key={language}
-                          className="inline-flex items-center gap-1 rounded-full bg-[#f5f3ff] px-3 py-1 text-xs font-medium text-[#5D3699]"
+                          className="inline-flex items-center gap-1 rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] px-3 py-1 text-xs font-medium text-[color:var(--theme-v-accent)]"
                         >
                           <Globe className="h-3 w-3" />
                           {language}
@@ -296,22 +296,22 @@ const MentorProfile = () => {
 
                   {/* Rating */}
                   {(rating || reviewCount != null) && (
-                    <div className="mt-6 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-5 py-3 ring-1 ring-[#e5e7eb]">
+                    <div className="mt-6 flex items-center gap-3 rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] px-5 py-3 ring-1 ring-[color:var(--theme-v-border-soft)]">
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
                             className={`h-5 w-5 ${i < Math.floor(rating || 0)
-                                ? 'fill-[#f59e0b] text-[#f59e0b]'
-                                : 'text-[#e5e7eb]'
+                                ? 'fill-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent)]'
+                                : 'text-white/30'
                               }`}
                           />
                         ))}
                       </div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-lg font-bold text-[#111827]">{rating}</span>
+                        <span className="text-lg font-bold text-[color:var(--theme-v-text-primary)]">{rating}</span>
                         {reviewCount != null && (
-                          <span className="text-sm text-[#6b7280]">({reviewCount})</span>
+                          <span className="text-sm text-[color:var(--theme-v-text-secondary)]">({reviewCount})</span>
                         )}
                       </div>
                     </div>
@@ -320,8 +320,8 @@ const MentorProfile = () => {
 
                 {/* AI Matched Areas */}
                 {Array.isArray(mentor?.areas) && mentor.areas.length > 0 && (
-                  <div className="mt-6 rounded-xl bg-[#f5f3ff] p-4">
-                    <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#5D3699]">
+                  <div className="mt-6 rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-4">
+                    <div className="flex items-center justify-center gap-2 text-xs font-medium text-[color:var(--theme-v-accent)]">
                       <Sparkles className="h-4 w-4" />
                       AI Matched For
                     </div>
@@ -329,7 +329,7 @@ const MentorProfile = () => {
                       {mentor.areas.map((area) => (
                         <span
                           key={area}
-                          className="rounded-full bg-white px-3 py-1 text-xs font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20"
+                          className="rounded-full bg-[color:var(--theme-v-surface-overlay)] px-3 py-1 text-xs font-medium text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-border-soft)]"
                         >
                           {area}
                         </span>
@@ -341,24 +341,24 @@ const MentorProfile = () => {
             </aside>
 
             {/* Quick Info Card */}
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#e5e7eb]">
-              <h3 className="text-sm font-semibold text-[#111827]">Quick Info</h3>
+            <div className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-5 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
+              <h3 className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">Quick Info</h3>
               <div className="mt-4 space-y-3">
-                <div className="flex items-center gap-3 text-sm text-[#6b7280]">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f5f3ff]">
-                    <Clock className="h-4 w-4 text-[#5D3699]" />
+                <div className="flex items-center gap-3 text-sm text-[color:var(--theme-v-text-secondary)]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--theme-v-surface-overlay-strong)]">
+                    <Clock className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                   </div>
                   <span>Usually responds within 24h</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-[#6b7280]">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50">
-                    <CheckCircle2 className="h-4 w-4 text-[#10b981]" />
+                <div className="flex items-center gap-3 text-sm text-[color:var(--theme-v-text-secondary)]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--theme-v-toast-success-bg)] ring-1 ring-[color:var(--theme-v-toast-success-border)]">
+                    <CheckCircle2 className="h-4 w-4 text-[color:var(--theme-v-toast-success-text)]" />
                   </div>
                   <span>Available this week</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-[#6b7280]">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f5f3ff]">
-                    <MessageCircle className="h-4 w-4 text-[#5D3699]" />
+                <div className="flex items-center gap-3 text-sm text-[color:var(--theme-v-text-secondary)]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--theme-v-surface-overlay-strong)]">
+                    <MessageCircle className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                   </div>
                   <span>{reviewCount || 0} reviews received</span>
                 </div>
@@ -371,32 +371,32 @@ const MentorProfile = () => {
             {/* Loading/Error State */}
             {(loading || error) && (
               <div
-                className={`flex items-center gap-3 rounded-xl p-4 ${error ? 'bg-red-50 ring-1 ring-red-100' : 'bg-white ring-1 ring-[#e5e7eb]'
+                className={`flex items-center gap-3 rounded-xl p-4 ${error ? 'bg-[color:var(--theme-v-toast-error-bg)] ring-1 ring-[color:var(--theme-v-toast-error-border)]' : 'bg-[color:var(--theme-v-surface-overlay)] ring-1 ring-[color:var(--theme-v-border-soft)]'
                   }`}
               >
                 {loading && (
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#e5e7eb] border-t-[#5D3699]" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[color:var(--theme-v-border-soft)] border-t-[color:var(--theme-v-accent)]" />
                 )}
-                <span className={`text-sm ${error ? 'text-red-600' : 'text-[#6b7280]'}`}>
+                <span className={`text-sm ${error ? 'text-[color:var(--theme-v-toast-error-text)]' : 'text-[color:var(--theme-v-text-secondary)]'}`}>
                   {error || 'Loading mentor profile...'}
                 </span>
               </div>
             )}
 
             {/* About Section */}
-            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
+            <div className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-                  <User className="h-5 w-5 text-[#5D3699]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+                  <User className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
                 </div>
-                <h2 className="text-lg font-semibold text-[#111827]">About the Mentor</h2>
+                <h2 className="text-lg font-semibold text-[color:var(--theme-v-text-primary)]">About the Mentor</h2>
               </div>
 
               {mentor?.bio && (
                 <>
                   <p
                     ref={aboutRef}
-                    className={`mt-4 text-[#6b7280] leading-relaxed ${aboutExpanded ? '' : 'line-clamp-4'
+                    className={`mt-4 text-[color:var(--theme-v-text-secondary)] leading-relaxed ${aboutExpanded ? '' : 'line-clamp-4'
                       }`}
                   >
                     {mentor.bio}
@@ -405,7 +405,7 @@ const MentorProfile = () => {
                     <button
                       type="button"
                       onClick={() => setAboutExpanded((prev) => !prev)}
-                      className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#5D3699] transition-colors hover:text-[#4a2b7a]"
+                      className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[color:var(--theme-v-accent)] transition-colors hover:text-[color:var(--theme-v-accent-hover)]"
                     >
                       {aboutExpanded ? (
                         <>
@@ -424,19 +424,19 @@ const MentorProfile = () => {
               )}
 
               {!mentor?.bio && (
-                <p className="mt-4 text-sm text-[#9ca3af]">No bio available yet.</p>
+                <p className="mt-4 text-sm text-[color:var(--theme-v-text-placeholder)]">No bio available yet.</p>
               )}
             </div>
 
             {/* Wisdom Areas */}
-            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
+            <div className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-                  <BookOpen className="h-5 w-5 text-[#5D3699]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+                  <BookOpen className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-[#111827]">Wisdom Areas</h2>
-                  <p className="text-xs text-[#6b7280]">Topics this mentor specializes in</p>
+                  <h2 className="text-lg font-semibold text-[color:var(--theme-v-text-primary)]">Wisdom Areas</h2>
+                  <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Topics this mentor specializes in</p>
                 </div>
               </div>
 
@@ -445,45 +445,45 @@ const MentorProfile = () => {
                   mentor.areas.map((area) => (
                     <span
                       key={area}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-[#f5f3ff] px-4 py-2.5 text-sm font-medium text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-2.5 text-sm font-medium text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay)]"
                     >
                       <Sparkles className="h-3.5 w-3.5" />
                       {area}
                     </span>
                   ))
                 ) : (
-                  <span className="text-sm text-[#9ca3af]">No areas specified</span>
+                  <span className="text-sm text-[color:var(--theme-v-text-placeholder)]">No areas specified</span>
                 )}
               </div>
             </div>
 
             {/* Availability */}
-            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
+            <div className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] sm:p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-                    <Calendar className="h-5 w-5 text-[#5D3699]" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+                    <Calendar className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-[#111827]">Availability This Week</h2>
-                    <p className="text-xs text-[#6b7280]">Click any time slot to book instantly</p>
+                    <h2 className="text-lg font-semibold text-[color:var(--theme-v-text-primary)]">Availability This Week</h2>
+                    <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Click any time slot to book instantly</p>
                   </div>
                 </div>
-                <div className="inline-flex items-center gap-2 self-start rounded-lg bg-[#f8fafc] px-2 py-1.5 ring-1 ring-[#e5e7eb] sm:self-auto">
+                <div className="inline-flex items-center gap-2 self-start rounded-lg bg-[color:var(--theme-v-surface-overlay-strong)] px-2 py-1.5 ring-1 ring-[color:var(--theme-v-border-soft)] sm:self-auto">
                   <button
                     type="button"
                     onClick={() => setWeekStartKey((prev) => (canGoPrevWeek ? addDaysToDateKey(prev, -7) : prev))}
                     disabled={!canGoPrevWeek}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                     aria-label="Previous week"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <span className="text-xs font-semibold text-[#374151]">{weekRangeLabel}</span>
+                  <span className="text-xs font-semibold text-[color:var(--theme-v-text-primary)]">{weekRangeLabel}</span>
                   <button
                     type="button"
                     onClick={() => setWeekStartKey((prev) => addDaysToDateKey(prev, 7))}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay)]"
                     aria-label="Next week"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -501,22 +501,22 @@ const MentorProfile = () => {
                     return (
                       <div
                         key={`mobile-${column.dateKey}`}
-                        className={`rounded-xl p-3 ring-1 ${isTodayColumn ? 'bg-[#f5f0ff] ring-[#dfd2f6]' : 'bg-white ring-[#e5e7eb]'
+                        className={`rounded-xl p-3 ring-1 ${isTodayColumn ? 'bg-[color:var(--theme-v-surface-overlay)] ring-[color:var(--theme-v-border-medium)]' : 'bg-[color:var(--theme-v-surface-overlay)] ring-[color:var(--theme-v-border-soft)]'
                           }`}
                       >
                         <div className="mb-3 flex items-center gap-3">
                           <div
-                            className={`text-xs font-semibold uppercase tracking-wider ${isTodayColumn ? 'text-[#5D3699]' : 'text-[#6b7280]'
+                            className={`text-xs font-semibold uppercase tracking-wider ${isTodayColumn ? 'text-[color:var(--theme-v-accent)]' : 'text-[color:var(--theme-v-text-secondary)]'
                               }`}
                           >
                             {column.day}
                           </div>
                           {isTodayColumn ? (
-                            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-[#5D3699] px-2 text-sm font-bold text-white">
+                            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-[color:var(--theme-v-accent)] px-2 text-sm font-bold text-[color:var(--theme-v-accent-text)]">
                               {dayNumber || '--'}
                             </span>
                           ) : (
-                            <span className="text-sm font-bold text-[#5D3699]">{dayNumber || '--'}</span>
+                            <span className="text-sm font-bold text-[color:var(--theme-v-accent)]">{dayNumber || '--'}</span>
                           )}
                         </div>
                         <div className="space-y-2">
@@ -532,18 +532,18 @@ const MentorProfile = () => {
                                   onClick={() => openBookingConfirm(slot)}
                                   disabled={Boolean(bookingSlotKey)}
                                   className={`group flex h-14 w-full items-center justify-between rounded-xl border px-4 transition-all disabled:cursor-not-allowed ${isSubmitting
-                                      ? 'border-[#5D3699] bg-[#5D3699] text-white'
-                                      : 'border-[#cfb9ef] bg-gradient-to-b from-white to-[#f7f1ff] text-[#4a2b7a] shadow-[0_2px_6px_rgba(93,54,153,0.1)]'
+                                      ? 'border-[color:var(--theme-v-border-hover)] bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)]'
+                                      : 'border-[color:var(--theme-v-border-medium)] bg-gradient-to-b from-[color:var(--theme-v-surface-overlay)] to-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-primary)] shadow-[0_2px_6px_var(--theme-v-shell-shadow)]'
                                     } ${bookingSlotKey ? 'disabled:opacity-60' : ''}`}
                                 >
                                   <span className="text-sm font-bold tracking-wide">{startLabel || '--'}</span>
-                                  <span className={`h-px w-8 ${isSubmitting ? 'bg-white/70' : 'bg-[#d5c3f1]'}`} />
+                                  <span className={`h-px w-8 ${isSubmitting ? 'bg-[color:var(--theme-v-surface-overlay)]/70' : 'bg-[color:var(--theme-v-border-medium)]'}`} />
                                   <span className="text-sm font-bold tracking-wide">{endLabel || '--'}</span>
                                 </button>
                               );
                             })
                           ) : (
-                            <div className="flex h-12 items-center justify-center rounded-xl border border-dashed border-[#e5e7eb] bg-[#f9fafb] text-sm font-medium text-[#9ca3af]">
+                            <div className="flex h-12 items-center justify-center rounded-xl border border-dashed border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay-strong)] text-sm font-medium text-[color:var(--theme-v-text-placeholder)]">
                               No slots
                             </div>
                           )}
@@ -554,8 +554,8 @@ const MentorProfile = () => {
                 </div>
 
                 <div className="hidden overflow-x-auto lg:block">
-                  <div className="min-w-[620px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
-                    <div className="grid grid-cols-7 gap-2 border-b border-[#e5e7eb] pb-3">
+                  <div className="min-w-[620px] rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-3 ring-1 ring-[color:var(--theme-v-border-soft)]">
+                    <div className="grid grid-cols-7 gap-2 border-b border-[color:var(--theme-v-border-soft)] pb-3">
                       {weekColumns.map((column) => {
                         const isTodayColumn = column.dateKey === todayDateKey;
                         const dayNumber = Number(String(column.dateKey || '').split('-')[2] || 0);
@@ -566,19 +566,19 @@ const MentorProfile = () => {
                             className="py-2 text-center"
                           >
                             <div
-                              className={`text-xs font-semibold uppercase tracking-wider ${isTodayColumn ? 'text-[#5D3699]' : 'text-[#6b7280]'
+                              className={`text-xs font-semibold uppercase tracking-wider ${isTodayColumn ? 'text-[color:var(--theme-v-accent)]' : 'text-[color:var(--theme-v-text-secondary)]'
                                 }`}
                             >
                               {column.day}
                             </div>
                             {isTodayColumn ? (
                               <div className="mt-1.5 flex justify-center">
-                                <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-[12px] bg-[#5D3699] px-2 text-[22px] font-bold leading-none text-white shadow-[0_8px_16px_rgba(93,54,153,0.28)]">
+                                <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-[12px] bg-[color:var(--theme-v-accent)] px-2 text-[22px] font-bold leading-none text-[color:var(--theme-v-accent-text)] shadow-[0_8px_16px_rgba(93,54,153,0.28)]">
                                   {dayLabel}
                                 </span>
                               </div>
                             ) : (
-                              <div className="mt-1 text-[22px] font-bold leading-none text-[#5D3699]">
+                              <div className="mt-1 text-[22px] font-bold leading-none text-[color:var(--theme-v-accent)]">
                                 {dayLabel}
                               </div>
                             )}
@@ -593,7 +593,7 @@ const MentorProfile = () => {
                         return (
                           <div
                             key={column.dateKey}
-                            className={`space-y-2 rounded-xl p-1.5 ${isTodayColumn ? 'bg-[#f5f0ff] ring-1 ring-[#e0d2f7]' : ''
+                            className={`space-y-2 rounded-xl p-1.5 ${isTodayColumn ? 'bg-[color:var(--theme-v-surface-overlay)] ring-1 ring-[color:var(--theme-v-border-medium)]' : ''
                               }`}
                           >
                             {Array.from({ length: maxSlotRows }).map((_, rowIndex) => {
@@ -603,8 +603,8 @@ const MentorProfile = () => {
                                   <div
                                     key={`${column.dateKey}-empty-${rowIndex}`}
                                     className={`flex h-16 items-center justify-center rounded-xl border border-dashed text-sm font-semibold ${isTodayColumn
-                                        ? 'border-[#dfd2f6] bg-white/75 text-[#b2a4ca]'
-                                        : 'border-[#e5e7eb] bg-white text-[#9ca3af]'
+                                        ? 'border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)]/75 text-[color:var(--theme-v-text-placeholder)]'
+                                        : 'border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] text-[color:var(--theme-v-text-placeholder)]'
                                       }`}
                                   >
                                     --
@@ -622,8 +622,8 @@ const MentorProfile = () => {
                                   onClick={() => openBookingConfirm(slot)}
                                   disabled={Boolean(bookingSlotKey) || !isBookable}
                                   className={`group relative flex h-16 w-full items-center justify-center rounded-xl border px-2 transition-all disabled:cursor-not-allowed ${isBookable
-                                      ? 'border-[#cfb9ef] bg-gradient-to-b from-white to-[#f7f1ff] text-[#4a2b7a] shadow-[0_2px_6px_rgba(93,54,153,0.1)] hover:-translate-y-[1px] hover:border-[#5D3699] hover:from-[#6f49af] hover:to-[#5D3699] hover:text-white hover:shadow-[0_10px_20px_rgba(93,54,153,0.28)]'
-                                      : 'border-[#e5e7eb] bg-[#f3f4f6] text-[#9ca3af] opacity-70'
+                                      ? 'border-[color:var(--theme-v-border-medium)] bg-gradient-to-b from-[color:var(--theme-v-surface-overlay)] to-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-primary)] shadow-[0_2px_6px_var(--theme-v-shell-shadow)] hover:-translate-y-[1px] hover:border-[color:var(--theme-v-border-hover)] hover:bg-[color:var(--theme-v-surface-overlay)]'
+                                      : 'border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay-track)] text-[color:var(--theme-v-text-placeholder)] opacity-70'
                                     } ${bookingSlotKey ? 'disabled:opacity-60' : ''}`}
                                 >
                                   {isSubmitting ? (
@@ -632,7 +632,7 @@ const MentorProfile = () => {
                                     <span className="flex w-full flex-col items-center leading-none">
                                       <span className="text-[12px] font-bold tracking-wide">{startLabel || '--'}</span>
                                       <span
-                                        className={`my-1 h-px w-10 ${isBookable ? 'bg-[#d5c3f1] group-hover:bg-white/60' : 'bg-[#d1d5db]'
+                                        className={`my-1 h-px w-10 ${isBookable ? 'bg-[color:var(--theme-v-border-medium)] group-hover:bg-[color:var(--theme-v-surface-overlay)]/60' : 'bg-[color:var(--theme-v-border-soft)]'
                                           }`}
                                       />
                                       <span className="text-[12px] font-bold tracking-wide">{endLabel || '--'}</span>
@@ -649,7 +649,7 @@ const MentorProfile = () => {
                 </div>
               </div>
               {bookingError ? (
-                <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-100">
+                <div className="mt-3 rounded-lg bg-[color:var(--theme-v-toast-error-bg)] px-3 py-2 text-xs text-[color:var(--theme-v-toast-error-text)] ring-1 ring-[color:var(--theme-v-toast-error-border)]">
                   {bookingError}
                 </div>
               ) : null}
@@ -657,29 +657,29 @@ const MentorProfile = () => {
 
 
             {/* Reviews Section */}
-            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-6">
+            <div className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-                  <MessageCircle className="h-5 w-5 text-[#5D3699]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+                  <MessageCircle className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-[#111827]">What Mentees Say</h2>
-                  <p className="text-xs text-[#6b7280]">Feedback from previous sessions</p>
+                  <h2 className="text-lg font-semibold text-[color:var(--theme-v-text-primary)]">What Mentees Say</h2>
+                  <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Feedback from previous sessions</p>
                 </div>
               </div>
 
               {/* Review Card */}
               <div className="mt-6">
                 {review?.comments ? (
-                  <div className="rounded-xl bg-[#f8fafc] p-5 ring-1 ring-[#e5e7eb]">
+                  <div className="rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-5 ring-1 ring-[color:var(--theme-v-border-soft)]">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#5D3699]/10">
-                          <User className="h-5 w-5 text-[#5D3699]" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--theme-v-accent)]/10">
+                          <User className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-[#111827]">Anonymous Mentee</p>
-                          <p className="text-xs text-[#6b7280]">Verified Session</p>
+                          <p className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">Anonymous Mentee</p>
+                          <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Verified Session</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-0.5">
@@ -687,25 +687,25 @@ const MentorProfile = () => {
                           <Star
                             key={i}
                             className={`h-4 w-4 ${i < (review?.rating || 0)
-                                ? 'fill-[#f59e0b] text-[#f59e0b]'
-                                : 'text-[#e5e7eb]'
+                                ? 'fill-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent)]'
+                                : 'text-white/30'
                               }`}
                           />
                         ))}
                       </div>
                     </div>
                     <div className="mt-4 flex gap-2">
-                      <Quote className="h-5 w-5 flex-shrink-0 text-[#9ca3af]" />
-                      <p className="text-sm leading-relaxed text-[#6b7280]">{review.comments}</p>
+                      <Quote className="h-5 w-5 flex-shrink-0 text-[color:var(--theme-v-text-placeholder)]" />
+                      <p className="text-sm leading-relaxed text-[color:var(--theme-v-text-secondary)]">{review.comments}</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center rounded-xl bg-[#f8fafc] py-12 text-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f5f3ff]">
-                      <MessageCircle className="h-7 w-7 text-[#9ca3af]" />
+                  <div className="flex flex-col items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] py-12 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)]">
+                      <MessageCircle className="h-7 w-7 text-[color:var(--theme-v-text-placeholder)]" />
                     </div>
-                    <p className="mt-4 text-sm font-medium text-[#111827]">No reviews yet</p>
-                    <p className="mt-1 text-xs text-[#6b7280]">
+                    <p className="mt-4 text-sm font-medium text-[color:var(--theme-v-text-primary)]">No reviews yet</p>
+                    <p className="mt-1 text-xs text-[color:var(--theme-v-text-secondary)]">
                       Be the first to leave feedback after your session
                     </p>
                   </div>
@@ -714,17 +714,17 @@ const MentorProfile = () => {
             </div>
 
             {/* CTA Card */}
-            <div className="rounded-2xl bg-[#5D3699] p-6 text-white shadow-lg shadow-[#5D3699]/20">
+            <div className="rounded-2xl bg-[color:var(--theme-v-accent)] p-6 text-[color:var(--theme-v-accent-text)] shadow-lg shadow-[0_12px_24px_-18px_var(--theme-v-shell-shadow)]">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-lg font-semibold">Ready to connect?</h3>
-                  <p className="mt-1 text-sm text-white/80">
+                  <p className="mt-1 text-sm text-[color:var(--theme-v-accent-text)]/85">
                     Book a session with {displayName} today
                   </p>
                 </div>
                 <Link
                   to={`/book-session?mentorId=${mentor?.id || ''}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#5D3699] transition-all hover:bg-[#f5f3ff] sm:w-auto"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-text-primary)] px-6 py-3 text-sm font-semibold text-[color:var(--theme-v-accent-text)] shadow-sm transition-all hover:bg-[color:var(--theme-v-back-btn-hover)] sm:w-auto"
                 >
                   <Calendar className="h-5 w-5" />
                   Schedule Session
@@ -736,28 +736,28 @@ const MentorProfile = () => {
       </div>
       {confirmSlot ? (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-[#e5e7eb] sm:p-6">
-            <h3 className="text-lg font-semibold text-[#111827]">Book This Session?</h3>
-            <p className="mt-2 text-sm text-[#4b5563]">
+          <div className="w-full max-w-md rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-5 shadow-xl ring-1 ring-[color:var(--theme-v-border-soft)] sm:p-6">
+            <h3 className="text-lg font-semibold text-[color:var(--theme-v-text-primary)]">Book This Session?</h3>
+            <p className="mt-2 text-sm text-[color:var(--theme-v-text-secondary)]">
               Do you want to book this session? A request will be sent to the mentor.
             </p>
-            <div className="mt-4 rounded-xl bg-[#f8fafc] p-3 text-sm ring-1 ring-[#e5e7eb]">
-              <div className="font-semibold text-[#111827]">{displayName}</div>
-              <div className="mt-1 text-[#6b7280]">
+            <div className="mt-4 rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-3 text-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
+              <div className="font-semibold text-[color:var(--theme-v-text-primary)]">{displayName}</div>
+              <div className="mt-1 text-[color:var(--theme-v-text-secondary)]">
                 {indiaDateKeyToLabel(formatIndiaDateKey(confirmSlot.startTime), {
                   weekday: 'long',
                   month: 'short',
                   day: 'numeric',
                 }) || '--'}
               </div>
-              <div className="text-[#5D3699]">{confirmSlot.label}</div>
+              <div className="text-[color:var(--theme-v-accent)]">{confirmSlot.label}</div>
             </div>
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={closeBookingConfirm}
                 disabled={Boolean(bookingSlotKey)}
-                className="inline-flex items-center justify-center rounded-xl border border-[#d1d5db] px-4 py-2 text-sm font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-xl border border-[color:var(--theme-v-border-soft)] px-4 py-2 text-sm font-medium text-[color:var(--theme-v-text-primary)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -765,7 +765,7 @@ const MentorProfile = () => {
                 type="button"
                 onClick={handleBookSlot}
                 disabled={Boolean(bookingSlotKey)}
-                className="inline-flex items-center justify-center rounded-xl bg-[#5D3699] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4a2b7a] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-xl bg-[color:var(--theme-v-accent)] px-4 py-2 text-sm font-semibold text-[color:var(--theme-v-accent-text)] transition-colors hover:bg-[color:var(--theme-v-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {bookingSlotKey ? 'Sending...' : 'Send Request'}
               </button>
@@ -778,3 +778,4 @@ const MentorProfile = () => {
 };
 
 export default MentorProfile;
+

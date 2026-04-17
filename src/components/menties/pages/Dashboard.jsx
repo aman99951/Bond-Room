@@ -726,7 +726,7 @@ return (
                 <Sparkles className="h-3 w-3" />
                 Welcome Back
               </span>
-              <span className="inline-flex rounded-full bg-[#f3ecff] px-2.5 py-1 text-[11px] font-medium text-[#6f4ca6] ring-1 ring-[#e7d8ff]">
+              <span className="inline-flex rounded-full !bg-[color:var(--theme-v-accent)] px-2.5 py-1 text-[11px] font-semibold !text-[color:var(--theme-v-accent-text)] ring-1 ring-[color:var(--theme-v-header-border)]">
                 Daily Momentum
               </span>
             </div>

@@ -95,17 +95,17 @@ const SessionCompleted = () => {
 
   return (
     <div className="min-h-screen bg-transparent p-6 sm:p-10">
-      <div className="w-full rounded-[16px] bg-white shadow-[0_20px_40px_rgba(0,0,0,0.12)] border border-[#ece7f6] p-10">
+      <div className="w-full rounded-[16px] bg-[color:var(--theme-v-surface-overlay)] shadow-[0_20px_40px_var(--theme-v-shell-shadow)] border border-[color:var(--theme-v-border-soft)] p-10">
         <div className="flex flex-col items-center text-center">
-          <div className="h-16 w-16 rounded-full bg-[#dcfce7] flex items-center justify-center">
-            <Check className="h-6 w-6 text-[#22c55e]" aria-hidden="true" />
+          <div className="h-16 w-16 rounded-full bg-[color:var(--theme-v-toast-success-bg)] flex items-center justify-center">
+            <Check className="h-6 w-6 text-[color:var(--theme-v-toast-success-text)]" aria-hidden="true" />
           </div>
-          <h1 className="mt-4 text-2xl font-semibold text-[#1f2937]">Session Completed!</h1>
+          <h1 className="mt-4 text-2xl font-semibold text-[color:var(--theme-v-text-primary)]">Session Completed!</h1>
         </div>
 
-        <div className="mt-6 rounded-2xl bg-[#f7fafc] px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-[#374151]">
+        <div className="mt-6 rounded-2xl bg-[color:var(--theme-v-surface-overlay-strong)] px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-[color:var(--theme-v-text-primary)]">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ec4899] text-white flex items-center justify-center text-xs font-semibold">
+            <div className="h-9 w-9 rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-primary)] flex items-center justify-center text-xs font-semibold ring-1 ring-[color:var(--theme-v-border-soft)]">
               {menteeLabel
                 .split(' ')
                 .slice(-1)[0]
@@ -114,24 +114,24 @@ const SessionCompleted = () => {
             </div>
             <div className="font-medium">{menteeLabel}</div>
           </div>
-          <div className="hidden sm:block h-6 w-px bg-[#e5e7eb]" />
+          <div className="hidden sm:block h-6 w-px bg-[color:var(--theme-v-border-soft)]" />
           <div className="flex items-center gap-2 text-sm">
-            <Clock className="h-4 w-4 text-[#6b7280]" />
+            <Clock className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
             {durationLabel}
           </div>
-          <div className="hidden sm:block h-6 w-px bg-[#e5e7eb]" />
+          <div className="hidden sm:block h-6 w-px bg-[color:var(--theme-v-border-soft)]" />
           <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-[#6b7280]" />
+            <Calendar className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
             {dateLabel}
           </div>
         </div>
 
-        <p className="mt-4 text-center text-sm text-[#6b7280]">
+        <p className="mt-4 text-center text-sm text-[color:var(--theme-v-text-secondary)]">
           This session has been successfully recorded.
         </p>
 
         <div className="mt-8 text-center">
-          <h2 className="text-sm font-semibold text-[#374151]">
+          <h2 className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">
             How would you like to process this session?
           </h2>
         </div>
@@ -140,25 +140,25 @@ const SessionCompleted = () => {
           {cards.map((card) => {
             const Icon = card.icon;
             const selectedStyle =
-              selected === card.id ? 'ring-2 ring-[#5b2c91]' : 'ring-1 ring-transparent';
+              selected === card.id ? 'ring-2 ring-[color:var(--theme-v-border-focus)]' : 'ring-1 ring-[color:var(--theme-v-border-soft)]';
             const toneStyle =
               card.tone === 'purple'
-                ? 'bg-[#efe7ff] text-[#5b2c91]'
+                ? 'bg-[color:var(--theme-v-selected-bg)] text-[color:var(--theme-v-accent)]'
                 : card.tone === 'yellow'
-                ? 'bg-[#fff3c4] text-[#f59e0b]'
-                : 'bg-[#f3f4f6] text-[#6b7280]';
+                ? 'bg-[color:var(--theme-v-back-btn-hover)] text-[color:var(--theme-v-accent)]'
+                : 'bg-[color:var(--theme-v-surface-overlay-track)] text-[color:var(--theme-v-text-secondary)]';
             return (
               <button
                 key={card.id}
                 type="button"
                 onClick={() => setSelected(card.id)}
-                className={`rounded-2xl bg-white border border-[#e5e7eb] p-5 text-center shadow-[0_8px_18px_rgba(0,0,0,0.06)] ${selectedStyle}`}
+                className={`rounded-2xl bg-[color:var(--theme-v-surface-overlay)] border border-[color:var(--theme-v-border-soft)] p-5 text-center shadow-[0_8px_18px_var(--theme-v-shell-shadow)] ${selectedStyle}`}
               >
                 <div className={`mx-auto h-12 w-12 rounded-full flex items-center justify-center ${toneStyle}`}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <h3 className="mt-4 text-sm font-semibold text-[#1f2937]">{card.title}</h3>
-                <p className="mt-2 text-xs text-[#6b7280]">{card.desc}</p>
+                <h3 className="mt-4 text-sm font-semibold text-[color:var(--theme-v-text-primary)]">{card.title}</h3>
+                <p className="mt-2 text-xs text-[color:var(--theme-v-text-secondary)]">{card.desc}</p>
               </button>
             );
           })}
@@ -168,9 +168,9 @@ const SessionCompleted = () => {
           {selected === 'report' && (
             <>
               <div>
-                <label className="block text-xs text-[#6b7280] mb-1">Issue Category</label>
+                <label className="block text-xs text-[color:var(--theme-v-text-secondary)] mb-1">Issue Category</label>
                 <select
-                  className="w-full rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] px-3 py-2 text-sm"
                   value={issueCategory}
                   onChange={(event) => setIssueCategory(event.target.value)}
                 >
@@ -181,10 +181,10 @@ const SessionCompleted = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#6b7280] mb-1">Issue Description</label>
+                <label className="block text-xs text-[color:var(--theme-v-text-secondary)] mb-1">Issue Description</label>
                 <textarea
                   rows={3}
-                  className="w-full rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] px-3 py-2 text-sm"
                   value={issueDescription}
                   onChange={(event) => setIssueDescription(event.target.value)}
                   placeholder="Describe the issue."
@@ -198,18 +198,18 @@ const SessionCompleted = () => {
           <button
             type="button"
             className={`w-full sm:w-[320px] rounded-full py-3 text-sm font-semibold transition ${
-              selected ? 'bg-[#5b2c91] text-white' : 'bg-[#e5e7eb] text-[#9ca3af]'
+              selected ? 'bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)]' : 'bg-[color:var(--theme-v-border-soft)] text-[color:var(--theme-v-text-placeholder)]'
             }`}
             disabled={!selected || saving}
             onClick={handleConfirm}
           >
             {saving ? 'Saving...' : 'Confirm Selection'}
           </button>
-          <button type="button" className="text-sm text-[#6b7280]">
+          <button type="button" className="text-sm text-[color:var(--theme-v-text-secondary)]">
             Need Help?
           </button>
           {(loading || error || infoMessage) && (
-            <div className={`text-xs ${error ? 'text-red-600' : 'text-green-700'}`}>
+            <div className={`text-xs ${error ? 'text-[color:var(--theme-v-toast-error-text)]' : 'text-[color:var(--theme-v-toast-success-text)]'}`}>
               {error || infoMessage || 'Loading session...'}
             </div>
           )}
@@ -221,5 +221,6 @@ const SessionCompleted = () => {
 };
 
 export default SessionCompleted;
+
 
 

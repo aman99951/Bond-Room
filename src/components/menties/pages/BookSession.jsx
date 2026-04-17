@@ -336,7 +336,7 @@ const BookSession = () => {
         {/* Back Link */}
         <Link
           to="/dashboard"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-[#6b7280] transition-colors hover:text-[#5D3699]"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-[color:var(--theme-v-text-primary)] font-semibold transition-colors hover:text-[color:var(--theme-v-accent)]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Mentors
@@ -345,55 +345,55 @@ const BookSession = () => {
         {/* Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
-              <Calendar className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--theme-v-accent)] shadow-lg shadow-[0_12px_24px_-18px_var(--theme-v-shell-shadow)]">
+              <Calendar className="h-6 w-6 text-[color:var(--theme-v-text-primary)]" />
             </div>
             <div>
-              <h1 className="book-session-title text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
+              <h1 className="book-session-title text-xl font-bold tracking-tight text-[color:var(--theme-v-text-primary)] sm:text-2xl">
                 {mentor?.name ? `Book with ${mentor.name}` : 'Book Session'}
               </h1>
-              <p className="mt-0.5 text-sm text-[#6b7280]">
+              <p className="mt-0.5 text-sm text-[color:var(--theme-v-text-primary)] font-medium opacity-80">
                 Select a date and time that works for you
               </p>
             </div>
           </div>
 
           {/* Safety Badge */}
-          <div className="inline-flex items-center gap-2 self-start rounded-full bg-[#ecfdf3] px-4 py-2 ring-1 ring-[#10b981]/20">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#10b981]">
-              <Shield className="h-3.5 w-3.5 text-white" />
+          <div className="inline-flex items-center gap-2 self-start rounded-full bg-[color:var(--theme-v-accent)]/20 px-4 py-2 ring-1 ring-[color:var(--theme-v-border-medium)]">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--theme-v-accent)]">
+              <Shield className="h-3.5 w-3.5 text-[color:var(--theme-v-text-primary)]" />
             </div>
-            <span className="text-xs font-medium text-[#10b981]">
+            <span className="text-xs font-medium text-[color:var(--theme-v-highlight-mid)]">
               Sessions are monitored for safety
             </span>
           </div>
         </div>
 
         {/* Main Card */}
-        <div className="book-session-main overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
+        <div className="book-session-main overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
           <div className="book-session-layout flex flex-col lg:grid lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
             {/* Left Sidebar - Mentor Info */}
-            <aside className="border-b border-[#e5e7eb] bg-[#f8fafc] lg:border-b-0 lg:border-r">
+            <aside className="border-b border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay-strong)] lg:border-b-0 lg:border-r">
               {/* ——— Mobile: Compact Mentor Card ——— */}
               <div className="block p-4 lg:hidden">
                 <div className="flex items-center gap-3">
                   <div className="relative flex-shrink-0">
-                    <div className="h-12 w-12 overflow-hidden rounded-xl bg-[#f5f3ff] ring-2 ring-white shadow-md">
+                    <div className="h-12 w-12 overflow-hidden rounded-xl bg-[color:var(--theme-v-accent)]/20 ring-2 ring-white shadow-md">
                       {mentor?.avatar ? (
                         <img src={mentor.avatar} alt={mentor?.name || 'Mentor'} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <User className="h-6 w-6 text-[#5D3699]" />
+                          <User className="h-6 w-6 text-[color:var(--theme-v-accent)]" />
                         </div>
                       )}
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white bg-[#10b981]" />
+                    <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white bg-[color:var(--theme-v-accent)]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-base font-bold text-[#111827] truncate">
+                    <h2 className="text-base font-bold text-[color:var(--theme-v-text-primary)] truncate">
                       {mentor?.name || 'Mentor'}
                     </h2>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-[#6b7280]">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-[color:var(--theme-v-text-secondary)]">
                       {mentor?.location && (
                         <span className="inline-flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
@@ -402,8 +402,8 @@ const BookSession = () => {
                       )}
                       {mentor?.rating !== null && mentor?.rating !== undefined && (
                         <span className="inline-flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-[#f59e0b] text-[#f59e0b]" />
-                          <span className="font-semibold text-[#111827]">{Number(mentor.rating).toFixed(1)}</span>
+                          <Star className="h-3 w-3 fill-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent)]" />
+                          <span className="font-semibold text-[color:var(--theme-v-text-primary)]">{Number(mentor.rating).toFixed(1)}</span>
                         </span>
                       )}
                       <span className="inline-flex items-center gap-1">
@@ -416,12 +416,12 @@ const BookSession = () => {
                 {(mentor?.expertise || []).length > 0 && (
                   <div className="mt-2.5 flex flex-wrap gap-1.5">
                     {mentor.expertise.slice(0, 3).map((t) => (
-                      <span key={t} className="inline-flex items-center rounded-full bg-[#f5f3ff] px-2.5 py-1 text-[10px] font-medium text-[#5D3699]">
+                      <span key={t} className="inline-flex items-center rounded-full bg-[color:var(--theme-v-accent)]/20 px-2.5 py-1 text-[10px] font-medium text-[color:var(--theme-v-highlight-mid)]">
                         {t}
                       </span>
                     ))}
                     {mentor.expertise.length > 3 && (
-                      <span className="inline-flex items-center rounded-full bg-[#f5f3ff] px-2.5 py-1 text-[10px] font-medium text-[#9ca3af]">
+                      <span className="inline-flex items-center rounded-full bg-[color:var(--theme-v-accent)]/20 px-2.5 py-1 text-[10px] font-medium text-[color:var(--theme-v-text-placeholder)]">
                         +{mentor.expertise.length - 3}
                       </span>
                     )}
@@ -433,7 +433,7 @@ const BookSession = () => {
                 {/* Mentor Header */}
                 <div className="flex items-center gap-4">
                   <div className="relative flex-shrink-0">
-                    <div className="h-16 w-16 overflow-hidden rounded-xl bg-[#f5f3ff] ring-2 ring-white shadow-md">
+                    <div className="h-16 w-16 overflow-hidden rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] ring-2 ring-white shadow-md">
                       {mentor?.avatar ? (
                         <img
                           src={mentor.avatar}
@@ -442,19 +442,19 @@ const BookSession = () => {
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <User className="h-8 w-8 text-[#5D3699]" />
+                          <User className="h-8 w-8 text-[color:var(--theme-v-accent)]" />
                         </div>
                       )}
                     </div>
                     {/* Online indicator */}
-                    <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white bg-[#10b981]" />
+                    <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white bg-[color:var(--theme-v-accent)]" />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="text-lg font-bold text-[#111827] truncate">
+                    <h2 className="text-lg font-bold text-[color:var(--theme-v-text-primary)] truncate">
                       {mentor?.name || 'Mentor'}
                     </h2>
                     {mentor?.location && (
-                      <div className="mt-0.5 flex items-center gap-1.5 text-sm text-[#6b7280]">
+                      <div className="mt-0.5 flex items-center gap-1.5 text-sm text-[color:var(--theme-v-text-secondary)]">
                         <MapPin className="h-3.5 w-3.5" />
                         <span className="truncate">{mentor.location}</span>
                       </div>
@@ -463,40 +463,40 @@ const BookSession = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="mt-6 flex items-center gap-4 rounded-xl bg-white p-4 ring-1 ring-[#e5e7eb]">
+                <div className="mt-6 flex items-center gap-4 rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-4 ring-1 ring-[color:var(--theme-v-border-soft)]">
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
                           className={`h-4 w-4 ${i < Math.floor(mentor?.rating || 0)
-                            ? 'fill-[#f59e0b] text-[#f59e0b]'
-                            : 'text-[#e5e7eb]'
+                            ? 'fill-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent)]'
+                            : 'text-[color:var(--theme-v-accent-text)]/30'
                             }`}
                         />
                       ))}
                     </div>
-                    <span className="text-sm font-bold text-[#111827]">
+                    <span className="text-sm font-bold text-[color:var(--theme-v-text-primary)]">
                       {mentor?.rating !== null && mentor?.rating !== undefined
                         ? Number(mentor.rating).toFixed(1)
                         : '--'}
                     </span>
                   </div>
-                  <div className="h-4 w-px bg-[#e5e7eb]" />
-                  <div className="flex items-center gap-1 text-sm text-[#6b7280]">
+                  <div className="h-4 w-px bg-[color:var(--theme-v-border-soft)]" />
+                  <div className="flex items-center gap-1 text-sm text-[color:var(--theme-v-text-secondary)]">
                     <MessageCircle className="h-3.5 w-3.5" />
                     <span>{mentor?.reviews ?? 0}</span>
                   </div>
-                  <div className="h-4 w-px bg-[#e5e7eb]" />
-                  <div className="flex items-center gap-1 text-sm text-[#6b7280]">
+                  <div className="h-4 w-px bg-[color:var(--theme-v-border-soft)]" />
+                  <div className="flex items-center gap-1 text-sm text-[color:var(--theme-v-text-secondary)]">
                     <Video className="h-3.5 w-3.5" />
-                    <span className="font-semibold text-[#111827]">{mentor?.sessions ?? 0}</span>
+                    <span className="font-semibold text-[color:var(--theme-v-text-primary)]">{mentor?.sessions ?? 0}</span>
                   </div>
                 </div>
 
                 {/* Expertise */}
                 <div className="mt-6">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                     <BookOpen className="h-4 w-4" />
                     Expertise
                   </div>
@@ -504,20 +504,20 @@ const BookSession = () => {
                     {(mentor?.expertise || []).map((t) => (
                       <span
                         key={t}
-                        className="inline-flex items-center rounded-full bg-[#f5f3ff] px-3 py-1.5 text-xs font-medium text-[#5D3699]"
+                        className="inline-flex items-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] px-3 py-1.5 text-xs font-medium text-[color:var(--theme-v-accent)]"
                       >
                         {t}
                       </span>
                     ))}
                     {!mentor?.expertise?.length && (
-                      <span className="text-xs text-[#9ca3af]">Not specified</span>
+                      <span className="text-xs text-[color:var(--theme-v-text-placeholder)]">Not specified</span>
                     )}
                   </div>
                 </div>
 
                 {/* Languages */}
                 <div className="mt-6">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                     <Globe className="h-4 w-4" />
                     Languages
                   </div>
@@ -525,31 +525,31 @@ const BookSession = () => {
                     {(mentor?.languages || []).map((t) => (
                       <span
                         key={t}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-[#6b7280] ring-1 ring-[#e5e7eb]"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--theme-v-surface-overlay)] px-3 py-1.5 text-xs font-medium text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-border-soft)]"
                       >
                         <Globe className="h-3 w-3" />
                         {t}
                       </span>
                     ))}
                     {!mentor?.languages?.length && (
-                      <span className="text-xs text-[#9ca3af]">Not specified</span>
+                      <span className="text-xs text-[color:var(--theme-v-text-placeholder)]">Not specified</span>
                     )}
                   </div>
                 </div>
 
                 {/* Bio */}
                 <div className="mt-6">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                     <Sparkles className="h-4 w-4" />
                     My Story
                   </div>
-                  <div className="mt-3 rounded-xl bg-white p-4 ring-1 ring-[#e5e7eb]">
-                    <p className="text-sm italic leading-relaxed text-[#6b7280]">
+                  <div className="mt-3 rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-4 ring-1 ring-[color:var(--theme-v-border-soft)]">
+                    <p className="text-sm italic leading-relaxed text-[color:var(--theme-v-text-secondary)]">
                       "{mentor?.bio || 'Bio not provided yet.'}"
                     </p>
                     <button
                       type="button"
-                      className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#5D3699] hover:underline"
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[color:var(--theme-v-accent)] hover:underline"
                     >
                       Read full bio
                       <ChevronRight className="h-3 w-3" />
@@ -569,30 +569,30 @@ const BookSession = () => {
                     <button
                       type="button"
                       onClick={() => handleMonthChange(-1)}
-                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay)]"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
-                    <h2 className="text-lg font-semibold text-[#111827]">
+                    <h2 className="text-lg font-semibold text-[color:var(--theme-v-text-primary)]">
                       {monthLabel}
                     </h2>
                     <button
                       type="button"
                       onClick={() => handleMonthChange(1)}
-                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay)]"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>
                   </div>
 
                   {/* Calendar Grid */}
-                  <div className="book-session-calendar-grid rounded-xl bg-[#f8fafc] p-4 ring-1 ring-[#e5e7eb]">
+                  <div className="book-session-calendar-grid rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-4 ring-1 ring-[color:var(--theme-v-border-soft)]">
                     {/* Days Header */}
                     <div className="mb-3 grid grid-cols-7 gap-2">
                       {days.map((d) => (
                         <div
                           key={d}
-                          className="text-center text-xs font-semibold uppercase tracking-wider text-[#9ca3af]"
+                          className="text-center text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-placeholder)]"
                         >
                           {d}
                         </div>
@@ -620,26 +620,26 @@ const BookSession = () => {
                             relative flex aspect-square w-full items-center justify-center rounded-xl text-sm font-medium transition-all
                             ${isEmpty ? 'cursor-default' : ''}
                             ${isSelected
-                                ? 'bg-[#5D3699] text-white shadow-md shadow-[#5D3699]/30'
+                                ? 'bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-text-primary)] shadow-[0_12px_24px_-18px_var(--theme-v-shell-shadow)]'
                                 : ''
                               }
                             ${!isEmpty && !isSelected && !isUnavailable
-                                ? 'bg-white text-[#111827] ring-1 ring-[#e5e7eb] hover:ring-[#5D3699] hover:bg-[#f5f3ff]'
+                                ? 'bg-[color:var(--theme-v-surface-overlay)] text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] hover:ring-[color:var(--theme-v-border-hover)] hover:bg-[color:var(--theme-v-accent)]/10'
                                 : ''
                               }
                             ${isUnavailable
-                                ? 'cursor-not-allowed bg-transparent text-[#d1d5db]'
+                                ? 'cursor-not-allowed bg-transparent text-[color:var(--theme-v-text-placeholder)]'
                                 : ''
                               }
                             ${isToday && !isSelected
-                                ? 'ring-2 ring-[#5D3699]/30'
+                                ? 'ring-2 ring-[color:var(--theme-v-focus-ring)]'
                                 : ''
                               }
                           `}
                           >
                             {d || ''}
                             {isToday && !isSelected && (
-                              <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#5D3699]" />
+                              <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[color:var(--theme-v-accent)]" />
                             )}
                           </button>
                         );
@@ -648,33 +648,33 @@ const BookSession = () => {
                   </div>
 
                   {/* Legend */}
-                  <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-[#6b7280]">
+                  <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-[color:var(--theme-v-text-secondary)]">
                     <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-[#5D3699]" />
+                      <div className="h-3 w-3 rounded-full bg-[color:var(--theme-v-accent)]" />
                       <span>Selected</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-white ring-1 ring-[#e5e7eb]" />
+                      <div className="h-3 w-3 rounded-full bg-[color:var(--theme-v-surface-overlay)] ring-1 ring-[color:var(--theme-v-border-soft)]" />
                       <span>Available</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-[#f5f3ff]" />
+                      <div className="h-3 w-3 rounded-full bg-[color:var(--theme-v-accent)]/30" />
                       <span>Unavailable</span>
                     </div>
                   </div>
                 </section>
 
                 {/* Time Slots */}
-                <aside className="border-t border-[#e5e7eb] pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+                <aside className="border-t border-[color:var(--theme-v-border-soft)] pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-                      <Clock className="h-5 w-5 text-[#5D3699]" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-accent)]/20">
+                      <Clock className="h-5 w-5 text-[color:var(--theme-v-highlight-mid)]" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-[#111827]">
+                      <h3 className="text-base font-semibold text-[color:var(--theme-v-text-primary)]">
                         Available Times
                       </h3>
-                      <p className="text-xs text-[#6b7280]">
+                      <p className="text-xs text-[color:var(--theme-v-text-secondary)]">
                         {selectedDateKey ? formatDateLabel(selectedDateKey) : 'Select a date'}
                       </p>
                     </div>
@@ -692,8 +692,8 @@ const BookSession = () => {
                             type="button"
                             onClick={() => setSelectedSlotId(slot.id)}
                             className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all ${isSelected
-                              ? 'bg-[#5D3699] text-white shadow-md shadow-[#5D3699]/20'
-                              : 'bg-white text-[#111827] ring-1 ring-[#e5e7eb] hover:ring-[#5D3699] hover:bg-[#f5f3ff]'
+                              ? 'bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-text-primary)] shadow-[0_12px_24px_-18px_var(--theme-v-shell-shadow)]'
+                              : 'bg-[color:var(--theme-v-surface-overlay)] text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] hover:ring-[color:var(--theme-v-border-hover)] hover:bg-[color:var(--theme-v-accent)]/10'
                               }`}
                           >
                             <span>{slot.label}</span>
@@ -704,14 +704,14 @@ const BookSession = () => {
                         );
                       })
                     ) : (
-                      <div className="flex flex-col items-center justify-center rounded-xl bg-[#f8fafc] py-8 text-center">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white ring-1 ring-[#e5e7eb]">
-                          <Clock className="h-6 w-6 text-[#9ca3af]" />
+                      <div className="flex flex-col items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] py-8 text-center">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay)] ring-1 ring-[color:var(--theme-v-border-soft)]">
+                          <Clock className="h-6 w-6 text-[color:var(--theme-v-text-placeholder)]" />
                         </div>
-                        <p className="mt-3 text-sm font-medium text-[#111827]">
+                        <p className="mt-3 text-sm font-medium text-[color:var(--theme-v-text-primary)]">
                           No times available
                         </p>
-                        <p className="mt-1 text-xs text-[#6b7280]">
+                        <p className="mt-1 text-xs text-[color:var(--theme-v-text-secondary)]">
                           Please select another date
                         </p>
                       </div>
@@ -720,12 +720,12 @@ const BookSession = () => {
 
                   {/* Selected Summary */}
                   {selectedSlot && (
-                    <div className="mt-4 rounded-xl bg-[#f5f3ff] p-4">
-                      <div className="flex items-center gap-2 text-xs font-medium text-[#5D3699]">
+                    <div className="mt-4 rounded-xl bg-[color:var(--theme-v-accent)]/20 p-4">
+                      <div className="flex items-center gap-2 text-xs font-medium text-[color:var(--theme-v-highlight-mid)]">
                         <CheckCircle2 className="h-4 w-4" />
                         Selected Time
                       </div>
-                      <p className="mt-1 text-sm font-semibold text-[#111827]">
+                      <p className="mt-1 text-sm font-semibold text-[color:var(--theme-v-text-primary)]">
                         {currentSelectedTimeLabel}
                       </p>
                     </div>
@@ -736,17 +736,17 @@ const BookSession = () => {
           </div>
 
           {/* Footer CTA */}
-          <div className="border-t border-[#e5e7eb] bg-[#f8fafc] p-4 sm:p-6">
+          <div className="border-t border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay-strong)] p-4 sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#5D3699]">
-                  <Video className="h-5 w-5 text-white" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-accent)]">
+                  <Video className="h-5 w-5 text-[color:var(--theme-v-text-primary)]" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-[#111827]">
+                  <p className="text-sm font-medium text-[color:var(--theme-v-text-primary)]">
                     {selectedSlot ? 'Ready to book?' : 'Select a time slot'}
                   </p>
-                  <p className="text-xs text-[#6b7280]">
+                  <p className="text-xs text-[color:var(--theme-v-text-secondary)]">
                     {selectedSlot
                       ? `Session with ${mentor?.name || 'Mentor'}`
                       : 'Choose a date and time above'}
@@ -758,7 +758,7 @@ const BookSession = () => {
                 type="button"
                 onClick={handleConfirmBooking}
                 disabled={submitting || loading || !selectedSlot}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-8 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-accent)] px-8 py-3.5 text-sm font-semibold text-[color:var(--theme-v-accent-text)] shadow-sm transition-all hover:bg-[color:var(--theme-v-accent-hover)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 {submitting ? (
                   <>
@@ -778,58 +778,58 @@ const BookSession = () => {
 
         {/* Loading/Error States */}
         {loading && (
-          <div className="mt-6 flex items-center justify-center gap-3 rounded-xl bg-white p-6 shadow-sm ring-1 ring-[#e5e7eb]">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#e5e7eb] border-t-[#5D3699]" />
-            <span className="text-sm font-medium text-[#6b7280]">Loading available slots...</span>
+          <div className="mt-6 flex items-center justify-center gap-3 rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-6 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[color:var(--theme-v-border-soft)] border-t-[color:var(--theme-v-accent)]" />
+            <span className="text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Loading available slots...</span>
           </div>
         )}
 
         {error && (
-          <div className="mt-6 flex items-center gap-3 rounded-xl bg-red-50 p-4 ring-1 ring-red-100">
-            <AlertCircle className="h-5 w-5 text-red-600" />
-            <span className="text-sm text-red-600">{error}</span>
+          <div className="mt-6 flex items-center gap-3 rounded-xl bg-[color:var(--theme-v-toast-error-bg)] p-4 ring-1 ring-[color:var(--theme-v-toast-error-border)]">
+            <AlertCircle className="h-5 w-5 text-[color:var(--theme-v-toast-error-text)]" />
+            <span className="text-sm text-[color:var(--theme-v-toast-error-text)]">{error}</span>
           </div>
         )}
 
         {/* Session Info */}
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-                <Video className="h-5 w-5 text-[#5D3699]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+                <Video className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#111827]">Video Call</p>
-                <p className="text-xs text-[#6b7280]">Secure video session</p>
+                <p className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">Video Call</p>
+                <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Secure video session</p>
               </div>
             </div>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-                <Clock className="h-5 w-5 text-[#5D3699]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+                <Clock className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#111827]">30 Minutes</p>
-                <p className="text-xs text-[#6b7280]">Session duration</p>
+                <p className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">30 Minutes</p>
+                <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Session duration</p>
               </div>
             </div>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb]">
+          <div className="rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50">
-                <Shield className="h-5 w-5 text-[#10b981]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-toast-success-bg)]">
+                <Shield className="h-5 w-5 text-[color:var(--theme-v-toast-success-text)]" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#111827]">Safe & Secure</p>
-                <p className="text-xs text-[#6b7280]">Monitored sessions</p>
+                <p className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">Safe & Secure</p>
+                <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Monitored sessions</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Help Text */}
-        <p className="mt-6 text-center text-xs text-[#9ca3af]">
+        <p className="mt-6 text-center text-xs text-[color:var(--theme-v-text-placeholder)]">
           Need help? Contact our support team at support@bondroom.com
         </p>
       </div>
@@ -838,3 +838,4 @@ const BookSession = () => {
 };
 
 export default BookSession;
+
