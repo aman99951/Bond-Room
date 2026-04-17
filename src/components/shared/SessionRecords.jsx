@@ -97,13 +97,13 @@ const getStatusClasses = (statusValue) => {
   const normalized = String(statusValue || '').toLowerCase();
   if (normalized === 'completed') return 'bg-green-50 text-green-700 ring-1 ring-green-200';
   if (normalized === 'scheduled' || normalized === 'approved') {
-    return 'bg-blue-50 text-blue-700 ring-1 ring-blue-200';
+    return 'bg-[color:var(--theme-v-nav-hover-bg)] text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-hero-border)]';
   }
   if (normalized === 'requested') return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200';
   if (normalized === 'canceled' || normalized === 'no_show') {
     return 'bg-rose-50 text-rose-700 ring-1 ring-rose-200';
   }
-  return 'bg-gray-100 text-gray-700 ring-1 ring-gray-200';
+  return 'bg-[color:var(--theme-v-nav-hover-bg)] text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-hero-border)]';
 };
 
 const formatIncidentLabel = (value) =>
@@ -292,15 +292,15 @@ const SessionRecords = () => {
   }, [incidentsBySession, isMentorRole, mentorMap, recordingsBySession, sessions]);
 
   return (
-    <div className="min-h-screen bg-transparent p-2 sm:p-4 lg:p-6">
-      <div className="mb-6 flex flex-col gap-4 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] xl:flex-row xl:items-center xl:justify-between lg:p-6">
+    <div className="min-h-screen bg-transparent p-2 text-[color:var(--theme-v-text-primary)] sm:p-4 lg:p-6">
+      <div className="mb-6 flex flex-col gap-4 rounded-[28px] border border-[color:var(--theme-v-hero-border)] bg-[linear-gradient(135deg,var(--theme-v-bg-start)_0%,var(--theme-v-bg-mid)_48%,var(--theme-v-bg-end)_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(22,10,46,0.7)] ring-1 ring-[color:var(--theme-v-hero-border)] xl:flex-row xl:items-center xl:justify-between lg:p-6">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#5D3699] text-white">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)]">
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#111827]">Session Records</h1>
-            <p className="text-sm text-[#6b7280]">
+            <h1 className="text-2xl font-bold text-[color:var(--theme-v-text-primary)]">Session Records</h1>
+            <p className="text-sm text-[color:var(--theme-v-text-secondary)]">
               View all sessions, recording status, summaries, and meeting details.
             </p>
           </div>
@@ -308,19 +308,19 @@ const SessionRecords = () => {
 
         <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] xl:w-auto">
           <div className="relative min-w-0">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--theme-v-text-secondary)]" />
             <input
               type="text"
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               placeholder="Search by person, topic, or session id"
-              className="h-11 w-full sm:min-w-[280px] xl:w-[320px] rounded-xl border-0 bg-white pl-10 pr-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:ring-2 focus:ring-[#5D3699]"
+              className="h-11 w-full sm:min-w-[280px] xl:w-[320px] rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] pl-10 pr-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:ring-2 focus:ring-[color:var(--theme-v-accent)]"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:ring-2 focus:ring-[#5D3699] sm:w-auto sm:justify-self-end"
+            className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:ring-2 focus:ring-[color:var(--theme-v-accent)] sm:w-auto sm:justify-self-end"
           >
             {statuses.map((statusValue) => (
               <option key={statusValue} value={statusValue}>
@@ -332,7 +332,7 @@ const SessionRecords = () => {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl bg-white p-6 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb]">
+        <div className="rounded-2xl bg-[color:var(--theme-v-nav-hover-bg)] p-6 text-sm text-[color:var(--theme-v-text-secondary)] shadow-sm ring-1 ring-[color:var(--theme-v-hero-border)]">
           Loading session records...
         </div>
       ) : null}
@@ -342,7 +342,7 @@ const SessionRecords = () => {
       ) : null}
 
       {!loading && !rows.length ? (
-        <div className="rounded-2xl bg-white p-10 text-center text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb]">
+        <div className="rounded-2xl bg-[color:var(--theme-v-nav-hover-bg)] p-10 text-center text-sm text-[color:var(--theme-v-text-secondary)] shadow-sm ring-1 ring-[color:var(--theme-v-hero-border)]">
           No sessions found for the selected filters.
         </div>
       ) : null}
@@ -352,14 +352,14 @@ const SessionRecords = () => {
           const { session, recording, participant, summary, highlights, actionItems, mentorWarnings } = item;
           const recordingStatus = String(recording?.status || 'not_started').toLowerCase();
           return (
-            <div key={session.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e5e7eb] sm:p-5">
+            <div key={session.id} className="rounded-2xl bg-[color:var(--theme-v-nav-hover-bg)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-hero-border)] sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <div className="text-xs font-medium uppercase tracking-wide text-[#6b7280]">
+                  <div className="text-xs font-medium uppercase tracking-wide text-[color:var(--theme-v-text-secondary)]">
                     Session #{session.id}
                   </div>
                   <div className="mt-1 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#f3f4f6] text-sm font-semibold text-[#5D3699]">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[color:var(--theme-v-header-bg)] text-sm font-semibold text-[color:var(--theme-v-accent)]">
                       {participant.avatar ? (
                         <img src={participant.avatar} alt={participant.name} className="h-full w-full object-cover" />
                       ) : (
@@ -367,8 +367,8 @@ const SessionRecords = () => {
                       )}
                     </div>
                     <div>
-                      <div className="text-lg font-semibold text-[#111827]">{participant.name}</div>
-                      <div className="text-sm text-[#6b7280]">{participant.label}</div>
+                      <div className="text-lg font-semibold text-[color:var(--theme-v-text-primary)]">{participant.name}</div>
+                      <div className="text-sm text-[color:var(--theme-v-text-secondary)]">{participant.label}</div>
                     </div>
                   </div>
                 </div>
@@ -377,48 +377,48 @@ const SessionRecords = () => {
                 </span>
               </div>
 
-              <div className="mt-4 grid gap-3 text-sm text-[#374151] sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-4 grid gap-3 text-sm text-[color:var(--theme-v-text-secondary)] sm:grid-cols-2 lg:grid-cols-4">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-[#5D3699]" />
+                  <Calendar className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                   <span>{formatDate(session?.scheduled_start)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-[#5D3699]" />
+                  <Clock className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                   <span>{formatTimeRange(session?.scheduled_start, session?.scheduled_end)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Video className="h-4 w-4 text-[#5D3699]" />
+                  <Video className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                   <span>{formatStatus(session?.mode || 'online')}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-[#111827]">Duration:</span>{' '}
+                  <span className="font-medium text-[color:var(--theme-v-text-primary)]">Duration:</span>{' '}
                   {session?.duration_minutes ? `${session.duration_minutes} mins` : '45 mins'}
                 </div>
               </div>
 
-              <div className="mt-4 rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
+              <div className="mt-4 rounded-xl bg-[color:var(--theme-v-header-bg)] p-3 ring-1 ring-[color:var(--theme-v-hero-border)]">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-sm font-semibold text-[#111827]">
+                  <div className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">
                     Recording: {formatStatus(recordingStatus)}
                   </div>
-                  <span className="text-xs text-[#6b7280]">Recording playback disabled</span>
+                  <span className="text-xs text-[color:var(--theme-v-text-secondary)]">Recording playback disabled</span>
                 </div>
-                <div className="mt-2 grid gap-2 text-xs text-[#6b7280] sm:grid-cols-3">
+                <div className="mt-2 grid gap-2 text-xs text-[color:var(--theme-v-text-secondary)] sm:grid-cols-3">
                   <div>
-                    <span className="font-medium text-[#374151]">Started:</span> {formatDateTime(recording?.started_at)}
+                    <span className="font-medium text-[color:var(--theme-v-text-primary)]">Started:</span> {formatDateTime(recording?.started_at)}
                   </div>
                   <div>
-                    <span className="font-medium text-[#374151]">Ended:</span> {formatDateTime(recording?.ended_at)}
+                    <span className="font-medium text-[color:var(--theme-v-text-primary)]">Ended:</span> {formatDateTime(recording?.ended_at)}
                   </div>
                   <div>
-                    <span className="font-medium text-[#374151]">File Size:</span> {formatFileSize(recording?.file_size_bytes)}
+                    <span className="font-medium text-[color:var(--theme-v-text-primary)]">File Size:</span> {formatFileSize(recording?.file_size_bytes)}
                   </div>
                 </div>
               </div>
 
               <div className="mt-4 grid gap-4 lg:grid-cols-3">
-                <div className="lg:col-span-2 rounded-xl border border-[#e5e7eb] bg-white p-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                <div className="lg:col-span-2 rounded-xl border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-[color:var(--theme-v-text-secondary)]">
                     Meeting Summary
                   </div>
                   {mentorWarnings.length ? (
@@ -431,25 +431,25 @@ const SessionRecords = () => {
                       ))}
                     </div>
                   ) : null}
-                  <p className="mt-2 text-sm text-[#111827]">
+                  <p className="mt-2 text-sm text-[color:var(--theme-v-text-primary)]">
                     {summary || 'Summary not generated yet for this session.'}
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#e5e7eb] bg-white p-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                <div className="rounded-xl border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-[color:var(--theme-v-text-secondary)]">
                     Additional Details
                   </div>
-                  <div className="mt-2 space-y-2 text-sm text-[#374151]">
+                  <div className="mt-2 space-y-2 text-sm text-[color:var(--theme-v-text-secondary)]">
                     <div>
-                      <span className="font-medium text-[#111827]">Highlights:</span>{' '}
+                      <span className="font-medium text-[color:var(--theme-v-text-primary)]">Highlights:</span>{' '}
                       {highlights.length ? highlights.slice(0, 2).join(' | ') : 'Not available'}
                     </div>
                     <div>
-                      <span className="font-medium text-[#111827]">Action Items:</span>{' '}
+                      <span className="font-medium text-[color:var(--theme-v-text-primary)]">Action Items:</span>{' '}
                       {actionItems.length ? actionItems.slice(0, 2).join(' | ') : 'Not available'}
                     </div>
                     <div>
-                      <span className="font-medium text-[#111827]">Topics:</span>{' '}
+                      <span className="font-medium text-[color:var(--theme-v-text-primary)]">Topics:</span>{' '}
                       {Array.isArray(session?.topic_tags) && session.topic_tags.length
                         ? session.topic_tags.join(', ')
                         : 'Not provided'}
@@ -463,8 +463,8 @@ const SessionRecords = () => {
       </div>
 
       {!loading && totalPages > 1 ? (
-        <div className="mt-6 flex flex-col items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-[#e5e7eb] sm:flex-row">
-          <p className="text-xs text-[#6b7280]">
+        <div className="mt-6 flex flex-col items-center justify-between gap-3 rounded-2xl bg-[color:var(--theme-v-nav-hover-bg)] px-4 py-3 shadow-sm ring-1 ring-[color:var(--theme-v-hero-border)] sm:flex-row">
+          <p className="text-xs text-[color:var(--theme-v-text-secondary)]">
             Showing page {page} of {totalPages} ({totalCount} total records)
           </p>
           <div className="flex items-center gap-2">
@@ -472,7 +472,7 @@ const SessionRecords = () => {
               type="button"
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
               disabled={page <= 1}
-              className="rounded-lg border border-[#d1d5db] bg-white px-3 py-1.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] px-3 py-1.5 text-sm font-medium text-[color:var(--theme-v-text-primary)] hover:bg-[color:var(--theme-v-header-bg)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               Previous
             </button>
@@ -480,7 +480,7 @@ const SessionRecords = () => {
               type="button"
               onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={page >= totalPages}
-              className="rounded-lg border border-[#d1d5db] bg-white px-3 py-1.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] px-3 py-1.5 text-sm font-medium text-[color:var(--theme-v-text-primary)] hover:bg-[color:var(--theme-v-header-bg)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               Next
             </button>

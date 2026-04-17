@@ -92,7 +92,7 @@ const normalizeVolunteerEvent = (event) => ({
     : [],
 });
 
-const VolunteerEventRegister = ({ menteeOnly = false }) => {
+const VolunteerEventRegister = ({ menteeOnly = false, showPublicChrome = true }) => {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const { authSession, mentee, loadCurrentMentee } = useMenteeData({ autoLoad: false });
@@ -432,8 +432,8 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
   if (eventLoading || !eventItem) {
     return (
       <>
-        {topBar}
-        <div className="theme-v-page min-h-screen p-6 pt-[90px] sm:p-8 sm:pt-[94px]">
+        {showPublicChrome ? topBar : null}
+        <div className={`theme-v-page min-h-screen p-6 ${showPublicChrome ? 'pt-[90px] sm:p-8 sm:pt-[94px]' : 'pt-6 sm:pt-8'}`}>
           <div className="mx-auto max-w-xl rounded-2xl border border-red-200 bg-white p-8 text-center">
             {eventLoading ? (
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#e7d8ff] border-t-[#5D3699]" />
@@ -455,16 +455,16 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
             </Link>
           </div>
         </div>
-        <VolunteerBottomAuth />
+        {showPublicChrome ? <VolunteerBottomAuth /> : null}
       </>
     );
   }
 
   return (
     <>
-      {topBar}
+      {showPublicChrome ? topBar : null}
       <motion.div
-        className="theme-v-page relative min-h-screen overflow-hidden p-3 pt-[86px] sm:p-6 sm:pt-[90px] lg:p-8 lg:pt-[94px]"
+        className={`theme-v-page relative min-h-screen overflow-hidden p-3 ${showPublicChrome ? 'pt-[86px] sm:p-6 sm:pt-[90px] lg:p-8 lg:pt-[94px]' : 'pt-3 sm:pt-4 lg:p-6 lg:pt-5'}`}
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
@@ -705,7 +705,7 @@ const VolunteerEventRegister = ({ menteeOnly = false }) => {
         </form>
       </div>
       </motion.div>
-      <VolunteerBottomAuth />
+      {showPublicChrome ? <VolunteerBottomAuth /> : null}
     </>
   );
 };

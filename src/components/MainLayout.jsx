@@ -144,7 +144,7 @@ const MainLayout = () => {
 
             {/* Scrollable content area */}
             <div
-              className="flex-1 overflow-y-auto min-h-0 sm:px-2 sm:py-4 lg:px-4 lg:py-6"
+              className="theme-v-page flex-1 overflow-y-auto min-h-0 sm:px-2 sm:py-4 lg:px-4 lg:py-6"
               data-scroll-container="true"
               tabIndex={0}
             >

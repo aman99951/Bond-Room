@@ -422,32 +422,32 @@ const Myprofile = () => {
     }
   };
 return (
-  <div className="min-h-screen p-3 sm:p-6 lg:p-8">
+  <div className="min-h-screen bg-transparent p-3 text-[color:var(--theme-v-text-primary)] sm:p-6 lg:p-8">
     <div className="w-full">
       {/* Header Section */}
-      <div className="relative mb-8 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
-        <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
+      <div className="relative mb-8 overflow-hidden rounded-3xl border border-[color:var(--theme-v-border-strong)] bg-[linear-gradient(135deg,var(--theme-v-bg-mid)_0%,var(--theme-v-bg-start)_50%,var(--theme-v-bg-end)_100%)] p-4 shadow-[0_20px_45px_-28px_var(--theme-v-shell-shadow)] ring-1 ring-[color:var(--theme-v-hero-ring)] sm:p-6">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[color:var(--theme-v-orb-gold)] blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[color:var(--theme-v-orb-light)] blur-3xl" />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {/* Title with decorative element */}
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#f5f3ff] sm:h-12 sm:w-12">
-              <User className="h-6 w-6 text-[#5D3699]" />
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[color:var(--theme-v-surface-overlay-strong)] sm:h-12 sm:w-12">
+              <User className="h-6 w-6 text-[color:var(--theme-v-accent)]" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+              <h1 className="text-xl font-bold tracking-tight text-[color:var(--theme-v-text-primary)] sm:text-3xl">
                 My Profile
               </h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">
                 Manage your mentor profile details
               </p>
             </div>
           </div>
 
           {/* Mentor ID Badge */}
-          <div className="flex w-full items-center justify-center gap-2 rounded-full bg-[#5D3699]/10 px-4 py-2 ring-1 ring-[#5D3699]/20 sm:w-auto sm:self-start sm:justify-start">
-            <Shield className="h-4 w-4 text-[#5D3699]" />
-            <span className="text-sm font-semibold text-[#5D3699]">
+          <div className="flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--theme-v-surface-overlay)] px-4 py-2 ring-1 ring-[color:var(--theme-v-border-soft)] sm:w-auto sm:self-start sm:justify-start">
+            <Shield className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
+            <span className="text-sm font-semibold text-[color:var(--theme-v-accent)]">
               {profile?.public_id || 'BR-0000'}
             </span>
           </div>
@@ -459,11 +459,11 @@ return (
         {/* Left Column - Profile Card */}
         <div className="space-y-6">
           {/* Profile Overview Card */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6">
+          <div className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] sm:p-6">
             {/* Avatar Section */}
             <div className="flex flex-col items-center text-center">
               <div className="relative">
-                <div className="h-20 w-20 overflow-hidden rounded-2xl bg-[#5D3699]/10 ring-4 ring-white shadow-lg sm:h-24 sm:w-24">
+                <div className="h-20 w-20 overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay-strong)] ring-4 ring-[color:var(--theme-v-surface-overlay)] shadow-lg sm:h-24 sm:w-24">
                   {photoPreview ? (
                     <img
                       src={photoPreview}
@@ -483,7 +483,7 @@ return (
                       }}
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-[#5D3699]">
+                    <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-[color:var(--theme-v-accent)]">
                       {initials}
                     </div>
                   )}
@@ -493,7 +493,7 @@ return (
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={photoUploading}
-                  className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#5D3699] text-white shadow-lg transition-all hover:bg-[#4a2b7a] hover:scale-110 disabled:opacity-60"
+                  className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] shadow-lg transition-all hover:bg-[color:var(--theme-v-accent-hover)] hover:scale-110 disabled:opacity-60"
                 >
                   {photoUploading ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -515,10 +515,10 @@ return (
               </div>
 
               {/* Name & Role */}
-              <h2 className="mt-4 text-xl font-bold text-gray-900">
+              <h2 className="mt-4 text-xl font-bold text-[color:var(--theme-v-text-primary)]">
                 {form.fullName || 'Mentor Name'}
               </h2>
-              <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+              <div className="mt-1 flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{locationLabel || 'Location not set'}</span>
               </div>
@@ -543,33 +543,33 @@ return (
             </div>
 
             {/* Divider */}
-            <div className="my-6 border-t border-gray-100" />
+            <div className="my-6 border-t border-[color:var(--theme-v-border-soft)]" />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <div className="rounded-xl bg-gray-50 p-4 text-center">
-                <div className="flex items-center justify-center gap-1.5 text-gray-500">
+              <div className="rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-4 text-center ring-1 ring-[color:var(--theme-v-border-soft)]">
+                <div className="flex items-center justify-center gap-1.5 text-[color:var(--theme-v-text-secondary)]">
                   <Calendar className="h-4 w-4" />
                   <span className="text-xs font-medium">Sessions</span>
                 </div>
-                <p className="mt-2 text-2xl font-bold text-gray-900">
+                <p className="mt-2 text-2xl font-bold text-[color:var(--theme-v-text-primary)]">
                   {stats.sessions_completed}
                 </p>
               </div>
-              <div className="rounded-xl bg-gray-50 p-4 text-center">
-                <div className="flex items-center justify-center gap-1.5 text-gray-500">
+              <div className="rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-4 text-center ring-1 ring-[color:var(--theme-v-border-soft)]">
+                <div className="flex items-center justify-center gap-1.5 text-[color:var(--theme-v-text-secondary)]">
                   <Star className="h-4 w-4" />
                   <span className="text-xs font-medium">Rating</span>
                 </div>
-                <p className="mt-2 text-2xl font-bold text-gray-900">
+                <p className="mt-2 text-2xl font-bold text-[color:var(--theme-v-text-primary)]">
                   {stats.average_rating}
                 </p>
               </div>
             </div>
 
             {/* Languages */}
-            <div className="mt-4 rounded-xl bg-gray-50 p-4">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="mt-4 rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-4 ring-1 ring-[color:var(--theme-v-border-soft)]">
+              <div className="flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
                 <Globe className="h-4 w-4" />
                 <span className="font-medium">Languages</span>
               </div>
@@ -578,30 +578,30 @@ return (
                   mentor.languages.map((lang, idx) => (
                     <span
                       key={idx}
-                      className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 ring-1 ring-gray-200"
+                      className="rounded-full bg-[color:var(--theme-v-surface-overlay)] px-3 py-1 text-xs font-medium text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-border-soft)]"
                     >
                       {lang}
                     </span>
                   ))
                 ) : (
-                  <span className="text-sm text-gray-400">Not set</span>
+                  <span className="text-sm text-[color:var(--theme-v-text-placeholder)]">Not set</span>
                 )}
               </div>
             </div>
           </div>
 
           {/* Quick Actions Card */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6">
-            <h3 className="text-sm font-semibold text-gray-900">Quick Actions</h3>
+          <div className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] sm:p-6">
+            <h3 className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">Quick Actions</h3>
             <div className="mt-4 space-y-2">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={photoUploading}
-                className="flex w-full items-center gap-3 rounded-xl bg-gray-50 px-4 py-3 text-left text-sm font-medium text-gray-700 transition-all hover:bg-gray-100 disabled:opacity-60"
+                className="flex w-full items-center gap-3 rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-left text-sm font-medium text-[color:var(--theme-v-text-primary)] transition-all hover:bg-[color:var(--theme-v-surface-overlay)] disabled:opacity-60"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#5D3699]/10">
-                  <Camera className="h-4 w-4 text-[#5D3699]" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--theme-v-surface-overlay)]">
+                  <Camera className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                 </div>
                 <span>{photoUploading ? 'Uploading...' : 'Change Photo'}</span>
               </button>
@@ -611,15 +611,15 @@ return (
         </div>
 
         {/* Right Column - Edit Form */}
-        <div className="min-w-0 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6 lg:p-8">
+        <div className="min-w-0 rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] sm:p-6 lg:p-8">
           {/* Form Header */}
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#5D3699]/10">
-              <Edit3 className="h-5 w-5 text-[#5D3699]" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+              <Edit3 className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Edit Profile</h2>
-              <p className="text-sm text-gray-500">Update your personal information</p>
+              <h2 className="text-lg font-semibold text-[color:var(--theme-v-text-primary)]">Edit Profile</h2>
+              <p className="text-sm text-[color:var(--theme-v-text-secondary)]">Update your personal information</p>
             </div>
           </div>
 
@@ -627,19 +627,19 @@ return (
           <div className="space-y-6">
             {/* Personal Information Section */}
             <div>
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                 Personal Information
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 {/* Full Name */}
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <User className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <User className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     Full Name
                   </label>
                   <input
                     type="text"
-                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    className="w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all placeholder:text-[color:var(--theme-v-text-placeholder)] focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                     placeholder="Enter your full name"
                     value={form.fullName}
                     onChange={(event) => updateField('fullName', event.target.value)}
@@ -648,13 +648,13 @@ return (
 
                 {/* Email */}
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Mail className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <Mail className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     Email
                   </label>
                   <input
                     type="email"
-                    className="w-full cursor-not-allowed rounded-xl border-0 bg-gray-100 px-4 py-3 text-sm text-gray-500 ring-1 ring-gray-200"
+                    className="w-full cursor-not-allowed rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-border-soft)]"
                     value={form.email}
                     readOnly
                   />
@@ -662,13 +662,13 @@ return (
 
                 {/* Phone */}
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Phone className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <Phone className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     Phone
                   </label>
                   <input
                     type="tel"
-                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    className="w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all placeholder:text-[color:var(--theme-v-text-placeholder)] focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                     placeholder="Enter your phone number"
                     value={form.phone}
                     onChange={(event) => updateField('phone', event.target.value)}
@@ -677,12 +677,12 @@ return (
 
                 {/* City */}
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Globe className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <Globe className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     Country
                   </label>
                   <select
-                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    className="w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                     value={form.country}
                     onChange={(event) => updateField('country', event.target.value)}
                   >
@@ -695,25 +695,25 @@ return (
                 </div>
 
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Phone className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <Phone className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     Country Code
                   </label>
                   <input
                     type="text"
-                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    className="w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                     value={form.countryCode}
                     onChange={(event) => updateField('countryCode', event.target.value)}
                   />
                 </div>
 
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <MapPin className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <MapPin className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     State
                   </label>
                   <select
-                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    className="w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                     value={form.stateName}
                     onChange={(event) => updateField('stateName', event.target.value)}
                   >
@@ -726,12 +726,12 @@ return (
                 </div>
 
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <MapPin className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <MapPin className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     City
                   </label>
                   <select
-                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    className="w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                     value={form.city}
                     onChange={(event) => updateField('city', event.target.value)}
                   >
@@ -744,13 +744,13 @@ return (
                 </div>
 
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <MapPin className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <MapPin className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     Pincode
                   </label>
                   <input
                     type="text"
-                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    className="w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all placeholder:text-[color:var(--theme-v-text-placeholder)] focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                     placeholder={form.country === 'USA' ? 'e.g. 77001' : 'e.g. 600001'}
                     value={form.postalCode}
                     onChange={(event) => updateField('postalCode', event.target.value)}
@@ -760,23 +760,23 @@ return (
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-[color:var(--theme-v-border-soft)]" />
 
             {/* Professional Information Section */}
             <div>
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                 Professional Information
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 {/* Specialization */}
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Award className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <Award className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     Specialization
                   </label>
                   <input
                     type="text"
-                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    className="w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all placeholder:text-[color:var(--theme-v-text-placeholder)] focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                     placeholder="e.g., Career Coaching, Tech Mentoring"
                     value={form.specialization}
                     onChange={(event) => updateField('specialization', event.target.value)}
@@ -785,13 +785,13 @@ return (
 
                 {/* Experience */}
                 <div className="group">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Briefcase className="h-4 w-4 text-gray-400" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                    <Briefcase className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                     Experience
                   </label>
                   <input
                     type="text"
-                    className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                    className="w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all placeholder:text-[color:var(--theme-v-text-placeholder)] focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                     placeholder="e.g., 5+ years in software development"
                     value={form.experience}
                     onChange={(event) => updateField('experience', event.target.value)}
@@ -799,7 +799,7 @@ return (
                 </div>
               </div>
               <div className="mt-5">
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-label)]">
                   Care Areas
                 </label>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -812,8 +812,8 @@ return (
                         onClick={() => toggleCareArea(area)}
                         className={`rounded-lg px-3 py-2 text-left text-xs font-medium transition-all ${
                           selected
-                            ? 'bg-[#f3ecff] text-[#5D3699] ring-1 ring-[#cdb8f4]'
-                            : 'bg-gray-50 text-gray-700 ring-1 ring-gray-200 hover:bg-gray-100'
+                            ? 'bg-[color:var(--theme-v-selected-bg)] text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-border-medium)]'
+                            : 'bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-border-soft)] hover:bg-[color:var(--theme-v-surface-overlay)]'
                         }`}
                       >
                         {area}
@@ -825,22 +825,22 @@ return (
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-[color:var(--theme-v-border-soft)]" />
 
             {/* Bio Section */}
             <div>
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                 About You
               </h3>
               <div className="group">
-                <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Edit3 className="h-4 w-4 text-gray-400" />
+                <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-label)]">
+                  <Edit3 className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                   Brief Bio
                 </label>
                 <textarea
                   ref={bioTextareaRef}
                   rows={5}
-                  className="w-full resize-y overflow-hidden rounded-xl border-0 bg-gray-50 px-4 py-3 text-sm text-gray-900 ring-1 ring-gray-200 transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#5D3699]"
+                  className="w-full resize-y overflow-hidden rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all placeholder:text-[color:var(--theme-v-text-placeholder)] focus:bg-[color:var(--theme-v-surface-overlay)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                   placeholder="Tell mentees about yourself, your experience, and what you can help them with..."
                   value={form.bio}
                   onChange={(event) => handleBioInput(event.target.value)}
@@ -850,20 +850,20 @@ return (
                     element.style.height = `${Math.max(140, element.scrollHeight)}px`;
                   }}
                 />
-                <p className="mt-2 text-xs text-gray-400">
+                <p className="mt-2 text-xs text-[color:var(--theme-v-text-secondary)]">
                   Maximum {BIO_MAX_WORDS} words. Current: {bioWordCount}.
                 </p>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-t border-[color:var(--theme-v-border-soft)] pt-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="order-2 flex flex-col gap-3 sm:order-1 sm:flex-row">
                 <button
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-accent)] px-6 py-3 text-sm font-semibold text-[color:var(--theme-v-accent-text)] shadow-sm transition-all hover:bg-[color:var(--theme-v-accent-hover)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {saving ? (
                     <>
@@ -880,14 +880,14 @@ return (
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-gray-700 ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:ring-gray-300 sm:w-auto"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-surface-overlay)] px-6 py-3 text-sm font-semibold text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all hover:bg-[color:var(--theme-v-surface-overlay-strong)] hover:ring-[color:var(--theme-v-border-hover)] sm:w-auto"
                 >
                   <X className="h-4 w-4" />
                   Cancel
                 </button>
               </div>
 
-              <p className="order-1 text-xs text-gray-400 sm:order-2">
+              <p className="order-1 text-xs text-[color:var(--theme-v-text-secondary)] sm:order-2">
                 Last updated: Today
               </p>
             </div>
@@ -897,9 +897,9 @@ return (
 
       {/* Status Messages */}
       {loading && (
-        <div className="mt-6 flex items-center justify-center gap-3 rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-[#5D3699]" />
-          <span className="text-sm font-medium text-gray-600">Loading profile...</span>
+        <div className="mt-6 flex items-center justify-center gap-3 rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-6 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[color:var(--theme-v-border-soft)] border-t-[color:var(--theme-v-accent)]" />
+          <span className="text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Loading profile...</span>
         </div>
       )}
 

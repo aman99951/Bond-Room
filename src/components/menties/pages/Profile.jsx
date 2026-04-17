@@ -110,28 +110,28 @@ const DropdownSelect = ({ value, options, placeholder, disabled = false, onChang
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-white px-3 text-sm shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] focus:outline-none focus:ring-2 focus:ring-[#5D3699] disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] px-3 text-sm shadow-sm ring-1 ring-[color:var(--theme-v-hero-border)] transition-all hover:ring-[color:var(--theme-v-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <span className={selectedLabel ? 'text-[#111827]' : 'text-[#9ca3af]'}>
+        <span className={selectedLabel ? 'text-[color:var(--theme-v-text-primary)]' : 'text-[color:var(--theme-v-text-secondary)]'}>
           {selectedLabel || placeholder}
         </span>
         <ChevronDown
-          className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-[color:var(--theme-v-text-secondary)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
       {open && (
         <ul
           role="listbox"
-          className="absolute z-20 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]"
+          className="absolute z-20 mt-2 w-full rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] py-2 shadow-xl ring-1 ring-[color:var(--theme-v-hero-border)]"
         >
           {options.map((opt) => (
             <li key={opt.value}>
               <button
                 type="button"
                 className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${value === opt.value
-                    ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
-                    : 'text-[#6b7280] hover:bg-[#f5f3ff]'
+                    ? 'bg-[color:var(--theme-v-nav-hover-bg)] text-[color:var(--theme-v-accent)] font-medium'
+                    : 'text-[color:var(--theme-v-text-secondary)] hover:bg-[color:var(--theme-v-nav-hover-bg)]'
                   }`}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
@@ -461,16 +461,16 @@ const Profile = () => {
     <div className="p-4 sm:p-6 lg:p-8 bg-transparent">
       <div className="mx-auto max-w-full">
         {/* Header */}
-        <div className="mb-6 sm:mb-8 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:p-6">
+        <div className="mb-6 sm:mb-8 rounded-[28px] border border-[color:var(--theme-v-hero-border)] bg-[linear-gradient(135deg,var(--theme-v-bg-start)_0%,var(--theme-v-bg-mid)_45%,var(--theme-v-bg-end)_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(22,10,46,0.72)] ring-1 ring-[color:var(--theme-v-hero-border)] sm:p-6">
           <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#5D3699] shadow-lg shadow-[#5D3699]/20">
-              <User className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[color:var(--theme-v-accent)] shadow-lg">
+              <User className="h-6 w-6 text-[color:var(--theme-v-accent-text)]" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold tracking-tight text-[#111827] sm:text-3xl">
+              <h1 className="text-xl font-bold tracking-tight text-[color:var(--theme-v-text-primary)] sm:text-3xl">
                 My Profile
               </h1>
-              <p className="mt-1 text-sm text-[#6b7280]">
+              <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">
                 Manage your profile and preferences
               </p>
             </div>
@@ -478,12 +478,12 @@ const Profile = () => {
         </div>
 
         {/* Main Card */}
-        <div className="rounded-2xl bg-white p-4 sm:p-6 lg:p-8 shadow-sm ring-1 ring-[#e5e7eb]">
+        <div className="rounded-2xl bg-[color:var(--theme-v-nav-hover-bg)] p-4 sm:p-6 lg:p-8 shadow-sm ring-1 ring-[color:var(--theme-v-hero-border)]">
           <div className="flex flex-col gap-8 lg:flex-row">
             {/* Avatar Section */}
             <div className="flex flex-col items-center gap-4 lg:w-48">
               <div className="relative">
-                <div className="h-28 w-28 overflow-hidden rounded-2xl bg-[#f5f3ff] ring-4 ring-white shadow-lg">
+                <div className="h-28 w-28 overflow-hidden rounded-2xl bg-[color:var(--theme-v-nav-hover-bg)] ring-4 ring-[color:var(--theme-v-hero-border)] shadow-lg">
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
@@ -491,7 +491,7 @@ const Profile = () => {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-[#5D3699]">
+                    <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-[color:var(--theme-v-accent)]">
                       {initials || 'U'}
                     </div>
                   )}
@@ -500,11 +500,11 @@ const Profile = () => {
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
                   disabled={photoUploading || saving || menteeLoading}
-                  className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#5D3699] text-white shadow-lg transition-all hover:bg-[#4a2b7a] hover:scale-110 disabled:opacity-60"
+                  className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] shadow-lg transition-all hover:bg-[color:var(--theme-v-accent-hover)] hover:scale-110 disabled:opacity-60"
                   aria-label="Upload profile photo"
                 >
                   {photoUploading ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[rgba(59,34,101,0.3)] border-t-[color:var(--theme-v-accent-text)]" />
                   ) : (
                     <Camera className="h-5 w-5" />
                   )}
@@ -518,8 +518,8 @@ const Profile = () => {
                 />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-[#111827]">{fullName}</p>
-                <p className="text-xs text-[#6b7280]">Student</p>
+                <p className="text-sm font-medium text-[color:var(--theme-v-text-primary)]">{fullName}</p>
+                <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Student</p>
               </div>
             </div>
 
@@ -527,7 +527,7 @@ const Profile = () => {
             <div className="flex-1 space-y-6">
               {/* Personal Information */}
               <div>
-                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-[#9ca3af]">
+                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                   <User className="h-4 w-4" />
                   Personal Information
                 </h2>
@@ -535,54 +535,54 @@ const Profile = () => {
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {/* Full Name */}
                   <div>
-                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#6b7280]">
-                      <User className="h-4 w-4 text-[#9ca3af]" />
+                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-secondary)]">
+                      <User className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                       Full Name
                     </label>
                     <input
                       type="text"
                       value={fullName}
                       readOnly
-                      className="h-11 w-full rounded-xl border-0 bg-[#f8fafc] px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] cursor-not-allowed"
+                      className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] cursor-not-allowed"
                     />
                   </div>
 
                   {/* Email */}
                   <div>
-                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#6b7280]">
-                      <Mail className="h-4 w-4 text-[#9ca3af]" />
+                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-secondary)]">
+                      <Mail className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                       Email
                     </label>
                     <input
                       type="email"
                       value={email}
                       readOnly
-                      className="h-11 w-full rounded-xl border-0 bg-[#f8fafc] px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] cursor-not-allowed"
+                      className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] cursor-not-allowed"
                     />
                   </div>
 
                   {/* Grade */}
                   <div>
-                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#6b7280]">
-                      <GraduationCap className="h-4 w-4 text-[#9ca3af]" />
+                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-secondary)]">
+                      <GraduationCap className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                       Grade / Class
                     </label>
-                    <div className="flex h-11 w-full items-center justify-between rounded-xl bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb]">
+                    <div className="flex h-11 w-full items-center justify-between rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)]">
                       <span>{grade}</span>
-                      <ChevronRight className="h-4 w-4 text-[#9ca3af] rotate-90" />
+                      <ChevronRight className="h-4 w-4 text-[color:var(--theme-v-text-secondary)] rotate-90" />
                     </div>
                   </div>
 
                   {/* Parent's Mobile */}
                   <div>
-                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#6b7280]">
-                      <Phone className="h-4 w-4 text-[#9ca3af]" />
+                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-secondary)]">
+                      <Phone className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                       Parent's Mobile
                     </label>
-                    <div className="flex h-11 w-full items-center justify-between rounded-xl bg-[#f8fafc] px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb]">
+                    <div className="flex h-11 w-full items-center justify-between rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)]">
                       <span>{parentMobile}</span>
-                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#e5e7eb]">
-                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-[#6b7280]" fill="none" stroke="currentColor" strokeWidth="2">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[color:var(--theme-v-hero-border)]">
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-[color:var(--theme-v-text-secondary)]" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="5" y="11" width="14" height="10" rx="2" />
                           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                         </svg>
@@ -593,90 +593,90 @@ const Profile = () => {
               </div>
 
               {/* Divider */}
-              <div className="border-t border-[#e5e7eb]" />
+              <div className="border-t border-[color:var(--theme-v-hero-border)]" />
 
               {/* Registration Details */}
               <div>
-                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-[#9ca3af]">
+                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                   <Settings className="h-4 w-4" />
                   Registration Details
                 </h2>
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">School / College</label>
-                    <input type="text" value={profileFields.schoolOrCollege} onChange={(event) => handleProfileFieldChange('schoolOrCollege', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">School / College</label>
+                    <input type="text" value={profileFields.schoolOrCollege} onChange={(event) => handleProfileFieldChange('schoolOrCollege', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)]" />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Mentee Mobile</label>
-                    <input type="tel" value={profileFields.mobile} onChange={(event) => handleProfileFieldChange('mobile', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Mentee Mobile</label>
+                    <input type="tel" value={profileFields.mobile} onChange={(event) => handleProfileFieldChange('mobile', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)]" />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Country</label>
-                    <select value={profileFields.country} onChange={(event) => handleProfileFieldChange('country', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]">
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Country</label>
+                    <select value={profileFields.country} onChange={(event) => handleProfileFieldChange('country', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)]">
                       {COUNTRY_OPTIONS.map((country) => (<option key={country} value={country}>{country}</option>))}
                     </select>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">State</label>
-                    <select value={profileFields.state} onChange={(event) => handleProfileFieldChange('state', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]">
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">State</label>
+                    <select value={profileFields.state} onChange={(event) => handleProfileFieldChange('state', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)]">
                       {(LOCATION_OPTIONS[profileFields.country]?.states || []).map((stateName) => (<option key={stateName} value={stateName}>{stateName}</option>))}
                     </select>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">City</label>
-                    <select value={profileFields.city} onChange={(event) => handleProfileFieldChange('city', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]">
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">City</label>
+                    <select value={profileFields.city} onChange={(event) => handleProfileFieldChange('city', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)]">
                       {(LOCATION_OPTIONS[profileFields.country]?.citiesByState?.[profileFields.state] || []).map((cityName) => (<option key={cityName} value={cityName}>{cityName}</option>))}
                     </select>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Postal Code</label>
-                    <input type="text" value={profileFields.postalCode} onChange={(event) => handleProfileFieldChange('postalCode', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Postal Code</label>
+                    <input type="text" value={profileFields.postalCode} onChange={(event) => handleProfileFieldChange('postalCode', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)]" />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Gender</label>
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Gender</label>
                     <DropdownSelect value={profileFields.gender} options={genderOptions.map((opt) => ({ label: opt, value: opt }))} placeholder="Select Gender" onChange={(value) => handleProfileFieldChange('gender', value)} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Date of Birth</label>
-                    <input type="date" value={profileFields.dob} onChange={(event) => handleProfileFieldChange('dob', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Date of Birth</label>
+                    <input type="date" value={profileFields.dob} onChange={(event) => handleProfileFieldChange('dob', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)]" />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Grade</label>
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Grade</label>
                     <DropdownSelect value={profileFields.grade} options={gradeOptions.map((opt) => ({ label: opt, value: opt }))} placeholder="Select Grade" onChange={(value) => handleProfileFieldChange('grade', value)} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-[#6b7280]">Parent Mobile</label>
-                    <input type="tel" value={profileFields.parentMobile} onChange={(event) => handleProfileFieldChange('parentMobile', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#111827] ring-1 ring-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#5D3699]" />
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Parent Mobile</label>
+                    <input type="tel" value={profileFields.parentMobile} onChange={(event) => handleProfileFieldChange('parentMobile', event.target.value)} className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-nav-hover-bg)] px-4 text-sm text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-hero-border)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)]" />
                   </div>
                 </div>
               </div>
 
               {/* Divider */}
-              <div className="border-t border-[#e5e7eb]" />
+              <div className="border-t border-[color:var(--theme-v-hero-border)]" />
 
               {/* Assessment Card */}
-              <div className="rounded-2xl bg-[#f5f3ff] p-5 ring-1 ring-[#5D3699]/10">
+              <div className="rounded-2xl bg-[color:var(--theme-v-nav-hover-bg)] p-5 ring-1 ring-[color:var(--theme-v-hero-border)]">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex min-w-0 items-start gap-4">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[#5D3699]">
-                      <Sparkles className="h-6 w-6 text-white" />
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[color:var(--theme-v-accent)]">
+                      <Sparkles className="h-6 w-6 text-[color:var(--theme-v-accent-text)]" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-base font-semibold text-[#111827]">
+                      <h3 className="text-base font-semibold text-[color:var(--theme-v-text-primary)]">
                         Mood & Needs Assessment
                       </h3>
                       {assessmentSummary.lastTaken && assessmentSummary.focus ? (
-                        <p className="mt-1 break-words text-sm leading-relaxed text-[#6b7280]">
+                        <p className="mt-1 break-words text-sm leading-relaxed text-[color:var(--theme-v-text-secondary)]">
                           Last taken on{' '}
-                          <span className="font-medium text-[#111827]">{assessmentSummary.lastTaken}</span>
+                          <span className="font-medium text-[color:var(--theme-v-text-primary)]">{assessmentSummary.lastTaken}</span>
                           <br className="sm:hidden" />
-                          <span className="hidden sm:inline">{' � '}</span>
+                          <span className="hidden sm:inline">{' | '}</span>
                           Focus:{' '}
-                          <span className="font-medium text-[#5D3699]">{assessmentSummary.focus}</span>
+                          <span className="font-medium text-[color:var(--theme-v-accent)]">{assessmentSummary.focus}</span>
                         </p>
                       ) : (
-                        <p className="mt-1 text-sm text-[#6b7280]">
+                        <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">
                           Complete your assessment to get personalized mentor matches.
                         </p>
                       )}
@@ -685,7 +685,7 @@ const Profile = () => {
                   <button
                     type="button"
                     onClick={() => navigate('/needs-assessment')}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20 transition-all hover:bg-[#5D3699] hover:text-white sm:w-auto sm:self-start lg:flex-shrink-0 lg:self-auto"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] px-4 py-2.5 text-sm font-medium text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-hero-border)] transition-all hover:bg-[color:var(--theme-v-accent)] hover:text-[color:var(--theme-v-accent-text)] sm:w-auto sm:self-start lg:flex-shrink-0 lg:self-auto"
                   >
                     <RefreshCw className="h-4 w-4" />
                     Retake Assessment
@@ -694,19 +694,19 @@ const Profile = () => {
               </div>
 
               {/* Divider */}
-              <div className="border-t border-[#e5e7eb]" />
+              <div className="border-t border-[color:var(--theme-v-hero-border)]" />
 
               {/* Session Preferences */}
               <div>
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f5f3ff]">
-                    <Settings className="h-4 w-4 text-[#5D3699]" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--theme-v-nav-hover-bg)]">
+                    <Settings className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-[#111827]">
+                    <h2 className="text-base font-semibold text-[color:var(--theme-v-text-primary)]">
                       Session Preferences
                     </h2>
-                    <p className="text-xs text-[#6b7280]">
+                    <p className="text-xs text-[color:var(--theme-v-text-secondary)]">
                       Help us find the best mentors for you
                     </p>
                   </div>
@@ -714,12 +714,12 @@ const Profile = () => {
 
                 <div className="mt-6 grid gap-6 sm:grid-cols-2">
                   {/* Comfort Level */}
-                  <div className="rounded-xl bg-[#f8fafc] p-4 ring-1 ring-[#e5e7eb]">
-                    <div className="flex items-center gap-2 text-sm font-medium text-[#111827]">
-                      <Heart className="h-4 w-4 text-[#5D3699]" />
+                  <div className="rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] p-4 ring-1 ring-[color:var(--theme-v-hero-border)]">
+                    <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-primary)]">
+                      <Heart className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                       Comfort Level
                     </div>
-                    <p className="mt-1 text-xs text-[#6b7280]">
+                    <p className="mt-1 text-xs text-[color:var(--theme-v-text-secondary)]">
                       Talking to new people
                     </p>
 
@@ -734,47 +734,47 @@ const Profile = () => {
 
                     {comfortPosition != null ? (
                       <div className="mt-4">
-                        <div className="relative h-2 rounded-full bg-[#e5e7eb]">
+                        <div className="relative h-2 rounded-full bg-[color:var(--theme-v-hero-border)]">
                           <div
-                            className="absolute h-2 rounded-full bg-[#5D3699]"
+                            className="absolute h-2 rounded-full bg-[color:var(--theme-v-accent)]"
                             style={{ width: `${comfortPosition}%` }}
                           />
                           <div
-                            className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5D3699] ring-4 ring-white shadow-lg"
+                            className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color:var(--theme-v-accent)] ring-4 ring-[color:var(--theme-v-hero-border)] shadow-lg"
                             style={{ left: `${comfortPosition}%` }}
                           />
                         </div>
-                        <div className="mt-3 flex items-center justify-between text-[10px] font-medium text-[#9ca3af]">
+                        <div className="mt-3 flex items-center justify-between text-[10px] font-medium text-[color:var(--theme-v-text-secondary)]">
                           <span>Very Shy</span>
                           <span>Neutral</span>
                           <span>Outgoing</span>
                         </div>
                       </div>
                     ) : (
-                      <div className="mt-4 flex items-center justify-center rounded-lg bg-white py-4 text-xs text-[#9ca3af]">
+                      <div className="mt-4 flex items-center justify-center rounded-lg bg-[color:var(--theme-v-nav-hover-bg)] py-4 text-xs text-[color:var(--theme-v-text-secondary)]">
                         Not set yet
                       </div>
                     )}
                   </div>
 
                   {/* Session Length */}
-                  <div className="rounded-xl bg-[#f8fafc] p-4 ring-1 ring-[#e5e7eb]">
-                    <div className="flex items-center gap-2 text-sm font-medium text-[#111827]">
-                      <Clock className="h-4 w-4 text-[#5D3699]" />
+                  <div className="rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] p-4 ring-1 ring-[color:var(--theme-v-hero-border)]">
+                    <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-primary)]">
+                      <Clock className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                       Session Length
                     </div>
-                    <p className="mt-1 text-xs text-[#6b7280]">
+                    <p className="mt-1 text-xs text-[color:var(--theme-v-text-secondary)]">
                       Preferred duration
                     </p>
 
                     <div className="mt-3">
-                      <div className="flex h-10 w-full items-center justify-between rounded-xl bg-white px-3 text-sm text-[#111827] shadow-sm ring-1 ring-[#e5e7eb]">
+                      <div className="flex h-10 w-full items-center justify-between rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] px-3 text-sm text-[color:var(--theme-v-text-primary)] shadow-sm ring-1 ring-[color:var(--theme-v-hero-border)]">
                         <span>30 minutes</span>
-                        <span className="text-[11px] font-semibold text-[#9ca3af]">Fixed</span>
+                        <span className="text-[11px] font-semibold text-[color:var(--theme-v-text-secondary)]">Fixed</span>
                       </div>
                     </div>
 
-                    <div className="mt-4 flex h-12 items-center justify-center rounded-xl bg-white text-lg font-semibold text-[#5D3699] ring-1 ring-[#e5e7eb]">
+                    <div className="mt-4 flex h-12 items-center justify-center rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] text-lg font-semibold text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-hero-border)]">
                       30 min
                     </div>
                   </div>
@@ -782,11 +782,11 @@ const Profile = () => {
 
                 {/* Mentor Type */}
                 <div className="mt-6">
-                  <div className="flex items-center gap-2 text-sm font-medium text-[#111827]">
-                    <Users className="h-4 w-4 text-[#5D3699]" />
+                  <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--theme-v-text-primary)]">
+                    <Users className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                     Preferred Mentor Type
                   </div>
-                  <p className="mt-1 text-xs text-[#6b7280]">
+                  <p className="mt-1 text-xs text-[color:var(--theme-v-text-secondary)]">
                     Select the type of mentors you'd like to connect with
                   </p>
 
@@ -799,8 +799,8 @@ const Profile = () => {
                           type="button"
                           onClick={() => toggleMentorType(option.value)}
                           className={`group inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-200 ${selected
-                              ? 'bg-[#5D3699] text-white shadow-md shadow-[#5D3699]/20'
-                              : 'bg-white text-[#6b7280] ring-1 ring-[#e5e7eb] hover:ring-[#5D3699]/30 hover:text-[#5D3699]'
+                              ? 'bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] shadow-md'
+                              : 'bg-[color:var(--theme-v-nav-hover-bg)] text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-hero-border)] hover:ring-[color:var(--theme-v-accent)] hover:text-[color:var(--theme-v-accent)]'
                             }`}
                         >
                           {selected && (
@@ -837,21 +837,21 @@ const Profile = () => {
               )}
 
               {(loading || menteeLoading) && !error && !success && (
-                <div className="flex items-center justify-center gap-3 rounded-xl bg-[#f5f3ff] px-4 py-4">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#e5e7eb] border-t-[#5D3699]" />
-                  <span className="text-sm text-[#6b7280]">Loading profile...</span>
+                <div className="flex items-center justify-center gap-3 rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] px-4 py-4">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[color:var(--theme-v-hero-border)] border-t-[color:var(--theme-v-accent)]" />
+                  <span className="text-sm text-[color:var(--theme-v-text-secondary)]">Loading profile...</span>
                 </div>
               )}
 
               {/* Divider */}
-              <div className="border-t border-[#e5e7eb]" />
+              <div className="border-t border-[color:var(--theme-v-hero-border)]" />
 
               {/* Action Buttons */}
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-medium text-[#6b7280] ring-1 ring-[#e5e7eb] transition-all hover:bg-[#f8fafc] hover:text-[#111827]"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] px-6 py-3 text-sm font-medium text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-hero-border)] transition-all hover:bg-[color:var(--theme-v-nav-hover-bg)] hover:text-[color:var(--theme-v-text-primary)]"
                 >
                   <X className="h-4 w-4" />
                   Cancel
@@ -860,11 +860,11 @@ const Profile = () => {
                   type="button"
                   onClick={handleSave}
                   disabled={saving || menteeLoading}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#5D3699] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-accent)] px-6 py-3 text-sm font-semibold text-[color:var(--theme-v-accent-text)] shadow-sm transition-all hover:bg-[color:var(--theme-v-accent-hover)] hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {saving ? (
                     <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-[rgba(59,34,101,0.3)] border-t-[color:var(--theme-v-accent-text)]" />
                       Saving...
                     </>
                   ) : (
@@ -880,15 +880,15 @@ const Profile = () => {
         </div>
 
         {/* Help Card */}
-        <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#e5e7eb]">
+        <div className="mt-6 rounded-2xl bg-[color:var(--theme-v-nav-hover-bg)] p-5 shadow-sm ring-1 ring-[color:var(--theme-v-hero-border)]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f3ff]">
-                <Sparkles className="h-5 w-5 text-[#5D3699]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--theme-v-nav-hover-bg)]">
+                <Sparkles className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-[#111827]">Need Help?</h3>
-                <p className="text-xs text-[#6b7280]">
+                <h3 className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">Need Help?</h3>
+                <p className="text-xs text-[color:var(--theme-v-text-secondary)]">
                   Contact support if you need assistance with your profile
                 </p>
               </div>
@@ -902,4 +902,6 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
 

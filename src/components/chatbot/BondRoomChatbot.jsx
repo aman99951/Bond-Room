@@ -19,12 +19,14 @@ const BOT_WELCOME =
 
 const BondRoomChatbot = () => {
   const [open, setOpen] = useState(false);
+  const [preferLifted, setPreferLifted] = useState(true);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([{ role: 'assistant', content: BOT_WELCOME }]);
   const [loading, setLoading] = useState(false);
   const [hasAskedQuestion, setHasAskedQuestion] = useState(false);
   const [quickQuestionsOpen, setQuickQuestionsOpen] = useState(true);
   const messagesContainerRef = useRef(null);
+  const isLifted = open || preferLifted;
 
   const history = useMemo(
     () =>
@@ -78,7 +80,21 @@ const BondRoomChatbot = () => {
   }, [messages, loading, open]);
 
   return (
-    <div className="bond-chatbot-root" aria-live="polite">
+    <div
+      className={`bond-chatbot-root ${isLifted ? 'is-lifted' : 'is-behind-footer'}`}
+      aria-live="polite"
+    >
+      {!open ? (
+        <button
+          type="button"
+          className="bond-chatbot-dock-toggle"
+          onClick={() => setPreferLifted((prev) => !prev)}
+          aria-label={preferLifted ? 'Send chatbot behind footer' : 'Bring chatbot above footer'}
+        >
+          {preferLifted ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+        </button>
+      ) : null}
+
       {!open ? (
         <button
           type="button"

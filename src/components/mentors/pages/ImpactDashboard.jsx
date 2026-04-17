@@ -104,7 +104,7 @@ const ImpactDashboard = () => {
           session?.mentee_name ||
           [session?.mentee_first_name, session?.mentee_last_name].filter(Boolean).join(' ') ||
           (session?.mentee ? `Mentee #${session.mentee}` : `Session #${entry.session}`),
-        duration: session?.duration_minutes ? `${session.duration_minutes} min` : '—',
+        duration: session?.duration_minutes ? `${session.duration_minutes} min` : '-',
         status: entry.action || entry.status,
         rating: feedback?.rating ? Number(feedback.rating) : 0,
         notes: entry.note || '',
@@ -321,12 +321,12 @@ const ImpactDashboard = () => {
     if (isInitialLoading) {
       return loadingTopicPlaceholders.map((item, index) => ({
         ...item,
-        color: ['#5b2c91', '#7b4cbc', '#a27be0'][index % 3],
+        color: ['var(--theme-v-accent)', 'var(--theme-v-highlight-mid)', 'var(--theme-v-nav-hover-text)'][index % 3],
       }));
     }
 
     if (!normalizedTopics.length) {
-      return [{ label: 'No topics yet', value: 100, count: 0, color: '#d9c8f8' }];
+      return [{ label: 'No topics yet', value: 100, count: 0, color: 'var(--theme-v-surface-overlay-track)' }];
     }
 
     const sorted = [...normalizedTopics].sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
@@ -335,7 +335,14 @@ const ImpactDashboard = () => {
     const remainingCount = remaining.reduce((acc, item) => acc + Number(item.count || 0), 0);
     const merged = remainingCount > 0 ? [...top, { label: 'Other Topics', count: remainingCount }] : top;
     const totalCount = merged.reduce((acc, item) => acc + Number(item.count || 0), 0) || 1;
-    const palette = ['#5b2c91', '#7b4cbc', '#9b7bdc', '#b99ae9', '#d2bbf4', '#e8dcfb'];
+    const palette = [
+      'var(--theme-v-accent)',
+      'var(--theme-v-highlight-mid)',
+      'var(--theme-v-nav-hover-text)',
+      'var(--theme-v-text-label)',
+      'var(--theme-v-text-muted-soft)',
+      'var(--theme-v-nav-text)',
+    ];
 
     let used = 0;
     return merged.map((item, index) => {
@@ -370,7 +377,7 @@ const ImpactDashboard = () => {
       return `${item.color} ${start}% ${end}%`;
     });
     if (cursor < 100) {
-      segments.push(`#ede5ff ${cursor}% 100%`);
+      segments.push(`var(--theme-v-surface-overlay-track) ${cursor}% 100%`);
     }
     return `conic-gradient(${segments.join(', ')})`;
   }, [topicChartData]);
@@ -384,7 +391,7 @@ const ImpactDashboard = () => {
           [item.mentee_first_name, item.mentee_last_name].filter(Boolean).join(' ') ||
           (item.mentee ? `Mentee #${item.mentee}` : `Session #${item.id}`),
         status: item.status || 'pending',
-        duration: item.duration_minutes ? `${item.duration_minutes} min` : '—',
+        duration: item.duration_minutes ? `${item.duration_minutes} min` : '-',
       })),
     [sessions]
   );
@@ -406,18 +413,18 @@ const ImpactDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-transparent p-4 text-[#111827] sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-transparent p-4 text-[color:var(--theme-v-text-primary)] sm:p-6 lg:p-8">
       <div className="w-full">
-        <div className="relative overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
-          <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl border border-[color:var(--theme-v-border-strong)] bg-[linear-gradient(135deg,var(--theme-v-bg-mid)_0%,var(--theme-v-bg-start)_50%,var(--theme-v-bg-end)_100%)] p-4 shadow-[0_20px_45px_-28px_var(--theme-v-shell-shadow)] ring-1 ring-[color:var(--theme-v-hero-ring)] sm:p-6">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[color:var(--theme-v-orb-gold)] blur-3xl" />
+          <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[color:var(--theme-v-orb-light)] blur-3xl" />
           <div>
-            <h2 className="font-sans text-[30px] font-bold leading-[36px] tracking-[0px] align-middle text-[#1f1a32]">Impact Dashboard</h2>
-            <p className="mt-1 text-sm text-[#6b5f84]">Track your mentoring outcomes, ratings, and monthly impact.</p>
+            <h2 className="font-sans text-[30px] font-bold leading-[36px] tracking-[0px] align-middle text-[color:var(--theme-v-text-primary)]">Impact Dashboard</h2>
+            <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">Track your mentoring outcomes, ratings, and monthly impact.</p>
           </div>
           <button
             type="button"
-            className="inline-flex items-center gap-2 self-start rounded-xl border border-[#d9cdf3] bg-white px-3 py-2 text-xs font-medium text-[#4a2b7a] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#bda7e8] hover:shadow sm:self-auto"
+            className="inline-flex items-center gap-2 self-start rounded-xl border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] px-3 py-2 text-xs font-medium text-[color:var(--theme-v-accent)] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[color:var(--theme-v-accent)] hover:shadow sm:self-auto"
             onClick={handleExport}
           >
             <Download className="h-3.5 w-3.5" aria-hidden="true" />
@@ -428,12 +435,12 @@ const ImpactDashboard = () => {
         {showTrainingPendingCard && (
           <button
             type="button"
-            className="mt-5 w-full rounded-2xl border border-[#d9c8f5] bg-gradient-to-r from-[#f5f0ff] via-[#fbf9ff] to-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#c9b5e8] hover:shadow-md"
+            className="mt-5 w-full rounded-2xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[color:var(--theme-v-accent)] hover:shadow-md"
             onClick={() => navigate('/mentor-training-modules')}
           >
-            <p className="text-xs uppercase tracking-[0.08em] text-[#7c3aed]">Optional</p>
-            <p className="mt-1 text-base font-semibold text-[#5b2c91]">Training Module Pending</p>
-            <p className="mt-1 text-xs text-[#475467]">
+            <p className="text-xs uppercase tracking-[0.08em] text-[color:var(--theme-v-accent)]">Optional</p>
+            <p className="mt-1 text-base font-semibold text-[color:var(--theme-v-accent)]">Training Module Pending</p>
+            <p className="mt-1 text-xs text-[color:var(--theme-v-text-secondary)]">
               You can continue mentoring now. Click here anytime to complete training modules.
             </p>
           </button>
@@ -442,99 +449,99 @@ const ImpactDashboard = () => {
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <button
             type="button"
-            className="group rounded-2xl border border-[#e6e2f1] bg-[linear-gradient(145deg,#ffffff_0%,#f9f6ff_100%)] p-4 text-left shadow-[0_10px_24px_-18px_rgba(93,54,153,0.55)] transition hover:-translate-y-0.5 hover:border-[#c9b5e8] hover:shadow-[0_18px_32px_-20px_rgba(93,54,153,0.6)] cursor-pointer"
+            className="group rounded-2xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] p-4 text-left shadow-[0_10px_24px_-18px_var(--theme-v-shell-shadow)] transition hover:-translate-y-0.5 hover:border-[color:var(--theme-v-accent)] hover:shadow-[0_18px_32px_-20px_var(--theme-v-shell-shadow)] cursor-pointer"
             onClick={() => navigate('/mentor-session-records')}
           >
             <p
-              className="text-[#333333]"
+              className="text-[color:var(--theme-v-text-primary)]"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Total Sessions
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ede9fe] text-[#5b2c91] transition-transform group-hover:scale-105">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-accent)] transition-transform group-hover:scale-105">
                 <Video className="h-4 w-4" />
               </span>
-              <span className="text-[24px] font-semibold text-[#5b2c91]">
+              <span className="text-[24px] font-semibold text-[color:var(--theme-v-accent)]">
                 {isInitialLoading ? '--' : summary.total_sessions || 0}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#475467]">
+            <p className="mt-1 text-[11px] text-[color:var(--theme-v-text-secondary)]">
               {isInitialLoading ? 'Loading metrics...' : sessionChangeLabel}
             </p>
           </button>
           <button
             type="button"
-            className="group rounded-2xl border border-[#e6e2f1] bg-[linear-gradient(145deg,#ffffff_0%,#f8fff9_100%)] p-4 text-left shadow-[0_10px_24px_-18px_rgba(31,128,73,0.45)] transition hover:-translate-y-0.5 hover:border-[#b9e4c9] hover:shadow-[0_18px_32px_-20px_rgba(31,128,73,0.5)] cursor-pointer"
+            className="group rounded-2xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] p-4 text-left shadow-[0_10px_24px_-18px_var(--theme-v-shell-shadow)] transition hover:-translate-y-0.5 hover:border-[color:var(--theme-v-accent)] hover:shadow-[0_18px_32px_-20px_var(--theme-v-shell-shadow)] cursor-pointer"
             onClick={() => setDonatedPopupOpen(true)}
           >
             <div className="flex items-center justify-between">
               <p
-                className="text-[#333333]"
+                className="text-[color:var(--theme-v-text-primary)]"
                 style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
               >
                 Total Complementary Service
               </p>
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dcfce7] text-[#16a34a] transition-transform group-hover:scale-105">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-accent)] transition-transform group-hover:scale-105">
                 <Leaf className="h-4 w-4" />
               </span>
-              <span className="text-[24px] font-semibold text-[#16a34a]">
+              <span className="text-[24px] font-semibold text-[color:var(--theme-v-accent)]">
                 {isInitialLoading ? '--' : donatedRows.length}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#475467]">Total complementary sessions</p>
+            <p className="mt-1 text-[11px] text-[color:var(--theme-v-text-secondary)]">Total complementary sessions</p>
           </button>
           <button
             type="button"
-            className="group rounded-2xl border border-[#e6e2f1] bg-[linear-gradient(145deg,#ffffff_0%,#f5f9ff_100%)] p-4 text-left shadow-[0_10px_24px_-18px_rgba(59,130,246,0.5)] transition hover:-translate-y-0.5 hover:border-[#bdd8ff] hover:shadow-[0_18px_32px_-20px_rgba(59,130,246,0.55)] cursor-pointer"
+            className="group rounded-2xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] p-4 text-left shadow-[0_10px_24px_-18px_var(--theme-v-shell-shadow)] transition hover:-translate-y-0.5 hover:border-[color:var(--theme-v-accent)] hover:shadow-[0_18px_32px_-20px_var(--theme-v-shell-shadow)] cursor-pointer"
             onClick={() => {
               setClaimedPopupMessage('');
               setClaimedPopupOpen(true);
             }}
           >
             <p
-              className="text-[#333333]"
+              className="text-[color:var(--theme-v-text-primary)]"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Total Claimed
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dbeafe] text-[#3b82f6] transition-transform group-hover:scale-105">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-accent)] transition-transform group-hover:scale-105">
                 <Clock className="h-4 w-4" />
               </span>
-              <span className="text-[24px] font-semibold text-[#3b82f6]">
-                ₹{summary.total_claimed || 0}
+              <span className="text-[24px] font-semibold text-[color:var(--theme-v-accent)]">
+                Rs {summary.total_claimed || 0}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#475467]">Pending payout: ₹{summary.pending_payout || 0}</p>
+            <p className="mt-1 text-[11px] text-[color:var(--theme-v-text-secondary)]">Pending payout: Rs {summary.pending_payout || 0}</p>
           </button>
           <button
             type="button"
-            className="group rounded-2xl border border-[#e6e2f1] bg-[linear-gradient(145deg,#ffffff_0%,#fffbf0_100%)] p-4 text-left shadow-[0_10px_24px_-18px_rgba(245,158,11,0.5)] transition hover:-translate-y-0.5 hover:border-[#f8d89a] hover:shadow-[0_18px_32px_-20px_rgba(245,158,11,0.5)] cursor-pointer"
+            className="group rounded-2xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] p-4 text-left shadow-[0_10px_24px_-18px_var(--theme-v-shell-shadow)] transition hover:-translate-y-0.5 hover:border-[color:var(--theme-v-accent)] hover:shadow-[0_18px_32px_-20px_var(--theme-v-shell-shadow)] cursor-pointer"
             onClick={() => setRatingPopupOpen(true)}
           >
             <p
-              className="text-[#333333]"
+              className="text-[color:var(--theme-v-text-primary)]"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Avg. Rating
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fef3c7] text-[#f59e0b] transition-transform group-hover:scale-105">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-accent)] transition-transform group-hover:scale-105">
                 <Star className="h-4 w-4" />
               </span>
-              <span className="text-[24px] font-semibold text-[#f59e0b]">{summary.average_rating || 0}</span>
+              <span className="text-[24px] font-semibold text-[color:var(--theme-v-accent)]">{summary.average_rating || 0}</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#475467]">Based on {reviewCount} reviews</p>
+            <p className="mt-1 text-[11px] text-[color:var(--theme-v-text-secondary)]">Based on {reviewCount} reviews</p>
           </button>
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-[#e6def8] bg-[linear-gradient(155deg,#ffffff_0%,#faf6ff_100%)] p-4 shadow-[0_16px_30px_-22px_rgba(93,54,153,0.45)]">
+          <div className="rounded-2xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-[0_16px_30px_-22px_var(--theme-v-shell-shadow)]">
             <h3
-              className="text-[#333333]"
+              className="text-[color:var(--theme-v-text-primary)]"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Topics Addressed
@@ -542,18 +549,18 @@ const ImpactDashboard = () => {
             <div className="mt-4 flex h-[calc(100%-28px)] flex-col justify-between gap-4">
               <div className="grid place-items-center">
                 <div
-                  className="relative flex h-40 w-40 items-center justify-center rounded-full ring-1 ring-[#e4d8fb]"
+                  className="relative flex h-40 w-40 items-center justify-center rounded-full ring-1 ring-[color:var(--theme-v-border-soft)]"
                   style={{ background: topicConicGradient }}
                 >
-                  <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-[linear-gradient(145deg,#ffffff,#f7f2ff)] ring-1 ring-[#e6def8]">
-                    <span className="text-[20px] font-semibold text-[#5b2c91]">{topicTotalCount}</span>
-                    <span className="text-[11px] text-[#6b5f84]">total logs</span>
+                  <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay)] ring-1 ring-[color:var(--theme-v-border-soft)]">
+                    <span className="text-[20px] font-semibold text-[color:var(--theme-v-accent)]">{topicTotalCount}</span>
+                    <span className="text-[11px] text-[color:var(--theme-v-text-secondary)]">total logs</span>
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
                 {topicChartData.map((item, index) => (
-                  <div key={`${item.label}-${index}`} className="flex items-center justify-between text-[11px] text-[#475467]">
+                  <div key={`${item.label}-${index}`} className="flex items-center justify-between text-[11px] text-[color:var(--theme-v-text-secondary)]">
                     <span className="inline-flex min-w-0 items-center gap-2">
                       <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
                       <span className="truncate">{item.label}</span>
@@ -565,9 +572,9 @@ const ImpactDashboard = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-[linear-gradient(135deg,#4b2a86_0%,#5f35a7_55%,#7b4cbc_100%)] p-4 text-white shadow-[0_16px_30px_-20px_rgba(75,42,134,0.7)] ring-1 ring-white/15">
+          <div className="rounded-2xl border border-[color:var(--theme-v-border-medium)] bg-[linear-gradient(135deg,var(--theme-v-bg-start)_0%,var(--theme-v-bg-mid)_55%,var(--theme-v-bg-end)_100%)] p-4 text-[color:var(--theme-v-text-primary)] shadow-[0_16px_30px_-20px_var(--theme-v-shell-shadow)] ring-1 ring-[color:var(--theme-v-hero-ring)]">
             <h3
-              className="text-white"
+              className="text-[color:var(--theme-v-text-primary)]"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Monthly Contribution
@@ -576,66 +583,66 @@ const ImpactDashboard = () => {
               {monthlySeries.map((item) => (
                 <div key={item.key} className="flex flex-col items-center gap-2">
                   <div
-                    className={`w-full rounded-md ${item.value === maxMonthlyValue ? 'bg-[#fdd253]' : 'bg-white/20'}`}
+                    className={`w-full rounded-md ${item.value === maxMonthlyValue ? 'bg-[color:var(--theme-v-accent)]' : 'bg-[color:var(--theme-v-surface-overlay-track)]'}`}
                     style={{ height: `${Math.max(10, (item.value / maxMonthlyValue) * 100)}px` }}
                   />
-                  <span className="text-[10px] text-white/70">{item.label}</span>
+                  <span className="text-[10px] text-[color:var(--theme-v-text-primary)]/70">{item.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex flex-col items-center rounded-2xl border border-[#e6def8] bg-[linear-gradient(155deg,#ffffff_0%,#faf6ff_100%)] p-4 shadow-[0_16px_30px_-22px_rgba(93,54,153,0.45)]">
+          <div className="flex flex-col items-center rounded-2xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-[0_16px_30px_-22px_var(--theme-v-shell-shadow)]">
             <h3
-              className="text-[#333333] self-start"
+              className="text-[color:var(--theme-v-text-primary)] self-start"
               style={{ fontSize: '16px', lineHeight: '20px', fontWeight: 500 }}
             >
               Donation vs Claim Ratio
             </h3>
             <div
               className="mt-6 h-36 w-36 rounded-full flex items-center justify-center"
-              style={{ background: `conic-gradient(#8b5cf6 0% ${donationRatio}%, #d6c2ff ${donationRatio}% 100%)` }}
+              style={{ background: `conic-gradient(var(--theme-v-accent) 0% ${donationRatio}%, var(--theme-v-surface-overlay-track) ${donationRatio}% 100%)` }}
             >
-              <div className="h-28 w-28 rounded-full bg-[linear-gradient(145deg,#ffffff,#f7f2ff)] flex items-center justify-center ring-1 ring-[#e6def8]">
-                <span className="text-[16px] font-semibold text-[#5b2c91]">{donationRatio}%</span>
+              <div className="h-28 w-28 rounded-full bg-[color:var(--theme-v-surface-overlay)] flex items-center justify-center ring-1 ring-[color:var(--theme-v-border-soft)]">
+                <span className="text-[16px] font-semibold text-[color:var(--theme-v-accent)]">{donationRatio}%</span>
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-4 text-[11px] text-[#475467]">
+            <div className="mt-4 flex items-center gap-4 text-[11px] text-[color:var(--theme-v-text-secondary)]">
               <span className="inline-flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#d6c2ff]" />
+                <span className="h-2 w-2 rounded-full bg-[color:var(--theme-v-surface-overlay-track)]" />
                 Claimed
               </span>
               <span className="inline-flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#8b5cf6]" />
+                <span className="h-2 w-2 rounded-full bg-[color:var(--theme-v-accent)]" />
                 Donated
               </span>
             </div>
             <div className="mt-4 grid w-full grid-cols-2 gap-2 text-[11px]">
-              <div className="rounded-lg bg-white px-3 py-2 text-[#5b2c91] ring-1 ring-[#e6def8]">
+              <div className="rounded-lg bg-[color:var(--theme-v-surface-overlay)] px-3 py-2 text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-border-soft)]">
                 Donated: {Number(summary.total_donated || 0)}
               </div>
-              <div className="rounded-lg bg-white px-3 py-2 text-[#6b5f84] ring-1 ring-[#e6def8]">
+              <div className="rounded-lg bg-[color:var(--theme-v-surface-overlay)] px-3 py-2 text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-border-soft)]">
                 Claimed: {Number(summary.total_claimed || 0)}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-2xl border border-[#e6def8] bg-[linear-gradient(160deg,#ffffff_0%,#fcfaff_100%)] shadow-[0_18px_34px_-24px_rgba(93,54,153,0.45)]">
-          <div className="flex items-center justify-between border-b border-[#e6def8] bg-[linear-gradient(120deg,#f8f4ff_0%,#f2ebff_100%)] p-4">
+        <div className="mt-5 overflow-hidden rounded-2xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] shadow-[0_18px_34px_-24px_var(--theme-v-shell-shadow)]">
+          <div className="flex items-center justify-between border-b border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay-strong)] p-4">
             <h3
-              className="text-[#3f2b66]"
+              className="text-[color:var(--theme-v-text-primary)]"
               style={{ fontSize: '18px', lineHeight: '22px', fontWeight: 600 }}
             >
               Session Ledger
             </h3>
-            <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#5D3699] ring-1 ring-[#dccff5]">
+            <span className="rounded-full bg-[color:var(--theme-v-surface-overlay)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-border-soft)]">
               Recent Activity
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[12px]">
-              <thead className="border-y border-[#e6def8] bg-[#f7f1ff] text-[#5b4d78]">
+              <thead className="border-y border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] text-[color:var(--theme-v-text-secondary)]">
               <tr>
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Mentee</th>
@@ -650,16 +657,16 @@ const ImpactDashboard = () => {
                 const statusLabel = getStatusLabel(row.status);
                 const badgeClass =
                   statusLabel === 'Reported'
-                    ? 'bg-[#fee2e2] text-[#b91c1c]'
+                    ? 'bg-[color:var(--theme-v-toast-error-bg)] text-[color:var(--theme-v-toast-error-text)]'
                     : statusLabel === 'Donated'
-                      ? 'bg-[#ede3ff] text-[#5D3699]'
+                      ? 'bg-[color:var(--theme-v-selected-bg)] text-[color:var(--theme-v-accent-text)]'
                       : statusLabel === 'Claimed'
-                        ? 'bg-[#e9ddff] text-[#4a2b7a]'
-                        : 'bg-[#e2e8f0] text-[#334155]';
+                        ? 'bg-[color:var(--theme-v-selected-bg)] text-[color:var(--theme-v-accent-text)]'
+                        : 'bg-[color:var(--theme-v-surface-overlay-track)] text-[color:var(--theme-v-text-primary)]';
                 return (
-                    <tr key={row.id} className="border-t border-[#f1edf9] text-[#1f2937] transition-colors hover:bg-[#faf6ff]">
+                    <tr key={row.id} className="border-t border-[color:var(--theme-v-border-medium)] text-[color:var(--theme-v-text-label)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)]">
                     <td className="px-4 py-3">
-                      {row.date ? new Date(row.date).toLocaleDateString() : '—'}
+                      {row.date ? new Date(row.date).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-4 py-3">{row.mentee}</td>
                     <td className="px-4 py-3">{row.duration}</td>
@@ -673,19 +680,19 @@ const ImpactDashboard = () => {
                         {Array.from({ length: 5 }).map((_, idx) => (
                           <Star
                             key={idx}
-                            className={`h-3 w-3 ${idx < row.rating ? 'text-[#fbbf24]' : 'text-[#e5e7eb]'}`}
+                            className={`h-3 w-3 ${idx < row.rating ? 'text-[color:var(--theme-v-accent)]' : 'text-white/30'}`}
                             fill={idx < row.rating ? 'currentColor' : 'none'}
                           />
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[#475467]">{row.notes || '—'}</td>
+                    <td className="px-4 py-3 text-[color:var(--theme-v-text-secondary)]">{row.notes || '-'}</td>
                   </tr>
                 );
               })}
               {!tableRows.length && (
-                <tr className="border-t border-[#f1edf9] text-[#1f2937]">
-                  <td className="px-4 py-3 text-sm text-[#475467]" colSpan={6}>
+                <tr className="border-t border-[color:var(--theme-v-border-medium)] text-[color:var(--theme-v-text-primary)]">
+                  <td className="px-4 py-3 text-sm text-[color:var(--theme-v-text-secondary)]" colSpan={6}>
                     No ledger entries yet.
                   </td>
                 </tr>
@@ -693,15 +700,15 @@ const ImpactDashboard = () => {
             </tbody>
           </table>
         </div>
-          <div className="flex items-center justify-between border-t border-[#e6def8] bg-white p-4 text-[12px] text-[#475467]">
-            <span className="rounded-lg bg-[#faf6ff] px-2 py-1 text-[12px] text-[#4a2b7a] ring-1 ring-[#e6def8]">
+          <div className="flex items-center justify-between border-t border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] p-4 text-[12px] text-[color:var(--theme-v-text-secondary)]">
+            <span className="rounded-lg bg-[color:var(--theme-v-surface-overlay)] px-2 py-1 text-[12px] text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-border-soft)]">
               Showing {ledgerRows.length ? (ledgerPage - 1) * ledgerPageSize + 1 : 0}-
               {Math.min(ledgerPage * ledgerPageSize, ledgerRows.length)} of {ledgerRows.length} sessions
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="rounded-md border border-[#e6def8] bg-white px-3 py-1 text-[#4a2b7a] transition-colors hover:bg-[#f8f4ff] disabled:opacity-50"
+                className="rounded-md border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] px-3 py-1 text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-header-bg)] disabled:opacity-50"
                 onClick={() => setLedgerPage((prev) => Math.max(1, prev - 1))}
                 disabled={isInitialLoading || ledgerPage <= 1}
               >
@@ -709,7 +716,7 @@ const ImpactDashboard = () => {
               </button>
               <button
                 type="button"
-                className="rounded-md bg-[#5D3699] px-3 py-1 text-white transition-colors hover:bg-[#4a2b7a] disabled:opacity-50"
+                className="rounded-md bg-[color:var(--theme-v-accent)] px-3 py-1 text-[color:var(--theme-v-accent-text)] transition-colors hover:bg-[color:var(--theme-v-accent-hover)] disabled:opacity-50"
                 onClick={() => setLedgerPage((prev) => Math.min(totalLedgerPages, prev + 1))}
                 disabled={isInitialLoading || ledgerPage >= totalLedgerPages}
               >
@@ -719,28 +726,28 @@ const ImpactDashboard = () => {
           </div>
         </div>
         {(loading || error) && (
-          <div className={`mt-3 text-xs ${error ? 'text-red-600' : 'text-[#475467]'}`}>
+          <div className={`mt-3 text-xs ${error ? 'text-red-600' : 'text-[color:var(--theme-v-text-secondary)]'}`}>
             {error || 'Loading impact dashboard...'}
           </div>
         )}
       </div>
 
       {donatedPopupOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
-          <div className="w-full max-w-lg rounded-2xl border border-[#e6e2f1] bg-white p-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[1px] flex items-center justify-center px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[color:var(--theme-v-border-strong)] bg-[linear-gradient(180deg,var(--theme-v-shell-bg-start)_0%,var(--theme-v-shell-bg-end)_100%)] p-5 text-[color:var(--theme-v-text-primary)] shadow-[0_24px_48px_-18px_var(--theme-v-shell-shadow)]">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-[#111827]">Total Complementary Sessions</h3>
+              <h3 className="text-base font-semibold text-[color:var(--theme-v-text-primary)]">Total Complementary Sessions</h3>
               <button
                 type="button"
-                className="text-xs text-[#5b2c91] underline"
+                className="text-xs text-[color:var(--theme-v-accent)] underline"
                 onClick={() => setDonatedPopupOpen(false)}
               >
                 Close
               </button>
             </div>
-            <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
+            <div className="mt-4 overflow-hidden rounded-xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)]">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8fafc] text-[#475467]">
+                <thead className="bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-label)]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Mentee Name</th>
                     <th className="px-3 py-2 font-medium">Session ID</th>
@@ -749,13 +756,13 @@ const ImpactDashboard = () => {
                 <tbody>
                   {donatedRows.length > 0 ? (
                     donatedRows.map((row) => (
-                        <tr key={`donated-${row.id}`} className="border-t border-[#f1f5f9] text-[#1f2937]">
+                        <tr key={`donated-${row.id}`} className="border-t border-[color:var(--theme-v-hero-border)] text-[color:var(--theme-v-text-primary)]">
                         <td className="px-3 py-2">{row.mentee}</td>
                         <td className="px-3 py-2">#{row.sessionId}</td>
                       </tr>
                     ))
                   ) : (
-                    <tr className="border-t border-[#f1f5f9] text-[#475467]">
+                    <tr className="border-t border-[color:var(--theme-v-hero-border)] text-[color:var(--theme-v-text-secondary)]">
                       <td className="px-3 py-3" colSpan={2}>
                         No donated sessions yet.
                       </td>
@@ -769,21 +776,21 @@ const ImpactDashboard = () => {
       )}
 
       {sessionsPopupOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
-          <div className="w-full max-w-lg rounded-2xl border border-[#e6e2f1] bg-white p-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[1px] flex items-center justify-center px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[color:var(--theme-v-border-strong)] bg-[linear-gradient(180deg,var(--theme-v-shell-bg-start)_0%,var(--theme-v-shell-bg-end)_100%)] p-5 text-[color:var(--theme-v-text-primary)] shadow-[0_24px_48px_-18px_var(--theme-v-shell-shadow)]">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-[#111827]">Total Sessions</h3>
+              <h3 className="text-base font-semibold text-[color:var(--theme-v-text-primary)]">Total Sessions</h3>
               <button
                 type="button"
-                className="text-xs text-[#5b2c91] underline"
+                className="text-xs text-[color:var(--theme-v-accent)] underline"
                 onClick={() => setSessionsPopupOpen(false)}
               >
                 Close
               </button>
             </div>
-            <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
+            <div className="mt-4 overflow-hidden rounded-xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)]">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8fafc] text-[#475467]">
+                <thead className="bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-label)]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Mentee Name</th>
                     <th className="px-3 py-2 font-medium">Session ID</th>
@@ -793,14 +800,14 @@ const ImpactDashboard = () => {
                 <tbody>
                   {sessionDetailRows.length > 0 ? (
                     sessionDetailRows.map((row) => (
-                    <tr key={`session-${row.id}`} className="border-t border-[#f1f5f9] text-[#1f2937]">
+                    <tr key={`session-${row.id}`} className="border-t border-[color:var(--theme-v-hero-border)] text-[color:var(--theme-v-text-primary)]">
                         <td className="px-3 py-2">{row.menteeName}</td>
                         <td className="px-3 py-2">#{row.id}</td>
                         <td className="px-3 py-2">{getStatusLabel(row.status)}</td>
                       </tr>
                     ))
                   ) : (
-                    <tr className="border-t border-[#f1f5f9] text-[#475467]">
+                    <tr className="border-t border-[color:var(--theme-v-hero-border)] text-[color:var(--theme-v-text-secondary)]">
                       <td className="px-3 py-3" colSpan={3}>
                         No sessions yet.
                       </td>
@@ -814,13 +821,13 @@ const ImpactDashboard = () => {
       )}
 
       {claimedPopupOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
-          <div className="w-full max-w-3xl rounded-2xl border border-[#e6e2f1] bg-white p-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[1px] flex items-center justify-center px-4">
+          <div className="w-full max-w-3xl rounded-2xl border border-[color:var(--theme-v-border-strong)] bg-[linear-gradient(180deg,var(--theme-v-shell-bg-start)_0%,var(--theme-v-shell-bg-end)_100%)] p-5 text-[color:var(--theme-v-text-primary)] shadow-[0_24px_48px_-18px_var(--theme-v-shell-shadow)]">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-[#111827]">Total Claimed</h3>
+              <h3 className="text-base font-semibold text-[color:var(--theme-v-text-primary)]">Total Claimed</h3>
               <button
                 type="button"
-                className="text-xs text-[#5b2c91] underline"
+                className="text-xs text-[color:var(--theme-v-accent)] underline"
                 onClick={() => {
                   setClaimedPopupMessage('');
                   setClaimedPopupOpen(false);
@@ -830,13 +837,13 @@ const ImpactDashboard = () => {
               </button>
             </div>
             {claimedPopupMessage && (
-              <p className="mt-3 rounded-lg bg-[#f8fafc] px-3 py-2 text-xs text-[#0f172a] border border-[#e2e8f0]">
+              <p className="mt-3 rounded-lg border border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] px-3 py-2 text-xs text-[color:var(--theme-v-text-primary)]">
                 {claimedPopupMessage}
               </p>
             )}
-            <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
+            <div className="mt-4 overflow-hidden rounded-xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)]">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8fafc] text-[#475467]">
+                <thead className="bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-label)]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Mentee Name</th>
                     <th className="px-3 py-2 font-medium">Session ID</th>
@@ -848,29 +855,29 @@ const ImpactDashboard = () => {
                 <tbody>
                   {claimedPayoutRows.length > 0 ? (
                     claimedPayoutRows.map((row) => (
-                    <tr key={`claimed-${row.id}`} className="border-t border-[#f1f5f9] text-[#1f2937]">
+                    <tr key={`claimed-${row.id}`} className="border-t border-[color:var(--theme-v-hero-border)] text-[color:var(--theme-v-text-primary)]">
                         <td className="px-3 py-2">{row.menteeName}</td>
                         <td className="px-3 py-2">#{row.sessionId}</td>
-                        <td className="px-3 py-2">₹{row.amount}</td>
+                        <td className="px-3 py-2">Rs {row.amount}</td>
                         <td className="px-3 py-2">{getPayoutStatusLabel(row.status)}</td>
                         <td className="px-3 py-2">
                           {canMarkPaid && row.status !== 'paid' ? (
                             <button
                               type="button"
-                              className="rounded-md bg-[#5b2c91] px-2.5 py-1 text-[11px] text-white disabled:opacity-60"
+                              className="rounded-md bg-[color:var(--theme-v-accent)] px-2.5 py-1 text-[11px] text-[color:var(--theme-v-accent-text)] disabled:opacity-60"
                               disabled={markPaidLoadingId === row.id}
                               onClick={() => handleMarkPaid(row.id)}
                             >
                               {markPaidLoadingId === row.id ? 'Processing...' : 'Mark Paid'}
                             </button>
                           ) : (
-                            <span className="text-[11px] text-[#475467]">-</span>
+                            <span className="text-[11px] text-[color:var(--theme-v-text-secondary)]">-</span>
                           )}
                         </td>
                       </tr>
                     ))
                   ) : (
-                    <tr className="border-t border-[#f1f5f9] text-[#475467]">
+                    <tr className="border-t border-[color:var(--theme-v-hero-border)] text-[color:var(--theme-v-text-secondary)]">
                       <td className="px-3 py-3" colSpan={5}>
                         No claimed sessions yet.
                       </td>
@@ -884,21 +891,21 @@ const ImpactDashboard = () => {
       )}
 
       {ratingPopupOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
-          <div className="w-full max-w-lg rounded-2xl border border-[#e6e2f1] bg-white p-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[1px] flex items-center justify-center px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[color:var(--theme-v-border-strong)] bg-[linear-gradient(180deg,var(--theme-v-shell-bg-start)_0%,var(--theme-v-shell-bg-end)_100%)] p-5 text-[color:var(--theme-v-text-primary)] shadow-[0_24px_48px_-18px_var(--theme-v-shell-shadow)]">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-[#111827]">Avg. Rating</h3>
+              <h3 className="text-base font-semibold text-[color:var(--theme-v-text-primary)]">Avg. Rating</h3>
               <button
                 type="button"
-                className="text-xs text-[#5b2c91] underline"
+                className="text-xs text-[color:var(--theme-v-accent)] underline"
                 onClick={() => setRatingPopupOpen(false)}
               >
                 Close
               </button>
             </div>
-            <div className="mt-4 rounded-xl border border-[#e5e7eb] overflow-hidden">
+            <div className="mt-4 overflow-hidden rounded-xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)]">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8fafc] text-[#475467]">
+                <thead className="bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-label)]">
                   <tr>
                     <th className="px-3 py-2 font-medium">Mentee Name</th>
                     <th className="px-3 py-2 font-medium">Session ID</th>
@@ -908,14 +915,14 @@ const ImpactDashboard = () => {
                 <tbody>
                   {ratingDetailRows.length > 0 ? (
                     ratingDetailRows.map((row) => (
-                    <tr key={`rating-${row.id}`} className="border-t border-[#f1f5f9] text-[#1f2937]">
+                    <tr key={`rating-${row.id}`} className="border-t border-[color:var(--theme-v-hero-border)] text-[color:var(--theme-v-text-primary)]">
                         <td className="px-3 py-2">{row.menteeName}</td>
                         <td className="px-3 py-2">#{row.sessionId}</td>
                         <td className="px-3 py-2">{row.rating}</td>
                       </tr>
                     ))
                   ) : (
-                    <tr className="border-t border-[#f1f5f9] text-[#475467]">
+                    <tr className="border-t border-[color:var(--theme-v-hero-border)] text-[color:var(--theme-v-text-secondary)]">
                       <td className="px-3 py-3" colSpan={3}>
                         No ratings yet.
                       </td>
@@ -932,3 +939,4 @@ const ImpactDashboard = () => {
 };
 
 export default ImpactDashboard;
+

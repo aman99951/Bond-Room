@@ -40,42 +40,60 @@ const TopAuth = ({ lockNavigation = false, onBlockedNavigate, logoutRedirectTo =
   };
 
   return (
-    <header className="lp-hdr">
-      <div className="mx-auto flex w-full max-w-[1400px] 2xl:max-w-[min(97vw,3000px)] items-center gap-5 px-4 sm:px-6 lg:px-10 xl:px-14 2xl:px-6">
-        <Link to="/" className="lp-logo" aria-label="Go to landing page" onClick={(event) => handleNavClick(event, '/')}>
-          <img src={logo} alt="Bond Room" />
-          <span>Bridging Old and New Destinies</span>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-[color:var(--theme-v-hero-border)] bg-[linear-gradient(180deg,var(--theme-v-bg-mid)_0%,var(--theme-v-bg-end)_100%)]">
+      <div className="mx-auto flex w-full max-w-[1400px] items-center gap-5 px-4 py-2 sm:px-6 lg:px-10 xl:px-14">
+        <Link to="/" className="flex flex-col items-center leading-none" aria-label="Go to landing page" onClick={(event) => handleNavClick(event, '/')}>
+          <div className="rounded-lg bg-white px-2 py-1 shadow-sm">
+            <img src={logo} alt="Bond Room" className="h-12 w-auto object-contain" />
+          </div>
+          <span className="mt-1 hidden text-[10px] uppercase tracking-[0.25em] text-[color:var(--theme-v-text-secondary)] sm:block">
+            Bridging Old and New Destinies
+          </span>
         </Link>
 
-        <nav className="lp-nav">
+        <nav className="ml-auto flex items-center gap-2 sm:gap-3">
           {shouldShowBack ? (
             <button
               type="button"
               onClick={handleBack}
-              className="lp-ghost"
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[color:var(--theme-v-nav-text)] transition-colors hover:bg-[color:var(--theme-v-nav-hover-bg)] hover:text-[color:var(--theme-v-nav-hover-text)]"
               aria-label="Go back"
             >
               Back
             </button>
           ) : null}
-          <Link to="/" onClick={(event) => handleNavClick(event, '/')}>Home</Link>
+          <Link
+            to="/"
+            onClick={(event) => handleNavClick(event, '/')}
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[color:var(--theme-v-nav-text)] transition-colors hover:bg-[color:var(--theme-v-nav-hover-bg)] hover:text-[color:var(--theme-v-nav-hover-text)]"
+          >
+            Home
+          </Link>
         </nav>
 
-        <div className="lp-hdr-actions">
+        <div className="flex items-center">
           {isLoggedIn ? (
             <button
               type="button"
               onClick={handleLogout}
-              className="lp-ghost"
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[color:var(--theme-v-nav-text)] transition-colors hover:bg-[color:var(--theme-v-nav-hover-bg)] hover:text-[color:var(--theme-v-nav-hover-text)]"
             >
               Logout
             </button>
           ) : isLogin ? (
-            <Link to="/register" className="lp-ghost" onClick={(event) => handleNavClick(event, '/register')}>
+            <Link
+              to="/register"
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[color:var(--theme-v-nav-text)] transition-colors hover:bg-[color:var(--theme-v-nav-hover-bg)] hover:text-[color:var(--theme-v-nav-hover-text)]"
+              onClick={(event) => handleNavClick(event, '/register')}
+            >
               Student Sign Up
             </Link>
           ) : (
-            <Link to="/login" className="lp-ghost" onClick={(event) => handleNavClick(event, '/login')}>
+            <Link
+              to="/login"
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[color:var(--theme-v-nav-text)] transition-colors hover:bg-[color:var(--theme-v-nav-hover-bg)] hover:text-[color:var(--theme-v-nav-hover-text)]"
+              onClick={(event) => handleNavClick(event, '/login')}
+            >
               Login
             </Link>
           )}

@@ -338,18 +338,25 @@ const UploadCard = ({
   };
 
   const isRejected = isRejectedStatus(reviewStatus);
+  const useDarkText = Boolean(isRejected || error || uploaded);
+  const headingTextClass = useDarkText
+    ? 'text-[color:var(--theme-v-accent-text)]'
+    : 'text-[color:var(--theme-v-text-primary)]';
+  const mutedTextClass = useDarkText
+    ? 'text-[color:var(--theme-v-accent-text)] opacity-80'
+    : 'text-[color:var(--theme-v-text-secondary)]';
 
   return (
     <div>
       <div
-        className={`group min-h-[330px] border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-[#5b2c91] focus-within:border-[#5b2c91] focus-within:ring-2 focus-within:ring-[#5b2c91] ${
+        className={`group min-h-[330px] border border-dashed rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-[color:var(--theme-v-accent)] focus-within:border-[color:var(--theme-v-accent)] focus-within:ring-2 focus-within:ring-[color:var(--theme-v-accent)] ${
           isRejected
             ? 'border-red-500 bg-[#fff1f2]'
             : uploaded
             ? 'border-[#22c55e] bg-[#f0fdf4]'
             : error
               ? 'border-red-500 bg-[#fff7f7]'
-              : 'border-[#d7d0e2] bg-white'
+              : 'border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)]'
         }`}
       >
         {isRejected && (
@@ -366,21 +373,21 @@ const UploadCard = ({
         />
         <div
           ref={pickerRef}
-          className="relative h-[180px] w-full overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f8fafc] flex items-center justify-center"
+          className="relative h-[180px] w-full overflow-hidden rounded-lg border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] flex items-center justify-center"
         >
           {viewUrl && kind === 'image' ? (
             <img src={viewUrl} alt={title} className="h-full w-full object-cover" />
           ) : (
             <button
               type="button"
-              className="h-10 w-10 rounded-full bg-[#5b2c91] flex items-center justify-center hover:bg-[#4a2374] transition-colors"
+              className="h-10 w-10 rounded-full bg-[color:var(--theme-v-bg-mid)] flex items-center justify-center hover:bg-[color:var(--theme-v-bg-end)] transition-colors"
               onClick={() => setShowSourcePicker((prev) => !prev)}
               aria-label={`Upload ${title}`}
               aria-haspopup="menu"
               aria-expanded={showSourcePicker}
             >
               <Upload
-                className={`h-5 w-5 ${uploaded ? 'text-[#FDD253]' : 'text-white'} group-focus-within:text-[#FDD253]`}
+                className={`h-5 w-5 ${uploaded ? 'text-[color:var(--theme-v-accent)]' : 'text-white'} group-focus-within:text-[color:var(--theme-v-accent)]`}
                 aria-hidden="true"
               />
             </button>
@@ -388,7 +395,7 @@ const UploadCard = ({
           {viewUrl && kind === 'image' && (
             <button
               type="button"
-              className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#5b2c91] bg-white text-[#5b2c91] hover:bg-[#f3ecff] transition-colors"
+              className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] text-[color:var(--theme-v-accent)] hover:bg-[color:var(--theme-v-nav-hover-bg)] transition-colors"
               onClick={() => setShowSourcePicker((prev) => !prev)}
               aria-label={`Upload ${title}`}
               aria-haspopup="menu"
@@ -398,10 +405,10 @@ const UploadCard = ({
             </button>
           )}
           {showSourcePicker && (
-            <div className="absolute left-1/2 top-1/2 z-20 w-[min(92%,320px)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-[#d7d0e2] bg-white shadow-lg divide-y divide-[#ece7f6]">
+            <div className="absolute left-1/2 top-1/2 z-20 w-[min(92%,320px)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] shadow-lg divide-y divide-[color:var(--theme-v-hero-border)]">
               <button
                 type="button"
-                className="w-full px-3 py-2 text-xs font-medium text-[#1f2937] hover:bg-[#f3ecff] transition-colors inline-flex items-center justify-center gap-2"
+                className="w-full px-3 py-2 text-xs font-medium text-[color:var(--theme-v-text-primary)] hover:bg-[color:var(--theme-v-nav-hover-bg)] transition-colors inline-flex items-center justify-center gap-2"
                 onClick={openComputerPicker}
               >
                 <Upload className="h-3.5 w-3.5" aria-hidden="true" />
@@ -409,7 +416,7 @@ const UploadCard = ({
               </button>
               <button
                 type="button"
-                className="w-full px-3 py-2 text-xs font-medium text-[#1f2937] hover:bg-[#f3ecff] transition-colors inline-flex items-center justify-center gap-2"
+                className="w-full px-3 py-2 text-xs font-medium text-[color:var(--theme-v-text-primary)] hover:bg-[color:var(--theme-v-nav-hover-bg)] transition-colors inline-flex items-center justify-center gap-2"
                 onClick={openCameraPicker}
               >
                 <Camera className="h-3.5 w-3.5" aria-hidden="true" />
@@ -418,13 +425,13 @@ const UploadCard = ({
             </div>
           )}
         </div>
-        <span className="text-sm text-[#1f2937] min-h-[20px] flex items-center justify-center leading-5">{title}</span>
-        <span className="text-xs text-[#6b7280]">Click the upload icon to choose source</span>
-        {helperText ? <span className="text-xs text-[#6b7280]">{helperText}</span> : null}
-        <span className={`text-xs max-w-full truncate ${uploaded ? 'text-[#166534] font-medium' : 'text-[#6b7280]'}`}>
+        <span className={`text-sm min-h-[20px] flex items-center justify-center leading-5 ${headingTextClass}`}>{title}</span>
+        <span className={`text-xs ${mutedTextClass}`}>Click the upload icon to choose source</span>
+        {helperText ? <span className={`text-xs ${mutedTextClass}`}>{helperText}</span> : null}
+        <span className={`text-xs max-w-full truncate ${uploaded ? 'text-[#166534] font-medium' : mutedTextClass}`}>
           {getUploadStatus(file, uploaded)}
         </span>
-        {viewUrl && kind === 'pdf' && <span className="text-[11px] text-[#5b2c91]">PDF uploaded</span>}
+        {viewUrl && kind === 'pdf' && <span className="text-[11px] text-[color:var(--theme-v-accent)]">PDF uploaded</span>}
         {isRejected && reviewComment && (
           <p className="w-full rounded-md border border-[#fecaca] bg-[#fff7f7] px-2 py-1 text-[11px] leading-4 text-[#991b1b]">
             {reviewComment}
@@ -434,18 +441,18 @@ const UploadCard = ({
       </div>
       {showCameraModal && (
         <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-xl bg-white border border-[#e6e2f1] shadow-xl p-4">
-            <h4 className="text-sm font-semibold text-[#1f2937]">Capture {title}</h4>
-            <div className="mt-3 overflow-hidden rounded-lg border border-[#e5e7eb] bg-black">
+          <div className="w-full max-w-md rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] border border-[color:var(--theme-v-hero-border)] shadow-xl p-4">
+            <h4 className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">Capture {title}</h4>
+            <div className="mt-3 overflow-hidden rounded-lg border border-[color:var(--theme-v-hero-border)] bg-black">
               <video ref={videoRef} autoPlay playsInline muted className="h-64 w-full object-cover" />
             </div>
-            {cameraBusy && <p className="mt-2 text-xs text-[#6b7280]">Opening camera...</p>}
+            {cameraBusy && <p className="mt-2 text-xs text-[color:var(--theme-v-text-secondary)]">Opening camera...</p>}
             {!cameraBusy && cameraNotice && <p className="mt-2 text-xs text-amber-700">{cameraNotice}</p>}
             {cameraError && <p className="mt-2 text-xs text-red-600">{cameraError}</p>}
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
-                className="rounded-md border border-[#d7d0e2] px-3 py-2 text-xs font-medium text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-md border border-[color:var(--theme-v-hero-border)] px-3 py-2 text-xs font-medium text-[color:var(--theme-v-text-primary)] hover:bg-[color:var(--theme-v-nav-hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={toggleCamera}
                 disabled={cameraBusy || cameraDeviceCount <= 1}
               >
@@ -453,14 +460,14 @@ const UploadCard = ({
               </button>
               <button
                 type="button"
-                className="rounded-md border border-[#d7d0e2] px-3 py-2 text-xs font-medium text-[#374151] hover:bg-[#f9fafb]"
+                className="rounded-md border border-[color:var(--theme-v-hero-border)] px-3 py-2 text-xs font-medium text-[color:var(--theme-v-text-primary)] hover:bg-[color:var(--theme-v-nav-hover-bg)]"
                 onClick={closeCameraModal}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="rounded-md bg-[#5b2c91] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a2374] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-md bg-[color:var(--theme-v-bg-mid)] px-3 py-2 text-xs font-semibold text-white hover:bg-[color:var(--theme-v-bg-end)] disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={capturePhoto}
                 disabled={cameraBusy || Boolean(cameraError)}
               >
@@ -917,12 +924,12 @@ const VerifyIdentity = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
+    <div className="min-h-screen bg-[linear-gradient(135deg,var(--theme-v-bg-start)_0%,var(--theme-v-bg-mid)_45%,var(--theme-v-bg-end)_100%)] text-primary flex flex-col">
       <TopAuth />
 
       <main className="flex-1 pt-20 sm:pt-24">
         <div className="flex w-full justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-10">
-          <div className="w-full overflow-hidden rounded-xl border border-[#e6e2f1] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+          <div className="w-full overflow-hidden rounded-xl border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-header-bg)] shadow-[0_18px_40px_-22px_rgba(22,10,46,0.78)]">
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.7fr)]">
               <div className="relative hidden h-full grid-rows-2 bg-transparent xl:grid">
                 <img
@@ -939,7 +946,7 @@ const VerifyIdentity = () => {
                       className="h-full w-full object-cover"
                     />
                   </div>
-                  <div className="relative bg-[#5b2c91] p-6 text-white flex flex-col justify-between">
+                  <div className="relative bg-[color:var(--theme-v-bg-mid)] p-6 text-white flex flex-col justify-between">
                     <div>
                       <h3 className="font-sans font-bold text-[37px] leading-[36.5px]">
                         Join a
@@ -957,7 +964,7 @@ const VerifyIdentity = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-[1.05fr_1fr]">
-                  <div className="bg-[#f2c94c] p-6 text-[#1f2937] flex items-center justify-center">
+                  <div className="bg-[color:var(--theme-v-accent)] p-6 text-[color:var(--theme-v-accent-text)] flex items-center justify-center">
                     <ul className="list-disc pl-4 space-y-3 text-sm">
                       <li>Bond Room exists to restore human connection in an exam-driven system.</li>
                       <li>You are not expected to teach.</li>
@@ -974,30 +981,30 @@ const VerifyIdentity = () => {
                 </div>
               </div>
 
-              <div className="bg-[#f7f5fa] p-4 text-[#1f2937] sm:p-6 lg:p-10">
+              <div className="bg-[color:var(--theme-v-header-bg)] p-4 text-[color:var(--theme-v-text-primary)] sm:p-6 lg:p-10">
                 <div className="max-w-2xl mx-auto md:max-w-none md:mx-0">
-                  <div className="inline-flex items-center rounded-full bg-[#e9ddff] text-xs text-[#5b2c91] px-3 py-1 font-medium">
+                  <div className="inline-flex items-center rounded-full bg-[color:var(--theme-v-accent)] text-xs text-[color:var(--theme-v-accent-text)] px-3 py-1 font-medium">
                     Step 3 of 3
                   </div>
-                  <h2 className="mt-3 text-xl sm:text-2xl font-semibold text-[#1f2937]">
+                  <h2 className="mt-3 text-xl sm:text-2xl font-semibold text-[color:var(--theme-v-text-primary)]">
                     Verify your Identity
                   </h2>
-                  <p className="mt-1 text-sm text-[#6b7280]">
+                  <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">
                     Upload one ID Proof and one Address Proof. For each proof, upload both Front and Back images.
                   </p>
 
                   <form className="mt-6 space-y-5">
                     <div className="grid gap-5 2xl:grid-cols-2">
-                      <div className="rounded-xl border border-[#e5def2] bg-white p-4 space-y-3">
-                        <h3 className="text-sm font-semibold text-[#1f2937]">ID Proof</h3>
+                      <div className="rounded-xl border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] p-4 space-y-3">
+                        <h3 className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">ID Proof</h3>
                         <div>
-                          <label htmlFor="idProofType" className="text-xs text-[#6b7280]">Document Type</label>
+                          <label htmlFor="idProofType" className="text-xs text-[color:var(--theme-v-text-secondary)]">Document Type</label>
                           <select
                             id="idProofType"
-                            className={`mt-2 w-full rounded-md border px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:border-transparent ${
+                            className={`mt-2 w-full rounded-md border px-3 py-2 text-sm bg-[color:var(--theme-v-nav-hover-bg)] focus:outline-none focus:ring-2 focus:border-transparent ${
                               showIdProofTypeError
                                 ? 'border-red-500 focus:ring-red-500'
-                                : 'border-[#d7d0e2] focus:ring-[#5b2c91]'
+                                : 'border-[color:var(--theme-v-hero-border)] focus:ring-[color:var(--theme-v-accent)]'
                             }`}
                             value={idProofType}
                             onChange={(event) => {
@@ -1017,14 +1024,14 @@ const VerifyIdentity = () => {
                         </div>
 
                         <div>
-                          <label htmlFor="idProofNumber" className="text-xs text-[#6b7280]">Document Number</label>
+                          <label htmlFor="idProofNumber" className="text-xs text-[color:var(--theme-v-text-secondary)]">Document Number</label>
                           <input
                             id="idProofNumber"
                             type="text"
-                            className={`mt-2 w-full rounded-md border px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:border-transparent ${
+                            className={`mt-2 w-full rounded-md border px-3 py-2 text-sm bg-[color:var(--theme-v-nav-hover-bg)] focus:outline-none focus:ring-2 focus:border-transparent ${
                               showIdProofNumberError
                                 ? 'border-red-500 focus:ring-red-500'
-                                : 'border-[#d7d0e2] focus:ring-[#5b2c91]'
+                                : 'border-[color:var(--theme-v-hero-border)] focus:ring-[color:var(--theme-v-accent)]'
                             }`}
                             placeholder="Enter document number"
                             value={idProofNumber}
@@ -1034,7 +1041,7 @@ const VerifyIdentity = () => {
                             }}
                             onBlur={() => setTouched((prev) => ({ ...prev, idProofNumber: true }))}
                           />
-                          <p className="mt-1 text-[11px] text-[#6b7280]">
+                          <p className="mt-1 text-[11px] text-[color:var(--theme-v-text-secondary)]">
                             {idProofType ? PROOF_NUMBER_HINTS[idProofType] : 'Choose a document type to see format.'}
                           </p>
                           {showIdProofNumberError && (
@@ -1080,16 +1087,16 @@ const VerifyIdentity = () => {
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-[#e5def2] bg-white p-4 space-y-3">
-                        <h3 className="text-sm font-semibold text-[#1f2937]">Address Proof</h3>
+                      <div className="rounded-xl border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] p-4 space-y-3">
+                        <h3 className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">Address Proof</h3>
                         <div>
-                          <label htmlFor="addressProofType" className="text-xs text-[#6b7280]">Document Type</label>
+                          <label htmlFor="addressProofType" className="text-xs text-[color:var(--theme-v-text-secondary)]">Document Type</label>
                           <select
                             id="addressProofType"
-                            className={`mt-2 w-full rounded-md border px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:border-transparent ${
+                            className={`mt-2 w-full rounded-md border px-3 py-2 text-sm bg-[color:var(--theme-v-nav-hover-bg)] focus:outline-none focus:ring-2 focus:border-transparent ${
                               showAddressProofTypeError
                                 ? 'border-red-500 focus:ring-red-500'
-                                : 'border-[#d7d0e2] focus:ring-[#5b2c91]'
+                                : 'border-[color:var(--theme-v-hero-border)] focus:ring-[color:var(--theme-v-accent)]'
                             }`}
                             value={addressProofType}
                             onChange={(event) => {
@@ -1109,14 +1116,14 @@ const VerifyIdentity = () => {
                         </div>
 
                         <div>
-                          <label htmlFor="addressProofNumber" className="text-xs text-[#6b7280]">Document Number</label>
+                          <label htmlFor="addressProofNumber" className="text-xs text-[color:var(--theme-v-text-secondary)]">Document Number</label>
                           <input
                             id="addressProofNumber"
                             type="text"
-                            className={`mt-2 w-full rounded-md border px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:border-transparent ${
+                            className={`mt-2 w-full rounded-md border px-3 py-2 text-sm bg-[color:var(--theme-v-nav-hover-bg)] focus:outline-none focus:ring-2 focus:border-transparent ${
                               showAddressProofNumberError
                                 ? 'border-red-500 focus:ring-red-500'
-                                : 'border-[#d7d0e2] focus:ring-[#5b2c91]'
+                                : 'border-[color:var(--theme-v-hero-border)] focus:ring-[color:var(--theme-v-accent)]'
                             }`}
                             placeholder="Enter document number"
                             value={addressProofNumber}
@@ -1126,7 +1133,7 @@ const VerifyIdentity = () => {
                             }}
                             onBlur={() => setTouched((prev) => ({ ...prev, addressProofNumber: true }))}
                           />
-                          <p className="mt-1 text-[11px] text-[#6b7280]">
+                          <p className="mt-1 text-[11px] text-[color:var(--theme-v-text-secondary)]">
                             {addressProofType ? PROOF_NUMBER_HINTS[addressProofType] : 'Choose a document type to see format.'}
                           </p>
                           {showAddressProofNumberError && (
@@ -1173,8 +1180,8 @@ const VerifyIdentity = () => {
                       </div>
                     </div>
 
-                    <div className="mx-auto w-full sm:max-w-[420px] rounded-xl border border-[#e5def2] bg-white p-4 space-y-3">
-                      <h3 className="text-sm font-semibold text-[#1f2937]">Professional Certificate</h3>
+                    <div className="mx-auto w-full sm:max-w-[420px] rounded-xl border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] p-4 space-y-3">
+                      <h3 className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">Professional Certificate</h3>
                       
                       <div className="grid grid-cols-1 gap-3">
                         <UploadCard
@@ -1203,13 +1210,13 @@ const VerifyIdentity = () => {
                     )}
 
                     <div>
-                      <label htmlFor="mentorAdditionalNotes" className="text-xs text-[#6b7280]">
+                      <label htmlFor="mentorAdditionalNotes" className="text-xs text-[color:var(--theme-v-text-secondary)]">
                         Additional Notes (Optional)
                       </label>
                       <textarea
                         id="mentorAdditionalNotes"
                         rows={4}
-                        className="mt-2 w-full rounded-md border border-[#d7d0e2] px-3 py-2 text-sm bg-white resize-y min-h-[120px] max-h-[380px] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent"
+                        className="mt-2 w-full rounded-md border border-[color:var(--theme-v-hero-border)] px-3 py-2 text-sm bg-[color:var(--theme-v-nav-hover-bg)] resize-y min-h-[120px] max-h-[380px] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-accent)] focus:border-transparent"
                         placeholder="Add any context for verification..."
                         value={notes}
                         onChange={(event) => setNotes(event.target.value)}
@@ -1218,7 +1225,7 @@ const VerifyIdentity = () => {
 
                     <div className="flex flex-col items-center gap-2">
                       {verificationStatus && (
-                        <p className="text-xs text-[#6b7280]">
+                        <p className="text-xs text-[color:var(--theme-v-text-secondary)]">
                           Current status: <span className="font-semibold">{verificationStatus}</span>
                         </p>
                       )}
@@ -1226,13 +1233,13 @@ const VerifyIdentity = () => {
                       {!errorMessage && infoMessage && <p className="text-xs text-green-700">{infoMessage}</p>}
                       <button
                         type="button"
-                        className="w-full rounded-md bg-[#5b2c91] text-white py-2.5 text-sm font-semibold hover:bg-[#4a2374] transition-all"
+                        className="w-full rounded-md bg-[color:var(--theme-v-bg-mid)] text-white py-2.5 text-sm font-semibold hover:bg-[color:var(--theme-v-bg-end)] transition-all"
                         onClick={handleSubmit}
                         disabled={loading}
                       >
                         {loading ? 'Submitting...' : 'Submit for Verification'}
                       </button>
-                      <p className="text-xs text-[#6b7280]">Verification usually takes 24-48 hours</p>
+                      <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Verification usually takes 24-48 hours</p>
                     </div>
                   </form>
                 </div>
@@ -1248,3 +1255,4 @@ const VerifyIdentity = () => {
 };
 
 export default VerifyIdentity;
+

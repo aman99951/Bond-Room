@@ -130,30 +130,30 @@ const SessionRequests = () => {
   const rows = useMemo(() => sessions, [sessions]);
 
 return (
-  <div className="min-h-screen p-4 sm:p-6 lg:p-8">
+  <div className="min-h-screen bg-transparent p-4 text-[color:var(--theme-v-text-primary)] sm:p-6 lg:p-8">
     {/* Header Section */}
-    <div className="relative mb-8 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
-      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
-      <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
+    <div className="relative mb-8 overflow-hidden rounded-3xl border border-[color:var(--theme-v-border-strong)] bg-[linear-gradient(135deg,var(--theme-v-bg-mid)_0%,var(--theme-v-bg-start)_50%,var(--theme-v-bg-end)_100%)] p-4 shadow-[0_20px_45px_-28px_var(--theme-v-shell-shadow)] ring-1 ring-[color:var(--theme-v-hero-ring)] sm:p-6">
+      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[color:var(--theme-v-orb-gold)] blur-3xl" />
+      <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[color:var(--theme-v-orb-light)] blur-3xl" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Title with decorative element */}
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f3ff]">
-            <Inbox className="h-6 w-6 text-[#5D3699]" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+            <Inbox className="h-6 w-6 text-[color:var(--theme-v-accent)]" />
           </div>
           <div>
             <button
               type="button"
               onClick={() => navigate('/mentor-sessions')}
-              className="mb-2 inline-flex items-center gap-1 rounded-lg border border-[#ded2f5] bg-white px-3 py-1.5 text-xs font-medium text-[#5D3699] transition-colors hover:bg-[#f8f4ff]"
+              className="mb-2 inline-flex items-center gap-1 rounded-lg border border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] px-3 py-1.5 text-xs font-medium text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)]"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Back to My Sessions
             </button>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-[color:var(--theme-v-text-primary)] sm:text-3xl">
               Session Requests
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">
               Review mentee requests waiting for your approval
             </p>
           </div>
@@ -164,9 +164,9 @@ return (
           type="button"
           onClick={loadRequests}
           disabled={loading}
-          className="group inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9cdf3] bg-white px-5 py-2.5 text-sm font-medium text-[#4a2b7a] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#bda7e8] hover:shadow disabled:cursor-not-allowed disabled:opacity-60"
+          className="group inline-flex items-center justify-center gap-2 rounded-xl border border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] px-5 py-2.5 text-sm font-medium text-[color:var(--theme-v-text-primary)] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[color:var(--theme-v-border-hover)] hover:shadow disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <RefreshCw className={`h-4 w-4 text-[#6b5f84] transition-transform group-hover:text-[#5D3699] ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-[color:var(--theme-v-accent)] transition-transform group-hover:text-[color:var(--theme-v-highlight-mid)] ${loading ? 'animate-spin' : ''}`} />
           {loading ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
@@ -174,36 +174,36 @@ return (
       {/* Stats Cards */}
       {(rows.length > 0 || stats.approvedToday > 0 || stats.approvedThisWeek > 0) && (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+          <div className="rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
-                <Clock className="h-5 w-5 text-amber-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--theme-v-surface-overlay)]">
+                <Clock className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{rows.length}</p>
-                <p className="text-xs text-gray-500">Pending Requests</p>
+                <p className="text-2xl font-bold text-[color:var(--theme-v-text-primary)]">{rows.length}</p>
+                <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Pending Requests</p>
               </div>
             </div>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+          <div className="rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--theme-v-surface-overlay)]">
+                <CheckCircle2 className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.approvedToday}</p>
-                <p className="text-xs text-gray-500">Approved Today</p>
+                <p className="text-2xl font-bold text-[color:var(--theme-v-text-primary)]">{stats.approvedToday}</p>
+                <p className="text-xs text-[color:var(--theme-v-text-secondary)]">Approved Today</p>
               </div>
             </div>
           </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+          <div className="rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] p-4 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-                <Calendar className="h-5 w-5 text-blue-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--theme-v-surface-overlay)]">
+                <Calendar className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.approvedThisWeek}</p>
-                <p className="text-xs text-gray-500">This Week</p>
+                <p className="text-2xl font-bold text-[color:var(--theme-v-text-primary)]">{stats.approvedThisWeek}</p>
+                <p className="text-xs text-[color:var(--theme-v-text-secondary)]">This Week</p>
               </div>
             </div>
           </div>
@@ -212,32 +212,32 @@ return (
     </div>
 
     {/* Table Section */}
-    <div className="hidden overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 lg:block">
+    <div className="hidden overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] lg:block">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px]">
           <thead>
-            <tr className="bg-gray-50/80">
-              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <tr className="bg-[color:var(--theme-v-surface-overlay-strong)]">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                 Mentee
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                 Date
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                 Time
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                 Duration
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                 Mode
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-[color:var(--theme-v-border-soft)]">
             {rows.map((session) => {
               const durationLabel = session?.duration_minutes
                 ? `${session.duration_minutes} min`
@@ -247,7 +247,6 @@ return (
               const menteeAvatar = resolveMediaUrl(session?.mentee_avatar);
               const busy = updatingId === session.id;
 
-              // Get mode icon
               const getModeIcon = (mode) => {
                 switch (mode?.toLowerCase()) {
                   case 'video':
@@ -264,12 +263,12 @@ return (
               return (
                 <tr
                   key={session.id}
-                  className="group transition-colors hover:bg-gray-50/50"
+                  className="group transition-colors hover:bg-[color:var(--theme-v-surface-overlay)]"
                 >
                   {/* Mentee */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#5D3699]/10">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)]">
                         {menteeAvatar ? (
                           <img
                             src={menteeAvatar}
@@ -277,14 +276,14 @@ return (
                             className="h-10 w-10 rounded-full object-cover"
                           />
                         ) : (
-                          <User className="h-5 w-5 text-[#5D3699]" />
+                          <User className="h-5 w-5 text-[color:var(--theme-v-accent)]" />
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-[color:var(--theme-v-text-primary)]">
                           {menteeName}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-[color:var(--theme-v-text-secondary)]">
                           Awaiting approval
                         </p>
                       </div>
@@ -293,16 +292,16 @@ return (
 
                   {/* Date */}
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
+                      <Calendar className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                       {formatDateLabel(session.scheduled_start)}
                     </div>
                   </td>
 
                   {/* Time */}
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock className="h-4 w-4 text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
+                      <Clock className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                       {formatTimeRange(session.scheduled_start, session.scheduled_end)}
                     </div>
                   </td>
@@ -310,8 +309,8 @@ return (
                   {/* Duration */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                        <Timer className="h-3 w-3" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] px-3 py-1 text-xs font-medium text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)]">
+                        <Timer className="h-3 w-3 text-[color:var(--theme-v-accent)]" />
                         {durationLabel}
                       </span>
                     </div>
@@ -319,7 +318,7 @@ return (
 
                   {/* Mode */}
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium capitalize text-blue-700 ring-1 ring-blue-600/10">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--theme-v-surface-overlay)] px-3 py-1 text-xs font-medium capitalize text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-border-soft)]">
                       {getModeIcon(session?.mode)}
                       {modeLabel}
                     </span>
@@ -332,7 +331,7 @@ return (
                         type="button"
                         onClick={() => handleDecision(session.id, 'approved')}
                         disabled={busy}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#5D3699] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[color:var(--theme-v-accent)] px-4 py-2 text-xs font-semibold text-[color:var(--theme-v-accent-text)] shadow-sm transition-all hover:bg-[color:var(--theme-v-accent-hover)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {busy ? (
                           <>
@@ -350,7 +349,7 @@ return (
                         type="button"
                         onClick={() => handleDecision(session.id, 'canceled')}
                         disabled={busy}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:text-red-600 hover:ring-red-200 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[color:var(--theme-v-surface-overlay)] px-4 py-2 text-xs font-semibold text-[color:var(--theme-v-text-secondary)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] transition-all hover:bg-[color:var(--theme-v-surface-overlay-strong)] hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <XCircle className="h-3.5 w-3.5" />
                         Decline
@@ -366,19 +365,19 @@ return (
               <tr>
                 <td colSpan={6} className="px-6 py-16">
                   <div className="flex flex-col items-center justify-center text-center">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
-                      <Inbox className="h-10 w-10 text-gray-400" />
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)]">
+                      <Inbox className="h-10 w-10 text-[color:var(--theme-v-accent)]" />
                     </div>
-                    <h3 className="mt-4 text-base font-semibold text-gray-900">
+                    <h3 className="mt-4 text-base font-semibold text-[color:var(--theme-v-text-primary)]">
                       No pending requests
                     </h3>
-                    <p className="mt-1 max-w-sm text-sm text-gray-500">
+                    <p className="mt-1 max-w-sm text-sm text-[color:var(--theme-v-text-secondary)]">
                       You're all caught up! New session requests from mentees will appear here.
                     </p>
                     <button
                       type="button"
                       onClick={loadRequests}
-                      className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#5D3699] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md"
+                      className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[color:var(--theme-v-accent)] px-5 py-2.5 text-sm font-medium text-[color:var(--theme-v-accent-text)] shadow-sm transition-all hover:bg-[color:var(--theme-v-accent-hover)] hover:shadow-md"
                     >
                       <RefreshCw className="h-4 w-4" />
                       Check for new requests
@@ -394,26 +393,26 @@ return (
 
     {/* Loading State */}
     {loading && (
-      <div className="mt-6 flex items-center justify-center gap-3 rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-[#5D3699]" />
-        <span className="text-sm font-medium text-gray-600">Loading session requests...</span>
+      <div className="mt-6 flex items-center justify-center gap-3 rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-6 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[color:var(--theme-v-border-soft)] border-t-[color:var(--theme-v-accent)]" />
+        <span className="text-sm font-medium text-[color:var(--theme-v-text-secondary)]">Loading session requests...</span>
       </div>
     )}
 
     {/* Error State */}
     {error && (
-      <div className="mt-6 flex items-center gap-3 rounded-xl bg-red-50 p-4 ring-1 ring-red-100">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-          <XCircle className="h-5 w-5 text-red-600" />
+      <div className="mt-6 flex items-center gap-3 rounded-xl bg-[color:var(--theme-v-toast-error-bg)] p-4 ring-1 ring-[color:var(--theme-v-toast-error-border)]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-900/40">
+          <XCircle className="h-5 w-5 text-[color:var(--theme-v-toast-error-text)]" />
         </div>
         <div>
-          <p className="text-sm font-medium text-red-800">Error loading requests</p>
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm font-medium text-[color:var(--theme-v-toast-error-text)]">Error loading requests</p>
+          <p className="text-sm text-red-300">{error}</p>
         </div>
         <button
           type="button"
           onClick={loadRequests}
-          className="ml-auto rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-200"
+          className="ml-auto rounded-lg bg-red-900/50 px-3 py-1.5 text-xs font-medium text-[color:var(--theme-v-toast-error-text)] transition-colors hover:bg-red-900/70"
         >
           Try Again
         </button>
@@ -422,13 +421,13 @@ return (
 
     {/* Success State */}
     {success && (
-      <div className="mt-6 flex items-center gap-3 rounded-xl bg-green-50 p-4 ring-1 ring-green-100">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-          <CheckCircle2 className="h-5 w-5 text-green-600" />
+      <div className="mt-6 flex items-center gap-3 rounded-xl bg-[color:var(--theme-v-toast-success-bg)] p-4 ring-1 ring-[color:var(--theme-v-toast-success-border)]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-900/40">
+          <CheckCircle2 className="h-5 w-5 text-[color:var(--theme-v-toast-success-text)]" />
         </div>
         <div>
-          <p className="text-sm font-medium text-green-800">Success!</p>
-          <p className="text-sm text-green-600">{success}</p>
+          <p className="text-sm font-medium text-[color:var(--theme-v-toast-success-text)]">Success!</p>
+          <p className="text-sm text-emerald-300">{success}</p>
         </div>
       </div>
     )}
@@ -447,12 +446,12 @@ return (
         return (
           <div
             key={`mobile-${session.id}`}
-            className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100"
+            className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-5 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]"
           >
             {/* Card Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#5D3699]/10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)]">
                   {menteeAvatar ? (
                     <img
                       src={menteeAvatar}
@@ -460,12 +459,12 @@ return (
                       className="h-12 w-12 rounded-full object-cover"
                     />
                   ) : (
-                    <User className="h-6 w-6 text-[#5D3699]" />
+                    <User className="h-6 w-6 text-[color:var(--theme-v-accent)]" />
                   )}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{menteeName}</p>
-                  <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                  <p className="font-semibold text-[color:var(--theme-v-text-primary)]">{menteeName}</p>
+                  <span className="inline-flex items-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] px-2 py-0.5 text-xs font-medium text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-border-soft)]">
                     Pending
                   </span>
                 </div>
@@ -474,20 +473,20 @@ return (
 
             {/* Card Details */}
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="h-4 w-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
+                <Calendar className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                 {formatDateLabel(session.scheduled_start)}
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Clock className="h-4 w-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
+                <Clock className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                 {formatTimeRange(session.scheduled_start, session.scheduled_end)}
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Timer className="h-4 w-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
+                <Timer className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                 {durationLabel}
               </div>
-              <div className="flex items-center gap-2 text-sm capitalize text-gray-600">
-                <Video className="h-4 w-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-sm capitalize text-[color:var(--theme-v-text-secondary)]">
+                <Video className="h-4 w-4 text-[color:var(--theme-v-accent)]" />
                 {modeLabel}
               </div>
             </div>
@@ -498,7 +497,7 @@ return (
                 type="button"
                 onClick={() => handleDecision(session.id, 'approved')}
                 disabled={busy}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#5D3699] py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#4a2b7a] disabled:opacity-60"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-accent)] py-2.5 text-sm font-semibold text-[color:var(--theme-v-accent-text)] shadow-sm transition-all hover:bg-[color:var(--theme-v-accent-hover)] disabled:opacity-60"
               >
                 {busy ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -511,7 +510,7 @@ return (
                 type="button"
                 onClick={() => handleDecision(session.id, 'canceled')}
                 disabled={busy}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-semibold text-gray-700 ring-1 ring-gray-200 transition-all hover:bg-gray-50 hover:text-red-600 disabled:opacity-60"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-surface-overlay)] py-2.5 text-sm font-semibold text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-all hover:bg-[color:var(--theme-v-surface-overlay-strong)] hover:text-red-400 disabled:opacity-60"
               >
                 <XCircle className="h-4 w-4" />
                 Decline
@@ -522,13 +521,13 @@ return (
       })}
 
       {!rows.length && !loading && (
-        <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-100">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-            <Inbox className="h-8 w-8 text-gray-400" />
+        <div className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] p-8 text-center shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)]">
+            <Inbox className="h-8 w-8 text-[color:var(--theme-v-accent)]" />
           </div>
-          <h3 className="mt-4 text-base font-semibold text-gray-900">No pending requests</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            You&apos;re all caught up! New session requests from mentees will appear here.
+          <h3 className="mt-4 text-base font-semibold text-[color:var(--theme-v-text-primary)]">No pending requests</h3>
+          <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">
+            You're all caught up! New session requests from mentees will appear here.
           </p>
         </div>
       )}

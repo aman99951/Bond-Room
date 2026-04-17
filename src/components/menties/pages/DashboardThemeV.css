@@ -1,0 +1,115 @@
+.theme-v-dashboard {
+  background: transparent;
+  color: var(--theme-v-text-primary);
+}
+
+/* Surfaces */
+.theme-v-dashboard [class*="bg-white"],
+.theme-v-dashboard [class*="bg-[#f5f3ff]"],
+.theme-v-dashboard [class*="bg-[#f8f3ff]"],
+.theme-v-dashboard [class*="bg-[#f8f4ff]"],
+.theme-v-dashboard [class*="bg-[#f8f5ff]"],
+.theme-v-dashboard [class*="bg-[#faf7ff]"],
+.theme-v-dashboard [class*="bg-[#fcfaff]"],
+.theme-v-dashboard [class*="bg-[#f3ecff]"],
+.theme-v-dashboard [class*="bg-[#f4edff]"],
+.theme-v-dashboard [class*="bg-[#efe6ff]"],
+.theme-v-dashboard [class*="bg-[#efe7ff]"],
+.theme-v-dashboard [class*="bg-[#f2eaff]"] {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+  border-color: var(--theme-v-hero-border) !important;
+  box-shadow: 0 18px 40px -26px rgba(22, 10, 46, 0.62) !important;
+  backdrop-filter: blur(8px);
+}
+
+/* Welcome header card: force dark theme-v surface for readable heading text */
+.theme-v-dashboard [class*="bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)]"] {
+  background-image: linear-gradient(135deg, var(--theme-v-bg-start) 0%, var(--theme-v-bg-mid) 48%, var(--theme-v-bg-end) 100%) !important;
+  border-color: var(--theme-v-hero-border) !important;
+}
+
+/* Primary and secondary text */
+.theme-v-dashboard [class*="text-[#111827]"],
+.theme-v-dashboard [class*="text-[#4b5563]"] {
+  color: var(--theme-v-text-primary) !important;
+}
+
+.theme-v-dashboard [class*="text-[#6b7280]"],
+.theme-v-dashboard [class*="text-[#7b699d]"],
+.theme-v-dashboard [class*="text-[#84749f]"],
+.theme-v-dashboard [class*="text-[#9ca3af]"] {
+  color: var(--theme-v-text-secondary) !important;
+}
+
+/* Accent text/icons/chips */
+.theme-v-dashboard [class*="text-[#5D3699]"],
+.theme-v-dashboard [class*="text-[#4a2b7a]"],
+.theme-v-dashboard [class*="text-[#8c63cc]"] {
+  color: var(--theme-v-accent) !important;
+}
+
+.theme-v-dashboard [class*="ring-[#e9ddff]"],
+.theme-v-dashboard [class*="ring-[#e8dcff]"],
+.theme-v-dashboard [class*="ring-[#e7d8ff]"],
+.theme-v-dashboard [class*="ring-[#efe7ff]"] {
+  --tw-ring-color: var(--theme-v-hero-border) !important;
+}
+
+.theme-v-dashboard [class*="border-[#e9ddff]"],
+.theme-v-dashboard [class*="border-[#e8dcff]"],
+.theme-v-dashboard [class*="border-[#e7d8ff]"],
+.theme-v-dashboard [class*="border-[#ece4ff]"],
+.theme-v-dashboard [class*="border-[#e5e7eb]"] {
+  border-color: var(--theme-v-hero-border) !important;
+}
+
+.theme-v-dashboard [class*="divide-[#ece4ff]"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(253, 210, 83, 0.2) !important;
+}
+
+/* Buttons */
+.theme-v-dashboard [class*="bg-[#5D3699]"],
+.theme-v-dashboard [class*="bg-[#4a2b7a]"],
+.theme-v-dashboard [class*="bg-[linear-gradient(135deg,#5D3699_0%,#7b4cbc_100%)]"] {
+  background: var(--theme-v-accent) !important;
+  color: var(--theme-v-accent-text) !important;
+}
+
+.theme-v-dashboard [class*="hover:bg-[#4a2b7a]"]:hover,
+.theme-v-dashboard [class*="hover:bg-[#ede9fe]"]:hover,
+.theme-v-dashboard [class*="group-hover:bg-[#ede9fe]"]:hover {
+  background: var(--theme-v-accent-hover) !important;
+}
+
+.theme-v-dashboard [class*="bg-gradient-to-r from-[#5D3699] to-[#8c63cc]"] {
+  background-image: linear-gradient(90deg, var(--theme-v-accent), var(--theme-v-highlight-mid), var(--theme-v-accent)) !important;
+}
+
+.theme-v-dashboard [class*="bg-[linear-gradient(90deg,#5D3699,#8b5cf6)]"] {
+  background-image: linear-gradient(90deg, var(--theme-v-accent), var(--theme-v-highlight-mid)) !important;
+}
+
+/* Keep success labels readable */
+.theme-v-dashboard [class*="text-[#15803d]"],
+.theme-v-dashboard [class*="text-[#166534]"],
+.theme-v-dashboard [class*="text-[#16a34a]"] {
+  color: #86efac !important;
+}
+
+/* Done status pill: force strong contrast */
+.theme-v-dashboard [class*="bg-green-50"] {
+  background-color: rgba(20, 83, 45, 0.78) !important;
+}
+
+.theme-v-dashboard [class*="ring-green-200"] {
+  --tw-ring-color: rgba(134, 239, 172, 0.45) !important;
+}
+
+.theme-v-dashboard [class*="text-[#16a34a]"] {
+  color: #dcfce7 !important;
+}
+
+/* Keep warning chip readable */
+.theme-v-dashboard [class*="text-[#b45309]"] {
+  color: #fde68a !important;
+}

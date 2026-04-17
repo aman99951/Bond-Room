@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, ClipboardList, RefreshCw } from 'lucide-react';
 import { menteeApi } from '../../../apis/api/menteeApi';
+import './SessionRequestsThemeV.css';
 
 const normalizeList = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -104,7 +105,7 @@ const SessionRequests = () => {
   }, [sessions]);
 
   return (
-    <div className="bg-transparent p-3 sm:p-5 lg:p-8 font-sans text-[#111827]">
+    <div className="theme-v-session-requests bg-transparent p-3 sm:p-5 lg:p-8 font-sans text-[#111827]">
       <div className="mb-6 flex flex-col gap-3 rounded-[28px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div>
           <div className="inline-flex items-center gap-3 rounded-2xl bg-[#5D3699]/10 px-4 py-2 text-sm font-semibold text-[#5D3699]">

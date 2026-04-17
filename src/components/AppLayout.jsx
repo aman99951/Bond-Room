@@ -21,6 +21,7 @@ import BookingSuccess from './menties/pages/BookingSuccess';
 import Feedback from './menties/pages/Feedback';
 import MentorProfile from './menties/pages/MentorProfile';
 import VolunteerEventRegister from './menties/pages/VolunteerEventRegister';
+import MenteeEventRegister from './menties/pages/MenteeEventRegister';
 import RegisteredEvents from './menties/pages/RegisteredEvents';
 import EventCertificate from './menties/pages/EventCertificate';
 import MenteeMeetingRoom from './menties/pages/MeetingRoom';
@@ -472,7 +473,7 @@ const AppLayout = () => {
         <Route path="mentee-zoom-meeting" element={<MenteeMeetingRoom />} />
         <Route path="mentor-profile" element={<MentorProfile />} />
         <Route path="registered-events" element={<RegisteredEvents />} />
-        <Route path="event-register/:eventId" element={<VolunteerEventRegister menteeOnly />} />
+        <Route path="event-register/:eventId" element={<MenteeEventRegister />} />
         <Route path="event-certificate/:registrationId" element={<EventCertificate />} />
         <Route
           path="mentor-impact-dashboard"

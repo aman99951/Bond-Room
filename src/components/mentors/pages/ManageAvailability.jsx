@@ -724,23 +724,23 @@ const ManageAvailability = () => {
     <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8">
       {error ? (
         <div className="fixed right-4 top-4 z-[80] w-[92vw] max-w-sm">
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+          <div className="rounded-xl border border-[color:var(--theme-v-toast-error-border)] bg-[color:var(--theme-v-toast-error-bg)] px-4 py-3 text-sm font-semibold text-[color:var(--theme-v-toast-error-text)] shadow-lg">
             {error}
           </div>
         </div>
       ) : null}
       <div className="mx-auto max-w-[1400px]">
         {/* Header */}
-        <div className="relative mb-6 flex flex-col gap-4 overflow-hidden rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:flex-row sm:items-center sm:justify-between sm:p-6">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
-          <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
+        <div className="relative mb-6 flex flex-col gap-4 overflow-hidden rounded-3xl bg-[linear-gradient(135deg,var(--theme-v-bg-mid)_0%,var(--theme-v-bg-start)_50%,var(--theme-v-bg-end)_100%)] p-4 shadow-[0_20px_45px_-28px_var(--theme-v-shell-shadow)] ring-1 ring-[color:var(--theme-v-border-soft)] sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[color:var(--theme-v-orb-gold)] blur-3xl" />
+          <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[color:var(--theme-v-orb-light)] blur-3xl" />
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f3ff]">
-              <Calendar className="h-6 w-6 text-[#5D3699]" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+              <Calendar className="h-6 w-6 text-[color:var(--theme-v-accent)]" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">Manage Availability</h1>
-              <div className="mt-0.5 inline-flex items-center gap-2 text-sm text-[#6b7280]">
+              <h1 className="text-xl font-bold tracking-tight text-[color:var(--theme-v-text-primary)] sm:text-2xl">Manage Availability</h1>
+              <div className="mt-0.5 inline-flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
                 <Clock className="h-4 w-4" />
                 <span>{timezoneLabel}</span>
               </div>
@@ -749,21 +749,21 @@ const ManageAvailability = () => {
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {/* Week Navigation */}
-            <div className="inline-flex items-center gap-2 self-start rounded-lg bg-[#f8fafc] px-2 py-1.5 ring-1 ring-[#e5e7eb] sm:self-auto">
+            <div className="inline-flex items-center gap-2 self-start rounded-lg bg-[color:var(--theme-v-surface-overlay)] px-2 py-1.5 ring-1 ring-[color:var(--theme-v-border-soft)] sm:self-auto">
               <button
                 type="button"
                 onClick={() => handleWeekChange(-1)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                 aria-label="Previous week"
                 disabled={loading}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="text-xs font-semibold text-[#374151]">{weekLabel}</span>
+              <span className="text-xs font-semibold text-[color:var(--theme-v-text-primary)]">{weekLabel}</span>
               <button
                 type="button"
                 onClick={() => handleWeekChange(1)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                 aria-label="Next week"
                 disabled={loading}
               >
@@ -773,7 +773,7 @@ const ManageAvailability = () => {
 
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-xl bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 ring-1 ring-red-100 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-xl bg-[color:var(--theme-v-toast-error-bg)] px-4 py-2 text-xs font-semibold text-[color:var(--theme-v-toast-error-text)] ring-1 ring-[color:var(--theme-v-toast-error-border)] transition-colors hover:bg-[color:var(--theme-v-toast-error-bg)] disabled:cursor-not-allowed disabled:opacity-60"
               onClick={handleClearWeek}
               disabled={loading}
             >
@@ -781,7 +781,7 @@ const ManageAvailability = () => {
             </button>
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-xl bg-[#f5f3ff] px-4 py-2 text-xs font-semibold text-[#5D3699] ring-1 ring-[#5D3699]/10 transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-xl bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-2 text-xs font-semibold text-[color:var(--theme-v-accent)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-60"
               onClick={handleCopyWeek}
               disabled={loading}
             >
@@ -796,12 +796,12 @@ const ManageAvailability = () => {
             <div
               className={`flex items-center gap-2 px-4 py-3 ${
                 error
-                  ? 'bg-red-50 text-red-700 ring-red-100'
-                  : 'bg-[#f5f3ff] text-[#5D3699] ring-[#5D3699]/10'
+                  ? 'bg-[color:var(--theme-v-toast-error-bg)] text-[color:var(--theme-v-toast-error-text)] ring-[color:var(--theme-v-toast-error-border)]'
+                  : 'bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-accent)] ring-[color:var(--theme-v-border-soft)]'
               }`}
             >
               {!error && (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#5D3699]/20 border-t-[#5D3699]" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[color:var(--theme-v-border-soft)] border-t-[color:var(--theme-v-accent)]" />
               )}
               <span className="text-xs font-medium">{error || 'Loading availability...'}</span>
             </div>
@@ -825,18 +825,18 @@ const ManageAvailability = () => {
                 }}
                 onDrop={(e) => handleDropOnDay(e, day.label)}
               >
-                <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb]">
-                  <div className={`px-3 py-3 ${isToday ? 'bg-[#f5f0ff]' : 'bg-[#f8fafc]'} border-b border-[#e5e7eb]`}>
+                <div className="overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
+                  <div className={`px-3 py-3 ${isToday ? 'bg-[color:var(--theme-v-surface-overlay)]' : 'bg-[color:var(--theme-v-surface-overlay)]'} border-b border-[color:var(--theme-v-border-soft)]`}>
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <div className="text-xs font-semibold uppercase tracking-wider text-[#6b7280]">{day.label}</div>
-                        <div className="mt-1 text-lg font-bold text-[#5D3699]">{day.dayNumber || '--'}</div>
+                        <div className="text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">{day.label}</div>
+                        <div className="mt-1 text-lg font-bold text-[color:var(--theme-v-accent)]">{day.dayNumber || '--'}</div>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
                           onClick={() => handleOpenCopy(day.label)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                           aria-label="Copy day"
                           disabled={loading}
                         >
@@ -845,7 +845,7 @@ const ManageAvailability = () => {
                         <button
                           type="button"
                           onClick={() => handleClearDay(day.label)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                           aria-label="Clear day"
                           disabled={loading}
                         >
@@ -859,9 +859,9 @@ const ManageAvailability = () => {
                     {copyOpen?.dayLabel === day.label && (
                       <div
                         ref={popoverRef}
-                        className="absolute left-3 right-3 top-3 z-50 rounded-xl bg-white p-4 shadow-xl ring-1 ring-[#e5e7eb]"
+                        className="absolute left-3 right-3 top-3 z-50 rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-xl ring-1 ring-[color:var(--theme-v-border-soft)]"
                       >
-                        <p className="mb-3 text-xs font-semibold text-[#111827]">
+                        <p className="mb-3 text-xs font-semibold text-[color:var(--theme-v-text-primary)]">
                           {copyOpen?.slot ? 'Copy slot to...' : 'Copy day to...'}
                         </p>
                         <div className="max-h-48 space-y-2 overflow-y-auto custom-scrollbar">
@@ -870,21 +870,21 @@ const ManageAvailability = () => {
                             .map((label) => (
                               <label
                                 key={label}
-                                className="flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors hover:bg-[#f5f3ff]"
+                                className="flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)]"
                               >
                                 <input
                                   type="checkbox"
-                                  className="h-3.5 w-3.5 cursor-pointer rounded border-[#d1d5db] text-[#5D3699] focus:ring-2 focus:ring-[#5D3699]"
+                                  className="h-3.5 w-3.5 cursor-pointer rounded border-[color:var(--theme-v-border-soft)] text-[color:var(--theme-v-accent)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                                   checked={copyTargets.includes(label)}
                                   onChange={() => toggleCopyTarget(label)}
                                 />
-                                <span className="text-xs font-medium text-[#374151]">{label}</span>
+                                <span className="text-xs font-medium text-[color:var(--theme-v-text-primary)]">{label}</span>
                               </label>
                             ))}
                         </div>
                         <button
                           type="button"
-                          className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-[#5D3699] py-2 text-xs font-semibold text-white transition-colors hover:bg-[#4a2b7a] disabled:cursor-not-allowed disabled:opacity-60"
+                          className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-[color:var(--theme-v-accent)] py-2 text-xs font-semibold text-[color:var(--theme-v-accent-text)] transition-colors hover:bg-[color:var(--theme-v-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                           disabled={!copyTargets.length || loading}
                           onClick={handleApplyCopy}
                         >
@@ -931,18 +931,18 @@ const ManageAvailability = () => {
                         }}
                         className={`group flex items-center justify-between gap-2 rounded-xl border px-3 py-2 ${
                           slot.tone === 'scheduled'
-                            ? 'border-[#e5e7eb] bg-[#f3f4f6] text-[#9ca3af]'
-                            : 'cursor-move border-[#cfb9ef] bg-gradient-to-b from-white to-[#f7f1ff] text-[#4a2b7a] shadow-[0_2px_6px_rgba(93,54,153,0.1)]'
+                            ? 'border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay-track)] text-[color:var(--theme-v-text-secondary)]'
+                            : 'cursor-move border-[color:var(--theme-v-border-medium)] bg-gradient-to-b from-[color:var(--theme-v-surface-overlay)] to-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-primary)] shadow-[0_2px_6px_var(--theme-v-shell-shadow)]'
                         }`}
                       >
                         <div className="min-w-0">
                           <div className="text-xs font-bold">{startParts.time}</div>
-                          <div className="text-[10px] font-medium text-[#6b7280]">to</div>
+                          <div className="text-[10px] font-medium text-[color:var(--theme-v-text-secondary)]">to</div>
                           <div className="text-xs font-bold">{endParts.time}</div>
                         </div>
                         <div className="flex items-center gap-2">
                           {slotPeriodLabel && (
-                            <span className="inline-flex min-w-[44px] items-center justify-center rounded-full bg-[#ede9fe] px-2 py-1 text-[10px] font-bold tracking-wide text-[#5D3699]">
+                            <span className="inline-flex min-w-[44px] items-center justify-center rounded-full bg-[color:var(--theme-v-selected-bg)] px-2 py-1 text-[10px] font-bold tracking-wide text-[color:var(--theme-v-accent)]">
                               {slotPeriodLabel}
                             </span>
                           )}
@@ -952,7 +952,7 @@ const ManageAvailability = () => {
                               event.stopPropagation();
                               handleOpenCopy(day.label, slot);
                             }}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-40"
                             aria-label="Copy slot"
                             disabled={loading}
                           >
@@ -961,7 +961,7 @@ const ManageAvailability = () => {
                           <button
                             type="button"
                             onClick={() => handleDeleteSlot(slot.id)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-40"
                             aria-label="Delete slot"
                             disabled={loading || slot.tone === 'scheduled'}
                           >
@@ -974,14 +974,14 @@ const ManageAvailability = () => {
                     ))}
 
                     {customEditorDay === day.label && (
-                      <div className="mt-2 space-y-2 rounded-xl border border-[#e6def8] bg-[#faf7ff] p-2">
+                      <div className="mt-2 space-y-2 rounded-xl border border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] p-2">
                         <>
                             {(customDraft?.[day.label]?.intervals || []).map((interval, index) => (
-                              <div key={`m-inline-${day.label}-${index}`} className="space-y-1.5 rounded-lg bg-white/80 p-1.5 ring-1 ring-[#e9ddff]">
+                              <div key={`m-inline-${day.label}-${index}`} className="space-y-1.5 rounded-lg bg-[color:var(--theme-v-surface-overlay)]/80 p-1.5 ring-1 ring-[color:var(--theme-v-border-soft)]">
                                 <select
                                   value={interval.start}
                                   onChange={(event) => updateInterval(day.label, index, 'start', event.target.value)}
-                                  className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-xs font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
+                                  className="h-8 w-full rounded-lg border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay-strong)] px-2 text-xs font-semibold text-[color:var(--theme-v-accent-text)] focus:border-[color:var(--theme-v-border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]/30"
                                   disabled={loading}
                                 >
                                   {timeOptions.map((option) => (
@@ -992,7 +992,7 @@ const ManageAvailability = () => {
                                 </select>
                                 <select
                                   value={getFixedEndLabel(interval.start)}
-                                  className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-xs font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
+                                  className="h-8 w-full rounded-lg border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay-strong)] px-2 text-xs font-semibold text-[color:var(--theme-v-accent-text)] focus:border-[color:var(--theme-v-border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]/30"
                                   disabled
                                 >
                                   <option value={getFixedEndLabel(interval.start)}>
@@ -1000,13 +1000,13 @@ const ManageAvailability = () => {
                                   </option>
                                 </select>
                                 <div className="flex items-center justify-between">
-                                  <span className="rounded-md bg-[#efe4ff] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#5D3699]">
+                                  <span className="rounded-md bg-[color:var(--theme-v-selected-bg)] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[color:var(--theme-v-accent)]">
                                     {toAmPmLabel(interval.start)} - {toAmPmLabel(getFixedEndLabel(interval.start))}
                                   </span>
                                   <button
                                     type="button"
                                     onClick={() => removeInterval(day.label, index)}
-                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[#eadffb] bg-white text-[#7a5bad]"
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] text-[color:var(--theme-v-accent)]"
                                     disabled={loading}
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
@@ -1018,7 +1018,7 @@ const ManageAvailability = () => {
                               <button
                                 type="button"
                                 onClick={() => addInterval(day.label)}
-                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-[#cfb9ef] bg-white px-2 text-[11px] font-semibold text-[#5D3699]"
+                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] px-2 text-[11px] font-semibold text-[color:var(--theme-v-accent)]"
                                 disabled={loading}
                               >
                                 <Plus className="h-3.5 w-3.5" />
@@ -1027,7 +1027,7 @@ const ManageAvailability = () => {
                               <button
                                 type="button"
                                 onClick={() => applyDayCustomSchedule(day.label)}
-                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg bg-[#5D3699] px-2 text-[11px] font-semibold text-white"
+                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg bg-[color:var(--theme-v-accent)] px-2 text-[11px] font-semibold text-[color:var(--theme-v-accent-text)]"
                                 disabled={loading}
                               >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
@@ -1041,7 +1041,7 @@ const ManageAvailability = () => {
                     <div className="mt-auto grid grid-cols-1 gap-2">
                       <button
                         type="button"
-                        className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-[#d7c7f5] bg-[#f7f1ff] text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#efe5ff] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] text-xs font-semibold text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                         onClick={() => setCustomEditorDay((prev) => (prev === day.label ? null : day.label))}
                         disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
                       >
@@ -1050,7 +1050,7 @@ const ManageAvailability = () => {
                       </button>
                       <button
                         type="button"
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-dashed border-[#cfb9ef] bg-white text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-dashed border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] text-xs font-semibold text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                         onClick={() => addSlot(day.label)}
                         disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
                       >
@@ -1067,33 +1067,33 @@ const ManageAvailability = () => {
 
         {/* Desktop Week Grid */}
         <div className="hidden overflow-x-auto lg:block">
-          <div className="min-w-[860px] rounded-xl bg-[#f8fafc] p-3 ring-1 ring-[#e5e7eb]">
-            <div className="grid grid-cols-7 gap-2 border-b border-[#e5e7eb] pb-3">
+          <div className="min-w-[860px] rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-3 ring-1 ring-[color:var(--theme-v-border-soft)]">
+            <div className="grid grid-cols-7 gap-2 border-b border-[color:var(--theme-v-border-soft)] pb-3">
               {days.map((day) => {
                 const isToday = day.dateKey === todayDateKey;
                 return (
                   <div key={day.label} className="py-2 text-center">
                     <div
                       className={`text-xs font-semibold uppercase tracking-wider ${
-                        isToday ? 'text-[#5D3699]' : 'text-[#6b7280]'
+                        isToday ? 'text-[color:var(--theme-v-accent)]' : 'text-[color:var(--theme-v-text-secondary)]'
                       }`}
                     >
                       {day.label}
                     </div>
                     {isToday ? (
                       <div className="mt-1.5 flex justify-center">
-                        <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-[12px] bg-[#5D3699] px-2 text-[22px] font-bold leading-none text-white shadow-[0_8px_16px_rgba(93,54,153,0.28)]">
+                        <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-[12px] bg-[color:var(--theme-v-accent)] px-2 text-[22px] font-bold leading-none text-[color:var(--theme-v-accent-text)] shadow-[0_8px_16px_var(--theme-v-shell-shadow)]">
                           {day.dayNumber || '--'}
                         </span>
                       </div>
                     ) : (
-                      <div className="mt-1 text-[22px] font-bold leading-none text-[#5D3699]">{day.dayNumber || '--'}</div>
+                      <div className="mt-1 text-[22px] font-bold leading-none text-[color:var(--theme-v-accent)]">{day.dayNumber || '--'}</div>
                     )}
                     <div className="mt-2 flex items-center justify-center gap-1">
                       <button
                         type="button"
                         onClick={() => handleOpenCopy(day.label)}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label="Copy day"
                         disabled={loading}
                       >
@@ -1102,7 +1102,7 @@ const ManageAvailability = () => {
                       <button
                         type="button"
                         onClick={() => handleClearDay(day.label)}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label="Clear day"
                         disabled={loading}
                       >
@@ -1120,7 +1120,7 @@ const ManageAvailability = () => {
                 return (
                   <div
                     key={day.label}
-                    className={`relative space-y-2 rounded-xl p-2 ${isToday ? 'bg-[#f5f0ff] ring-1 ring-[#e0d2f7]' : ''}`}
+                    className={`relative space-y-2 rounded-xl p-2 ${isToday ? 'bg-[color:var(--theme-v-surface-overlay)] ring-1 ring-[color:var(--theme-v-border-medium)]' : ''}`}
                     onDragOver={(e) => {
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
@@ -1133,9 +1133,9 @@ const ManageAvailability = () => {
                     {copyOpen?.dayLabel === day.label && (
                       <div
                         ref={popoverRef}
-                        className="absolute left-2 right-2 top-2 z-50 rounded-xl bg-white p-4 shadow-xl ring-1 ring-[#e5e7eb]"
+                        className="absolute left-2 right-2 top-2 z-50 rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-4 shadow-xl ring-1 ring-[color:var(--theme-v-border-soft)]"
                       >
-                        <p className="mb-3 text-xs font-semibold text-[#111827]">
+                        <p className="mb-3 text-xs font-semibold text-[color:var(--theme-v-text-primary)]">
                           {copyOpen?.slot ? 'Copy slot to...' : 'Copy day to...'}
                         </p>
                         <div className="max-h-48 space-y-2 overflow-y-auto custom-scrollbar">
@@ -1144,21 +1144,21 @@ const ManageAvailability = () => {
                             .map((label) => (
                               <label
                                 key={label}
-                                className="flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors hover:bg-[#f5f3ff]"
+                                className="flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)]"
                               >
                                 <input
                                   type="checkbox"
-                                  className="h-3.5 w-3.5 cursor-pointer rounded border-[#d1d5db] text-[#5D3699] focus:ring-2 focus:ring-[#5D3699]"
+                                  className="h-3.5 w-3.5 cursor-pointer rounded border-[color:var(--theme-v-border-soft)] text-[color:var(--theme-v-accent)] focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]"
                                   checked={copyTargets.includes(label)}
                                   onChange={() => toggleCopyTarget(label)}
                                 />
-                                <span className="text-xs font-medium text-[#374151]">{label}</span>
+                                <span className="text-xs font-medium text-[color:var(--theme-v-text-primary)]">{label}</span>
                               </label>
                             ))}
                         </div>
                         <button
                           type="button"
-                          className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-[#5D3699] py-2 text-xs font-semibold text-white transition-colors hover:bg-[#4a2b7a] disabled:cursor-not-allowed disabled:opacity-60"
+                          className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-[color:var(--theme-v-accent)] py-2 text-xs font-semibold text-[color:var(--theme-v-accent-text)] transition-colors hover:bg-[color:var(--theme-v-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                           disabled={!copyTargets.length || loading}
                           onClick={handleApplyCopy}
                         >
@@ -1205,19 +1205,19 @@ const ManageAvailability = () => {
                         }}
                         className={`group relative flex items-center justify-between gap-2 rounded-xl border px-2 py-2 transition-all ${
                           slot.tone === 'scheduled'
-                            ? 'border-[#e5e7eb] bg-[#f3f4f6] text-[#9ca3af]'
-                            : 'cursor-move border-[#cfb9ef] bg-gradient-to-b from-white to-[#f7f1ff] text-[#4a2b7a] shadow-[0_2px_6px_rgba(93,54,153,0.1)] hover:-translate-y-[1px] hover:border-[#5D3699]'
+                            ? 'border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay-track)] text-[color:var(--theme-v-text-secondary)]'
+                            : 'cursor-move border-[color:var(--theme-v-border-medium)] bg-gradient-to-b from-[color:var(--theme-v-surface-overlay)] to-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-primary)] shadow-[0_2px_6px_var(--theme-v-shell-shadow)] hover:-translate-y-[1px] hover:border-[color:var(--theme-v-border-hover)]'
                         }`}
                       >
                         <div className="flex min-w-0 flex-col items-center justify-center leading-none">
                           <span className="text-[12px] font-bold tracking-wide">{startParts.time}</span>
-                          <span className="my-1 h-px w-10 bg-[#d5c3f1]" />
+                          <span className="my-1 h-px w-10 bg-[color:var(--theme-v-border-medium)]" />
                           <span className="text-[12px] font-bold tracking-wide">{endParts.time}</span>
                         </div>
 
                         <div className="relative flex h-8 w-[74px] items-center justify-end">
                           {slotPeriodLabel && (
-                            <span className="inline-flex min-w-[44px] items-center justify-center rounded-full bg-[#ede9fe] px-2 py-1 text-[10px] font-bold tracking-wide text-[#5D3699] transition-opacity duration-150 group-hover:opacity-0">
+                            <span className="inline-flex min-w-[44px] items-center justify-center rounded-full bg-[color:var(--theme-v-selected-bg)] px-2 py-1 text-[10px] font-bold tracking-wide text-[color:var(--theme-v-accent)] transition-opacity duration-150 group-hover:opacity-0">
                               {slotPeriodLabel}
                             </span>
                           )}
@@ -1228,7 +1228,7 @@ const ManageAvailability = () => {
                                 event.stopPropagation();
                                 handleOpenCopy(day.label, slot);
                               }}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-40"
                               aria-label="Copy slot"
                               disabled={loading}
                             >
@@ -1237,7 +1237,7 @@ const ManageAvailability = () => {
                             <button
                               type="button"
                               onClick={() => handleDeleteSlot(slot.id)}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[#5D3699] transition-colors hover:bg-[#ede9fe] disabled:cursor-not-allowed disabled:opacity-40"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-40"
                               aria-label="Delete slot"
                               disabled={loading || slot.tone === 'scheduled'}
                             >
@@ -1258,14 +1258,14 @@ const ManageAvailability = () => {
                     )}
 
                     {customEditorDay === day.label && (
-                      <div className="mt-2 space-y-2 rounded-xl border border-[#e6def8] bg-[#faf7ff] p-2">
+                      <div className="mt-2 space-y-2 rounded-xl border border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] p-2">
                         <>
                             {(customDraft?.[day.label]?.intervals || []).map((interval, index) => (
-                              <div key={`d-inline-${day.label}-${index}`} className="space-y-1.5 rounded-lg bg-white/90 p-1.5 ring-1 ring-[#e9ddff]">
+                              <div key={`d-inline-${day.label}-${index}`} className="space-y-1.5 rounded-lg bg-[color:var(--theme-v-surface-overlay)]/90 p-1.5 ring-1 ring-[color:var(--theme-v-border-soft)]">
                                 <select
                                   value={interval.start}
                                   onChange={(event) => updateInterval(day.label, index, 'start', event.target.value)}
-                                  className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-[11px] font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
+                                  className="h-8 w-full rounded-lg border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay-strong)] px-2 text-[11px] font-semibold text-[color:var(--theme-v-accent-text)] focus:border-[color:var(--theme-v-border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]/30"
                                   disabled={loading}
                                 >
                                   {timeOptions.map((option) => (
@@ -1276,7 +1276,7 @@ const ManageAvailability = () => {
                                 </select>
                                 <select
                                   value={getFixedEndLabel(interval.start)}
-                                  className="h-8 w-full rounded-lg border border-[#cfb9ef] bg-[#f8f2ff] px-2 text-[11px] font-semibold text-[#4a2b7a] focus:border-[#5D3699] focus:outline-none focus:ring-2 focus:ring-[#5D3699]/30"
+                                  className="h-8 w-full rounded-lg border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay-strong)] px-2 text-[11px] font-semibold text-[color:var(--theme-v-accent-text)] focus:border-[color:var(--theme-v-border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)]/30"
                                   disabled
                                 >
                                   <option value={getFixedEndLabel(interval.start)}>
@@ -1284,13 +1284,13 @@ const ManageAvailability = () => {
                                   </option>
                                 </select>
                                 <div className="flex items-center justify-between">
-                                  <span className="rounded-md bg-[#efe4ff] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#5D3699]">
+                                  <span className="rounded-md bg-[color:var(--theme-v-selected-bg)] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[color:var(--theme-v-accent)]">
                                     {toAmPmLabel(interval.start)} - {toAmPmLabel(getFixedEndLabel(interval.start))}
                                   </span>
                                   <button
                                     type="button"
                                     onClick={() => removeInterval(day.label, index)}
-                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[#eadffb] bg-white text-[#7a5bad]"
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[color:var(--theme-v-border-soft)] bg-[color:var(--theme-v-surface-overlay)] text-[color:var(--theme-v-accent)]"
                                     disabled={loading}
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
@@ -1302,7 +1302,7 @@ const ManageAvailability = () => {
                               <button
                                 type="button"
                                 onClick={() => addInterval(day.label)}
-                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-[#cfb9ef] bg-white px-2 text-[11px] font-semibold text-[#5D3699]"
+                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] px-2 text-[11px] font-semibold text-[color:var(--theme-v-accent)]"
                                 disabled={loading}
                               >
                                 <Plus className="h-3.5 w-3.5" />
@@ -1311,7 +1311,7 @@ const ManageAvailability = () => {
                               <button
                                 type="button"
                                 onClick={() => applyDayCustomSchedule(day.label)}
-                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg bg-[#5D3699] px-2 text-[11px] font-semibold text-white"
+                                className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-lg bg-[color:var(--theme-v-accent)] px-2 text-[11px] font-semibold text-[color:var(--theme-v-accent-text)]"
                                 disabled={loading}
                               >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
@@ -1325,7 +1325,7 @@ const ManageAvailability = () => {
                     <div className="mt-2 grid grid-cols-1 gap-2">
                       <button
                         type="button"
-                        className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-[#d7c7f5] bg-[#f7f1ff] text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#efe5ff] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] text-xs font-semibold text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                         onClick={() => setCustomEditorDay((prev) => (prev === day.label ? null : day.label))}
                         disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
                       >
@@ -1334,7 +1334,7 @@ const ManageAvailability = () => {
                       </button>
                       <button
                         type="button"
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-dashed border-[#cfb9ef] bg-white text-xs font-semibold text-[#5D3699] transition-colors hover:bg-[#f5f3ff] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-dashed border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] text-xs font-semibold text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                         onClick={() => addSlot(day.label)}
                         disabled={loading || (day.dateKey && day.dateKey < todayDateKey)}
                       >
@@ -1353,26 +1353,26 @@ const ManageAvailability = () => {
       {/* Move Confirmation Modal */}
       {pendingMove && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className="bg-[#5D3699] px-6 py-4">
-              <h3 className="text-lg font-bold text-white">Move Availability</h3>
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay)] shadow-2xl">
+            <div className="bg-[color:var(--theme-v-accent)] px-6 py-4">
+              <h3 className="text-lg font-bold text-[color:var(--theme-v-accent-text)]">Move Availability</h3>
             </div>
 
             <div className="p-6">
-              <p className="text-sm leading-relaxed text-[#374151]">
+              <p className="text-sm leading-relaxed text-[color:var(--theme-v-text-primary)]">
                 Move slot{' '}
-                <span className="font-bold text-[#5D3699]">
+                <span className="font-bold text-[color:var(--theme-v-accent)]">
                   {getDisplayTimeParts(pendingMove.slot.start_time).label} - {getDisplayTimeParts(pendingMove.slot.end_time).label}
                 </span>{' '}
-                from <span className="font-bold text-[#111827]">{pendingMove.fromLabel}</span> to{' '}
-                <span className="font-bold text-[#111827]">{pendingMove.toLabel}</span>?
+                from <span className="font-bold text-[color:var(--theme-v-text-primary)]">{pendingMove.fromLabel}</span> to{' '}
+                <span className="font-bold text-[color:var(--theme-v-text-primary)]">{pendingMove.toLabel}</span>?
               </p>
             </div>
 
             <div className="flex items-center justify-end gap-3 px-6 pb-6">
               <button
                 type="button"
-                className="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-[#374151] ring-1 ring-[#e5e7eb] transition-colors hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl bg-[color:var(--theme-v-surface-overlay)] px-5 py-2.5 text-sm font-semibold text-[color:var(--theme-v-text-primary)] ring-1 ring-[color:var(--theme-v-border-soft)] transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={() => setPendingMove(null)}
                 disabled={loading}
               >
@@ -1380,7 +1380,7 @@ const ManageAvailability = () => {
               </button>
               <button
                 type="button"
-                className="rounded-xl bg-[#5D3699] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#4a2b7a] disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl bg-[color:var(--theme-v-accent)] px-5 py-2.5 text-sm font-semibold text-[color:var(--theme-v-accent-text)] shadow-sm transition-colors hover:bg-[color:var(--theme-v-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={handleConfirmMove}
                 disabled={loading}
               >
@@ -1396,3 +1396,4 @@ const ManageAvailability = () => {
 };
 
 export default ManageAvailability;
+

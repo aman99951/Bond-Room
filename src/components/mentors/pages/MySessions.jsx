@@ -567,36 +567,36 @@ const MySessions = () => {
   };
 
 return (
-  <div className="min-h-screen bg-transparent p-4 sm:p-6 lg:p-8 overflow-hidden">
+  <div className="min-h-screen overflow-hidden bg-transparent p-4 text-[color:var(--theme-v-text-primary)] sm:p-6 lg:p-8">
     {/* Header Section */}
-    <div className="relative z-10 mb-8 overflow-visible rounded-3xl bg-[linear-gradient(120deg,#ffffff_0%,#f8f4ff_55%,#f3ecff_100%)] p-4 shadow-[0_20px_45px_-28px_rgba(93,54,153,0.45)] ring-1 ring-[#e6def8] sm:p-6">
-      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#d7c2ff]/35 blur-3xl" />
-      <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[#ede5ff]/70 blur-3xl" />
+    <div className="relative z-10 mb-8 overflow-visible rounded-3xl border border-[color:var(--theme-v-border-strong)] bg-[linear-gradient(135deg,var(--theme-v-bg-mid)_0%,var(--theme-v-bg-start)_50%,var(--theme-v-bg-end)_100%)] p-4 shadow-[0_20px_45px_-28px_var(--theme-v-shell-shadow)] ring-1 ring-[color:var(--theme-v-hero-ring)] sm:p-6">
+      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[color:var(--theme-v-orb-gold)] blur-3xl" />
+      <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-[color:var(--theme-v-orb-light)] blur-3xl" />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
         {/* Title with decorative element */}
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f3ff]">
-            <Calendar className="h-6 w-6 text-[#5D3699]" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--theme-v-surface-overlay-strong)]">
+            <Calendar className="h-6 w-6 text-[color:var(--theme-v-accent)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#111827] sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-[color:var(--theme-v-text-primary)] sm:text-3xl">
               My Sessions
             </h1>
-            <p className="mt-1 text-sm text-[#6b7280]">
+            <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">
               Manage and track all your mentoring sessions
             </p>
             <button
               type="button"
               onClick={() => navigate('/mentor-session-requests')}
-              className={`mt-3 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-white transition-colors ${
+              className={`mt-3 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-[color:var(--theme-v-accent-text)] transition-colors ${
                 pendingRequestCount > 0
-                  ? 'animate-pulse bg-[#6d28d9] shadow-[0_0_0_4px_rgba(109,40,217,0.18)] hover:bg-[#5b21b6]'
-                  : 'bg-[#5D3699] hover:bg-[#4a2b7a]'
+                  ? 'animate-pulse bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] shadow-[0_0_0_4px_var(--theme-v-focus-ring)] hover:bg-[color:var(--theme-v-accent-hover)]'
+                  : 'bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] hover:bg-[color:var(--theme-v-accent-hover)]'
               }`}
             >
               Session Requests
               {pendingRequestCount > 0 ? (
-                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold text-[#5D3699]">
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay)] px-1.5 py-0.5 text-[10px] font-bold text-[color:var(--theme-v-accent)]">
                   {pendingRequestCount}
                 </span>
               ) : null}
@@ -609,10 +609,10 @@ return (
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:w-auto xl:justify-end">
           {/* Search Input */}
           <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--theme-v-text-secondary)]" />
             <input
               type="text"
-              className="h-11 w-full rounded-xl border-0 bg-white pl-11 pr-4 text-sm text-[#111827] shadow-sm ring-1 ring-[#e5e7eb] placeholder:text-[#9ca3af] transition-all duration-200 focus:ring-2 focus:ring-[#5D3699] sm:w-64"
+              className="h-11 w-full rounded-xl border-0 bg-[color:var(--theme-v-surface-overlay)] pl-11 pr-4 text-sm text-[color:var(--theme-v-text-primary)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] placeholder:text-[color:var(--theme-v-text-placeholder)] transition-all duration-200 focus:ring-2 focus:ring-[color:var(--theme-v-border-focus)] sm:w-64"
               placeholder="Search mentee..."
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
@@ -620,9 +620,9 @@ return (
             {searchValue && (
               <button
                 onClick={() => setSearchValue('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors hover:bg-[#f5f3ff]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)]"
               >
-                <X className="h-4 w-4 text-[#9ca3af]" />
+                <X className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
               </button>
             )}
           </div>
@@ -631,25 +631,25 @@ return (
           <div className="relative z-30" tabIndex={0} onBlur={() => setFilterOpen(false)}>
             <button
               type="button"
-              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] sm:w-40"
+              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-[color:var(--theme-v-surface-overlay)] px-4 text-sm text-[color:var(--theme-v-text-secondary)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] transition-all hover:ring-[color:var(--theme-v-border-hover)] sm:w-40"
               onClick={() => setFilterOpen((o) => !o)}
             >
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-[#9ca3af]" />
+                <Filter className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                 <span>{filterValue}</span>
               </div>
-              <ChevronDown className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-4 w-4 text-[color:var(--theme-v-text-secondary)] transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
             </button>
             {filterOpen && (
-              <ul className="absolute z-50 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
+              <ul className="absolute z-50 mt-2 w-full rounded-xl bg-[linear-gradient(180deg,var(--theme-v-shell-bg-start)_0%,var(--theme-v-shell-bg-end)_100%)] py-2 shadow-xl ring-1 ring-[color:var(--theme-v-border-medium)]">
                 {filterOptions.map((opt) => (
                   <li key={opt}>
                     <button
                       type="button"
                       className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
                         filterValue === opt
-                          ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
-                          : 'text-[#6b7280] hover:bg-[#f5f3ff]'
+                          ? 'bg-[color:var(--theme-v-selected-bg)] text-[color:var(--theme-v-accent)] font-medium'
+                          : 'text-[color:var(--theme-v-text-secondary)] hover:bg-[color:var(--theme-v-surface-overlay-strong)]'
                       }`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
@@ -669,22 +669,22 @@ return (
           <div className="relative z-30" tabIndex={0} onBlur={() => setWeekFilterOpen(false)}>
             <button
               type="button"
-              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-white px-4 text-sm text-[#6b7280] shadow-sm ring-1 ring-[#e5e7eb] transition-all hover:ring-[#c4b5fd] sm:w-36"
+              className="flex h-11 w-full items-center justify-between gap-2 rounded-xl bg-[color:var(--theme-v-surface-overlay)] px-4 text-sm text-[color:var(--theme-v-text-secondary)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] transition-all hover:ring-[color:var(--theme-v-border-hover)] sm:w-36"
               onClick={() => setWeekFilterOpen((o) => !o)}
             >
               <span>{weekFilterValue}</span>
-              <ChevronDown className={`h-4 w-4 text-[#9ca3af] transition-transform duration-200 ${weekFilterOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-4 w-4 text-[color:var(--theme-v-text-secondary)] transition-transform duration-200 ${weekFilterOpen ? 'rotate-180' : ''}`} />
             </button>
             {weekFilterOpen && (
-              <ul className="absolute z-50 mt-2 w-full rounded-xl bg-white py-2 shadow-xl ring-1 ring-[#e5e7eb]">
+              <ul className="absolute z-50 mt-2 w-full rounded-xl bg-[linear-gradient(180deg,var(--theme-v-shell-bg-start)_0%,var(--theme-v-shell-bg-end)_100%)] py-2 shadow-xl ring-1 ring-[color:var(--theme-v-border-medium)]">
                 {weekFilterOptions.map((opt) => (
                   <li key={opt}>
                     <button
                       type="button"
                       className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
                         weekFilterValue === opt
-                          ? 'bg-[#f5f3ff] text-[#5D3699] font-medium'
-                          : 'text-[#6b7280] hover:bg-[#f5f3ff]'
+                          ? 'bg-[color:var(--theme-v-selected-bg)] text-[color:var(--theme-v-accent)] font-medium'
+                          : 'text-[color:var(--theme-v-text-secondary)] hover:bg-[color:var(--theme-v-surface-overlay-strong)]'
                       }`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
@@ -701,12 +701,12 @@ return (
           </div>
 
           {/* View Toggle */}
-          <div className="flex h-11 w-full min-w-[190px] items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-[#e5e7eb] sm:w-auto">
+          <div className="flex h-11 w-full min-w-[190px] items-center rounded-xl bg-[color:var(--theme-v-surface-overlay)] p-1 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)] sm:w-auto">
             <button
               className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 sm:flex-none ${
                 view === 'calendar'
-                  ? 'bg-[#5D3699] text-white shadow-md'
-                  : 'text-[#6b7280] hover:text-[#111827]'
+                  ? 'bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] shadow-md'
+                  : 'text-[color:var(--theme-v-text-secondary)] hover:text-[color:var(--theme-v-text-primary)]'
               }`}
               onClick={() => setView('calendar')}
             >
@@ -716,8 +716,8 @@ return (
             <button
               className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 sm:flex-none ${
                 view === 'table'
-                  ? 'bg-[#5D3699] text-white shadow-md'
-                  : 'text-[#6b7280] hover:text-[#111827]'
+                  ? 'bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] shadow-md'
+                  : 'text-[color:var(--theme-v-text-secondary)] hover:text-[color:var(--theme-v-text-primary)]'
               }`}
               onClick={() => setView('table')}
             >
@@ -730,9 +730,9 @@ return (
     </div>
 
     {meetingInvite && canJoinSession(meetingInvite) ? (
-      <div className="mb-4 rounded-xl border border-[#d8b4fe] bg-[#faf5ff] px-4 py-3 shadow-sm ring-1 ring-[#f3e8ff]">
+      <div className="mb-4 rounded-xl border border-[color:var(--theme-v-border-medium)] bg-[color:var(--theme-v-surface-overlay)] px-4 py-3 shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm text-[#4c1d95]">
+          <div className="text-sm text-[color:var(--theme-v-text-primary)]">
             {`${getMenteeName(meetingInvite)} started this session${
               formatStartedAtLabel(meetingInvite?.mentee_joined_at)
                 ? ` on ${formatStartedAtLabel(meetingInvite?.mentee_joined_at)}`
@@ -743,7 +743,7 @@ return (
             type="button"
             onClick={() => handleJoin(meetingInvite)}
             disabled={joiningId === meetingInvite.id}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#4a2b7a] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[color:var(--theme-v-accent)] px-3 py-1.5 text-xs font-semibold text-[color:var(--theme-v-accent-text)] hover:bg-[color:var(--theme-v-accent-hover)] disabled:opacity-50"
           >
             <Video className="h-3.5 w-3.5" />
             {joiningId === meetingInvite.id ? 'Joining...' : 'Join Meeting'}
@@ -758,11 +758,11 @@ return (
         <div className="space-y-4">
           {allTimeCalendarGroups.length ? (
             allTimeCalendarGroups.map((group) => (
-              <div key={group.dateKey} className="overflow-hidden rounded-2xl bg-white ring-1 ring-[#e5e7eb]">
-                <div className="bg-[#f8fafc] px-4 py-3 text-sm font-semibold text-[#374151] sm:px-5">
+              <div key={group.dateKey} className="overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay)] ring-1 ring-[color:var(--theme-v-border-soft)]">
+                <div className="bg-[color:var(--theme-v-surface-overlay-strong)] px-4 py-3 text-sm font-semibold text-[color:var(--theme-v-text-primary)] sm:px-5">
                   {group.dateLabel}
                 </div>
-                <div className="divide-y divide-[#eef2f7]">
+                <div className="divide-y divide-[color:var(--theme-v-border-soft)]">
                   {group.items.map((session) => (
                     <div
                       key={session.id}
@@ -771,7 +771,7 @@ return (
                       <div className="flex min-w-0 items-center gap-3">
                         <button
                           type="button"
-                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f3f4f6] text-sm font-semibold text-[#5D3699]"
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] text-sm font-semibold text-[color:var(--theme-v-accent)]"
                           onClick={() => navigate(`/mentor-mentee-profile/${session.id}`)}
                         >
                           {session.menteeAvatar ? (
@@ -783,12 +783,12 @@ return (
                         <div className="min-w-0">
                           <button
                             type="button"
-                            className="block truncate text-left text-sm font-semibold text-[#111827] hover:text-[#5D3699]"
+                            className="block truncate text-left text-sm font-semibold text-[color:var(--theme-v-text-primary)] hover:text-[color:var(--theme-v-accent)]"
                             onClick={() => navigate(`/mentor-mentee-profile/${session.id}`)}
                           >
                             {session.title}
                           </button>
-                          <div className="mt-1 flex items-center gap-1.5 text-xs text-[#6b7280]">
+                          <div className="mt-1 flex items-center gap-1.5 text-xs text-[color:var(--theme-v-text-secondary)]">
                             <Clock className="h-3.5 w-3.5" />
                             <span>{session.time}</span>
                           </div>
@@ -799,7 +799,7 @@ return (
                           <button
                             type="button"
                             onClick={() => handleJoin(session)}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a2b7a] disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[color:var(--theme-v-accent)] px-3 py-2 text-xs font-semibold text-[color:var(--theme-v-accent-text)] hover:bg-[color:var(--theme-v-accent-hover)] disabled:opacity-50"
                             disabled={joiningId === session.id}
                           >
                             <Video className="h-3.5 w-3.5" />
@@ -809,14 +809,14 @@ return (
                           <button
                             type="button"
                             onClick={() => openSelectionSubmission(session.id)}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4a2b7a]"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[color:var(--theme-v-accent)] px-3 py-2 text-xs font-semibold text-[color:var(--theme-v-accent-text)] hover:bg-[color:var(--theme-v-accent-hover)]"
                           >
                             Submit Selection
                             <ArrowRight className="h-3.5 w-3.5" />
                           </button>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-xs text-[#9ca3af]">
-                            <span className="h-2 w-2 rounded-full bg-[#e5e7eb]" />
+                          <span className="inline-flex items-center gap-1.5 text-xs text-[color:var(--theme-v-text-secondary)]">
+                            <span className="h-2 w-2 rounded-full bg-[color:var(--theme-v-surface-overlay-track)]" />
                             {getJoinUnavailableLabel(session)}
                           </span>
                         )}
@@ -827,39 +827,39 @@ return (
               </div>
             ))
           ) : (
-            <div className="rounded-2xl bg-white px-6 py-14 text-center shadow-sm ring-1 ring-[#e5e7eb]">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#f5f3ff]">
-                <Calendar className="h-7 w-7 text-[#9ca3af]" />
+            <div className="rounded-2xl bg-[color:var(--theme-v-surface-overlay)] px-6 py-14 text-center shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)]">
+                <Calendar className="h-7 w-7 text-[color:var(--theme-v-text-secondary)]" />
               </div>
-              <p className="mt-4 text-sm font-medium text-[#111827]">No sessions found</p>
-              <p className="mt-1 text-sm text-[#6b7280]">Try changing filters to view more dates.</p>
+              <p className="mt-4 text-sm font-medium text-[color:var(--theme-v-text-primary)]">No sessions found</p>
+              <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">Try changing filters to view more dates.</p>
             </div>
           )}
         </div>
       ) : (
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
+      <div className="overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
         <div className="overflow-x-auto">
           <div className="min-w-[980px] pr-2 lg:min-w-[1330px] lg:pr-3">
             {/* Calendar Header */}
-            <div className="grid grid-cols-[62px_repeat(7,minmax(130px,1fr))] bg-[#f8fafc] lg:grid-cols-[90px_repeat(7,minmax(176px,1fr))]">
+            <div className="grid grid-cols-[62px_repeat(7,minmax(130px,1fr))] bg-[color:var(--theme-v-surface-overlay-strong)] lg:grid-cols-[90px_repeat(7,minmax(176px,1fr))]">
               <div className="p-2.5 lg:p-4" />
               {days.map((d) => (
                 <div
                   key={`${d.label}-${d.dateKey}`}
-                  className={`border-l border-[#e5e7eb] p-2.5 text-center transition-colors lg:p-4 ${
-                    d.active ? 'bg-[#f5f3ff]' : ''
+                  className={`border-l border-[color:var(--theme-v-border-soft)] p-2.5 text-center transition-colors lg:p-4 ${
+                    d.active ? 'bg-[color:var(--theme-v-surface-overlay)]' : ''
                   }`}
                 >
                   <div className={`text-[10px] font-medium uppercase tracking-wider sm:text-xs ${
-                    d.active ? 'text-[#5D3699]' : 'text-[#9ca3af]'
+                    d.active ? 'text-[color:var(--theme-v-accent)]' : 'text-[color:var(--theme-v-text-secondary)]'
                   }`}>
                     {d.label}
                   </div>
                   <div
                     className={`mt-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-base font-bold transition-all lg:h-10 lg:w-10 lg:rounded-xl lg:text-lg ${
                       d.active
-                        ? 'bg-[#5D3699] text-white shadow-lg shadow-[#5D3699]/30'
-                        : 'text-[#111827]'
+                        ? 'bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] shadow-lg'
+                        : 'text-[color:var(--theme-v-text-primary)]'
                     }`}
                   >
                     {d.dayNumber}
@@ -869,14 +869,14 @@ return (
             </div>
 
             {/* Calendar Body */}
-            <div className="divide-y divide-[#e5e7eb]">
+            <div className="divide-y divide-[color:var(--theme-v-border-soft)]">
               {hours.map((h, idx) => {
                 const rowHasAction = calendarEntries.some(
                   (s) => s.hourIndex === idx && (canJoinSession(s) || s.needsSelection)
                 );
                 return (
                   <div key={h} className="grid grid-cols-[62px_repeat(7,minmax(130px,1fr))] lg:grid-cols-[90px_repeat(7,minmax(176px,1fr))]">
-                    <div className="flex items-start justify-end p-2.5 pr-3 text-[10px] font-medium text-[#9ca3af] sm:text-xs lg:p-3 lg:pr-4">
+                    <div className="flex items-start justify-end p-2.5 pr-3 text-[10px] font-medium text-[color:var(--theme-v-text-secondary)] sm:text-xs lg:p-3 lg:pr-4">
                       {h}
                     </div>
                     {days.map((d, c) => {
@@ -884,9 +884,9 @@ return (
                       return (
                         <div
                           key={`${h}-${d.label}`}
-                          className={`relative border-l border-[#e5e7eb] p-1.5 transition-colors lg:p-2 ${
+                          className={`relative border-l border-[color:var(--theme-v-border-soft)] p-1.5 transition-colors lg:p-2 ${
                             rowHasAction ? 'min-h-[88px] lg:min-h-[110px]' : 'min-h-[64px] lg:min-h-[70px]'
-                          } ${d.active ? 'bg-[#f5f3ff]/30' : 'hover:bg-[#f8fafc]'}`}
+                          } ${d.active ? 'bg-[color:var(--theme-v-surface-overlay)]' : 'hover:bg-[color:var(--theme-v-surface-overlay-strong)]'}`}
                         >
                           {session && (
                             <div
@@ -908,8 +908,8 @@ return (
                               }}
                               className={`group absolute inset-1 flex cursor-pointer flex-col rounded-xl p-2 transition-all duration-200 md:inset-1.5 md:p-2.5 lg:inset-2 lg:p-3 ${
                                 session.tone === 'light'
-                                  ? 'bg-[#f5f3ff] hover:bg-[#ede9fe] ring-1 ring-[#e5e7eb]'
-                                  : 'bg-[#5D3699] hover:bg-[#4a2b7a] shadow-lg shadow-[#5D3699]/20'
+                                  ? 'bg-[color:var(--theme-v-surface-overlay)] hover:bg-[color:var(--theme-v-surface-overlay-strong)] ring-1 ring-[color:var(--theme-v-border-soft)]'
+                                  : 'bg-[color:var(--theme-v-header-bg)] hover:bg-[color:var(--theme-v-bg-start)] shadow-lg'
                               } ${session.isPast ? 'opacity-60' : ''}`}
                             >
                               <div className="flex items-center gap-2">
@@ -917,7 +917,7 @@ return (
                                   type="button"
                                   className={`flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-full text-[10px] font-semibold ${
                                     session.tone === 'light'
-                                      ? 'bg-[#e5e7eb] text-[#374151]'
+                                      ? 'bg-[color:var(--theme-v-surface-overlay-track)] text-[color:var(--theme-v-text-primary)]'
                                       : 'bg-white/25 text-white'
                                   }`}
                                   onClick={(event) => {
@@ -935,7 +935,7 @@ return (
                                   type="button"
                                   className={`min-w-0 flex-1 text-left text-sm font-semibold truncate transition-colors ${
                                     session.tone === 'light'
-                                      ? 'text-[#111827] hover:text-[#5D3699]'
+                                      ? 'text-[color:var(--theme-v-text-primary)] hover:text-[color:var(--theme-v-accent)]'
                                       : 'text-white'
                                   }`}
                                   onClick={(event) => {
@@ -947,7 +947,7 @@ return (
                                 </button>
                               </div>
                               <div className={`mt-1 flex min-w-0 items-center gap-1 text-xs ${
-                                session.tone === 'light' ? 'text-[#6b7280]' : 'text-white/80'
+                                session.tone === 'light' ? 'text-[color:var(--theme-v-text-secondary)]' : 'text-white/80'
                               }`}>
                                 <Clock className="h-3 w-3" />
                                 <span className={`block min-w-0 whitespace-nowrap ${session.tone === 'light' ? 'line-through' : ''}`}>
@@ -975,7 +975,7 @@ return (
                                     event.stopPropagation();
                                     openSelectionSubmission(session.id);
                                   }}
-                                  className="mt-auto flex items-center justify-center gap-1.5 rounded-lg bg-[#5D3699] px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-[#4a2b7a]"
+                                  className="mt-auto flex items-center justify-center gap-1.5 rounded-lg bg-[color:var(--theme-v-accent)] px-3 py-1.5 text-xs font-semibold text-[color:var(--theme-v-accent-text)] transition-all hover:bg-[color:var(--theme-v-accent-hover)]"
                                 >
                                   Submit Selection
                                   <ArrowRight className="h-3 w-3" />
@@ -996,33 +996,33 @@ return (
       )
     ) : (
       /* Table View */
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-[#e5e7eb] overflow-hidden">
+      <div className="overflow-hidden rounded-2xl bg-[color:var(--theme-v-surface-overlay)] shadow-sm ring-1 ring-[color:var(--theme-v-border-soft)]">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px]">
             <thead>
-              <tr className="bg-[#f8fafc]">
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+              <tr className="bg-[color:var(--theme-v-surface-overlay-strong)]">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                   Mentee
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                   Date
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                   Time
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#6b7280]">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[color:var(--theme-v-text-secondary)]">
                   Action
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e5e7eb]">
+            <tbody className="divide-y divide-[color:var(--theme-v-border-soft)]">
               {filteredSessions.map((session) => (
                 <tr
                   key={session.id}
-                  className="group transition-colors hover:bg-[#f5f3ff]/30"
+                  className="group transition-colors hover:bg-[color:var(--theme-v-surface-overlay-strong)]"
                 >
                   <td className="px-6 py-4">
                     <button
@@ -1030,7 +1030,7 @@ return (
                       className="flex items-center gap-3 text-left"
                       onClick={() => navigate(`/mentor-mentee-profile/${session.id}`)}
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#5D3699]/10 text-sm font-semibold text-[#5D3699]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)] text-sm font-semibold text-[color:var(--theme-v-accent)]">
                         {getMenteeAvatar(session) ? (
                           <img src={getMenteeAvatar(session)} alt="" className="h-full w-full rounded-full object-cover" />
                         ) : (
@@ -1038,21 +1038,21 @@ return (
                         )}
                       </div>
                       <div>
-                        <span className="font-medium text-[#111827] group-hover:text-[#5D3699] transition-colors">
+                        <span className="font-medium text-[color:var(--theme-v-text-primary)] group-hover:text-[color:var(--theme-v-accent)] transition-colors">
                           {getMenteeName(session)}
                         </span>
                       </div>
                     </button>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-[#6b7280]">
-                      <Calendar className="h-4 w-4 text-[#9ca3af]" />
+                    <div className="flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
+                      <Calendar className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                       {formatDateLabel(session.scheduled_start)}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-[#6b7280]">
-                      <Clock className="h-4 w-4 text-[#9ca3af]" />
+                    <div className="flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
+                      <Clock className="h-4 w-4 text-[color:var(--theme-v-text-secondary)]" />
                       {formatTimeRange(session.scheduled_start, session.scheduled_end)}
                     </div>
                   </td>
@@ -1060,7 +1060,7 @@ return (
                     <span
                       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
                         isPastSession(session)
-                          ? 'bg-[#f5f3ff] text-[#6b7280]'
+                          ? 'bg-[color:var(--theme-v-surface-overlay-strong)] text-[color:var(--theme-v-text-secondary)]'
                           : 'bg-green-50 text-green-700 ring-1 ring-green-600/10'
                       }`}
                     >
@@ -1072,7 +1072,7 @@ return (
                       <button
                         type="button"
                         onClick={() => handleJoin(session)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#5D3699] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[color:var(--theme-v-accent)] px-4 py-2 text-sm font-medium text-[color:var(--theme-v-accent-text)] shadow-sm transition-all hover:bg-[color:var(--theme-v-accent-hover)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={joiningId === session.id}
                       >
                         <Video className="h-4 w-4" />
@@ -1083,14 +1083,14 @@ return (
                       <button
                         type="button"
                         onClick={() => openSelectionSubmission(session.id)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#5D3699] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#4a2b7a] hover:shadow-md"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[color:var(--theme-v-accent)] px-4 py-2 text-sm font-medium text-[color:var(--theme-v-accent-text)] shadow-sm transition-all hover:bg-[color:var(--theme-v-accent-hover)] hover:shadow-md"
                       >
                         Submit Selection
                         <ArrowRight className="h-4 w-4" />
                       </button>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-sm text-[#9ca3af]">
-                        <span className="h-2 w-2 rounded-full bg-[#e5e7eb]" />
+                      <span className="inline-flex items-center gap-1.5 text-sm text-[color:var(--theme-v-text-secondary)]">
+                        <span className="h-2 w-2 rounded-full bg-[color:var(--theme-v-surface-overlay-track)]" />
                         {getJoinUnavailableLabel(session)}
                       </span>
                     )}
@@ -1101,12 +1101,12 @@ return (
                 <tr>
                   <td colSpan={5} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f5f3ff]">
-                        <Calendar className="h-8 w-8 text-[#9ca3af]" />
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--theme-v-surface-overlay-strong)]">
+                        <Calendar className="h-8 w-8 text-[color:var(--theme-v-text-secondary)]" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-[#111827]">No sessions found</p>
-                        <p className="mt-1 text-sm text-[#6b7280]">
+                        <p className="text-sm font-medium text-[color:var(--theme-v-text-primary)]">No sessions found</p>
+                        <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">
                           Try adjusting your filters or search criteria
                         </p>
                       </div>
@@ -1123,17 +1123,17 @@ return (
     {/* Loading & Error States */}
     {(loading || error) && (
       <div className={`mt-6 flex items-center justify-center gap-2 rounded-xl p-4 ${
-        error ? 'bg-red-50 text-red-600' : 'bg-white text-[#6b7280] ring-1 ring-[#e5e7eb]'
+        error ? 'bg-[color:var(--theme-v-toast-error-bg)] text-[color:var(--theme-v-toast-error-text)] ring-1 ring-[color:var(--theme-v-toast-error-border)]' : 'bg-[color:var(--theme-v-surface-overlay)] text-[color:var(--theme-v-text-secondary)] ring-1 ring-[color:var(--theme-v-border-soft)]'
       }`}>
         {loading && (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#e5e7eb] border-t-[#5D3699]" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[color:var(--theme-v-border-soft)] border-t-[color:var(--theme-v-accent)]" />
         )}
         <span className="text-sm font-medium">{error || 'Loading sessions...'}</span>
       </div>
     )}
 
     {joinError && (
-      <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-600 ring-1 ring-red-100">
+      <div className="mt-4 flex items-center gap-2 rounded-xl bg-[color:var(--theme-v-toast-error-bg)] p-4 text-sm text-[color:var(--theme-v-toast-error-text)] ring-1 ring-[color:var(--theme-v-toast-error-border)]">
         <span className="font-medium">{joinError}</span>
       </div>
     )}

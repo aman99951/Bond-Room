@@ -97,7 +97,7 @@ export const navRoutes = [
   },
   {
     label: 'Dashboard',
-    path: '/mentor-dashboard',
+    path: '/mentor-impact-dashboard',
     icon: Home,
     component: MentorImpactDashboard,
     roles: ['mentors'],

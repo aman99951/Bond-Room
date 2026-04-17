@@ -116,7 +116,7 @@ const OnboardingStatus = () => {
     if (value === 'completed' || value === 'verified') return 'bg-[#dff6ea] text-[#1a9b61]';
     if (value === 'in_review') return 'bg-[#ffe0a3] text-[#a25b00]';
     if (value === 'rejected') return 'bg-[#fee2e2] text-[#b91c1c]';
-    return 'bg-[#f3f4f6] text-[#9ca3af]';
+    return 'bg-[color:var(--theme-v-nav-hover-bg)] text-[color:var(--theme-v-text-secondary)]';
   };
 
   const renderStepIcon = (value, index) => {
@@ -142,27 +142,27 @@ const OnboardingStatus = () => {
       );
     }
     return (
-      <div className="h-10 w-10 rounded-full bg-[#f3f4f6] text-[#9ca3af] flex items-center justify-center text-sm">
+      <div className="h-10 w-10 rounded-full bg-[color:var(--theme-v-nav-hover-bg)] text-[color:var(--theme-v-text-secondary)] flex items-center justify-center text-sm">
         {index + 1}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f2f7] text-primary flex flex-col">
+    <div className="min-h-screen bg-[linear-gradient(135deg,var(--theme-v-bg-start)_0%,var(--theme-v-bg-mid)_45%,var(--theme-v-bg-end)_100%)] text-primary flex flex-col">
       <TopAuth />
 
       <main className="flex-1 pt-20 sm:pt-24">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-          <div className="border border-[#e6e2f1] rounded-[18px] overflow-hidden bg-white shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
+          <div className="border border-[color:var(--theme-v-hero-border)] rounded-[18px] overflow-hidden bg-[color:var(--theme-v-header-bg)] shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
             <div className="p-8 sm:p-10 lg:p-12">
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="text-2xl sm:text-3xl font-semibold text-[#1f2937]">Your Onboarding Journey</h2>
-                    <p className="mt-1 text-sm text-[#6b7280]">Track your progress to becoming a mentor.</p>
+                    <h2 className="text-2xl sm:text-3xl font-semibold text-[color:var(--theme-v-text-primary)]">Your Onboarding Journey</h2>
+                    <p className="mt-1 text-sm text-[color:var(--theme-v-text-secondary)]">Track your progress to becoming a mentor.</p>
                   </div>
-                  <div className="inline-flex items-center gap-2 text-sm text-[#6b7280]">
+                  <div className="inline-flex items-center gap-2 text-sm text-[color:var(--theme-v-text-secondary)]">
                     <span>Current Status:</span>
                     <span className={`rounded-full text-xs px-3 py-1 ${getBadgeClasses(status?.current_status)}`}>
                       {currentStatusText}
@@ -172,21 +172,21 @@ const OnboardingStatus = () => {
 
                 <div className="mt-2">
                   <div className="relative px-2 sm:px-6">
-                    <div className="hidden sm:block absolute left-6 right-6 top-4 h-px bg-[#e5e7eb]" aria-hidden="true" />
+                    <div className="hidden sm:block absolute left-6 right-6 top-4 h-px bg-[color:var(--theme-v-hero-border)]" aria-hidden="true" />
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-center">
                       {steps.map((step, index) => {
                         const value = status?.[step.key] || 'pending';
                         const label = getStatusLabel(value);
                         const content = (
                           <>
-                            <div className="relative bg-white px-2">
+                            <div className="relative bg-[color:var(--theme-v-header-bg)] px-2">
                               {renderStepIcon(value, index)}
                             </div>
-                            <p className={`mt-3 text-sm font-medium ${value === 'pending' ? 'text-[#6b7280]' : 'text-[#1f2937]'}`}>
+                            <p className={`mt-3 text-sm font-medium ${value === 'pending' ? 'text-[color:var(--theme-v-text-secondary)]' : 'text-[color:var(--theme-v-text-primary)]'}`}>
                               {step.label}
                             </p>
                             {step.optional && (
-                              <span className="mt-1 inline-flex rounded-full bg-[#ede9fe] px-2 py-0.5 text-[10px] font-medium text-[#5b2c91]">
+                              <span className="mt-1 inline-flex rounded-full bg-[color:var(--theme-v-nav-hover-bg)] px-2 py-0.5 text-[10px] font-medium text-[color:var(--theme-v-accent)]">
                                 Optional
                               </span>
                             )}
@@ -196,9 +196,9 @@ const OnboardingStatus = () => {
                             {step.key === 'identity_status' && value === 'pending' && !hasIdentitySubmission && (
                               <Link
                                 to="/mentor-verify-identity"
-                                className="mt-3 inline-flex items-center gap-1 rounded-full border border-[#d9c7f7] bg-[#f7f1ff] px-3 py-1 text-[11px] font-semibold text-[#5b2c91] transition-colors hover:bg-[#efe5ff] hover:text-[#4a2374]"
+                                className="mt-3 inline-flex items-center gap-1 rounded-full border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] px-3 py-1 text-[11px] font-semibold text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-header-bg)] hover:text-[color:var(--theme-v-highlight-mid)]"
                               >
-                                <span className="h-1.5 w-1.5 rounded-full bg-[#5b2c91]" aria-hidden="true" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--theme-v-accent)]" aria-hidden="true" />
                                 Upload Documents
                               </Link>
                             )}
@@ -240,7 +240,7 @@ const OnboardingStatus = () => {
                       </div>
                       <Link
                         to="/mentor-verify-identity"
-                        className="inline-flex rounded-md border border-[#fca5a5] bg-white px-3 py-1.5 text-xs font-semibold text-[#b91c1c] hover:bg-[#fff5f5]"
+                        className="inline-flex rounded-md border border-[#fca5a5] bg-[#fff7f7] px-3 py-1.5 text-xs font-semibold text-[#b91c1c] hover:bg-[#fff5f5]"
                       >
                         Re-upload Documents
                       </Link>
@@ -251,7 +251,7 @@ const OnboardingStatus = () => {
                         {rejectedDocumentReasons.map((item) => (
                           <div
                             key={item.key}
-                            className="rounded-lg border border-[#fecaca] bg-white px-3 py-2"
+                            className="rounded-lg border border-[#fecaca] bg-[#fff7f7] px-3 py-2"
                           >
                             <p className="text-xs font-semibold text-[#7f1d1d]">{item.label}</p>
                             <p className="mt-1 text-xs text-[#991b1b]">{item.reason}</p>
@@ -259,24 +259,24 @@ const OnboardingStatus = () => {
                         ))}
                       </div>
                     ) : (
-                      <div className="mt-4 rounded-lg border border-[#fecaca] bg-white px-3 py-2 text-xs text-[#991b1b]">
+                      <div className="mt-4 rounded-lg border border-[#fecaca] bg-[#fff7f7] px-3 py-2 text-xs text-[#991b1b]">
                         Document verification is rejected. Reason was not provided by admin yet.
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="rounded-xl bg-[#f3ebff] p-5 text-sm text-[#5b2c91]">
+                <div className="rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] p-5 text-sm text-[color:var(--theme-v-accent)]">
                   {accessReady ? (
                     <>
-                      <p className="font-semibold text-[#5b2c91]">Dashboard Access Ready</p>
-                      <p className="mt-1 text-sm text-[#5b2c91]">
+                      <p className="font-semibold text-[color:var(--theme-v-accent)]">Dashboard Access Ready</p>
+                      <p className="mt-1 text-sm text-[color:var(--theme-v-accent)]">
                         Required steps are complete. Training is optional and can be completed anytime.
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button
                           type="button"
-                          className="inline-flex rounded-md bg-[#5b2c91] text-white px-4 py-2 text-xs font-semibold"
+                          className="inline-flex rounded-md bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] px-4 py-2 text-xs font-semibold"
                           onClick={() => navigate('/mentor-impact-dashboard')}
                         >
                           Skip Training & Go Dashboard
@@ -284,7 +284,7 @@ const OnboardingStatus = () => {
                         {!trainingDone && (
                           <button
                             type="button"
-                            className="inline-flex rounded-md border border-[#c9b5e8] bg-white text-[#5b2c91] px-4 py-2 text-xs font-semibold"
+                            className="inline-flex rounded-md border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-header-bg)] text-[color:var(--theme-v-accent)] px-4 py-2 text-xs font-semibold"
                             onClick={() => navigate('/mentor-training-modules')}
                           >
                             Do Training Now
@@ -294,8 +294,8 @@ const OnboardingStatus = () => {
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-[#5b2c91]">Verification in Progress</p>
-                      <p className="mt-1 text-sm text-[#5b2c91]">
+                      <p className="font-semibold text-[color:var(--theme-v-accent)]">Verification in Progress</p>
+                      <p className="mt-1 text-sm text-[color:var(--theme-v-accent)]">
                         You will be notified via email and SMS once the document verification is complete.
                         Dashboard unlocks after Personal Details and Document Verification are completed.
                       </p>
@@ -303,7 +303,7 @@ const OnboardingStatus = () => {
                   )}
                 </div>
                 {(loading || error) && (
-                  <div className={`text-xs ${error ? 'text-red-600' : 'text-[#6b7280]'}`}>
+                  <div className={`text-xs ${error ? 'text-red-600' : 'text-[color:var(--theme-v-text-secondary)]'}`}>
                     {error || 'Loading onboarding status...'}
                   </div>
                 )}
@@ -319,3 +319,4 @@ const OnboardingStatus = () => {
 };
 
 export default OnboardingStatus;
+

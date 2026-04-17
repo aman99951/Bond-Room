@@ -74,6 +74,48 @@
   --theme-v-text-secondary: rgba(255, 255, 255, 0.85);
   --theme-v-hero-border: rgba(253, 210, 83, 0.35);
   --theme-v-hero-ring: rgba(253, 210, 83, 0.2);
+  --theme-v-highlight-mid: #FFE28A;
+  --theme-v-back-btn-hover: #FFF3C4;
+
+  /* Needs assessment specific theme-v tokens */
+  --theme-v-logo-bg: #ffffff;
+  --theme-v-surface-overlay-soft: rgba(255, 255, 255, 0.06);
+  --theme-v-surface-overlay: rgba(255, 255, 255, 0.08);
+  --theme-v-surface-overlay-strong: rgba(255, 255, 255, 0.14);
+  --theme-v-surface-overlay-track: rgba(255, 255, 255, 0.2);
+  --theme-v-surface-overlay-subtle: rgba(255, 255, 255, 0.12);
+  --theme-v-text-strong: rgba(255, 255, 255, 0.95);
+  --theme-v-text-label: rgba(255, 255, 255, 0.92);
+  --theme-v-text-muted-soft: rgba(255, 255, 255, 0.84);
+  --theme-v-text-placeholder: rgba(255, 255, 255, 0.64);
+  --theme-v-border-soft: rgba(253, 210, 83, 0.2);
+  --theme-v-border-muted: rgba(253, 210, 83, 0.24);
+  --theme-v-border-medium: rgba(253, 210, 83, 0.28);
+  --theme-v-border-strong: rgba(253, 210, 83, 0.35);
+  --theme-v-border-stronger: rgba(253, 210, 83, 0.42);
+  --theme-v-border-hover: rgba(253, 210, 83, 0.5);
+  --theme-v-border-focus: rgba(253, 210, 83, 0.62);
+  --theme-v-focus-ring: rgba(253, 210, 83, 0.18);
+  --theme-v-ghost-border: rgba(253, 210, 83, 0.45);
+  --theme-v-shell-bg-start: rgba(70, 38, 118, 0.93);
+  --theme-v-shell-bg-end: rgba(53, 27, 96, 0.95);
+  --theme-v-shell-shadow: rgba(26, 10, 51, 0.4);
+  --theme-v-toast-shadow: rgba(19, 11, 38, 0.18);
+  --theme-v-orb-gold: rgba(253, 210, 83, 0.14);
+  --theme-v-orb-light: rgba(255, 255, 255, 0.12);
+  --theme-v-selected-bg: rgba(253, 210, 83, 0.2);
+  --theme-v-toast-error-bg: rgba(127, 29, 29, 0.82);
+  --theme-v-toast-error-border: rgba(254, 202, 202, 0.55);
+  --theme-v-toast-error-text: #fee2e2;
+  --theme-v-toast-success-bg: rgba(6, 78, 59, 0.82);
+  --theme-v-toast-success-border: rgba(167, 243, 208, 0.45);
+  --theme-v-toast-success-text: #d1fae5;
+  --theme-v-footer-bg-start: rgba(56, 30, 98, 0.9);
+  --theme-v-footer-bg-end: rgba(45, 23, 82, 0.96);
+  --theme-v-footer-sweep-start: rgba(253, 210, 83, 0);
+  --theme-v-footer-sweep-mid: rgba(253, 210, 83, 0.12);
+  --theme-v-footer-sweep-end: rgba(253, 210, 83, 0);
+
 }
 
 body {
@@ -166,7 +208,7 @@ select option:hover {
   .theme-v-title { color: var(--theme-v-text-primary); }
   .theme-v-subtitle { color: var(--theme-v-text-secondary); }
   .theme-v-highlight {
-    background: linear-gradient(90deg, var(--theme-v-accent), #FFE28A, var(--theme-v-accent));
+    background: linear-gradient(90deg, var(--theme-v-accent), var(--theme-v-highlight-mid), var(--theme-v-accent));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -177,7 +219,7 @@ select option:hover {
     color: var(--theme-v-accent-text);
     transition: all 0.2s ease;
   }
-  .theme-v-back-btn:hover { background: #FFF3C4; }
+  .theme-v-back-btn:hover { background: var(--theme-v-back-btn-hover); }
 }
 
 

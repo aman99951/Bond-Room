@@ -1,0 +1,115 @@
+.theme-v-my-sessions {
+  background: transparent;
+  color: var(--theme-v-text-primary);
+}
+
+/* Surfaces */
+.theme-v-my-sessions [class*="bg-white"],
+.theme-v-my-sessions [class*="bg-[#f8fafc]"],
+.theme-v-my-sessions [class*="bg-[#f5f3ff]"],
+.theme-v-my-sessions [class*="bg-[#f8f3ff]"],
+.theme-v-my-sessions [class*="bg-[#fcfaff]"],
+.theme-v-my-sessions [class*="bg-[#efe7ff]"],
+.theme-v-my-sessions [class*="bg-[#ede9fe]"] {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+  border-color: var(--theme-v-hero-border) !important;
+  box-shadow: 0 18px 40px -26px rgba(22, 10, 46, 0.62) !important;
+  backdrop-filter: blur(8px);
+}
+
+/* Header gradient card */
+.theme-v-my-sessions [class*="bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)]"] {
+  background-image: linear-gradient(135deg, var(--theme-v-bg-start) 0%, var(--theme-v-bg-mid) 48%, var(--theme-v-bg-end) 100%) !important;
+  border-color: var(--theme-v-hero-border) !important;
+}
+
+/* Text */
+.theme-v-my-sessions [class*="text-[#111827]"] {
+  color: var(--theme-v-text-primary) !important;
+}
+
+.theme-v-my-sessions [class*="text-[#6b7280]"],
+.theme-v-my-sessions [class*="text-[#9ca3af]"] {
+  color: var(--theme-v-text-secondary) !important;
+}
+
+.theme-v-my-sessions [class*="text-[#5D3699]"],
+.theme-v-my-sessions [class*="text-[#4a2b7a]"] {
+  color: var(--theme-v-accent) !important;
+}
+
+/* Borders / rings */
+.theme-v-my-sessions [class*="border-[#e5e7eb]"],
+.theme-v-my-sessions [class*="border-[#e8dcff]"],
+.theme-v-my-sessions [class*="border-[#efe7ff]"] {
+  border-color: var(--theme-v-hero-border) !important;
+}
+
+.theme-v-my-sessions [class*="ring-[#e5e7eb]"],
+.theme-v-my-sessions [class*="ring-[#e8dcff]"],
+.theme-v-my-sessions [class*="ring-[#efe7ff]"] {
+  --tw-ring-color: var(--theme-v-hero-border) !important;
+}
+
+.theme-v-my-sessions [class*="divide-[#e5e7eb]"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(253, 210, 83, 0.2) !important;
+}
+
+/* Inputs */
+.theme-v-my-sessions input[class*="bg-white"] {
+  color: var(--theme-v-text-primary) !important;
+}
+
+.theme-v-my-sessions input[class*="bg-white"]::placeholder {
+  color: var(--theme-v-text-secondary) !important;
+}
+
+/* Buttons */
+.theme-v-my-sessions button[class*="bg-[#5D3699]"] {
+  background: var(--theme-v-accent) !important;
+  color: var(--theme-v-accent-text) !important;
+}
+
+.theme-v-my-sessions button[class*="hover:bg-[#4a2b7a]"]:hover,
+.theme-v-my-sessions button[class*="hover:bg-[#ede9fe]"]:hover,
+.theme-v-my-sessions button[class*="hover:bg-[#f5f3ff]"]:hover {
+  background: var(--theme-v-accent-hover) !important;
+}
+
+/* Feedback buttons: enforce readable contrast */
+.theme-v-my-sessions button[class*="ring-[#5D3699]/20"] {
+  background: var(--theme-v-accent) !important;
+  color: var(--theme-v-accent-text) !important;
+  border-color: var(--theme-v-accent) !important;
+}
+
+.theme-v-my-sessions button[class*="ring-[#5D3699]/20"] svg {
+  color: var(--theme-v-accent-text) !important;
+}
+
+.theme-v-my-sessions button[class*="ring-[#5D3699]/20"]:hover {
+  background: var(--theme-v-accent-hover) !important;
+}
+
+/* Keep calendar dark session cards readable */
+.theme-v-my-sessions [class*="bg-[#5D3699]"][class*="shadow-[#5D3699]/20"] {
+  background: linear-gradient(135deg, var(--theme-v-bg-mid) 0%, var(--theme-v-bg-end) 100%) !important;
+  color: var(--theme-v-text-primary) !important;
+}
+
+.theme-v-my-sessions [class*="bg-[#5D3699]"][class*="shadow-[#5D3699]/20"] [class*="text-white"] {
+  color: var(--theme-v-text-primary) !important;
+}
+
+.theme-v-my-sessions [class*="bg-[#5D3699]"][class*="shadow-[#5D3699]/20"] [class*="text-white/80"] {
+  color: var(--theme-v-text-secondary) !important;
+}
+
+/* Success status contrast */
+.theme-v-my-sessions [class*="bg-green-50"] {
+  background-color: rgba(20, 83, 45, 0.78) !important;
+}
+
+.theme-v-my-sessions [class*="text-green-700"] {
+  color: #dcfce7 !important;
+}

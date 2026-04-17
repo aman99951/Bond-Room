@@ -1,0 +1,95 @@
+.theme-v-session-requests {
+  background: transparent;
+  color: var(--theme-v-text-primary);
+}
+
+/* Surfaces */
+.theme-v-session-requests [class*="bg-white"],
+.theme-v-session-requests [class*="bg-white/60"],
+.theme-v-session-requests [class*="bg-[#f5f3ff]"],
+.theme-v-session-requests [class*="bg-[#f8f3ff]"],
+.theme-v-session-requests [class*="bg-[#fcfaff]"] {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+  border-color: var(--theme-v-hero-border) !important;
+  box-shadow: 0 18px 40px -26px rgba(22, 10, 46, 0.62) !important;
+  backdrop-filter: blur(8px);
+}
+
+/* Header card */
+.theme-v-session-requests [class*="bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)]"] {
+  background-image: linear-gradient(135deg, var(--theme-v-bg-start) 0%, var(--theme-v-bg-mid) 48%, var(--theme-v-bg-end) 100%) !important;
+  border-color: var(--theme-v-hero-border) !important;
+}
+
+/* Text */
+.theme-v-session-requests [class*="text-[#111827]"] {
+  color: var(--theme-v-text-primary) !important;
+}
+
+.theme-v-session-requests [class*="text-[#6b7280]"],
+.theme-v-session-requests [class*="text-[#9ca3af]"] {
+  color: var(--theme-v-text-secondary) !important;
+}
+
+.theme-v-session-requests [class*="text-[#5D3699]"],
+.theme-v-session-requests [class*="text-[#4a2b7a]"] {
+  color: var(--theme-v-accent) !important;
+}
+
+/* Rings and borders */
+.theme-v-session-requests [class*="border-[#e5e7eb]"],
+.theme-v-session-requests [class*="border-[#e8dcff]"],
+.theme-v-session-requests [class*="border-dashed"] {
+  border-color: var(--theme-v-hero-border) !important;
+}
+
+.theme-v-session-requests [class*="ring-[#efe7ff]"],
+.theme-v-session-requests [class*="ring-[#e5e7eb]"] {
+  --tw-ring-color: var(--theme-v-hero-border) !important;
+}
+
+/* Primary action buttons */
+.theme-v-session-requests button[class*="bg-[#5D3699]"],
+.theme-v-session-requests button[class*="bg-white"][class*="text-[#5D3699]"] {
+  background: var(--theme-v-accent) !important;
+  color: var(--theme-v-accent-text) !important;
+  border-color: var(--theme-v-accent) !important;
+}
+
+.theme-v-session-requests button[class*="bg-[#5D3699]"]:hover,
+.theme-v-session-requests button[class*="hover:bg-[#ede9fe]"]:hover,
+.theme-v-session-requests button[class*="hover:bg-[#f5f3ff]"]:hover {
+  background: var(--theme-v-accent-hover) !important;
+}
+
+/* Keep status badges readable */
+.theme-v-session-requests [class*="bg-yellow-100"] {
+  background-color: rgba(120, 53, 15, 0.75) !important;
+  color: #fef3c7 !important;
+  border-color: rgba(253, 186, 116, 0.45) !important;
+}
+
+.theme-v-session-requests [class*="bg-sky-100"],
+.theme-v-session-requests [class*="bg-indigo-100"] {
+  background-color: rgba(30, 64, 175, 0.65) !important;
+  color: #dbeafe !important;
+  border-color: rgba(147, 197, 253, 0.45) !important;
+}
+
+.theme-v-session-requests [class*="bg-emerald-100"] {
+  background-color: rgba(20, 83, 45, 0.75) !important;
+  color: #dcfce7 !important;
+  border-color: rgba(134, 239, 172, 0.45) !important;
+}
+
+.theme-v-session-requests [class*="bg-red-100"] {
+  background-color: rgba(127, 29, 29, 0.75) !important;
+  color: #fee2e2 !important;
+  border-color: rgba(252, 165, 165, 0.45) !important;
+}
+
+.theme-v-session-requests [class*="bg-gray-100"] {
+  background-color: rgba(55, 65, 81, 0.65) !important;
+  color: #e5e7eb !important;
+  border-color: rgba(156, 163, 175, 0.45) !important;
+}

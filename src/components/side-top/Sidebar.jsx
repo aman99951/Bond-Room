@@ -225,7 +225,7 @@ return (
   <>
     {/* Mobile Overlay */}
     <div
-      className={`fixed inset-0 bg-[#5D3699]/50 backdrop-blur-sm z-40 transition-opacity duration-300 lg:hidden ${
+      className={`fixed inset-0 bg-[color:var(--theme-v-header-bg)] backdrop-blur-sm z-40 transition-opacity duration-300 lg:hidden ${
         isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
       onClick={onClose}
@@ -234,21 +234,22 @@ return (
 
     {/* Sidebar */}
     <aside
-      className={`fixed lg:static inset-y-0 left-0 z-50 w-[82vw] max-w-[300px] lg:w-[260px] bg-white border-r border-[#e5e7eb] flex flex-col h-[100dvh] lg:h-screen transform transition-transform duration-300 ease-in-out ${
+      className={`fixed lg:static inset-y-0 left-0 z-50 w-[82vw] max-w-[300px] lg:w-[260px] border-r border-[color:var(--theme-v-hero-border)] flex flex-col h-[100dvh] lg:h-screen transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}
+      style={{ background: 'linear-gradient(180deg, var(--theme-v-bg-mid) 0%, var(--theme-v-bg-end) 100%)' }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--theme-v-hero-border)]">
         <img
           src={logo}
           alt="Bond Room"
-          className="w-[70px] h-[60px] object-contain"
+          className="w-[70px] h-[60px] object-contain rounded-lg bg-white px-2 py-1"
         />
         <button
           type="button"
           onClick={onClose}
-          className="lg:hidden flex h-9 w-9 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#5D3699] transition-colors hover:bg-[#ede9fe]"
+          className="lg:hidden flex h-9 w-9 items-center justify-center rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] text-[color:var(--theme-v-accent)] transition-colors hover:bg-[color:var(--theme-v-header-bg)]"
           aria-label="Close sidebar"
         >
           <X className="h-5 w-5" />
@@ -258,7 +259,7 @@ return (
       {/* User Info */}
       <div className="px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-[#f5f3ff] text-[#5D3699] font-semibold text-lg">
+          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] text-[color:var(--theme-v-accent)] font-semibold text-lg">
             {displayAvatar ? (
               <img src={displayAvatar} alt={`${displayName} profile`} className="h-full w-full object-cover" />
             ) : (
@@ -266,8 +267,8 @@ return (
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-[#6b7280]">{greeting}</p>
-            <p className="text-base font-semibold text-[#111827] truncate">
+            <p className="text-xs text-[color:var(--theme-v-text-secondary)]">{greeting}</p>
+            <p className="text-base font-semibold text-[color:var(--theme-v-text-primary)] truncate">
               {displayName}
             </p>
           </div>
@@ -289,19 +290,19 @@ return (
                   className={({ isActive }) =>
                     `group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-[#5D3699] text-white shadow-md shadow-[#5D3699]/20'
-                        : 'text-[#6b7280] hover:bg-[#f5f3ff] hover:text-[#5D3699]'
+                        ? 'bg-[color:var(--theme-v-accent)] text-[color:var(--theme-v-accent-text)] shadow-md'
+                        : 'text-[color:var(--theme-v-nav-text)] hover:bg-[color:var(--theme-v-nav-hover-bg)] hover:text-[color:var(--theme-v-nav-hover-text)]'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
                       <Icon className={`h-5 w-5 flex-shrink-0 transition-colors ${
-                        isActive ? 'text-white' : 'text-[#9ca3af] group-hover:text-[#5D3699]'
+                        isActive ? 'text-[color:var(--theme-v-accent-text)]' : 'text-[color:var(--theme-v-text-secondary)] group-hover:text-[color:var(--theme-v-nav-hover-text)]'
                       }`} />
                       <span className="flex-1">{item.label}</span>
                       {isActive && (
-                        <ChevronRight className="h-4 w-4 text-white/70" />
+                        <ChevronRight className="h-4 w-4 text-[color:var(--theme-v-accent-text)] opacity-70" />
                       )}
                     </>
                   )}
@@ -312,11 +313,11 @@ return (
         </ul>
 
         {/* Logout Button */}
-        <div className="mt-4 pt-4 border-t border-[#e5e7eb]">
+        <div className="mt-4 pt-4 border-t border-[color:var(--theme-v-hero-border)]">
           <button
             type="button"
             onClick={() => setShowLogout(true)}
-            className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#6b7280] transition-all duration-200 hover:bg-red-50 hover:text-red-600"
+            className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[color:var(--theme-v-nav-text)] transition-all duration-200 hover:bg-red-50 hover:text-red-600"
           >
             <LogOut className="h-5 w-5" />
             <span>Logout</span>
@@ -326,31 +327,31 @@ return (
 
       {/* Match Info Card (for mentees only) */}
       {role !== 'mentors' && (
-        <div className="p-4 border-t border-[#e5e7eb]">
-          <div className="rounded-2xl bg-[#f5f3ff] p-4">
+        <div className="p-4 border-t border-[color:var(--theme-v-hero-border)]">
+          <div className="rounded-2xl border border-[color:var(--theme-v-hero-border)] bg-[color:var(--theme-v-nav-hover-bg)] p-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#5D3699]">
-                <Sparkles className="h-4 w-4 text-white" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--theme-v-accent)]">
+                <Sparkles className="h-4 w-4 text-[color:var(--theme-v-accent-text)]" />
               </div>
-              <h3 className="text-sm font-semibold text-[#111827]">
+              <h3 className="text-sm font-semibold text-[color:var(--theme-v-text-primary)]">
                 Why these matches?
               </h3>
             </div>
             
-            <p className="mt-2 text-xs text-[#6b7280] leading-relaxed">
+            <p className="mt-2 text-xs text-[color:var(--theme-v-text-secondary)] leading-relaxed">
               Our AI analyzed your recent input to find mentors best suited to support your needs.
             </p>
 
             <div className="mt-3 space-y-2">
-              <div className="flex items-center gap-2 text-xs text-[#6b7280]">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white">
-                  <Globe className="h-3.5 w-3.5 text-[#5D3699]" />
+              <div className="flex items-center gap-2 text-xs text-[color:var(--theme-v-text-secondary)]">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[color:var(--theme-v-header-bg)]">
+                  <Globe className="h-3.5 w-3.5 text-[color:var(--theme-v-accent)]" />
                 </div>
                 <span>{matchLanguage}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#6b7280]">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white">
-                  <Clock className="h-3.5 w-3.5 text-[#5D3699]" />
+              <div className="flex items-center gap-2 text-xs text-[color:var(--theme-v-text-secondary)]">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[color:var(--theme-v-header-bg)]">
+                  <Clock className="h-3.5 w-3.5 text-[color:var(--theme-v-accent)]" />
                 </div>
                 <span>{matchAvailability}</span>
               </div>
@@ -360,7 +361,7 @@ return (
               type="button"
               onClick={handleRefreshSuggestions}
               disabled={refreshingMatch}
-              className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-xs font-medium text-[#5D3699] ring-1 ring-[#5D3699]/20 transition-all hover:bg-[#5D3699] hover:text-white disabled:opacity-60"
+              className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-[color:var(--theme-v-accent)] px-3 py-2.5 text-xs font-medium text-[color:var(--theme-v-accent-text)] ring-1 ring-[color:var(--theme-v-accent)] transition-all hover:bg-[color:var(--theme-v-accent-hover)] disabled:opacity-60"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${refreshingMatch ? 'animate-spin' : ''}`} />
               {refreshingMatch ? 'Refreshing...' : 'Refresh Suggestions'}
@@ -380,19 +381,19 @@ return (
 
     {/* Logout Modal */}
     {showLogout && (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#5D3699]/50 backdrop-blur-sm p-4">
-        <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-[#e5e7eb]">
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[color:var(--theme-v-header-bg)] backdrop-blur-sm p-4">
+        <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-[color:var(--theme-v-hero-border)] bg-[linear-gradient(180deg,var(--theme-v-bg-mid)_0%,var(--theme-v-bg-end)_100%)] p-6 shadow-2xl">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
               <LogOut className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-[#111827]">Log out?</h2>
-              <p className="text-sm text-[#6b7280]">You'll need to sign in again.</p>
+              <h2 className="text-lg font-semibold text-[color:var(--theme-v-text-primary)]">Log out?</h2>
+              <p className="text-sm text-[color:var(--theme-v-text-secondary)]">You'll need to sign in again.</p>
             </div>
           </div>
           
-          <p className="mt-4 text-sm text-[#6b7280]">
+          <p className="mt-4 text-sm text-[color:var(--theme-v-text-secondary)]">
             Are you sure you want to log out of Bond Room?
           </p>
 
@@ -400,7 +401,7 @@ return (
             <button
               type="button"
               onClick={() => setShowLogout(false)}
-              className="flex-1 rounded-xl bg-[#f5f3ff] px-4 py-2.5 text-sm font-medium text-[#5D3699] transition-all hover:bg-[#ede9fe]"
+              className="flex-1 rounded-xl bg-[color:var(--theme-v-nav-hover-bg)] px-4 py-2.5 text-sm font-medium text-[color:var(--theme-v-accent)] transition-all hover:bg-[color:var(--theme-v-header-bg)]"
             >
               Cancel
             </button>

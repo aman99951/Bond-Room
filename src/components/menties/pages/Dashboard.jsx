@@ -19,6 +19,7 @@ import {
 import '../../LandingPage.css';
 import './DashboardMentorCarousel.css';
 import './DashboardMentorCard.css';
+import './DashboardThemeV.css';
 import { menteeApi } from '../../../apis/api/menteeApi';
 import { setSelectedMentorId, setSelectedSessionId } from '../../../apis/api/storage';
 import { useMenteeData } from '../../../apis/apihook/useMenteeData';
@@ -707,7 +708,7 @@ useEffect(() => {
   }, [stats]);
 return (
     <motion.div
-      className="relative overflow-hidden bg-transparent p-3 sm:p-6 lg:p-8"
+      className="theme-v-dashboard relative overflow-hidden bg-transparent p-3 sm:p-6 lg:p-8"
       initial="hidden"
       animate="show"
       variants={stagger}
@@ -717,9 +718,7 @@ return (
         variants={fadeUp}
         className="relative overflow-hidden rounded-[24px] border border-[#e8dcff] bg-[linear-gradient(135deg,#ffffff_0%,#fcfaff_45%,#f8f3ff_100%)] p-4 shadow-[0_28px_60px_-46px_rgba(93,54,153,0.65)] ring-1 ring-[#efe7ff] sm:rounded-[28px] sm:p-8"
       >
-        <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#efe6ff] blur-2xl" />
-        <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#f4edff] blur-2xl" />
-
+       
         <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px] lg:items-center">
           <div className="min-w-0">
             <div className="mb-3 flex items-center gap-2">
