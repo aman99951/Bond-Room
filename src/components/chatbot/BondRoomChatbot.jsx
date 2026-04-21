@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Send, X, Sparkles } from 'lucide-react';
 import { chatbotApi } from '../../apis/api/chatbotApi';
-import logoSvg from '../assets/Logo.svg';
+import beeWithWing from '../assets/bee-with-wing.png';
+import beeWithoutWing from '../assets/bee-without-wing.png';
 import './BondRoomChatbot.css';
 
 const FAQ_QUESTIONS = [
@@ -108,8 +109,8 @@ const BondRoomChatbot = () => {
           </div>
           
           <span className="bond-chatbot-avatar bond-chatbot-avatar-image" aria-hidden="true">
-            <img src={logoSvg} alt="" className="bee-frame bee-frame-rest" width="54" height="54" loading="lazy" decoding="async" />
-            <img src={logoSvg} alt="" className="bee-frame bee-frame-wing" width="54" height="54" loading="lazy" decoding="async" />
+            <img src={beeWithoutWing} alt="" className="bee-frame bee-frame-rest" />
+            <img src={beeWithWing} alt="" className="bee-frame bee-frame-wing" />
           </span>
           
           <div className="bond-chatbot-prompt-wrap">
@@ -158,7 +159,7 @@ const BondRoomChatbot = () => {
               >
                 {item.role === 'assistant' && (
                   <div className="message-avatar">
-                    <img src={logoSvg} alt="" className="mini-bee-image" width="16" height="16" loading="lazy" decoding="async" />
+                    <img src={beeWithoutWing} alt="" className="mini-bee-image" />
                   </div>
                 )}
                 <div className={`bond-chatbot-message ${item.role === 'user' ? 'is-user' : 'is-assistant'}`}>
@@ -169,7 +170,7 @@ const BondRoomChatbot = () => {
             {loading ? (
               <div className="bond-chatbot-message-wrapper is-assistant">
                 <div className="message-avatar">
-                  <img src={logoSvg} alt="" className="mini-bee-image typing-bee-image" width="16" height="16" loading="lazy" decoding="async" />
+                  <img src={beeWithWing} alt="" className="mini-bee-image typing-bee-image" />
                 </div>
                 <div className="bond-chatbot-typing">
                   <span className="typing-dot"></span>
