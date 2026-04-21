@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { menteeApi } from "../apis/api/menteeApi";
 import logo from "./assets/logo.png";
@@ -120,15 +120,30 @@ function useOnScreen(threshold = 0.1) {
   return [ref, visible];
 }
 
-function Particles() {
+function Particles({ enabled = true }) {
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 8 }).map((_, index) => ({
+        id: index,
+        size: 4 + (index % 4),
+        left: `${(index * 13) % 100}%`,
+        top: `${(index * 17) % 100}%`,
+        duration: `${4 + (index % 3)}s`,
+        delay: `${(index % 4) * 0.35}s`,
+      })),
+    [],
+  );
+
+  if (!enabled) return null;
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: 15 }).map((_, i) => (
-        <div key={i} className="absolute rounded-full opacity-15" style={{
-          width: `${3 + Math.random() * 6}px`, height: `${3 + Math.random() * 6}px`,
+      {particles.map((particle, i) => (
+        <div key={particle.id} className="absolute rounded-full opacity-15" style={{
+          width: `${particle.size}px`, height: `${particle.size}px`,
           background: ["#5D3699", "#5B2CC7", "#FDD253", "#8E61CE", "#7B4CBC"][i % 5],
-          left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
-          animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`, animationDelay: `${Math.random() * 3}s`,
+          left: particle.left, top: particle.top,
+          animation: `float ${particle.duration} ease-in-out infinite`, animationDelay: particle.delay,
         }} />
       ))}
     </div>
@@ -193,12 +208,20 @@ function MentorRingCarousel({ items, onSelectMentor, paused = false, stepSignal 
 
   useEffect(() => {
     applyArcLayout();
+    if (paused) {
+      if (rafRef.current) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      lastTsRef.current = null;
+      return undefined;
+    }
     const tick = (ts) => {
       if (lastTsRef.current === null) lastTsRef.current = ts;
       const dt = Math.min(0.05, (ts - lastTsRef.current) / 1000);
       lastTsRef.current = ts;
 
-      if (!paused && !dragRef.current) {
+      if (!dragRef.current) {
         const blend = 1 - Math.exp(-dt * 8.2);
         speedRef.current += (targetSpeedRef.current - speedRef.current) * blend;
         phaseRef.current = (phaseRef.current + speedRef.current * dt + items.length) % items.length;
@@ -295,7 +318,7 @@ function MentorRingCarousel({ items, onSelectMentor, paused = false, stepSignal 
               }}
             >
               <div className="lp-arc-card-inner">
-                <img src={item.image} alt={item.name} className="lp-arc-img" draggable={false} />
+                <img src={item.image} alt={item.name} className="lp-arc-img" draggable={false} loading="lazy" decoding="async" />
                 <div className="lp-arc-info">
                   <strong>{item.name}</strong>
                   <span>{item.role}</span>
@@ -312,12 +335,25 @@ function MentorRingCarousel({ items, onSelectMentor, paused = false, stepSignal 
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [donateEnabled] = useState(true);
+  const [motionEnabled, setMotionEnabled] = useState(true);
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [mentorCards, setMentorCards] = useState(FALLBACK_MENTORS);
   const [activeStory, setActiveStory] = useState(0);
   const [mentorStepSignal, setMentorStepSignal] = useState({ tick: 0, dir: 0 });
 
   useEffect(() => { const t = setInterval(() => setActiveStory((p) => (p + 1) % STORIES.length), 5000); return () => clearInterval(t); }, []);
+  useEffect(() => {
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleMotionChange = () => setMotionEnabled(!motionQuery.matches);
+    handleMotionChange();
+    try {
+      motionQuery.addEventListener("change", handleMotionChange);
+      return () => motionQuery.removeEventListener("change", handleMotionChange);
+    } catch {
+      motionQuery.addListener(handleMotionChange);
+      return () => motionQuery.removeListener(handleMotionChange);
+    }
+  }, []);
   useEffect(() => {
     let cancelled = false;
     const loadMentors = async () => {
@@ -429,7 +465,7 @@ export default function LandingPage() {
       <header className="theme-v-header fixed top-0 inset-x-0 z-50">
         <Wrap className="flex items-center justify-between h-[60px] 2xl:h-[72px] min-[2200px]:h-[84px]">
           <Link to="/" className="flex flex-col items-center leading-none group">
-            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 2xl:h-12 min-[2200px]:h-14 w-auto object-contain group-hover:scale-105 transition-transform" />
+            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 2xl:h-12 min-[2200px]:h-14 w-auto object-contain group-hover:scale-105 transition-transform" decoding="async" />
             <span className="theme-v-tagline mt-0.5 block text-[8px] leading-tight tracking-wide sm:text-[9px] 2xl:text-[11px] min-[2200px]:text-[13px]">Bridging Old and New Destinies</span>
           </Link>
           <nav className="hidden md:flex items-center gap-0.5 2xl:gap-1.5 min-[2200px]:gap-2">
@@ -476,7 +512,7 @@ export default function LandingPage() {
 
       {/* ═══ HERO ═══ */}
       <section ref={heroRef} className="relative pt-[64px] bg-gradient-to-b from-[#4A2B7A] via-[#5D3699] to-[#3D1F6D] overflow-hidden">
-        <Particles />
+        <Particles enabled={motionEnabled} />
         <div className="absolute -top-36 -left-36 w-[480px] h-[480px] bg-[#5B2CC7]/[.07] rounded-full blur-3xl ab" />
         <div className="absolute top-8 -right-28 w-[400px] h-[400px] bg-[#8E61CE]/10 rounded-full blur-3xl ab d3" />
         <div className="absolute bottom-0 left-1/3 w-[420px] h-[420px] bg-[#FDD253]/[.07] rounded-full blur-3xl ab d6" />
@@ -488,7 +524,7 @@ export default function LandingPage() {
             {/* LEFT */}
             <div className="hidden lg:flex lg:col-span-3 flex-col items-center min-[2200px]:items-start gap-4 2xl:gap-5 min-[2200px]:gap-6">
               <div className={`${heroVis ? "asr d3" : "opacity-0"} w-full max-w-[260px] 2xl:max-w-[320px] min-[2200px]:max-w-[420px]`}>
-                <img src={happyStudent} alt="Happy Teens" className="w-full h-auto object-contain drop-shadow-[0_16px_30px_rgba(93,54,153,0.18)] rounded-2xl" />
+                <img src={happyStudent} alt="Happy Teens" className="w-full h-auto object-contain drop-shadow-[0_16px_30px_rgba(93,54,153,0.18)] rounded-2xl" loading="eager" fetchPriority="high" decoding="async" />
               </div>
               <div className={`${heroVis ? "afi d7" : "opacity-0"} relative w-[110px] h-[110px] 2xl:w-[140px] 2xl:h-[140px] min-[2200px]:w-[180px] min-[2200px]:h-[180px]`}>
                 <div className="absolute inset-0 border-2 border-dashed border-[#DDD7ED] rounded-full asp" />
@@ -658,7 +694,7 @@ export default function LandingPage() {
 
       {/* ═══ STATS ═══ */}
       <section ref={statsRef} className="py-8 sm:py-10 bg-gradient-to-b from-[#5D3699] to-[#4A2B7A] relative overflow-hidden">
-        <Particles />
+        <Particles enabled={motionEnabled} />
         <Wrap>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {[{v:"Student-first",s:"",l:"Teens guided",e:"🎓",g:"from-[#5D3699] to-[#7B4CBC]"},
@@ -678,7 +714,7 @@ export default function LandingPage() {
 
       {/* ═══ HOW IT WORKS ═══ */}
       <section id="about" ref={howRef} className="py-10 sm:py-14 bg-[#4A2B7A] relative overflow-hidden">
-        <Particles />
+        <Particles enabled={motionEnabled} />
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#5B2CC7]/5 rounded-full blur-3xl" />
         <Wrap>
           <div className={`text-center mb-8 sm:mb-10 ${howVis?"asu":"opacity-0"}`}>
@@ -712,7 +748,7 @@ export default function LandingPage() {
 
       {/* ═══ SAFETY / TRUST ═══ */}
       <section id="safety" ref={trustRef} className="py-10 sm:py-14 bg-gradient-to-b from-[#5D3699] to-[#4A2B7A] relative overflow-hidden">
-        <Particles />
+        <Particles enabled={motionEnabled} />
         <Wrap>
           <div className={`text-center mb-7 sm:mb-10 ${trustVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full gl border border-[#DDD7ED] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">🛡️ Safety first</span>
@@ -750,7 +786,7 @@ export default function LandingPage() {
 
       {/* ═══ Teen VOICES ═══ */}
       <section id="stories" ref={voicesRef} className="py-10 sm:py-14 bg-[#4A2B7A] relative overflow-hidden">
-        <Particles />
+        <Particles enabled={motionEnabled} />
         <Wrap>
           <div className={`text-center mb-7 sm:mb-10 ${voicesVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">💬 Teen voices</span>
@@ -808,7 +844,7 @@ export default function LandingPage() {
 
       {/* ═══ MENTORS ═══ */}
       <section id="volunteer" ref={mentorSecRef} className="py-10 sm:py-14 bg-gradient-to-b from-[#5D3699] to-[#4A2B7A] relative overflow-hidden">
-        <Particles />
+        <Particles enabled={motionEnabled} />
         <Wrap>
           <div className={`flex flex-col sm:flex-row sm:items-end sm:justify-between mb-7 sm:mb-10 gap-3 ${mentorSecVis?"asu":"opacity-0"}`}>
             <div>
@@ -839,7 +875,7 @@ export default function LandingPage() {
               >
                 ›
               </button>
-              <MentorRingCarousel items={mentorCards} onSelectMentor={setSelectedMentor} paused={Boolean(selectedMentor)} stepSignal={mentorStepSignal} />
+              <MentorRingCarousel items={mentorCards} onSelectMentor={setSelectedMentor} paused={!mentorSecVis || Boolean(selectedMentor)} stepSignal={mentorStepSignal} />
             </div>
           )}
         </Wrap>
@@ -893,7 +929,7 @@ export default function LandingPage() {
 
       {/* ═══ WHY BOND ROOM ═══ */}
       <section ref={whyRef} className="py-10 sm:py-14 bg-[#4A2B7A] relative overflow-hidden">
-        <Particles />
+        <Particles enabled={motionEnabled} />
         <Wrap>
           <div className={`text-center mb-7 sm:mb-10 ${whyVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full bg-[#EDE3FF] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">Why choose us</span>
@@ -925,7 +961,7 @@ export default function LandingPage() {
 
       {/* ═══ FAQ ═══ */}
       <section ref={faqRef} className="py-10 sm:py-14 bg-gradient-to-b from-[#5D3699] to-[#4A2B7A] relative overflow-hidden">
-        <Particles />
+        <Particles enabled={motionEnabled} />
         <div className="max-w-[720px] mx-auto px-4 sm:px-6">
           <div className={`text-center mb-7 sm:mb-10 ${faqVis?"asu":"opacity-0"}`}>
             <span className="inline-block px-3 py-1 rounded-full gl border border-[#DDD7ED] text-[#5D3699] text-[11px] font-bold uppercase tracking-wider mb-2">❓ Got questions?</span>
@@ -946,7 +982,7 @@ export default function LandingPage() {
 
       {/* ═══ EDITORIAL CTA ═══ */}
       <section ref={ctaRef} className="py-10 sm:py-14 bg-[#4A2B7A] relative overflow-hidden">
-        <Particles />
+        <Particles enabled={motionEnabled} />
         <div className="absolute top-6 left-6 w-16 h-16 bg-[#FDD253]/20 rounded-full blur-lg af" />
         <div className="absolute bottom-6 right-6 w-14 h-14 bg-[#5B2CC7]/10 rounded-lg rotate-45 blur-md afs" />
         <Wrap className={ctaVis?"asu":"opacity-0"}>
@@ -981,7 +1017,7 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 mb-8">
             <div className="max-w-xs">
               <div className="flex items-center gap-2 mb-3">
-                <img src={logoSvg} alt="Bond Room" className="p-3 bg-white h-20 w-auto object-contain" />
+                <img src={logoSvg} alt="Bond Room" className="p-3 bg-white h-20 w-auto object-contain" loading="lazy" decoding="async" />
               
               </div>
               <p className="text-[13px] text-white/55 leading-relaxed mb-4">Bridging Old and New Destinies — A safe mentoring platform connecting Teens with experienced mentors who genuinely care.</p>
@@ -1081,6 +1117,7 @@ function FaqItem({ question, answer, index, visible }) {
     </div>
   );
 }
+
 
 
 
