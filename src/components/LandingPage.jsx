@@ -4,7 +4,6 @@ import { menteeApi } from "../apis/api/menteeApi";
 import logo from "./assets/logo.png";
 import logoSvg from "./assets/Logo.svg";
 import happyStudent from "./assets/happystudent.png";
-import avatarFallback from "./assets/avatar-1.jpg";
 
 const MENTORS = [
   { id: 1, name: "Dr. Meera Iyer", role: "Retired Professor · Physics", city: "Bangalore", qualification: "Ph.D. Physics, IISc", bio: "35 years of teaching physics to young minds. Passionate about making complex concepts simple and fun.", tags: ["Physics", "Board Exams", "Career Guidance"], languages: ["English", "Hindi", "Kannada"], rating: 4.9, avatar: "MI", color: "#7B4CBC" },
@@ -74,7 +73,7 @@ const toLandingMentorCard = (mentor, index = 0) => {
   const tags = tagsRaw.filter(Boolean).slice(0, 3);
   const languages = Array.isArray(source?.languages) ? source.languages.filter(Boolean) : [];
   const resolvedImage = resolveMediaUrl(source?.profile_photo || source?.avatar || source?.image || "");
-  const image = String(resolvedImage || "").trim() || avatarFallback;
+  const image = String(resolvedImage || "").trim() || logo;
   const palette = ["#7B4CBC", "#5B2CC7", "#5D3699", "#8E61CE", "#4A2B7A"];
   const color = palette[(Number(source?.id) || index) % palette.length];
   const avatar = name.split(" ").filter(Boolean).slice(0, 2).map((x) => x[0]?.toUpperCase() || "").join("") || "M";
@@ -318,7 +317,7 @@ function MentorRingCarousel({ items, onSelectMentor, paused = false, stepSignal 
               }}
             >
               <div className="lp-arc-card-inner">
-                <img src={item.image} alt={item.name} className="lp-arc-img" draggable={false} loading="lazy" decoding="async" />
+                <img src={item.image} alt={item.name} className="lp-arc-img" draggable={false} loading="lazy" decoding="async" width="408" height="497" />
                 <div className="lp-arc-info">
                   <strong>{item.name}</strong>
                   <span>{item.role}</span>
@@ -340,6 +339,7 @@ export default function LandingPage() {
   const [mentorCards, setMentorCards] = useState(FALLBACK_MENTORS);
   const [activeStory, setActiveStory] = useState(0);
   const [mentorStepSignal, setMentorStepSignal] = useState({ tick: 0, dir: 0 });
+  const [mentorSecRef, mentorSecVis] = useOnScreen(0.1);
 
   useEffect(() => { const t = setInterval(() => setActiveStory((p) => (p + 1) % STORIES.length), 5000); return () => clearInterval(t); }, []);
   useEffect(() => {
@@ -355,6 +355,7 @@ export default function LandingPage() {
     }
   }, []);
   useEffect(() => {
+    if (!mentorSecVis) return undefined;
     let cancelled = false;
     const loadMentors = async () => {
       try {
@@ -368,7 +369,7 @@ export default function LandingPage() {
     };
     loadMentors();
     return () => { cancelled = true; };
-  }, []);
+  }, [mentorSecVis]);
 
   const [statsRef, statsVis] = useOnScreen(0.15);
   const c1 = useCounter(2400, 2200, statsVis);
@@ -380,7 +381,6 @@ export default function LandingPage() {
   const [howRef, howVis] = useOnScreen(0.1);
   const [trustRef, trustVis] = useOnScreen(0.1);
   const [voicesRef, voicesVis] = useOnScreen(0.1);
-  const [mentorSecRef, mentorSecVis] = useOnScreen(0.1);
   const [ctaRef, ctaVis] = useOnScreen(0.1);
   const [whyRef, whyVis] = useOnScreen(0.1);
   const [faqRef, faqVis] = useOnScreen(0.1);
@@ -465,7 +465,7 @@ export default function LandingPage() {
       <header className="theme-v-header fixed top-0 inset-x-0 z-50">
         <Wrap className="flex items-center justify-between h-[60px] 2xl:h-[72px] min-[2200px]:h-[84px]">
           <Link to="/" className="flex flex-col items-center leading-none group">
-            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 2xl:h-12 min-[2200px]:h-14 w-auto object-contain group-hover:scale-105 transition-transform" decoding="async" />
+            <img src={logo} alt="Bond Room" className="theme-v-logo h-10 2xl:h-12 min-[2200px]:h-14 w-auto object-contain group-hover:scale-105 transition-transform" decoding="async" width="180" height="56" />
             <span className="theme-v-tagline mt-0.5 block text-[8px] leading-tight tracking-wide sm:text-[9px] 2xl:text-[11px] min-[2200px]:text-[13px]">Bridging Old and New Destinies</span>
           </Link>
           <nav className="hidden md:flex items-center gap-0.5 2xl:gap-1.5 min-[2200px]:gap-2">
@@ -479,7 +479,7 @@ export default function LandingPage() {
             {donateEnabled && <Link to="/donate" className="theme-v-cta px-3.5 py-1.5 2xl:px-4.5 2xl:py-2 min-[2200px]:px-5 min-[2200px]:py-2.5 text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-semibold rounded-lg hover:scale-105 transition-all">Donate</Link>}
             <Link to="/login" className="theme-v-cta px-4 py-1.5 2xl:px-5 2xl:py-2 min-[2200px]:px-6 min-[2200px]:py-2.5 text-[13px] 2xl:text-[15px] min-[2200px]:text-[17px] font-semibold rounded-lg shadow-md shadow-[#2D1A4F]/30 hover:shadow-[#2D1A4F]/45 hover:scale-105 transition-all">Log in</Link>
           </div>
-          <button onClick={() => setMobileOpen(true)} className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/10 transition">
+          <button onClick={() => setMobileOpen(true)} aria-label="Open navigation menu" className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/10 transition">
             <svg className="theme-v-menu-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
         </Wrap>
@@ -524,7 +524,7 @@ export default function LandingPage() {
             {/* LEFT */}
             <div className="hidden lg:flex lg:col-span-3 flex-col items-center min-[2200px]:items-start gap-4 2xl:gap-5 min-[2200px]:gap-6">
               <div className={`${heroVis ? "asr d3" : "opacity-0"} w-full max-w-[260px] 2xl:max-w-[320px] min-[2200px]:max-w-[420px]`}>
-                <img src={happyStudent} alt="Happy Teens" className="w-full h-auto object-contain drop-shadow-[0_16px_30px_rgba(93,54,153,0.18)] rounded-2xl" loading="eager" fetchPriority="high" decoding="async" />
+                <img src={happyStudent} alt="Happy Teens" className="w-full h-auto object-contain drop-shadow-[0_16px_30px_rgba(93,54,153,0.18)] rounded-2xl" loading="eager" fetchPriority="high" decoding="async" width="1024" height="768" />
               </div>
               <div className={`${heroVis ? "afi d7" : "opacity-0"} relative w-[110px] h-[110px] 2xl:w-[140px] 2xl:h-[140px] min-[2200px]:w-[180px] min-[2200px]:h-[180px]`}>
                 <div className="absolute inset-0 border-2 border-dashed border-[#DDD7ED] rounded-full asp" />
@@ -775,7 +775,7 @@ export default function LandingPage() {
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/80 shadow-sm transition-all group-hover:scale-110 group-hover:rotate-3">
                     <span className="text-2xl">{t.icon}</span>
                   </div>
-                  <h4 className="text-[15px] font-bold leading-tight text-[#111827]">{t.title}</h4>
+                  <h3 className="text-[15px] font-bold leading-tight text-[#111827]">{t.title}</h3>
                 </div>
                 <p className="text-[13px] text-[#5F6B81] leading-relaxed">{t.desc}</p>
               </div>
@@ -837,7 +837,7 @@ export default function LandingPage() {
               </div>
             </div>
             </div>
-            <div className="flex items-center justify-center gap-1.5 mt-3">{STORIES.map((_,i)=><button key={i} onClick={()=>setActiveStory(i)} className={`h-2 rounded-full transition-all ${i===activeStory?"bg-[#5D3699] w-6":"bg-[#DDD7ED] w-2"}`} />)}</div>
+            <div className="flex items-center justify-center gap-1.5 mt-3">{STORIES.map((_,i)=><button key={i} type="button" aria-label={`Show story ${i + 1}`} onClick={()=>setActiveStory(i)} className={`h-8 rounded-full transition-all ${i===activeStory?"bg-[#5D3699] w-8":"bg-[#DDD7ED] w-8"}`} />)}</div>
           </div>
         </Wrap>
       </section>
@@ -950,7 +950,7 @@ export default function LandingPage() {
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/80 shadow-sm transition-all group-hover:scale-110 group-hover:rotate-3">
                     <span className="text-2xl">{item.i}</span>
                   </div>
-                  <h4 className="font-bold text-[#111827] text-[15px] leading-tight">{item.t}</h4>
+                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight">{item.t}</h3>
                 </div>
                 <p className="text-[13px] text-[#5F6B81] leading-relaxed">{item.d}</p>
               </div>
@@ -1017,12 +1017,12 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 mb-8">
             <div className="max-w-xs">
               <div className="flex items-center gap-2 mb-3">
-                <img src={logoSvg} alt="Bond Room" className="p-3 bg-white h-20 w-auto object-contain" loading="lazy" decoding="async" />
+                <img src={logoSvg} alt="Bond Room" className="p-3 bg-white h-20 w-auto object-contain" loading="lazy" decoding="async" width="220" height="80" />
               
               </div>
               <p className="text-[13px] text-white/55 leading-relaxed mb-4">Bridging Old and New Destinies — A safe mentoring platform connecting Teens with experienced mentors who genuinely care.</p>
               <div className="flex items-center gap-3">
-                <a href="https://www.instagram.com/bondroomfoundation/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition">
+                <a href="https://www.instagram.com/bondroomfoundation/" target="_blank" rel="noreferrer" aria-label="Bond Room Instagram" className="inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition">
                   <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <rect x="3" y="3" width="18" height="18" rx="5" />
@@ -1031,7 +1031,7 @@ export default function LandingPage() {
                     </svg>
                   </span>
                 </a>
-                <a href="https://www.linkedin.com/in/bond-room-374aaa393/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition">
+                <a href="https://www.linkedin.com/in/bond-room-374aaa393/" target="_blank" rel="noreferrer" aria-label="Bond Room LinkedIn" className="inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition">
                   <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 8.98h4v12H3v-12Zm7 0h3.8v1.64h.06c.53-1 1.83-2.06 3.76-2.06 4.02 0 4.76 2.65 4.76 6.1v6.32h-4v-5.61c0-1.34-.02-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.97v5.7h-4v-12Z" />

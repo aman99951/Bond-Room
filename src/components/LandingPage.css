@@ -1,12 +1,11 @@
-﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Bond Room â€” Editorial Landing Page CSS
+/* ═══════════════════════════════════════════════
+   Bond Room — Editorial Landing Page CSS
    Fixed: cursor trail z-index, word descender
    clip, full responsive grid breakpoints
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+═══════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
 
-/* â”€â”€ tokens â”€â”€ */
+/* ── tokens ── */
 .lp {
   --bg:   #f7f4ff;
   --ink:  #1d2332;
@@ -27,7 +26,7 @@
   --lp-hero-scene-scale: 1;
 }
 
-/* â”€â”€ base â”€â”€ */
+/* ── base ── */
 .lp, .lp *, .lp *::before, .lp *::after { box-sizing: border-box; margin: 0; padding: 0; }
 /* hide native cursor only when custom cursor is active */
 html.has-custom-cursor,
@@ -46,13 +45,13 @@ html.has-custom-cursor * {
 .lp img { display: block; max-width: 100%; }
 .lp a   { text-decoration: none; }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    CURSOR
    z-index values:
-     canvas  9995  â€” trail behind dot/ring
-     ring    9996  â€” lerp ring
-     dot     9999  â€” solid tip always on top
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+     canvas  9995  — trail behind dot/ring
+     ring    9996  — lerp ring
+     dot     9999  — solid tip always on top
+══════════════════════════════════════ */
 .cr-canvas {
   position: fixed;
   inset: 0;
@@ -92,14 +91,14 @@ html.has-custom-cursor * {
   box-shadow: 0 0 0 1px rgba(185,154,239,0.28), 0 0 14px rgba(112,72,207,0.3);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    ROOT
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp { position: relative; overflow: hidden; background: var(--bg); }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    HEADER
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-hdr {
   position: fixed; top: 0; left: 0; right: 0;
   z-index: 200;
@@ -162,7 +161,7 @@ html.has-custom-cursor * {
 
 .lp-hdr-actions { display: flex; align-items: center; gap: 10px; }
 
-/* â”€â”€ buttons â”€â”€ */
+/* ── buttons ── */
 .lp-ghost {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 9px 18px; border-radius: 999px;
@@ -234,15 +233,15 @@ html.has-custom-cursor * {
 }
 .lp-drawer a:hover { color: var(--acc); }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    HERO
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-hero {
   position: relative;
   min-height: auto;
   padding: 88px clamp(20px,5vw,60px) 34px;
   display: flex; flex-direction: column; justify-content: flex-start;
-  overflow: visible;        /* NEVER clip the hero â€” words need space */
+  overflow: visible;        /* NEVER clip the hero — words need space */
 }
 .lp-hero::before {
   content: '';
@@ -560,17 +559,17 @@ html.has-custom-cursor * {
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* â”€â”€ TYPE BLOCK â”€â”€
+/* ── TYPE BLOCK ──
    Key rules:
-   â€¢ overflow: visible  â€” never clip anything here
-   â€¢ line-height: 1     â€” tight stacking
-   â€¢ each .lp-row uses align-items:flex-end (baseline align)
+   • overflow: visible  — never clip anything here
+   • line-height: 1     — tight stacking
+   • each .lp-row uses align-items:flex-end (baseline align)
 */
 .lp-type-block {
   display: flex; flex-direction: column;
   gap: 4px;                 /* small breathing room between rows */
   margin-bottom: 18px;
-  overflow: visible;        /* critical â€” never clip */
+  overflow: visible;        /* critical — never clip */
 }
 
 .lp-row {
@@ -583,10 +582,10 @@ html.has-custom-cursor * {
   padding-bottom: 4px;
 }
 
-/* â”€â”€ WORDS
+/* ── WORDS
    HeroWord in JSX wraps with overflow:hidden + paddingBottom:0.12em
    so descenders ("y","g","b") are never cut.
-   These CSS classes only control font/colour â€” not overflow.
+   These CSS classes only control font/colour — not overflow.
 */
 .lp-w {
   font-family: 'Playfair Display', Georgia, serif;
@@ -595,7 +594,7 @@ html.has-custom-cursor * {
   letter-spacing: -0.035em;
   line-height: 1;
   color: var(--ink);
-  /* no overflow:hidden here â€” that's handled in JSX HeroWord wrapper */
+  /* no overflow:hidden here — that's handled in JSX HeroWord wrapper */
 }
 .lp-w-muted   { color: var(--mute); font-size: clamp(1.8rem, 4.5vw, 4rem); }
 .lp-w-accent  { color: var(--acc); }
@@ -658,9 +657,9 @@ html.has-custom-cursor * {
   font-family: 'DM Mono', monospace; z-index: 2;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    MARQUEE
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-marquee {
   display: flex; overflow: hidden;
   border-top: 1px solid var(--line);
@@ -688,9 +687,9 @@ html.has-custom-cursor * {
   border-right: 1px solid var(--line);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    STATS
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-stats {
   display: grid; grid-template-columns: repeat(4,1fr);
   border-bottom: 1px solid var(--line);
@@ -744,9 +743,9 @@ html.has-custom-cursor * {
   font-family: 'DM Mono', monospace;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    SECTIONS (shared)
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-sec {
   padding: 44px clamp(18px,4vw,42px);
   max-width: var(--lp-frame-max); margin: 0 auto;
@@ -846,9 +845,9 @@ html.has-custom-cursor * {
 }
 .lp-link-arr:hover { gap: 9px; }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    HOW IT WORKS
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-how-grid {
   display: grid; grid-template-columns: repeat(3,1fr);
   gap: 2px; border: 1px solid var(--line);
@@ -922,9 +921,9 @@ html.has-custom-cursor * {
   color: #4f2c85;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    TRUST
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-trust-sec { max-width: unset; padding-inline: 0; }
 .lp-trust-sec .lp-sec-head {
   max-width: var(--lp-frame-max); margin-inline: auto;
@@ -1001,9 +1000,9 @@ html.has-custom-cursor * {
 }
 .lp-trust-item p { font-size: 0.86rem; color: #4f5d74; line-height: 1.55; }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    STORIES
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-story-stage { max-width: 800px; position: relative; }
 .lp-story {
   padding: 20px 18px;
@@ -1062,9 +1061,9 @@ html.has-custom-cursor * {
 }
 .lp-sdot.active { background: var(--gold); }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    MENTORS
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-mentor-carousel-shell {
   position: relative;
   margin-top: 18px;
@@ -1241,14 +1240,14 @@ html.has-custom-cursor * {
   color: #5d3aa1;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    FLAT-ARC 3D MENTOR CAROUSEL
    Matches Framer "3D Ring Carousel" reference:
-   â€“ All 5 cards always visible, spread full width
-   â€“ Center card faces forward, outer cards rotate inward
-   â€“ Height tapers from center outward (arc silhouette)
-   â€“ Hover lifts card with glow (toggleable)
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   – All 5 cards always visible, spread full width
+   – Center card faces forward, outer cards rotate inward
+   – Height tapers from center outward (arc silhouette)
+   – Hover lifts card with glow (toggleable)
+══════════════════════════════════════ */
 
 .lp-arc-shell {
   width: 100%;
@@ -1908,9 +1907,9 @@ html.has-custom-cursor * {
   display: none;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    EDITORIAL CTA
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-cta-sec {
   position: relative;
   background:
@@ -2002,9 +2001,9 @@ html.has-custom-cursor * {
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    FOOTER
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 .lp-footer {
   padding: 22px clamp(18px,4vw,42px) 16px;
   border-top: 1px solid var(--line);
@@ -2050,9 +2049,9 @@ html.has-custom-cursor * {
 }
 .lp-footer-btm span { display: flex; align-items: center; gap: 5px; }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    KEYFRAMES
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 @keyframes floatA {
   0%,100% { transform: translate(0,0);      }
   50%      { transform: translate(22px,30px); }
@@ -2102,11 +2101,11 @@ html.has-custom-cursor * {
   to { transform: translateX(120%); }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════
    RESPONSIVE
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════ */
 
-/* â”€â”€ tablet landscape (â‰¤ 1080px) â”€â”€ */
+/* ── tablet landscape (≤ 1080px) ── */
 @media (max-width: 1080px) {
   .lp-hero-depth    { display: none; }
   .lp-stats         { grid-template-columns: repeat(2,1fr); }
@@ -2118,7 +2117,7 @@ html.has-custom-cursor * {
   /* arc carousel handled inline */
 }
 
-/* â”€â”€ tablet portrait (â‰¤ 768px) â”€â”€ */
+/* ── tablet portrait (≤ 768px) ── */
 @media (max-width: 768px) {
   .lp-hdr {
     padding: 12px 14px;
@@ -2186,7 +2185,7 @@ html.has-custom-cursor * {
   .lp-drawer { inset: 0 0 0 20%; }
 }
 
-/* â”€â”€ mobile (â‰¤ 480px) â”€â”€ */
+/* ── mobile (≤ 480px) ── */
 @media (max-width: 480px) {
   .lp-hdr {
     padding: 10px 10px;
@@ -2488,7 +2487,7 @@ html.has-custom-cursor * {
   }
 }
 
-/* â”€â”€ reduced motion â”€â”€ */
+/* ── reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   .lp, .lp *, .lp *::before, .lp *::after { animation: none !important; transition: none !important; }
 }
