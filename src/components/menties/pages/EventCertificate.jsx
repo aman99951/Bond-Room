@@ -111,6 +111,11 @@ const PRESET_CERTIFICATES = {
     participantName: 'Sai Krishna, BVM',
     certificateNumber: 'BR-CERT-VOO-2026-SAIKRISHNA',
   },
+  gomathy: {
+    ...COMMON_CERTIFICATE_DATA,
+    participantName: 'Gomathy, Active Volunteer',
+    certificateNumber: 'BR-CERT-VOO-2026-GOMATHY',
+  },
 };
 
 const EventCertificate = ({ presetKey = '' }) => {
