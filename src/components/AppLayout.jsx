@@ -1,7 +1,54 @@
 ﻿// src/layouts/AppLayout.jsx
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
+import Register from './auth/Register';
+import MentorRegister from './auth/MentorRegister';
+import Login from './auth/Login';
+import NeedsAssessment from './auth/NeedsAssessment';
+import NeedsAssessmentQ2 from './auth/NeedsAssessmentQ2';
+import NeedsAssessmentQ3 from './auth/NeedsAssessmentQ3';
+import NeedsAssessmentQ4 from './auth/NeedsAssessmentQ4';
+import NeedsAssessmentQ5 from './auth/NeedsAssessmentQ5';
+import MainLayout from './MainLayout';
+import Dashboard from './menties/pages/Dashboard';
+import MySessions from './menties/pages/MySessions';
+import SessionRequests from './menties/pages/SessionRequests';
+import Profile from './menties/pages/Profile';
+import MentorDetails from './menties/pages/MentorDetails';
+import BookSession from './menties/pages/BookSession';
+import BookingSuccess from './menties/pages/BookingSuccess';
+import Feedback from './menties/pages/Feedback';
+import MentorProfile from './menties/pages/MentorProfile';
+import VolunteerEventRegister from './menties/pages/VolunteerEventRegister';
+import MenteeEventRegister from './menties/pages/MenteeEventRegister';
+import RegisteredEvents from './menties/pages/RegisteredEvents';
+import EventCertificate from './menties/pages/EventCertificate';
+import MenteeMeetingRoom from './menties/pages/MeetingRoom';
+import MentorVerifyIdentity from './mentors/pages/VerifyIdentity';
+import MentorOnboardingStatus from './mentors/pages/OnboardingStatus';
+import MentorTrainingModules from './mentors/pages/TrainingModules';
+import MentorTrainingBoundaries from './mentors/pages/TrainingBoundaries';
+import MentorTrainingQuiz from './mentors/pages/TrainingQuiz';
+import MentorImpactDashboard from './mentors/pages/ImpactDashboard';
+import MentorMySessions from './mentors/pages/MySessions';
+import MentorSessionRequests from './mentors/pages/SessionRequests';
+import MentorSessionCompleted from './mentors/pages/SessionCompleted';
+import MentorMeetingRoom from './mentors/pages/MeetingRoom';
+import MentorImpact from './mentors/pages/ImpactDashboard';
+import MentorAvailability from './mentors/pages/ManageAvailability';
+import MentorMyprofilePage from './mentors/pages/Myprofile';
+import MentorMenteeProfile from './mentors/pages/MenteeProfile';
+import SessionRecords from './shared/SessionRecords';
+import AdminPortal from './admin/AdminPortal';
+import AdminMentorReview from './admin/AdminMentorReview';
+import AdminActivityPage from './admin/AdminActivityPage';
+import AdminVolunteerEventsPage from './admin/AdminVolunteerEventsPage';
+import LandingPage from './LandingPage';
+import AboutUs from './AboutUs';
+import DonationPage from './DonationPage';
+import VolunteerPage from './VolunteerPage';
+import CompletedEventStoryPage from './CompletedEventStoryPage';
 import BondRoomChatbot from './chatbot/BondRoomChatbot';
 import {
   AUTH_LOGOUT_EVENT_NAME,
@@ -13,54 +60,6 @@ import { menteeApi } from '../apis/api/menteeApi';
 import { mentorApi } from '../apis/api/mentorApi';
 import { useMentorData } from '../apis/apihook/useMentorData';
 import SeoManager from '../seo/SeoManager';
-
-const Register = lazy(() => import('./auth/Register'));
-const MentorRegister = lazy(() => import('./auth/MentorRegister'));
-const Login = lazy(() => import('./auth/Login'));
-const NeedsAssessment = lazy(() => import('./auth/NeedsAssessment'));
-const NeedsAssessmentQ2 = lazy(() => import('./auth/NeedsAssessmentQ2'));
-const NeedsAssessmentQ3 = lazy(() => import('./auth/NeedsAssessmentQ3'));
-const NeedsAssessmentQ4 = lazy(() => import('./auth/NeedsAssessmentQ4'));
-const NeedsAssessmentQ5 = lazy(() => import('./auth/NeedsAssessmentQ5'));
-const MainLayout = lazy(() => import('./MainLayout'));
-const Dashboard = lazy(() => import('./menties/pages/Dashboard'));
-const MySessions = lazy(() => import('./menties/pages/MySessions'));
-const SessionRequests = lazy(() => import('./menties/pages/SessionRequests'));
-const Profile = lazy(() => import('./menties/pages/Profile'));
-const MentorDetails = lazy(() => import('./menties/pages/MentorDetails'));
-const BookSession = lazy(() => import('./menties/pages/BookSession'));
-const BookingSuccess = lazy(() => import('./menties/pages/BookingSuccess'));
-const Feedback = lazy(() => import('./menties/pages/Feedback'));
-const MentorProfile = lazy(() => import('./menties/pages/MentorProfile'));
-const VolunteerEventRegister = lazy(() => import('./menties/pages/VolunteerEventRegister'));
-const MenteeEventRegister = lazy(() => import('./menties/pages/MenteeEventRegister'));
-const RegisteredEvents = lazy(() => import('./menties/pages/RegisteredEvents'));
-const EventCertificate = lazy(() => import('./menties/pages/EventCertificate'));
-const MenteeMeetingRoom = lazy(() => import('./menties/pages/MeetingRoom'));
-const MentorVerifyIdentity = lazy(() => import('./mentors/pages/VerifyIdentity'));
-const MentorOnboardingStatus = lazy(() => import('./mentors/pages/OnboardingStatus'));
-const MentorTrainingModules = lazy(() => import('./mentors/pages/TrainingModules'));
-const MentorTrainingBoundaries = lazy(() => import('./mentors/pages/TrainingBoundaries'));
-const MentorTrainingQuiz = lazy(() => import('./mentors/pages/TrainingQuiz'));
-const MentorImpactDashboard = lazy(() => import('./mentors/pages/ImpactDashboard'));
-const MentorMySessions = lazy(() => import('./mentors/pages/MySessions'));
-const MentorSessionRequests = lazy(() => import('./mentors/pages/SessionRequests'));
-const MentorSessionCompleted = lazy(() => import('./mentors/pages/SessionCompleted'));
-const MentorMeetingRoom = lazy(() => import('./mentors/pages/MeetingRoom'));
-const MentorAvailability = lazy(() => import('./mentors/pages/ManageAvailability'));
-const MentorMyprofilePage = lazy(() => import('./mentors/pages/Myprofile'));
-const MentorMenteeProfile = lazy(() => import('./mentors/pages/MenteeProfile'));
-const SessionRecords = lazy(() => import('./shared/SessionRecords'));
-const AdminPortal = lazy(() => import('./admin/AdminPortal'));
-const AdminMentorReview = lazy(() => import('./admin/AdminMentorReview'));
-const AdminActivityPage = lazy(() => import('./admin/AdminActivityPage'));
-const AdminVolunteerEventsPage = lazy(() => import('./admin/AdminVolunteerEventsPage'));
-const LandingPage = lazy(() => import('./LandingPage'));
-const AboutUs = lazy(() => import('./AboutUs'));
-const DonationPage = lazy(() => import('./DonationPage'));
-const VolunteerPage = lazy(() => import('./VolunteerPage'));
-const CompletedEventStoryPage = lazy(() => import('./CompletedEventStoryPage'));
-const MentorImpact = MentorImpactDashboard;
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -420,8 +419,7 @@ const AppLayout = () => {
       <ScrollToTop />
       <AuthExpiryWatcher />
       <GlobalChatbot />
-      <Suspense fallback={<div className="px-6 py-8 text-sm text-[#6b7280]">Loading...</div>}>
-        <Routes>
+      <Routes>
         <Route path="/" element={<RootRoute />} />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/volunteer" element={<VolunteerPage />} />
@@ -515,8 +513,7 @@ const AppLayout = () => {
         <Route path="*" element={<ReturnToPreviousRoute />} />
       </Route>
         <Route path="*" element={<ReturnToPreviousRoute />} />
-        </Routes>
-      </Suspense>
+      </Routes>
     </Router>
   );
 };
