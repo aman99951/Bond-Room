@@ -59,6 +59,7 @@ import {
 import { menteeApi } from '../apis/api/menteeApi';
 import { mentorApi } from '../apis/api/mentorApi';
 import { useMentorData } from '../apis/apihook/useMentorData';
+import SeoManager from '../seo/SeoManager';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -414,6 +415,7 @@ const AppLayout = () => {
 
   return (
     <Router>
+      <SeoManager />
       <ScrollToTop />
       <AuthExpiryWatcher />
       <GlobalChatbot />

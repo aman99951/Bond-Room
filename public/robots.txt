@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /my-sessions
+Disallow: /session-requests
+Disallow: /session-records
+Disallow: /profile
+Disallow: /mentor-
+Disallow: /needs-assessment
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://bondroom.org/sitemap.xml
