@@ -1,8 +1,44 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.bondroom.org"
+        }
+      ],
+      "destination": "https://bondroom.org/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/volunteer", "destination": "/volunteer.html" },
+    { "source": "/volunteer-events", "destination": "/volunteer.html" },
+    { "source": "/donate", "destination": "/donate.html" },
+    { "source": "/volunteer/completed/(.*)", "destination": "/completed-story.html" },
+    { "source": "/admin", "destination": "/noindex.html" },
+    { "source": "/admin/(.*)", "destination": "/noindex.html" },
+    { "source": "/login", "destination": "/noindex.html" },
+    { "source": "/register", "destination": "/noindex.html" },
+    { "source": "/mentor-register", "destination": "/noindex.html" },
+    { "source": "/mentor-(.*)", "destination": "/noindex.html" },
+    { "source": "/dashboard", "destination": "/noindex.html" },
+    { "source": "/my-sessions", "destination": "/noindex.html" },
+    { "source": "/session-(.*)", "destination": "/noindex.html" },
+    { "source": "/profile", "destination": "/noindex.html" },
+    { "source": "/book-session", "destination": "/noindex.html" },
+    { "source": "/booking-success", "destination": "/noindex.html" },
+    { "source": "/feedback", "destination": "/noindex.html" },
+    { "source": "/registered-events", "destination": "/noindex.html" },
+    { "source": "/event-(.*)", "destination": "/noindex.html" },
+    { "source": "/needs-assessment", "destination": "/noindex.html" },
+    { "source": "/needs-assessment/(.*)", "destination": "/noindex.html" },
     {
       "source": "/((?!.*\\.[^/]+$).*)",
-      "destination": "/index.html"
+      "destination": "/noindex.html"
     }
   ]
 }

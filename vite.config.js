@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'node:path'
 
 import tailwindcss from '@tailwindcss/vite'
 
@@ -10,6 +11,18 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+          about: resolve(__dirname, 'about.html'),
+          volunteer: resolve(__dirname, 'volunteer.html'),
+          donate: resolve(__dirname, 'donate.html'),
+          completedStory: resolve(__dirname, 'completed-story.html'),
+          noindex: resolve(__dirname, 'noindex.html'),
+        },
+      },
+    },
     server: {
       proxy: {
         '/api': {
