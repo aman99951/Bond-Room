@@ -97,8 +97,10 @@ const isPublicPath = (pathname) => {
     '/volunteer',
     '/volunteer-events',
     '/donate',
+    '/certificates/voice-of-ocean-anusha',
   ]);
   if (exactPublicPaths.has(pathname)) return true;
+  if (pathname.startsWith('/certificates/')) return true;
   if (pathname.startsWith('/volunteer-events/')) return true;
   if (pathname.startsWith('/volunteer/completed/')) return true;
   return pathname.startsWith('/needs-assessment/');
@@ -426,6 +428,11 @@ const AppLayout = () => {
         <Route path="/volunteer/completed/:eventId" element={<CompletedEventStoryPage />} />
         <Route path="/volunteer-events" element={<Navigate to="/volunteer" replace />} />
         <Route path="/volunteer-events/:eventId/register" element={<VolunteerEventRegister />} />
+        <Route
+          path="/certificates/voice-of-ocean-anusha"
+          element={<EventCertificate presetKey="voice-of-ocean-anusha" />}
+        />
+        <Route path="/certificates/:presetId" element={<EventCertificate />} />
         <Route path="/donate" element={<DonationPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
