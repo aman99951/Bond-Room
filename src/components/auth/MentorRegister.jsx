@@ -283,7 +283,6 @@ const MentorRegister = () => {
     message: '',
     type: 'success',
   });
-  const [emailHint, setEmailHint] = useState('');
   const [phoneHint, setPhoneHint] = useState('');
   const [mentorId, setMentorId] = useState(null);
   const [emailVerified, setEmailVerified] = useState(false);
@@ -347,7 +346,6 @@ const MentorRegister = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const skipDraftPersistenceRef = useRef(false);
-  const isDev = Boolean(import.meta?.env?.DEV);
   const dobBounds = getMentorDobBounds();
   const dialCode = COUNTRY_DIAL_CODE[form.country] || '+91';
   const sectionOneFieldKeys = new Set([
@@ -421,12 +419,6 @@ const MentorRegister = () => {
     if (draft.validationState && typeof draft.validationState === 'object') {
       setValidationState((prev) => ({ ...prev, ...draft.validationState }));
     }
-    if (typeof draft.emailHint === 'string') {
-      setEmailHint(draft.emailHint);
-    }
-    if (typeof draft.phoneHint === 'string') {
-      setPhoneHint(draft.phoneHint);
-    }
     setDraftReady(true);
   }, []);
 
@@ -444,8 +436,6 @@ const MentorRegister = () => {
       formSection,
     touchedFields,
     validationState,
-    emailHint,
-    phoneHint,
   };
     try {
       window.localStorage.setItem(MENTOR_REGISTER_DRAFT_KEY, JSON.stringify(payload));
@@ -462,8 +452,6 @@ const MentorRegister = () => {
     formSection,
     touchedFields,
     validationState,
-    emailHint,
-    phoneHint,
     draftReady,
   ]);
 
@@ -597,8 +585,6 @@ const MentorRegister = () => {
     if (key === 'email') {
       setEmailVerified(false);
       setPhoneVerified(false);
-      setEmailHint('');
-      setPhoneHint('');
       setMentorId(null);
     }
     if (key === 'mobile') {
@@ -874,10 +860,6 @@ const MentorRegister = () => {
         throw new Error('Mobile number must be exactly 10 digits.');
       }
       const response = await sendMentorOtp(buildOtpPayload(channel));
-
-      if (channel === 'email' && response?.otp) {
-        setEmailHint(`Test OTP: ${response.otp}`);
-      }
       if (channel === 'phone' && response?.otp) {
         setPhoneHint(`Test OTP: ${response.otp}`);
       }
@@ -1998,22 +1980,11 @@ const MentorRegister = () => {
               }
               autoFocus
             />
-
-            {otpModal.channel === 'email' && emailHint && (
+            {otpModal.channel === 'phone' && phoneHint ? (
               <p className="mt-3 text-xs text-[#5b2c91] bg-[#f3ecff] rounded-lg p-2 animate-fadeIn">
-                🔑 {emailHint}
+                {phoneHint}
               </p>
-            )}
-            {otpModal.channel === 'phone' && phoneHint && (
-              <p className="mt-3 text-xs text-[#5b2c91] bg-[#f3ecff] rounded-lg p-2 animate-fadeIn">
-                🔑 {phoneHint}
-              </p>
-            )}
-            {isDev && (
-              <p className="mt-3 text-xs text-[#6b7280] bg-[#f9fafb] rounded-lg p-2 animate-fadeIn">
-                🧪 Local test OTP: 123456
-              </p>
-            )}
+            ) : null}
 
             <div className="mt-5 flex items-center justify-between gap-3">
               <button

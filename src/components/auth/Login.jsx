@@ -7,6 +7,7 @@ import logo from '../assets/Logo.svg';
 import mentorBottom from '../assets/teach1.png';
 import mentorLeft from '../assets/teach2.png';
 import imageContainer from '../assets/Image Container.png';
+import { authApi } from '../../apis/api/authApi';
 import { useMenteeAuth } from '../../apis/apihook/useMenteeAuth';
 import { clearAuthSession, mapAppRoleToUiRole } from '../../apis/api/storage';
 import { mentorApi } from '../../apis/api/mentorApi';
@@ -38,6 +39,15 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
   const [otpHint, setOtpHint] = useState('');
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [forgotVerified, setForgotVerified] = useState(false);
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [forgotLoading, setForgotLoading] = useState({ send: false, verify: false, reset: false });
+  const [forgotError, setForgotError] = useState('');
+  const [forgotInfo, setForgotInfo] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const navigate = useNavigate();
@@ -67,6 +77,110 @@ const Login = () => {
     setErrorMessage('');
     setInfoMessage('Mock OTP generated.');
     setOtpHint(`Mock OTP: ${MOCK_OTP}`);
+  };
+
+  const openForgotPassword = () => {
+    setForgotOpen(true);
+    setForgotEmail(email.trim().toLowerCase());
+    setForgotOtp('');
+    setForgotVerified(false);
+    setForgotNewPassword('');
+    setForgotConfirmPassword('');
+    setForgotError('');
+    setForgotInfo('');
+  };
+
+  const closeForgotPassword = () => {
+    setForgotOpen(false);
+    setForgotOtp('');
+    setForgotVerified(false);
+    setForgotNewPassword('');
+    setForgotConfirmPassword('');
+    setForgotError('');
+    setForgotInfo('');
+  };
+
+  const handleForgotSendOtp = async () => {
+    const normalizedEmail = forgotEmail.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setForgotError('Email is required.');
+      return;
+    }
+    setForgotError('');
+    setForgotInfo('');
+    setForgotLoading((prev) => ({ ...prev, send: true }));
+    try {
+      await authApi.sendPasswordResetOtp({ email: normalizedEmail });
+      setForgotInfo('OTP sent to your email.');
+    } catch (err) {
+      setForgotError(err?.message || 'Unable to send OTP.');
+    } finally {
+      setForgotLoading((prev) => ({ ...prev, send: false }));
+    }
+  };
+
+  const handleForgotVerifyOtp = async () => {
+    const normalizedEmail = forgotEmail.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setForgotError('Email is required.');
+      return;
+    }
+    if (forgotOtp.length !== 6) {
+      setForgotError('Please enter a valid 6-digit OTP.');
+      return;
+    }
+
+    setForgotError('');
+    setForgotInfo('');
+    setForgotLoading((prev) => ({ ...prev, verify: true }));
+    try {
+      await authApi.verifyPasswordResetOtp({ email: normalizedEmail, otp: forgotOtp });
+      setForgotVerified(true);
+      setForgotInfo('OTP verified. Set your new password.');
+    } catch (err) {
+      setForgotError(err?.message || 'OTP verification failed.');
+    } finally {
+      setForgotLoading((prev) => ({ ...prev, verify: false }));
+    }
+  };
+
+  const handleForgotResetPassword = async () => {
+    const normalizedEmail = forgotEmail.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setForgotError('Email is required.');
+      return;
+    }
+    if (!forgotVerified) {
+      setForgotError('Please verify OTP first.');
+      return;
+    }
+    if (!forgotNewPassword.trim()) {
+      setForgotError('New password is required.');
+      return;
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setForgotError('Passwords do not match.');
+      return;
+    }
+
+    setForgotError('');
+    setForgotInfo('');
+    setForgotLoading((prev) => ({ ...prev, reset: true }));
+    try {
+      await authApi.confirmPasswordReset({
+        email: normalizedEmail,
+        otp: forgotOtp,
+        new_password: forgotNewPassword,
+      });
+      setForgotInfo('Password reset successful. You can login now.');
+      setPassword('');
+      setShowPassword(false);
+      window.setTimeout(() => closeForgotPassword(), 700);
+    } catch (err) {
+      setForgotError(err?.message || 'Unable to reset password.');
+    } finally {
+      setForgotLoading((prev) => ({ ...prev, reset: false }));
+    }
   };
 
   const handleLogin = async (event) => {
@@ -356,6 +470,15 @@ const Login = () => {
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                           </button>
                         </div>
+                        <div className="mt-2 text-right">
+                          <button
+                            type="button"
+                            className="text-xs font-medium text-[#5b2c91] transition hover:text-[#4a2374] hover:underline"
+                            onClick={openForgotPassword}
+                          >
+                            Forgot Password?
+                          </button>
+                        </div>
                       </div>
                     </>
                   ) : (
@@ -480,6 +603,107 @@ const Login = () => {
       </main>
 
       <BottomAuth />
+      {forgotOpen && selectedRole === 'mentee' ? (
+        <div
+          className="lp-forgot-overlay"
+          onClick={closeForgotPassword}
+        >
+          <div
+            className="lp-forgot-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="lp-forgot-title">Forgot Password</h3>
+            <p className="lp-forgot-sub">
+              Enter your email, verify OTP, then set a new password.
+            </p>
+
+            <div className="lp-forgot-fields">
+              <input
+                type="email"
+                className="lp-input lp-forgot-input"
+                placeholder="Email address"
+                value={forgotEmail}
+                onChange={(event) => setForgotEmail(event.target.value)}
+                disabled={forgotLoading.send || forgotLoading.verify || forgotLoading.reset}
+              />
+              <div className="lp-forgot-action">
+                <button
+                  type="button"
+                  className="lp-forgot-btn"
+                  onClick={handleForgotSendOtp}
+                  disabled={forgotLoading.send || forgotLoading.verify || forgotLoading.reset}
+                >
+                  {forgotLoading.send ? 'Sending...' : 'Send OTP'}
+                </button>
+              </div>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                className="lp-input lp-forgot-input"
+                placeholder="Enter 6-digit OTP"
+                value={forgotOtp}
+                onChange={(event) => setForgotOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                disabled={forgotLoading.send || forgotLoading.verify || forgotLoading.reset}
+              />
+              <div className="lp-forgot-action">
+                <button
+                  type="button"
+                  className="lp-forgot-btn"
+                  onClick={handleForgotVerifyOtp}
+                  disabled={forgotLoading.send || forgotLoading.verify || forgotLoading.reset || forgotOtp.length !== 6}
+                >
+                  {forgotLoading.verify ? 'Verifying...' : 'Verify OTP'}
+                </button>
+              </div>
+
+              <input
+                type="password"
+                className="lp-input lp-forgot-input"
+                placeholder="New password"
+                value={forgotNewPassword}
+                onChange={(event) => setForgotNewPassword(event.target.value)}
+                disabled={!forgotVerified || forgotLoading.send || forgotLoading.verify || forgotLoading.reset}
+              />
+              <input
+                type="password"
+                className="lp-input lp-forgot-input"
+                placeholder="Confirm new password"
+                value={forgotConfirmPassword}
+                onChange={(event) => setForgotConfirmPassword(event.target.value)}
+                disabled={!forgotVerified || forgotLoading.send || forgotLoading.verify || forgotLoading.reset}
+              />
+
+              <div className="lp-forgot-footer">
+                <button
+                  type="button"
+                  className="lp-forgot-cancel"
+                  onClick={closeForgotPassword}
+                  disabled={forgotLoading.send || forgotLoading.verify || forgotLoading.reset}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="lp-forgot-btn"
+                  onClick={handleForgotResetPassword}
+                  disabled={!forgotVerified || forgotLoading.send || forgotLoading.verify || forgotLoading.reset}
+                >
+                  {forgotLoading.reset ? 'Updating...' : 'Reset Password'}
+                </button>
+              </div>
+
+              {forgotError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700">{forgotError}</div>
+              ) : null}
+              {forgotInfo ? (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-2 text-xs text-green-700">{forgotInfo}</div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
     </>
   );

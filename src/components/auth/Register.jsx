@@ -163,7 +163,7 @@ const Register = () => {
   const [menteeMobileVerified, setMenteeMobileVerified] = useState(false);
   const [otpModal, setOtpModal] = useState({ open: false, channel: 'email', otp: '' });
   const [otpError, setOtpError] = useState('');
-  const [otpHint, setOtpHint] = useState({ email: '', parentMobile: '', menteeMobile: '' });
+  const [mobileOtpHint, setMobileOtpHint] = useState({ parentMobile: '', menteeMobile: '' });
   const [otpBusy, setOtpBusy] = useState({ sending: false, verifying: false });
   const [otpCooldown, setOtpCooldown] = useState({ email: 0, parentMobile: 0, menteeMobile: 0 });
   const [showPassword, setShowPassword] = useState(false);
@@ -224,9 +224,6 @@ const Register = () => {
     if (typeof draft.menteeMobileVerified === 'boolean') {
       setMenteeMobileVerified(draft.menteeMobileVerified);
     }
-    if (draft.otpHint && typeof draft.otpHint === 'object') {
-      setOtpHint((prev) => ({ ...prev, ...draft.otpHint }));
-    }
     setDraftReady(true);
     return undefined;
   }, []);
@@ -248,7 +245,6 @@ const Register = () => {
       emailVerified,
       parentMobileVerified,
       menteeMobileVerified,
-      otpHint,
       signupSource,
       safeNextAfterRegister,
     };
@@ -264,7 +260,6 @@ const Register = () => {
     emailVerified,
     parentMobileVerified,
     menteeMobileVerified,
-    otpHint,
     signupSource,
     safeNextAfterRegister,
     draftReady,
@@ -313,11 +308,11 @@ const Register = () => {
       if (key === 'parentMobile') {
         setParentMobileVerified(false);
         setMenteeMobileVerified(form.menteeSameAsParent ? false : menteeMobileVerified);
-        setOtpHint((prev) => ({ ...prev, parentMobile: '', menteeMobile: '' }));
+        setMobileOtpHint((prev) => ({ ...prev, parentMobile: '', menteeMobile: '' }));
       }
       if (key === 'menteeMobile') {
         setMenteeMobileVerified(false);
-        setOtpHint((prev) => ({ ...prev, menteeMobile: '' }));
+        setMobileOtpHint((prev) => ({ ...prev, menteeMobile: '' }));
       }
       return;
     }
@@ -332,7 +327,7 @@ const Register = () => {
         menteeMobile: enabled ? normalizePhone(prev.parentMobile).slice(0, MOBILE_DIGITS_LENGTH) : '',
       }));
       setMenteeMobileVerified(enabled ? parentMobileVerified : false);
-      setOtpHint((prev) => ({ ...prev, menteeMobile: '' }));
+      setMobileOtpHint((prev) => ({ ...prev, menteeMobile: '' }));
       return;
     }
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -405,8 +400,11 @@ const Register = () => {
           ? { channel: 'email', email: value }
           : { channel: 'phone', mobile: value }
       );
-      if (response?.otp) {
-        setOtpHint((prev) => ({ ...prev, [channel]: `Test OTP: ${response.otp}` }));
+      if (channel !== 'email' && response?.otp) {
+        setMobileOtpHint((prev) => ({
+          ...prev,
+          [channel]: `Test OTP: ${response.otp}`,
+        }));
       }
       setOtpCooldown((prev) => ({ ...prev, [channel]: OTP_RESEND_COOLDOWN_SECONDS }));
       setInfoMessage(
@@ -1495,14 +1493,11 @@ const Register = () => {
               autoFocus
             />
 
-            {otpModal.channel === 'email' && otpHint.email ? (
-              <p className="mt-3 rounded-lg bg-[#f3ecff] p-2 text-xs text-[#5b2c91]">Test OTP: {otpHint.email}</p>
+            {otpModal.channel === 'parentMobile' && mobileOtpHint.parentMobile ? (
+              <p className="mt-3 rounded-lg bg-[#f3ecff] p-2 text-xs text-[#5b2c91]">{mobileOtpHint.parentMobile}</p>
             ) : null}
-            {otpModal.channel === 'parentMobile' && otpHint.parentMobile ? (
-              <p className="mt-3 rounded-lg bg-[#f3ecff] p-2 text-xs text-[#5b2c91]">Test OTP: {otpHint.parentMobile}</p>
-            ) : null}
-            {otpModal.channel === 'menteeMobile' && otpHint.menteeMobile ? (
-              <p className="mt-3 rounded-lg bg-[#f3ecff] p-2 text-xs text-[#5b2c91]">Test OTP: {otpHint.menteeMobile}</p>
+            {otpModal.channel === 'menteeMobile' && mobileOtpHint.menteeMobile ? (
+              <p className="mt-3 rounded-lg bg-[#f3ecff] p-2 text-xs text-[#5b2c91]">{mobileOtpHint.menteeMobile}</p>
             ) : null}
 
             <div className="mt-5 flex items-center justify-between gap-3">
