@@ -53,6 +53,8 @@ const NeedsAssessment = () => {
     type: 'error',
   });
   const assessmentSearch = location.search || '';
+  const fromParam = new URLSearchParams(location.search).get('from');
+  const showBackToDashboard = fromParam === 'dashboard';
 
   const options = ['Burnt Out', 'Anxious', 'Confused', 'Lonely', 'Hopeful', 'Other'];
 
@@ -199,9 +201,11 @@ const NeedsAssessment = () => {
           )}
 
           <div className="lp-na-actions">
-            <button type="button" onClick={() => navigate('/dashboard')} className="lp-na-btn-ghost">
-              Back to Dashboard
-            </button>
+            {showBackToDashboard ? (
+              <button type="button" onClick={() => navigate('/dashboard')} className="lp-na-btn-ghost">
+                Back to Dashboard
+              </button>
+            ) : null}
             <button type="button" onClick={handleNext} className="lp-na-btn-primary">Next Question {'\u2192'}</button>
           </div>
 

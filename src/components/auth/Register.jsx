@@ -79,6 +79,7 @@ const initialForm = {
   grade: '',
   email: '',
   password: '',
+  confirmPassword: '',
   dob: '',
   gender: '',
   parentConsent: true,
@@ -349,8 +350,18 @@ const Register = () => {
       if (!form.menteeSameAsParent && !digitsOnly) return true;
       return Boolean(digitsOnly && digitsOnly.length !== MOBILE_DIGITS_LENGTH);
     }
+    if (key === 'confirmPassword') {
+      return !String(form.confirmPassword || '').trim() || form.password !== form.confirmPassword;
+    }
     return !String(form[key] || '').trim();
   };
+
+  const getMentorLikeInputClasses = (hasError) =>
+    `w-full rounded-lg border px-4 py-2.5 text-sm transition-all duration-200 ${
+      hasError
+        ? 'border-red-300 bg-red-50 text-red-900 placeholder:text-red-400 hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400'
+        : 'border-[#d7d0e2] bg-white text-[#111827] hover:border-[#5b2c91] focus:outline-none focus:ring-2 focus:ring-[#5b2c91] focus:border-transparent placeholder:text-[#9ca3af]'
+    }`;
 
   const openOtpModal = async (channel) => {
     setErrorMessage('');
@@ -489,6 +500,7 @@ const Register = () => {
       !form.grade ||
       !form.email ||
       !form.password ||
+      !form.confirmPassword ||
       !form.dob ||
       !form.gender ||
       !form.schoolOrCollege ||
@@ -506,6 +518,10 @@ const Register = () => {
     }
     if (!isStrongPassword(form.password)) {
       notifyError(PASSWORD_REQUIREMENT_MESSAGE);
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      notifyError('Password and confirm password must match.');
       return;
     }
     if (!emailVerified) {
@@ -975,23 +991,23 @@ const Register = () => {
                     </h3>
                   </div>
 
-                  <div className="lp-register-row">
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="firstName">First Name *</label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-[10px]">
+                  <div className="group">
+                    <label htmlFor="firstName" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">First Name *</label>
                     <input
                       id="firstName"
-                      className={`lp-input ${hasRequiredFieldError('firstName') ? 'lp-input-error' : ''}`}
+                      className={getMentorLikeInputClasses(hasRequiredFieldError('firstName'))}
                       placeholder="e.g. Priya"
                       value={form.firstName}
                       onChange={(event) => updateField('firstName', event.target.value)}
                       onBlur={() => markFieldTouched('firstName')}
                     />
                   </div>
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="lastName">Last Name *</label>
+                  <div className="group">
+                    <label htmlFor="lastName" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">Last Name *</label>
                     <input
                       id="lastName"
-                      className={`lp-input ${hasRequiredFieldError('lastName') ? 'lp-input-error' : ''}`}
+                      className={getMentorLikeInputClasses(hasRequiredFieldError('lastName'))}
                       placeholder="e.g. Sharma"
                       value={form.lastName}
                       onChange={(event) => updateField('lastName', event.target.value)}
@@ -1080,9 +1096,9 @@ const Register = () => {
                     ) : null}
                   </div>
 
-                  <div className="lp-register-row">
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" id="registerGradeLabel">Grade *</label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-[10px] mt-3 lp-register-row-academic">
+                  <div className="group">
+                    <label id="registerGradeLabel" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">Grade *</label>
                     <div
                       className="lp-select-wrap"
                       tabIndex={0}
@@ -1093,7 +1109,7 @@ const Register = () => {
                     >
                       <button
                         type="button"
-                        className={`lp-input lp-select-trigger ${hasRequiredFieldError('grade') ? 'lp-input-error' : ''}`}
+                        className={`${getMentorLikeInputClasses(hasRequiredFieldError('grade'))} lp-select-trigger`}
                         onClick={() => setGradeOpen((open) => !open)}
                         aria-haspopup="listbox"
                         aria-expanded={gradeOpen}
@@ -1130,11 +1146,11 @@ const Register = () => {
                     </div>
                   </div>
 
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="dob">Date of Birth *</label>
+                  <div className="group">
+                    <label htmlFor="dob" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">Date of Birth *</label>
                     <BoundedDatePicker
                       id="dob"
-                      inputClassName={`lp-input ${hasRequiredFieldError('dob') ? 'lp-input-error' : ''}`}
+                      inputClassName={getMentorLikeInputClasses(hasRequiredFieldError('dob'))}
                       value={form.dob}
                       onChange={(nextValue) => updateField('dob', nextValue)}
                       onBlur={() => markFieldTouched('dob')}
@@ -1146,14 +1162,14 @@ const Register = () => {
                   </div>
                   </div>
 
-                  <div className="lp-register-row">
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="email">Email Address *</label>
-                    <div className="lp-register-inline-verify">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-[10px]">
+                  <div className="group">
+                    <label htmlFor="email" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">Email Address *</label>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <input
                         id="email"
                         type="email"
-                        className={`lp-input ${hasRequiredFieldError('email') ? 'lp-input-error' : ''}`}
+                        className={`${getMentorLikeInputClasses(hasRequiredFieldError('email'))} min-w-0 flex-1`}
                         placeholder="student@example.com"
                         value={form.email}
                         onChange={(event) => updateField('email', event.target.value)}
@@ -1161,7 +1177,7 @@ const Register = () => {
                       />
                       <button
                         type="button"
-                        className={`lp-vp-inline-btn ${emailVerified ? 'is-verified' : ''}`}
+                        className={`lp-vp-inline-btn w-full sm:w-auto sm:min-w-[96px] ${emailVerified ? 'is-verified' : ''}`}
                         onClick={() => openOtpModal('email')}
                       >
                         {emailVerified ? 'Verified' : 'Verify'}
@@ -1169,13 +1185,13 @@ const Register = () => {
                     </div>
                   </div>
 
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="password">Password *</label>
+                  <div className="group">
+                    <label htmlFor="password" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">Password *</label>
                     <div className="lp-password-wrap">
                       <input
                         id="password"
                         type={showPassword ? 'text' : 'password'}
-                        className={`lp-input lp-password-input ${hasRequiredFieldError('password') ? 'lp-input-error' : ''}`}
+                        className={`${getMentorLikeInputClasses(hasRequiredFieldError('password'))} lp-password-input`}
                         placeholder="Create password"
                         value={form.password}
                         onChange={(event) => updateField('password', event.target.value)}
@@ -1205,10 +1221,9 @@ const Register = () => {
                     ) : null}
                   </div>
                   </div>
-
-                  <div className="lp-register-row">
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" id="registerGenderLabel">Gender *</label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-[10px]">
+                  <div className="group">
+                    <label id="registerGenderLabel" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">Gender *</label>
                     <div
                       className="lp-select-wrap"
                       tabIndex={0}
@@ -1219,7 +1234,7 @@ const Register = () => {
                     >
                       <button
                         type="button"
-                        className={`lp-input lp-select-trigger ${hasRequiredFieldError('gender') ? 'lp-input-error' : ''}`}
+                        className={`${getMentorLikeInputClasses(hasRequiredFieldError('gender'))} lp-select-trigger`}
                         onClick={() => setGenderOpen((open) => !open)}
                         aria-haspopup="listbox"
                         aria-expanded={genderOpen}
@@ -1255,6 +1270,19 @@ const Register = () => {
                       )}
                     </div>
                   </div>
+
+                  <div className="group">
+                    <label htmlFor="confirmPassword" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">Confirm Password *</label>
+                    <input
+                      id="confirmPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      className={getMentorLikeInputClasses(hasRequiredFieldError('confirmPassword'))}
+                      placeholder="Confirm password"
+                      value={form.confirmPassword}
+                      onChange={(event) => updateField('confirmPassword', event.target.value)}
+                      onBlur={() => markFieldTouched('confirmPassword')}
+                    />
+                  </div>
                   </div>
                 </section>
 
@@ -1271,7 +1299,7 @@ const Register = () => {
                     <label className="lp-register-field-label" htmlFor="schoolOrCollege">School / College *</label>
                     <input
                       id="schoolOrCollege"
-                      className={`lp-input ${hasRequiredFieldError('schoolOrCollege') ? 'lp-input-error' : ''}`}
+                      className={getMentorLikeInputClasses(hasRequiredFieldError('schoolOrCollege'))}
                       placeholder="Enter school or college"
                       value={form.schoolOrCollege}
                       onChange={(event) => updateField('schoolOrCollege', event.target.value)}
@@ -1280,12 +1308,12 @@ const Register = () => {
                   </div>
                   </div>
 
-                  <div className="lp-register-row">
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="country">Country *</label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-[10px]">
+                  <div className="group">
+                    <label htmlFor="country" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">Country *</label>
                     <select
                       id="country"
-                      className={`lp-input ${hasRequiredFieldError('country') ? 'lp-input-error' : ''}`}
+                      className={getMentorLikeInputClasses(hasRequiredFieldError('country'))}
                       value={form.country}
                       onChange={(event) => updateField('country', event.target.value)}
                       onBlur={() => markFieldTouched('country')}
@@ -1295,11 +1323,11 @@ const Register = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="state">State *</label>
+                  <div className="group">
+                    <label htmlFor="state" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">State *</label>
                     <select
                       id="state"
-                      className={`lp-input ${hasRequiredFieldError('state') ? 'lp-input-error' : ''}`}
+                      className={getMentorLikeInputClasses(hasRequiredFieldError('state'))}
                       value={form.state}
                       onChange={(event) => updateField('state', event.target.value)}
                       onBlur={() => markFieldTouched('state')}
@@ -1311,12 +1339,12 @@ const Register = () => {
                   </div>
                   </div>
 
-                  <div className="lp-register-row">
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="city">City *</label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-[10px]">
+                  <div className="group">
+                    <label htmlFor="city" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">City *</label>
                     <select
                       id="city"
-                      className={`lp-input ${hasRequiredFieldError('city') ? 'lp-input-error' : ''}`}
+                      className={getMentorLikeInputClasses(hasRequiredFieldError('city'))}
                       value={form.city}
                       onChange={(event) => updateField('city', event.target.value)}
                       onBlur={() => markFieldTouched('city')}
@@ -1326,11 +1354,11 @@ const Register = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="lp-field">
-                    <label className="lp-register-field-label" htmlFor="postalCode">Pincode *</label>
+                  <div className="group">
+                    <label htmlFor="postalCode" className="mb-1 block text-xs font-medium text-[#6b7280] transition-colors group-hover:text-[#5b2c91]">Pincode *</label>
                     <input
                       id="postalCode"
-                      className={`lp-input ${hasRequiredFieldError('postalCode') ? 'lp-input-error' : ''}`}
+                      className={getMentorLikeInputClasses(hasRequiredFieldError('postalCode'))}
                       placeholder={form.country === 'USA' ? 'e.g. 77001' : 'e.g. 600001'}
                       value={form.postalCode}
                       onChange={(event) => updateField('postalCode', event.target.value)}
@@ -1478,7 +1506,11 @@ const Register = () => {
               </button>
             </div>
 
-            <p className="mb-4 text-sm text-[#6b7280]">Enter the 6-digit OTP sent to your contact.</p>
+            <p className="mb-4 text-sm text-[#6b7280]">
+              {otpModal.channel === 'email'
+                ? `Ener the 6 digit OTP sent your email address: ${form.email.trim().toLowerCase() || '-'}`
+                : 'Enter the 6-digit OTP sent to your contact.'}
+            </p>
 
             <input
               type="text"
@@ -1597,5 +1629,6 @@ const Register = () => {
 };
 
 export default Register;
+
 
 

@@ -326,6 +326,7 @@
 .lp-register-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  align-items: start;
   gap: 14px;
   margin-bottom: 10px;
 }
@@ -602,30 +603,36 @@
 .lp-field {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
 }
 
 .lp-register-field-label {
   display: block !important;
-  margin-bottom: 6px !important;
-  font-size: 0.78rem !important;
-  line-height: 1.15rem !important;
-  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+  min-height: 1rem !important;
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
+  font-weight: 500 !important;
   font-family: 'DM Sans', sans-serif !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
   color: #6b7280 !important;
+  transition: color .2s ease;
+}
+
+.lp-field:hover .lp-register-field-label {
+  color: #5b2c91 !important;
 }
 
 .lp-input {
   width: 100%;
-  border: 1px solid #e7e2f6;
+  border: 1px solid #d7d0e2;
   background: #fff;
-  border-radius: 10px;
-  padding: 12px 12px;
-  color: var(--ink);
-  outline: none;
-  transition: border-color .2s, box-shadow .2s;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #111827;
+  outline: 0;
+  transition: all .2s ease;
   font-size: 0.875rem;
 }
 
@@ -633,24 +640,28 @@
   color: #9ca3af;
 }
 
+.lp-input:hover {
+  border-color: #5b2c91;
+}
+
 .lp-input:focus {
-  border-color: rgba(91, 44, 199, 0.5);
-  box-shadow: 0 0 0 4px rgba(91, 44, 199, 0.1);
+  border-color: transparent;
+  box-shadow: 0 0 0 2px #5b2c91;
 }
 
 .lp-input.lp-input-error {
   border-color: #fca5a5;
   background: #fef2f2;
-  color: #991b1b;
+  color: #7f1d1d;
 }
 
 .lp-input.lp-input-error::placeholder {
-  color: #ef4444;
+  color: #f87171;
 }
 
 .lp-input.lp-input-error:focus {
   border-color: #f87171;
-  box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.18);
+  box-shadow: 0 0 0 2px #fecaca;
 }
 
 .lp-password-wrap {
@@ -724,6 +735,16 @@
 
 .lp-select-wrap {
   position: relative;
+}
+
+.lp-register-row-academic {
+  align-items: start;
+}
+
+.lp-register-row-academic > .group {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .lp-select-trigger {
@@ -849,23 +870,24 @@
 
 .lp-vp-inline-btn {
   border: 1px solid #d7d0e2;
-  border-radius: 10px;
-  min-height: 40px;
+  border-radius: 8px;
+  min-height: 42px;
   min-width: 88px;
-  background: #f7f2ff;
-  color: #4a2a7a;
+  background: #fff;
+  color: #5b2c91;
   font-size: 0.75rem;
   font-weight: 600;
   font-family: inherit;
-  padding: 0 12px;
+  padding: 0 14px;
   cursor: pointer;
   white-space: nowrap;
   transition: all .2s ease;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.06);
 }
 
 .lp-vp-inline-btn:hover {
-  background: #ebe1ff;
-  border-color: #cfc1ed;
+  background: #f3ecff;
+  border-color: #5b2c91;
 }
 
 .lp-vp-inline-btn:disabled {
