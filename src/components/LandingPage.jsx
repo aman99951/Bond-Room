@@ -511,6 +511,7 @@ export default function LandingPage() {
       )}
 
       {/* ═══ HERO ═══ */}
+      <main>
       <section ref={heroRef} className="relative pt-[64px] bg-gradient-to-b from-[#4A2B7A] via-[#5D3699] to-[#3D1F6D] overflow-hidden">
         <Particles enabled={motionEnabled} />
         <div className="absolute -top-36 -left-36 w-[480px] h-[480px] bg-[#5B2CC7]/[.07] rounded-full blur-3xl ab" />
@@ -1008,6 +1009,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ FOOTER ═══ */}
+      </main>
       <footer className="bg-gradient-to-b from-[#5D3699] to-[#3D1F6D] text-white relative overflow-hidden">
         <svg className="absolute -top-px left-0 w-full" viewBox="0 0 1440 48" fill="none" preserveAspectRatio="none">
           <path d="M0 48L48 40C96 32 192 16 288 13.3C384 10.7 480 21.3 576 24C672 26.7 768 21.3 864 18.7C960 16 1056 16 1152 18.7C1248 21.3 1344 26.7 1392 29.3L1440 32V0H0V48Z" fill="#FAF8FF" />

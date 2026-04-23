@@ -206,6 +206,7 @@ const AboutUs = () => {
           </div>
         ) : null}
 
+        <main>
         <section className="theme-v-hero relative overflow-hidden rounded-[28px] p-6 sm:p-10">
           <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#fdd253] opacity-40 blur-2xl" />
           <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#5D3699] opacity-20 blur-2xl" />
@@ -412,6 +413,7 @@ const AboutUs = () => {
             </div>
           </div>
         ) : null}
+        </main>
       </div>
     </div>
   );

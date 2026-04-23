@@ -600,7 +600,7 @@ const VolunteerPage = () => {
           </div>
         </div>
       ) : null}
-      <motion.div
+      <motion.main
         className="theme-v-page min-h-screen p-4 pt-24 sm:p-8 sm:pt-28"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1215,7 +1215,7 @@ const VolunteerPage = () => {
           </div>
         ) : null}
       </div>
-      </motion.div>
+      </motion.main>
       <VolunteerBottomAuth />
     </>
   );

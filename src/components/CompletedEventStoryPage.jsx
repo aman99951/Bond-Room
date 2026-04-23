@@ -194,12 +194,12 @@ const CompletedEventStoryPage = () => {
     return (
       <>
         {topBar}
-        <div className="theme-v-page min-h-screen p-4 pt-[86px] sm:p-8 sm:pt-[90px]">
+        <main className="theme-v-page min-h-screen p-4 pt-[86px] sm:p-8 sm:pt-[90px]">
           <div className="mx-auto max-w-5xl rounded-2xl border border-[#e8dcff] bg-white p-10 text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#d1fae5] border-t-[#15803d]" />
             <p className="mt-3 text-sm text-[#6b7280]">Loading completed event story...</p>
           </div>
-        </div>
+        </main>
       </>
     );
   }
@@ -208,7 +208,7 @@ const CompletedEventStoryPage = () => {
     return (
       <>
         {topBar}
-        <div className="theme-v-page min-h-screen p-4 pt-[86px] sm:p-8 sm:pt-[90px]">
+        <main className="theme-v-page min-h-screen p-4 pt-[86px] sm:p-8 sm:pt-[90px]">
           <div className="mx-auto max-w-5xl rounded-2xl border border-red-200 bg-white p-10 text-center">
             <p className="text-sm text-red-600">{error || 'Completed event not found.'}</p>
             <button
@@ -220,7 +220,7 @@ const CompletedEventStoryPage = () => {
               Back to Volunteer
             </button>
           </div>
-        </div>
+        </main>
       </>
     );
   }
@@ -228,7 +228,7 @@ const CompletedEventStoryPage = () => {
   return (
     <>
       {topBar}
-      <motion.div
+      <motion.main
         className="theme-v-page min-h-screen p-4 pt-[86px] sm:p-8 sm:pt-[90px]"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
@@ -353,7 +353,7 @@ const CompletedEventStoryPage = () => {
           </div>
         </div>
       ) : null}
-      </motion.div>
+      </motion.main>
     </>
   );
 };

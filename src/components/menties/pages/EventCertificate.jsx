@@ -256,18 +256,18 @@ const EventCertificate = ({ presetKey = '' }) => {
 
   if (loading) {
     return (
-      <div className="p-6 sm:p-8">
+      <main className="p-6 sm:p-8">
         <div className="mx-auto max-w-2xl rounded-2xl border border-[#e8dcff] bg-white p-8 text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#e7d8ff] border-t-[#5D3699]" />
           <p className="mt-3 text-sm text-[#6b7280]">Preparing certificate...</p>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (error || !registration) {
     return (
-      <div className="p-6 sm:p-8">
+      <main className="p-6 sm:p-8">
         <div className="mx-auto max-w-2xl rounded-2xl border border-red-200 bg-white p-8 text-center">
           <p className="text-sm text-red-600">{error || 'Certificate not available.'}</p>
           <button
@@ -279,12 +279,12 @@ const EventCertificate = ({ presetKey = '' }) => {
             Back to Dashboard
           </button>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="print-only-root relative overflow-hidden p-4 sm:p-8">
+    <main className="print-only-root relative overflow-hidden p-4 sm:p-8">
       <style>
         {`
           @media print {
@@ -433,7 +433,7 @@ const EventCertificate = ({ presetKey = '' }) => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

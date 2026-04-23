@@ -216,7 +216,7 @@ const DonationPage = () => {
         </div>
       ) : null}
 
-      <div className="theme-v-page relative min-h-screen overflow-hidden p-3 pt-[86px] sm:p-6 sm:pt-[90px] lg:p-8 lg:pt-[94px]">
+      <main className="theme-v-page relative min-h-screen overflow-hidden p-3 pt-[86px] sm:p-6 sm:pt-[90px] lg:p-8 lg:pt-[94px]">
         <div className="mx-auto max-w-6xl">
           <div className="theme-v-hero relative overflow-hidden rounded-[24px] p-5 ring-1 ring-[#FDD253]/20 sm:rounded-[28px] sm:p-8">
             <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#fdd253] opacity-50 blur-2xl" />
@@ -357,7 +357,7 @@ const DonationPage = () => {
             </section>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 };
