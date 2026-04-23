@@ -1,19 +1,21 @@
-const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://bondroom.org").replace(/\/+$/, "");
+﻿const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://www.bondroom.org").replace(/\/+$/, "");
 const DEFAULT_IMAGE = `${SITE_URL}/logo.png`;
 
 const INDEXABLE_ROUTES = new Set(["/", "/about", "/volunteer", "/donate"]);
 
 const PAGE_CONFIG = {
   "/": {
-    title: "Bond Room | Safe Teen Mentorship Platform",
+    title: "Bond Room Foundation | Free Safe Mentorship for Teens",
     description:
-      "Bond Room connects teens with trusted mentors for safe, guided one-on-one support in academics, wellbeing, and life decisions.",
-    keywords: "teen mentorship, student mentoring, youth guidance, safe online mentoring, Bond Room",
+      "Bond Room Foundation connects teens with trusted mentors for safe one-on-one support in academics, wellbeing, and life decisions.",
+    keywords:
+      "Bond Room Foundation, Bond Room mentorship, teen mentorship, student mentoring, youth guidance, safe online mentoring",
     jsonLd: [
       {
         "@context": "https://schema.org",
         "@type": "Organization",
         name: "Bond Room",
+        alternateName: "Bond Room Foundation",
         url: SITE_URL,
         logo: DEFAULT_IMAGE,
         sameAs: [
@@ -35,30 +37,62 @@ const PAGE_CONFIG = {
     ],
   },
   "/about": {
-    title: "About Bond Room | Mentorship Mission and Team",
+    title: "About Bond Room Foundation | Mentorship Mission and Team",
     description:
-      "Learn about Bond Room's mission, founders, and leadership building a safe, student-first mentoring platform.",
-    keywords: "about Bond Room, mentorship mission, student support platform, youth mentoring team",
+      "Learn about Bond Room Foundation's mission, founders, and leadership building a safe, student-first mentoring platform.",
+    keywords:
+      "about Bond Room Foundation, mentorship mission, student support platform, youth mentoring team",
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        name: "About Bond Room Foundation",
+        url: `${SITE_URL}/about`,
+        isPartOf: {
+          "@type": "WebSite",
+          name: "Bond Room",
+          url: SITE_URL,
+        },
+      },
+    ],
   },
   "/volunteer": {
-    title: "Volunteer Events | Bond Room Community Impact",
+    title: "Volunteer Events | Bond Room Foundation Community Impact",
     description:
-      "Explore upcoming and completed Bond Room volunteer events and join community initiatives that support teen growth.",
-    keywords: "volunteer events, student volunteering, community events, Bond Room volunteer",
+      "Explore upcoming and completed Bond Room Foundation volunteer events and join community initiatives that support teen growth.",
+    keywords:
+      "Bond Room volunteer events, student volunteering, community events, youth volunteering",
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Bond Room Volunteer Events",
+        url: `${SITE_URL}/volunteer`,
+      },
+    ],
   },
   "/donate": {
-    title: "Donate to Bond Room | Support Safe Student Mentorship",
+    title: "Donate to Bond Room Foundation | Support Safe Student Mentorship",
     description:
-      "Support Bond Room's safe mentorship platform. Donations help strengthen student support, mentor quality, and safety operations.",
-    keywords: "donate to mentoring, support student wellbeing, youth mentorship donation, Bond Room donate",
+      "Support Bond Room Foundation's safe mentorship platform. Donations help strengthen student support, mentor quality, and safety operations.",
+    keywords:
+      "donate to mentoring, support student wellbeing, youth mentorship donation, Bond Room Foundation donate",
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: "Donate to Bond Room Foundation",
+        url: `${SITE_URL}/donate`,
+      },
+    ],
   },
 };
 
 const FALLBACK_CONFIG = {
-  title: "Bond Room",
+  title: "Bond Room Foundation",
   description:
-    "Bond Room is a mentorship platform connecting teens with trusted mentors for safe and meaningful guidance.",
-  keywords: "Bond Room, teen mentorship, student support",
+    "Bond Room Foundation is a mentorship platform connecting teens with trusted mentors for safe and meaningful guidance.",
+  keywords: "Bond Room Foundation, Bond Room, teen mentorship, student support",
 };
 
 export const getSeoConfigForPath = (pathname) => {
@@ -127,3 +161,4 @@ export const seoDefaults = {
   defaultImage: DEFAULT_IMAGE,
   siteName: "Bond Room",
 };
+

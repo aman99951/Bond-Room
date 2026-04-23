@@ -52,6 +52,7 @@ const SeoManager = () => {
     upsertMetaTag('meta[name="description"]', { name: "description", content: description });
     upsertMetaTag('meta[name="keywords"]', { name: "keywords", content: keywords });
     upsertMetaTag('meta[name="robots"]', { name: "robots", content: robotsValue });
+    upsertMetaTag('meta[name="googlebot"]', { name: "googlebot", content: robotsValue });
 
     upsertMetaTag('meta[property="og:type"]', { property: "og:type", content: "website" });
     upsertMetaTag('meta[property="og:site_name"]', {
